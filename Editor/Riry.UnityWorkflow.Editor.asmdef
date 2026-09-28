@@ -1,0 +1,17 @@
+{
+  "name": "Riry.UnityWorkflow.Editor",
+  "rootNamespace": "Riry.UnityWorkflow.Editor",
+  "references": [],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+
