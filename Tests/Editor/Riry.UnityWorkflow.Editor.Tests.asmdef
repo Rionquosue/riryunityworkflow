@@ -1,0 +1,9 @@
+{
+  "name": "Riry.UnityWorkflow.Editor.Tests",
+  "rootNamespace": "Riry.UnityWorkflow.Editor.Tests",
+  "references": ["Riry.UnityWorkflow.Editor"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false,
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+}

@@ -2,6 +2,23 @@
 
 Editor-only workflow tools targeting Unity 2022.3 LTS.
 
+## Blendshape Sync
+
+Open **Tools > Rirytools > Blendshape Sync**. Drag in a master SkinnedMeshRenderer
+and children; an empty child row appears after each addition. Use each child's
+**Manual link** foldout to override name matching with Source/Destination names.
+
+**Sync now** copies matching weights. **Run automatically** performs one pass
+every 0.5 seconds. **Debug** enables exact, case-sensitive matching; ambiguous
+case-insensitive matches block the pass and offer to disable filtering.
+**Set all to original** restores all cached master/child weights and stops auto
+sync. The original cache lasts while the window remains open, including script
+reloads. Closing the window ends that cache.
+
+Sync and restore pause during Play Mode transitions, animation preview/recording,
+and Animator graph editing. Changes support Undo and prefab overrides.
+See [usage, cache behavior, and tests](Documentation~/blendshape-sync.md).
+
 ## Install
 
 In Unity Package Manager, choose **Add package from git URL** and enter:
