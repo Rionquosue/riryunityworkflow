@@ -1,8 +1,8 @@
 {
   "name": "com.riry.unityworkflow",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "Riry Unity Workflow",
-  "description": "Editor-only Unity workflow tools for conservative animation cleanup and reference-preserving asset GUID regeneration.",
+  "description": "Editor-only Unity tools for blendshape weight synchronization, conservative animation cleanup, and reference-preserving asset GUID regeneration.",
   "unity": "2022.3",
   "author": {
     "name": "Riry"

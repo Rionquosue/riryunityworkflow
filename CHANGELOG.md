@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 - 2026-10-06
+
+- Added **Tools > Rirytools > Blendshape Sync** with expanding drag/drop child rows.
+- Added per-child manual name links and case-insensitive literal matching.
+- Added collision alerts and a Debug button for exact case-sensitive matching.
+- Added automatic 0.5-second editor passes, Sync now, and original-weight restore.
+- Added window-session baselines, transactional writes, Undo, and prefab overrides.
+- Added Play Mode, animation-preview, and Animator graph editing guards.
+- Added optional Edit Mode regression tests and usage documentation.
+
 ## 0.2.0 - 2026-09-27
 
 - Added batch GUID regeneration with serialized-reference preservation.
