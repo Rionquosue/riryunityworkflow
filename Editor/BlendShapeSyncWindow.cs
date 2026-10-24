@@ -7,8 +7,6 @@ using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Riry.UnityWorkflow.Editor.Tests")]
-
 namespace Riry.UnityWorkflow.Editor
 {
     /// <summary>Copies renderer weights; never changes meshes or animation clips.</summary>

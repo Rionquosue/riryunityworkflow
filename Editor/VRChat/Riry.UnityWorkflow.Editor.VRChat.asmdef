@@ -1,0 +1,29 @@
+{
+  "name": "Riry.UnityWorkflow.Editor.VRChat",
+  "rootNamespace": "Riry.UnityWorkflow.Editor",
+  "references": [
+    "Riry.UnityWorkflow.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "VRC.Dynamics.dll",
+    "VRC.SDK3.Dynamics.Constraint.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "RIRY_VRC_CONSTRAINTS"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.7.0",
+      "define": "RIRY_VRC_CONSTRAINTS"
+    }
+  ],
+  "noEngineReferences": false
+}

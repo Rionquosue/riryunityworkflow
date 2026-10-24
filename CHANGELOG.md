@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 - 2026-10-24
+
+- Added **Tools > Rirytools > Constraint Train** (VRChat Avatars SDK 3.7.0+):
+  staggered VRC Parent Constraint trains onto 1 to 5 physics chains, built as a
+  Motion Time clip.
+- Added generated `Phys1_`..`Phys5_` and `Rest_` empty chains with automatic
+  endpoints, added without unpacking prefabs.
+- Added editable train step and chain blend curves, a halfway-influence power
+  curve preset, adaptive curve sampling, and an Animation Mode preview.
+- Added Constraint Train planner and chain tests.
+
 ## 0.3.1 - 2026-10-24
 
 - GUID Tools: the reference cache no longer skips uncached files with old
