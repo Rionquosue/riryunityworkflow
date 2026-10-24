@@ -606,19 +606,29 @@ namespace Riry.UnityWorkflow.Editor
                     sourceWeights[i] = master.GetBlendShapeWeight(i);
                 changes.Clear();
                 int linkCount = 0;
+                int invalid = 0;
                 foreach (ChildPlan plan in plans)
                 {
                     CaptureOriginal(plan.Renderer);
                     foreach (IndexLink link in plan.Links)
                     {
+                        float weight = sourceWeights[link.Source];
+                        // NaN or Infinity on the master must not spread to every child.
+                        if (float.IsNaN(weight) || float.IsInfinity(weight))
+                        {
+                            invalid++;
+                            continue;
+                        }
                         linkCount++;
-                        AddChange(plan.Renderer, link.Destination, sourceWeights[link.Source]);
+                        AddChange(plan.Renderer, link.Destination, weight);
                     }
                 }
                 int count = changes.Count;
                 ApplyChanges(SyncUndoName);
                 result = "Synced " + linkCount + " links across " + plans.Count +
                     " children; " + count + " weights changed.";
+                if (invalid > 0)
+                    result += " Skipped " + invalid + " links whose master weight is NaN or Infinity.";
             }
             catch (Exception exception)
             {

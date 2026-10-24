@@ -388,7 +388,9 @@ namespace Riry.UnityWorkflow.Editor
                 AnimationCurve curve = candidate.Curves[curveIndex].Curve;
                 if (curve == null)
                 {
-                    continue;
+                    // A curve that cannot be read was never checked, so keep it.
+                    reason = "The curve could not be read; preserved for safety.";
+                    return true;
                 }
 
                 Keyframe[] keys = curve.keys;
@@ -397,7 +399,7 @@ namespace Riry.UnityWorkflow.Editor
                 {
                     float value = keys[keyIndex].value;
 
-                    if (!IsFinite(value))
+                    if (!IsFinite(value) || !IsFinite(keys[keyIndex].time))
                     {
                         reason = "Contains NaN or Infinity; preserved for safety.";
                         return true;
@@ -449,7 +451,9 @@ namespace Riry.UnityWorkflow.Editor
                 AnimationCurve curve = candidate.Curves[curveIndex].Curve;
                 if (curve == null)
                 {
-                    continue;
+                    // A curve that cannot be read was never checked, so keep it.
+                    reason = "The curve could not be read; preserved for safety.";
+                    return true;
                 }
 
                 Keyframe[] keys = curve.keys;

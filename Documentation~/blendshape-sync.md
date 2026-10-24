@@ -60,6 +60,9 @@ Snapshots for deleted objects, different meshes, or reordered/renamed shapes are
 skipped and counted in the result. In-place mesh reimports do not overwrite the
 old baseline; mismatched snapshots are skipped to avoid restoring by wrong index.
 
+A master weight that is NaN or Infinity is never copied; the result message
+counts those skipped links.
+
 Each pass with actual weight changes is one Undo operation. No-op ticks add no
 Undo entries. Undo/Redo of a sync or restore pass stops automatic syncing so it
 cannot immediately overwrite the Undo result. Undoing any other edit, such as a
@@ -96,8 +99,8 @@ Closing/reloading the window removes its editor event subscriptions.
 
 ## Tests
 
-The package includes 20 Blendshape Sync Edit Mode regression tests for
-literal/case matching, manual-link precedence, ambiguity, multi-child updates,
+The package includes 21 Blendshape Sync Edit Mode regression tests for
+literal/case matching, non-finite weights, manual-link precedence, ambiguity, multi-child updates,
 cache restoration, mesh replacement, Undo, editor guards, timing, and automatic
 empty child rows. The same assembly also tests Clean Animation Keys and the GUID
 tool.

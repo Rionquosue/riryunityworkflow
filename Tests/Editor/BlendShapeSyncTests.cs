@@ -146,6 +146,20 @@ namespace Riry.UnityWorkflow.Editor.Tests
         }
 
         [Test]
+        public void NonFiniteMasterWeightIsNotCopied()
+        {
+            var master = Renderer("Master", "Blink", "Smile");
+            var child = Renderer("Child", "Blink", "Smile");
+            master.SetBlendShapeWeight(0, float.NaN);
+            master.SetBlendShapeWeight(1, 40);
+            child.SetBlendShapeWeight(0, 12);
+            Assign(master, child);
+            Call("SyncNow");
+            Assert.That(child.GetBlendShapeWeight(0), Is.EqualTo(12));
+            Assert.That(child.GetBlendShapeWeight(1), Is.EqualTo(40));
+        }
+
+        [Test]
         public void InvalidChildLinkPreventsWritesToEveryChild()
         {
             var master = Renderer("Master", "Blink");

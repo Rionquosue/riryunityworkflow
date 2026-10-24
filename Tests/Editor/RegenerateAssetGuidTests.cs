@@ -134,6 +134,40 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(target.Occurrences.ContainsKey(moved.RelativePath), Is.True);
         }
 
+        [Test]
+        public void FilesDifferingOnlyByCaseStopTheRun()
+        {
+            var files = new List<RegenerateAssetGuid.FileState>
+            {
+                new RegenerateAssetGuid.FileState { RelativePath = "Assets/Ref.prefab" },
+                new RegenerateAssetGuid.FileState { RelativePath = "Assets/ref.prefab" },
+                new RegenerateAssetGuid.FileState { RelativePath = "Assets/Zebra.prefab" }
+            };
+            Assert.Throws<InvalidOperationException>(() => RegenerateAssetGuid.ThrowIfCaseCollision(files));
+            files.RemoveAt(1);
+            Assert.DoesNotThrow(() => RegenerateAssetGuid.ThrowIfCaseCollision(files));
+        }
+
+        [Test]
+        public void CachePathStaysShortAndUniqueForLongOrOddNames()
+        {
+            string longName = "Assets/" + new string('a', 200) + ".prefab";
+            string other = "Assets/" + new string('a', 200) + "b.prefab";
+            string cache = RegenerateAssetGuid.GetCachePath(directory, longName);
+            Assert.That(Path.GetFileName(cache).Length, Is.LessThan(80));
+            Assert.That(cache, Is.Not.EqualTo(RegenerateAssetGuid.GetCachePath(directory, other)));
+            Assert.That(Path.GetFileName(RegenerateAssetGuid.GetCachePath(directory, "Assets/....prefab")),
+                Does.StartWith("asset_"));
+        }
+
+        [Test]
+        public void PathsCompareInComposedUnicode()
+        {
+            // "e" + combining acute accent (NFD, as macOS may report) equals the composed form.
+            Assert.That(RegenerateAssetGuid.NormalizeAssetPath("Assets\\Cafe\u0301.mat"),
+                Is.EqualTo("Assets/Caf\u00e9.mat"));
+        }
+
         private RegenerateAssetGuid.Target NewTarget()
         {
             return new RegenerateAssetGuid.Target

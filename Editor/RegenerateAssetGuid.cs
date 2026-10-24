@@ -26,6 +26,8 @@ internal static class RegenerateAssetGuid
         "Assets/Rirytools/Regenerate GUID";
     private const string CacheFolderName = "RegenerateGuidCache";
     private const string CacheExtension = ".rguiddb";
+    private const int CacheNameLength = 40;
+    private const int MaxDirectoryDepth = 64;
     private const int CacheMagic = 0x58494752; // RGIX
     private const int CacheVersion = 1;
     internal const int GuidLength = 32;
@@ -589,13 +591,30 @@ internal static class RegenerateAssetGuid
         };
 
         var files = new List<FileState>();
+        var pending = new Stack<KeyValuePair<string, int>>();
 
         foreach (string root in roots)
         {
-            if (!Directory.Exists(root))
-                continue;
+            if (Directory.Exists(root))
+                pending.Push(new KeyValuePair<string, int>(root, 0));
+        }
 
-            foreach (string fullPath in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        // Walk manually: a depth limit stops a symbolic link loop that
+        // SearchOption.AllDirectories would follow forever. Linked folders are
+        // otherwise scanned like real ones (OneDrive files also look like links).
+        while (pending.Count > 0)
+        {
+            KeyValuePair<string, int> entry = pending.Pop();
+            string directory = entry.Key;
+            if (entry.Value > MaxDirectoryDepth)
+                throw new InvalidOperationException(
+                    "Folders are nested too deeply, possibly through a symbolic link loop:\n" +
+                    MakeProjectRelative(projectRoot, directory));
+
+            foreach (string child in Directory.GetDirectories(directory))
+                pending.Push(new KeyValuePair<string, int>(child, entry.Value + 1));
+
+            foreach (string fullPath in Directory.GetFiles(directory))
             {
                 if (!TextExtensions.Contains(Path.GetExtension(fullPath)))
                     continue;
@@ -613,7 +632,28 @@ internal static class RegenerateAssetGuid
 
         files.Sort((left, right) =>
             StringComparer.OrdinalIgnoreCase.Compare(left.RelativePath, right.RelativePath));
+        ThrowIfCaseCollision(files);
         return files;
+    }
+
+    /// <summary>
+    /// Paths are compared without case so Windows and macOS behave the same.
+    /// Two files differing only by case would share one entry, and the
+    /// references in one of them would be lost, so they stop the run.
+    /// </summary>
+    internal static void ThrowIfCaseCollision(List<FileState> sortedFiles)
+    {
+        for (int i = 1; i < sortedFiles.Count; i++)
+        {
+            string previous = sortedFiles[i - 1].RelativePath;
+            string current = sortedFiles[i].RelativePath;
+            if (!previous.Equals(current, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            throw new InvalidOperationException(
+                "Two project files differ only by letter case:\n" + previous + "\n" + current +
+                "\n\nRename one of them before regenerating GUIDs.");
+        }
     }
 
     internal static void ScanReferences(
@@ -1302,11 +1342,16 @@ internal static class RegenerateAssetGuid
         return files.Count;
     }
 
-    private static string GetCachePath(string projectRoot, string assetPath)
+    internal static string GetCachePath(string projectRoot, string assetPath)
     {
         string name = Path.GetFileNameWithoutExtension(assetPath);
         foreach (char invalid in Path.GetInvalidFileNameChars())
             name = name.Replace(invalid, '_');
+        // The hash keeps names unique; a short readable part avoids Windows
+        // path-length limits for long asset names.
+        if (name.Length > CacheNameLength)
+            name = name.Substring(0, CacheNameLength);
+        name = name.TrimEnd('.', ' ');
         if (string.IsNullOrEmpty(name))
             name = "asset";
 
@@ -1371,9 +1416,13 @@ internal static class RegenerateAssetGuid
         return NormalizeAssetPath(full.Substring(root.Length));
     }
 
-    private static string NormalizeAssetPath(string path)
+    internal static string NormalizeAssetPath(string path)
     {
-        return string.IsNullOrEmpty(path) ? path : path.Replace('\\', '/');
+        // macOS can report decomposed Unicode (NFD) file names while Unity
+        // uses composed names (NFC); compare everything in NFC.
+        return string.IsNullOrEmpty(path)
+            ? path
+            : path.Replace('\\', '/').Normalize(NormalizationForm.FormC);
     }
 
     private static void ClearTemporaryData(

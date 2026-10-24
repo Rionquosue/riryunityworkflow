@@ -18,6 +18,10 @@
 - Added Edit Mode tests for Clean Animation Keys and GUID patching; Blendshape
   Sync tests now run in a temporary scene.
 - Removed forced garbage collection after GUID runs.
+- GUID Tools: stop symbolic link loops, stop on paths differing only by case, compare paths in NFC Unicode, and
+  keep cache file names short for long asset names.
+- Blendshape Sync: NaN or Infinity master weights are no longer copied.
+- Clean Animation Keys: unreadable curves and non-finite key times are preserved.
 
 ## 0.3.0 - 2026-10-06
 

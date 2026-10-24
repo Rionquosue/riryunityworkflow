@@ -78,12 +78,19 @@ archived files are deleted until the archive is within the limit.
   operation and must be reserialized as text first. Binary Unity files outside
   the Asset Database (for example in `ProjectSettings`) cannot be inspected and
   also abort the operation.
+- Folders reached through symbolic links or junctions are scanned and updated
+  like real folders. A link loop stops the run instead of scanning forever.
+- Two project files whose paths differ only by letter case stop the run, since
+  their references could otherwise be confused.
+- Paths are compared in composed Unicode (NFC), so accented names reported in
+  decomposed form by macOS still match.
 - Cache deletion removes only `Library/RegenerateGuidCache`.
 
 ## Tests
 
 `RegenerateAssetGuidTests` covers block-boundary scanning, byte-exact patching
 with the target `.meta` written last, refusal to patch a changed file, rollback,
-and the rule that the cache never hides an uncached file. The tests use
+the rule that the cache never hides an uncached file, case-only path
+collisions, short cache names for long asset names, and Unicode path matching. The tests use
 temporary files outside the project.
 
