@@ -15,7 +15,9 @@
   `Animations/`, then applies the model's preset (for example Humanoid).
   **Rirytools > Extract Animations (Generic)** does this for existing models.
 - `betterfbx: blend` exports `.blend` files to FBX through Blender and the Better
-  FBX add-on; the FBX then follows the folder's FBX rules.
+  FBX extension (checked against 6.3.3): every action is exported, Edit or Pose
+  Mode files are switched to Object Mode, and failures are reported; the FBX
+  then follows the folder's FBX rules.
 - Exported FBX files and extracted clips are replaced only while unchanged since
   the tool wrote them.
 - Added import preset tests, including an end-to-end texture import.

@@ -27,15 +27,23 @@ namespace Riry.UnityWorkflow.Editor
 
         // Arguments arrive through sys.argv, never through the script text, and
         // options are parsed with ast.literal_eval, so names and paths cannot inject code.
+        // Matches Better FBX 6.3.3 (exporter.py, BetterExportFbx):
+        // - poll() requires Object Mode, so a file saved in Edit or Pose Mode is switched first.
+        // - my_animation_type defaults to 'Active' (one action); 'Actions' exports every
+        //   action as its own take for Animations/ extraction. User options override it.
+        // - A failed fbx-utility run returns {'CANCELLED'} without a report.
+        // - The default axis, MayaZUp, is kept: the add-on warns its 'Unity' axis breaks Humanoid.
         private const string Script =
             "import ast, sys\n" +
             "import bpy\n" +
+            "\n" +
+            "DEFAULTS = {'my_animation_type': 'Actions'}\n" +
             "\n" +
             "def main():\n" +
             "    argv = sys.argv[sys.argv.index('--') + 1:]\n" +
             "    output = argv[0]\n" +
             "    options = argv[1] if len(argv) > 1 else ''\n" +
-            "    kwargs = {}\n" +
+            "    kwargs = dict(DEFAULTS)\n" +
             "    if options.strip():\n" +
             "        call = ast.parse('f(' + options + ')', mode='eval').body\n" +
             "        if call.args:\n" +
@@ -46,10 +54,16 @@ namespace Riry.UnityWorkflow.Editor
             "        bpy.ops.better_export.fbx.get_rna_type()\n" +
             "    except (AttributeError, KeyError):\n" +
             "        raise RuntimeError('Better FBX exporter (bpy.ops.better_export.fbx) is not available. ' +\n" +
-            "            'Enable the add-on in Blender and save the preferences.')\n" +
-            "    result = bpy.ops.better_export.fbx(filepath=output, **kwargs)\n" +
+            "            'Install the Better FBX extension (Blender 4.2 or newer), enable it and save the preferences.')\n" +
+            "    if bpy.context.mode != 'OBJECT' and bpy.context.view_layer.objects.active is not None:\n" +
+            "        bpy.ops.object.mode_set(mode='OBJECT')\n" +
+            "    try:\n" +
+            "        result = bpy.ops.better_export.fbx(filepath=output, **kwargs)\n" +
+            "    except TypeError as error:\n" +
+            "        raise RuntimeError('Invalid Better FBX option: ' + str(error))\n" +
             "    if 'FINISHED' not in result:\n" +
-            "        raise RuntimeError('Better FBX export returned ' + str(result))\n" +
+            "        raise RuntimeError('Better FBX export returned ' + str(result) +\n" +
+            "            '; its fbx-utility helper failed. Check the output above.')\n" +
             "    print('" + SuccessMarker + "')\n" +
             "\n" +
             "main()\n";
@@ -64,7 +78,10 @@ namespace Riry.UnityWorkflow.Editor
             set { EditorPrefs.SetString(BlenderPathPref, value ?? ""); }
         }
 
-        /// <summary>Extra exporter arguments such as use_selection=False, stored per user.</summary>
+        /// <summary>
+        /// Extra bpy.ops.better_export.fbx arguments, stored per user, for example
+        /// my_fbx_unit='m', use_triangulate=True or my_animation_type='Tracks'.
+        /// </summary>
         internal static string Options
         {
             get { return EditorPrefs.GetString(OptionsPref, ""); }

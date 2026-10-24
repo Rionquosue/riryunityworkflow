@@ -369,7 +369,7 @@ namespace Riry.UnityWorkflow.Editor
                 EditorStyles.wordWrappedMiniLabel);
             BetterFbxExporter.Options = EditorGUILayout.TextField(
                 new GUIContent("Exporter options", "Extra bpy.ops.better_export.fbx arguments, for example " +
-                    "use_selection=False. Leave empty for the add-on's defaults."), BetterFbxExporter.Options);
+                    "my_fbx_unit='m', use_triangulate=True. Every action is exported unless you set my_animation_type."), BetterFbxExporter.Options);
             string error = BetterFbxExporter.OptionsError(BetterFbxExporter.Options);
             if (error != null) EditorGUILayout.HelpBox(error, MessageType.Warning);
         }

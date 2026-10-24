@@ -113,13 +113,36 @@ default), and `animations: fbx`, apply to it. When the `.blend` changes, the FBX
 exported again and keeps its import settings; with `animations: fbx`, its clips
 are refreshed.
 
-- Better FBX is a paid Blender add-on. Enable it in Blender and save Blender's
-  preferences; background exports load saved preferences.
+- Better FBX is a paid Blender extension (Blender 4.2 or newer). Install and
+  enable it in Blender and save Blender's preferences; background exports load
+  saved preferences.
+- The call matches Better FBX 6.3.3: `bpy.ops.better_export.fbx(filepath=...)`
+  with the add-on's defaults, except `my_animation_type='Actions'`, so every
+  action becomes its own take (the add-on's default exports only the active
+  one). The default axis, `MayaZUp`, is kept because the add-on warns that its
+  `Unity` axis is not compatible with Humanoid.
+- The exporter only runs in Object Mode, so a `.blend` saved in Edit or Pose
+  Mode is switched to Object Mode in the background copy first; the `.blend`
+  itself is not saved.
 - **Blender** is detected (`Program Files\Blender Foundation` on Windows, the
   Applications folder on macOS, `PATH`, `/snap/bin` and `/usr/bin` on Linux) or set
   in the dialog's Better FBX section. **Exporter options** passes extra
-  `name=value` arguments, such as `use_selection=False`; they are checked as plain
-  values and never run as code. Both are saved per computer.
+  `name=value` arguments that override those defaults; they are checked as
+  plain values and never run as code. Both are saved per computer. Useful ones:
+
+  | Option | Values (default first) |
+  | --- | --- |
+  | `my_animation_type` | `'Actions'` here, `'Active'`, `'Tracks'` (NLA tracks) |
+  | `my_fbx_unit` | `'cm'`, `'m'`, `'mm'`, ... |
+  | `my_fbx_axis` | `'MayaZUp'`, `'OpenGL'` (`'Unity'` breaks Humanoid) |
+  | `use_selection`, `use_visible` | `False` |
+  | `use_only_deform_bones` | `False` |
+  | `use_triangulate` | `False` |
+  | `use_apply_modifiers` | `True` |
+  | `use_embed_media` | `False` |
+  | `my_max_bone_influences` | `'Unlimited'`, `'4'`, ... |
+
+  An unknown option or value stops the export and names the problem.
 - An existing FBX is replaced only when the tool exported it and it is unchanged
   since. A failed export restores the previous FBX, and Unity does not import a
   half-written file. Exports can be cancelled from the progress bar and time out
