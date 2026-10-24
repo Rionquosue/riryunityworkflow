@@ -237,6 +237,99 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(chain[1], Is.EqualTo(phys2));
         }
 
+        [Test]
+        public void NonFiniteCurvesFallBackToLinear()
+        {
+            var broken = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, float.NaN), new Keyframe(1, 1));
+            Assert.That(ConstraintTrainPlanner.Shape(broken, 0.5f), Is.EqualTo(0.5f).Within(Tolerance));
+            var infinite = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, float.PositiveInfinity));
+            Assert.That(ConstraintTrainPlanner.Shape(infinite, 0.25f), Is.EqualTo(0.25f).Within(Tolerance));
+            var bounce = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 3), new Keyframe(1, 1));
+            Assert.That(ConstraintTrainPlanner.Shape(bounce, 0.5f), Is.InRange(0f, 1f));
+        }
+
+        [Test]
+        public void AnimationPathsRejectSlashesAndShadowedNames()
+        {
+            var root = new GameObject("Avatar").transform;
+            Transform armature = Child(root, "Armature", Vector3.zero, 0f);
+            Transform good = Child(armature, "Tail", Vector3.zero, 0f);
+            Assert.That(ConstraintTrainChains.AnimationPathError(good, root), Is.Null);
+
+            Transform slashed = Child(armature, "Tail/Tip", Vector3.zero, 0f);
+            Assert.That(ConstraintTrainChains.AnimationPathError(slashed, root), Does.Contain("'/'"));
+
+            // The second "Tail" can never be reached by the path "Armature/Tail".
+            Transform shadowed = Child(armature, "Tail", Vector3.zero, 0f);
+            Assert.That(ConstraintTrainChains.AnimationPathError(shadowed, root), Does.Contain("earlier sibling"));
+            Assert.That(ConstraintTrainChains.AnimationPathError(good, root), Is.Null);
+        }
+
+        [Test]
+        public void ExistingChainsAreFoundByExactNameEvenWithSlashes()
+        {
+            var root = new GameObject("Hips").transform;
+            Transform real = Child(root, "Tail/1", Vector3.zero, 0f);
+            Transform generated = Child(root, "Phys1_Tail/1", Vector3.zero, 0f);
+            Assert.That(ConstraintTrainChains.FindExisting(new[] { real }, "Phys1_"), Is.EqualTo(generated));
+            Assert.That(ConstraintTrainChains.FindExisting(new[] { real }, "Phys2_"), Is.Null);
+        }
+
+        [Test]
+        public void ChainFollowingPrefersTheStartsOwnPrefix()
+        {
+            var root = new GameObject("Root").transform;
+            Transform real1 = Child(root, "A", Vector3.forward, 0f);
+            Transform real2 = Child(real1, "B", Vector3.forward, 0f);
+            Transform phys1 = Child(root, "Phys1_A", Vector3.forward, 0f);
+            Child(phys1, "Phys2_B", Vector3.forward, 0f);
+            Transform own = Child(phys1, "Phys1_B", Vector3.forward, 0f);
+            var chain = new List<Transform>();
+            string error;
+            Assert.That(ConstraintTrainChains.TryFollowChain(phys1, new[] { real1, real2 }, chain, out error),
+                Is.True, error);
+            Assert.That(chain[1], Is.EqualTo(own));
+        }
+
+        [Test]
+        public void SharedTargetsAndOuterAnimatorAreDetected()
+        {
+            var avatar = new GameObject("Avatar", typeof(Animator)).transform;
+            Transform prop = Child(avatar, "Prop", Vector3.zero, 0f);
+            prop.gameObject.AddComponent<Animator>();
+            Transform bone = Child(prop, "Bone", Vector3.zero, 0f);
+            Assert.That(ConstraintTrainChains.FindAvatarRoot(bone), Is.EqualTo(avatar));
+
+            var first = new List<Transform> { prop, bone };
+            var second = new List<Transform> { avatar, bone };
+            Assert.That(ConstraintTrainChains.FindSharedTarget(new[] { first, second }), Is.EqualTo(bone));
+            Assert.That(ConstraintTrainChains.FindSharedTarget(new[] { first }), Is.Null);
+        }
+
+        [Test]
+        public void ShortChainFailsInsteadOfUsingItsEndpoint()
+        {
+            var root = new GameObject("Root").transform;
+            Transform real1 = Child(root, "A", Vector3.forward, 0f);
+            Transform real2 = Child(real1, "B", Vector3.forward, 0f);
+            Transform real3 = Child(real2, "C", Vector3.forward, 0f);
+            Transform phys1 = Child(root, "Phys1_A", Vector3.forward, 0f);
+            Transform phys2 = Child(phys1, "Phys1_B", Vector3.forward, 0f);
+            Child(phys2, "Phys1_B_End", Vector3.forward, 0f);
+            string error;
+            Assert.That(ConstraintTrainChains.TryFollowChain(phys1, new[] { real1, real2, real3 },
+                new List<Transform>(), out error), Is.False);
+            Assert.That(error, Does.Contain("Phys1_B"));
+        }
+
+        [Test]
+        public void ChainGenerationNeedsAParentForTheStart()
+        {
+            var lone = new GameObject("Tail1").transform;
+            Assert.Throws<System.InvalidOperationException>(() =>
+                ConstraintTrainChains.CreateChain(new[] { lone }, "Phys1_", true, "Test"));
+        }
+
         private static ConstraintTrainPlanner.Settings Example()
         {
             return new ConstraintTrainPlanner.Settings

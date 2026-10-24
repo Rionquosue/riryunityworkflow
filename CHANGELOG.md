@@ -9,6 +9,9 @@
   endpoints, added without unpacking prefabs.
 - Added editable train step and chain blend curves, a halfway-influence power
   curve preset, adaptive curve sampling, and an Animation Mode preview.
+- Guarded names that break animation paths (`/`, shadowed sibling names),
+  shared targets, targets outside the avatar, nested Animators, read-only clips,
+  and NaN curves.
 - Added Constraint Train planner and chain tests.
 
 ## 0.3.1 - 2026-10-24

@@ -264,7 +264,7 @@ namespace Riry.UnityWorkflow.Editor
 
         /// <summary>
         /// Evaluates a 0..1 shaping curve, rescaled so it always runs from 0 to 1.
-        /// A missing or flat curve is linear.
+        /// A missing, flat or non-finite curve is linear.
         /// </summary>
         internal static float Shape(AnimationCurve curve, float u)
         {
@@ -272,8 +272,10 @@ namespace Riry.UnityWorkflow.Editor
             if (curve == null || curve.length < 2) return u;
             float start = curve.Evaluate(0f);
             float end = curve.Evaluate(1f);
-            if (Mathf.Abs(end - start) < 1e-6f) return u;
-            return Mathf.Clamp01((curve.Evaluate(u) - start) / (end - start));
+            // Also catches NaN or Infinity, which Mathf.Clamp01 would pass through.
+            if (!(Mathf.Abs(end - start) >= 1e-6f) || float.IsInfinity(end - start)) return u;
+            float value = (curve.Evaluate(u) - start) / (end - start);
+            return float.IsNaN(value) ? u : Mathf.Clamp01(value);
         }
 
         /// <summary>Exponent that puts a power curve at <paramref name="midpoint"/> halfway.</summary>

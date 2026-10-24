@@ -86,8 +86,32 @@ The **Value** slider shows each bone's weights. **Preview in Scene** samples the
 generated weights with Animation Mode on the set-up constraints, and stops before
 setup or build. Nothing is saved while previewing.
 
+## Names and other limits
+
+- The float parameter's name is never used by this tool: you pick it in the
+  Animator's Motion Time setting, so any characters Unity accepts there work.
+- Animation paths are built from object names. A real bone, or any object
+  between it and the avatar root, whose name contains `/` is rejected, because
+  Unity splits paths on `/`. So is one whose name repeats an earlier sibling's
+  name, because Unity would animate that sibling instead. Rename the object.
+- Avatar root defaults to the outermost Animator above the chain, so an
+  Animator on a prop or nested object is not picked by mistake.
+- Every target must be inside the avatar root (VRChat drops outside sources on
+  upload), outside the real chain, and used by only one target chain.
+- Generating chains needs RB1 to have a parent; otherwise the new chain would
+  become a second root, which a prefab cannot hold.
+- A bone with two VRC Parent Constraints is rejected. Other constraints on the
+  same bone are allowed but reported, since they also move it.
+- A clip inside an installed (read-only) package, an imported clip, or one not
+  open for editing is never replaced. Clear the Clip field to save a new one.
+- A curve containing NaN or Infinity, or one that starts and ends at the same
+  value, is treated as linear. Curves that overshoot are clamped to 0..1.
+- With a one-bone chain, no endpoint is generated: there is no previous bone to
+  measure an offset from.
+
 ## Tests
 
 `ConstraintTrainTests` covers the example timing, chain blends, the power curve,
-one to five chains, weight sums, curve accuracy, overflow source names, and
-chain generation and lookup. They do not need the VRChat SDK.
+one to five chains, weight sums, curve accuracy, overflow source names, broken
+curves, chain generation and lookup, `/` and duplicate names in paths, shared
+targets, and avatar root detection. They do not need the VRChat SDK.

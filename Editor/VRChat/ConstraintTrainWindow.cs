@@ -26,6 +26,7 @@ namespace Riry.UnityWorkflow.Editor
             public readonly List<Transform> Rest = new List<Transform>();
             public readonly List<List<Transform>> Chains = new List<List<Transform>>();
             public ConstraintTrainPlanner.Settings Settings;
+            public Transform Root;
         }
 
         [SerializeField] private Transform avatarRoot;
@@ -75,7 +76,11 @@ namespace Riry.UnityWorkflow.Editor
         private void OnGUI()
         {
             bool blocked = EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling;
-            if (blocked) EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
+            if (blocked)
+            {
+                StopPreview();
+                EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
+            }
 
             scroll = EditorGUILayout.BeginScrollView(scroll);
             using (new EditorGUI.DisabledScope(blocked))
@@ -105,12 +110,10 @@ namespace Riry.UnityWorkflow.Editor
             realStart = (Transform)EditorGUILayout.ObjectField("Start (RB1)", realStart, typeof(Transform), true);
             realEnd = (Transform)EditorGUILayout.ObjectField("End", realEnd, typeof(Transform), true);
             if (avatarRoot == null && realStart != null)
-            {
-                Animator animator = realStart.GetComponentInParent<Animator>(true);
-                if (animator != null) avatarRoot = animator.transform;
-            }
+                avatarRoot = ConstraintTrainChains.FindAvatarRoot(realStart);
             avatarRoot = (Transform)EditorGUILayout.ObjectField(
-                new GUIContent("Avatar root", "Animation paths are relative to this Animator."),
+                new GUIContent("Avatar root", "Animation paths are relative to this Animator. " +
+                    "Defaults to the outermost Animator above the chain."),
                 avatarRoot, typeof(Transform), true);
 
             string error;
@@ -294,6 +297,8 @@ namespace Riry.UnityWorkflow.Editor
             Transform start = realBones[0];
             if (EditorUtility.IsPersistent(start) || !start.gameObject.scene.IsValid())
                 return "Use real bones from a scene or Prefab Mode, not a prefab asset.";
+            if (start.parent == null)
+                return "The real chain start needs a parent to hold the generated chains.";
             return null;
         }
 
@@ -342,8 +347,11 @@ namespace Riry.UnityWorkflow.Editor
                     error = "Every real bone must be below the avatar root.";
                     return false;
                 }
+                error = ConstraintTrainChains.AnimationPathError(bone, avatarRoot);
+                if (error != null) return false;
             }
 
+            plan.Root = avatarRoot;
             plan.Settings = CurrentSettings(plan.Real.Count);
             error = ConstraintTrainPlanner.Validate(plan.Settings);
             if (error != null) return false;
@@ -355,6 +363,14 @@ namespace Riry.UnityWorkflow.Editor
                 if (!TryFollowTargets("Physics chain " + (c + 1), chainStarts[c], plan, chain, out error))
                     return false;
                 plan.Chains.Add(chain);
+            }
+
+            var all = new List<List<Transform>>(plan.Chains) { plan.Rest };
+            Transform shared = ConstraintTrainChains.FindSharedTarget(all);
+            if (shared != null)
+            {
+                error = "'" + shared.name + "' is used by more than one target chain. Each chain needs its own bones.";
+                return false;
             }
             return true;
         }
@@ -373,6 +389,12 @@ namespace Riry.UnityWorkflow.Editor
                 if (target.IsChildOf(plan.Real[0]))
                 {
                     error = label + ": targets must not be inside the real bone chain.";
+                    return false;
+                }
+                // VRChat removes constraint sources outside the avatar on upload.
+                if (!target.IsChildOf(plan.Root))
+                {
+                    error = label + ": targets must be inside the avatar root.";
                     return false;
                 }
             }
@@ -401,8 +423,18 @@ namespace Riry.UnityWorkflow.Editor
             // Sources are animated by index, so a constraint that already has
             // sources is replaced instead of extended.
             int replace = 0;
+            var others = new List<string>();
             foreach (Transform bone in plan.Real)
             {
+                if (bone.GetComponents<VRCParentConstraint>().Length > 1)
+                {
+                    status = bone.name + " has more than one VRC Parent Constraint. Keep one, then set up again.";
+                    return;
+                }
+                // Other constraints on the same bone fight over its pose.
+                if (bone.GetComponents<VRCConstraintBase>().Length > bone.GetComponents<VRCParentConstraint>().Length ||
+                    bone.GetComponent<UnityEngine.Animations.IConstraint>() != null)
+                    others.Add(bone.name);
                 VRCParentConstraint existing = bone.GetComponent<VRCParentConstraint>();
                 if (existing == null || existing.Sources.Count == 0) continue;
                 if (PrefabUtility.IsPartOfPrefabInstance(existing) &&
@@ -458,6 +490,9 @@ namespace Riry.UnityWorkflow.Editor
             }
             Undo.CollapseUndoOperations(group);
             status = "Set up VRC Parent Constraints on " + plan.Real.Count + " bones.";
+            if (others.Count > 0)
+                status += " Other constraints on " + string.Join(", ", others) +
+                    " also move these bones and may fight the train.";
         }
 
         private void BuildAnimation()
@@ -473,8 +508,11 @@ namespace Riry.UnityWorkflow.Editor
 
             if (clip == null)
             {
+                string fileName = plan.Real[0].name + "_ConstraintTrain";
+                foreach (char invalid in System.IO.Path.GetInvalidFileNameChars())
+                    fileName = fileName.Replace(invalid, '_');
                 string path = EditorUtility.SaveFilePanelInProject("Save Constraint Train Clip",
-                    plan.Real[0].name + "_ConstraintTrain", "anim", "Choose where to save the clip.");
+                    fileName, "anim", "Choose where to save the clip.");
                 if (string.IsNullOrEmpty(path)) return;
                 var created = new AnimationClip { frameRate = 60 };
                 WriteCurves(created, plan);
@@ -483,7 +521,8 @@ namespace Riry.UnityWorkflow.Editor
             }
             else
             {
-                if (!AssetDatabase.IsNativeAsset(clip) || (clip.hideFlags & HideFlags.NotEditable) != 0)
+                if (!AssetDatabase.IsNativeAsset(clip) || (clip.hideFlags & HideFlags.NotEditable) != 0 ||
+                    IsInImmutablePackage(clip) || !AssetDatabase.IsOpenForEdit(clip))
                 {
                     status = "The assigned clip is imported or read-only. Clear the field to save a new clip.";
                     return;
@@ -498,6 +537,13 @@ namespace Riry.UnityWorkflow.Editor
             EditorUtility.SetDirty(clip);
             AssetDatabase.SaveAssetIfDirty(clip);
             status = "Built '" + clip.name + "'. Drive it with Motion Time.";
+        }
+
+        private static bool IsInImmutablePackage(UnityEngine.Object asset)
+        {
+            var package = UnityEditor.PackageManager.PackageInfo.FindForAssetPath(AssetDatabase.GetAssetPath(asset));
+            return package != null && package.source != UnityEditor.PackageManager.PackageSource.Embedded &&
+                package.source != UnityEditor.PackageManager.PackageSource.Local;
         }
 
         private void WriteCurves(AnimationClip target, Plan plan)
