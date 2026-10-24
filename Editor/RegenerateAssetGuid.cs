@@ -6,12 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Riry.UnityWorkflow.Editor
 {
@@ -28,8 +28,8 @@ internal static class RegenerateAssetGuid
     private const string CacheExtension = ".rguiddb";
     private const int CacheMagic = 0x58494752; // RGIX
     private const int CacheVersion = 1;
-    private const int GuidLength = 32;
-    private const int ScanBlockSize = 256 * 1024;
+    internal const int GuidLength = 32;
+    internal const int ScanBlockSize = 256 * 1024;
 
     internal static string ProjectRootPath
     {
@@ -41,76 +41,11 @@ internal static class RegenerateAssetGuid
         get { return Path.Combine(ProjectRootPath, "Library", CacheFolderName); }
     }
 
-    internal static string ScriptDirectoryPath
+    // Logs live in the project's Logs folder: an installed package folder is
+    // read-only to Unity and is replaced on every package update.
+    internal static string LogDirectoryPath
     {
-        get
-        {
-            string compiledSourcePath = GetCompiledSourcePath();
-            if (!string.IsNullOrEmpty(compiledSourcePath))
-            {
-                string fullSourcePath = Path.GetFullPath(compiledSourcePath);
-                if (File.Exists(fullSourcePath))
-                {
-                    string compiledSourceDirectory =
-                        Path.GetDirectoryName(fullSourcePath);
-
-                    if (!string.IsNullOrEmpty(compiledSourceDirectory))
-                        return compiledSourceDirectory;
-                }
-            }
-
-            string filenameMatch = null;
-            string[] scriptGuids = AssetDatabase.FindAssets("RegenerateAssetGuid t:MonoScript");
-            foreach (string scriptGuid in scriptGuids)
-            {
-                string scriptPath = AssetDatabase.GUIDToAssetPath(scriptGuid);
-                if (!string.Equals(
-                        Path.GetFileName(scriptPath),
-                        "RegenerateAssetGuid.cs",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                if (filenameMatch == null)
-                    filenameMatch = scriptPath;
-
-                MonoScript script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
-                if (script == null || script.GetClass() != typeof(RegenerateAssetGuid))
-                    continue;
-
-                return GetPhysicalAssetDirectory(scriptPath);
-            }
-
-            if (filenameMatch != null)
-                return GetPhysicalAssetDirectory(filenameMatch);
-
-            return Path.Combine(Application.dataPath, "Editor");
-        }
-    }
-
-    private static string GetCompiledSourcePath(
-        [CallerFilePath] string sourcePath = null)
-    {
-        return sourcePath;
-    }
-
-    private static string GetPhysicalAssetDirectory(string scriptPath)
-    {
-        string physicalScriptPath = FileUtil.GetPhysicalPath(scriptPath);
-        if (!string.IsNullOrEmpty(physicalScriptPath))
-        {
-            string physicalDirectory =
-                Path.GetDirectoryName(Path.GetFullPath(physicalScriptPath));
-
-            if (!string.IsNullOrEmpty(physicalDirectory))
-                return physicalDirectory;
-        }
-
-        string logicalDirectory = Path.GetDirectoryName(scriptPath);
-        return ProjectRelativeToFull(
-            ProjectRootPath,
-            NormalizeAssetPath(logicalDirectory));
+        get { return Path.Combine(ProjectRootPath, "Logs", "RiryGuidTools"); }
     }
 
     private static readonly HashSet<string> TextExtensions =
@@ -139,7 +74,7 @@ internal static class RegenerateAssetGuid
             ".shadervariants", ".inputsettings"
         };
 
-    private sealed class Target
+    internal sealed class Target
     {
         public string AssetPath;
         public string MetaRelativePath;
@@ -152,7 +87,7 @@ internal static class RegenerateAssetGuid
             new Dictionary<string, List<long>>(StringComparer.OrdinalIgnoreCase);
     }
 
-    private sealed class ReferenceCache
+    internal sealed class ReferenceCache
     {
         public string AssetPath;
         public string Guid;
@@ -161,7 +96,7 @@ internal static class RegenerateAssetGuid
             new Dictionary<string, CachedReference>(StringComparer.OrdinalIgnoreCase);
     }
 
-    private sealed class CachedReference
+    internal sealed class CachedReference
     {
         public string RelativePath;
         public long Length;
@@ -169,7 +104,7 @@ internal static class RegenerateAssetGuid
         public List<long> Offsets;
     }
 
-    private sealed class FileState
+    internal sealed class FileState
     {
         public string FullPath;
         public string RelativePath;
@@ -177,19 +112,19 @@ internal static class RegenerateAssetGuid
         public long LastWriteUtcTicks;
     }
 
-    private sealed class PatchOperation
+    internal sealed class PatchOperation
     {
         public Target Target;
         public long Offset;
     }
 
-    private sealed class FilePatch
+    internal sealed class FilePatch
     {
         public FileState File;
         public readonly List<PatchOperation> Operations = new List<PatchOperation>();
     }
 
-    private sealed class WrittenOperation
+    internal sealed class WrittenOperation
     {
         public string FullPath;
         public long Offset;
@@ -208,6 +143,7 @@ internal static class RegenerateAssetGuid
         byte[] scanBuffer = null;
         bool reloadLocked = false;
         bool committed = false;
+        SceneSetup[] sceneSetup = null;
         long scanStartedUtcTicks = DateTime.UtcNow.Ticks;
 
         try
@@ -239,6 +175,17 @@ internal static class RegenerateAssetGuid
                 return;
             }
 
+            if (PrefabStageUtility.GetCurrentPrefabStage() != null)
+            {
+                log.Write("Stopped: Prefab Mode is open.");
+                EditorUtility.DisplayDialog(
+                    "Close Prefab Mode",
+                    "Save and close Prefab Mode before regenerating GUIDs. Objects open in " +
+                    "Prefab Mode keep the old references in memory.",
+                    "OK");
+                return;
+            }
+
             targets = BuildTargets(assetPaths, projectRoot, log);
             LoadCaches(targets, projectRoot, log);
 
@@ -263,6 +210,19 @@ internal static class RegenerateAssetGuid
                 return;
             }
 
+            // "Don't Save" also returns true. Unsaved scenes would later be
+            // saved over the patched files with stale in-memory references.
+            if (!ScenesAreSaved())
+            {
+                log.Write("Stopped: open scenes have unsaved changes.");
+                EditorUtility.DisplayDialog(
+                    "Save Scenes First",
+                    "Every open scene must be saved before regenerating GUIDs.",
+                    "OK");
+                return;
+            }
+
+            sceneSetup = EditorSceneManager.GetSceneManagerSetup();
             AssetDatabase.SaveAssets();
 
             files = EnumerateProjectTextFiles(projectRoot);
@@ -307,6 +267,8 @@ internal static class RegenerateAssetGuid
             SaveCaches(targets, projectRoot, scanStartedUtcTicks, log);
             committed = true;
 
+            ReloadScenes(sceneSetup, log);
+
             int referenceFileCount = CountReferenceFiles(targets);
             Debug.Log(
                 "GUID regeneration completed.\n" +
@@ -330,6 +292,7 @@ internal static class RegenerateAssetGuid
                     log.Write("Attempting rollback of " + written.Count + " written GUID occurrence(s).");
                     RollBack(written, log);
                     AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                    ReloadScenes(sceneSetup, log);
                 }
                 catch (Exception rollbackException)
                 {
@@ -356,8 +319,6 @@ internal static class RegenerateAssetGuid
             scanBuffer = null;
             log.Write("Temporary processing data released.");
             log.Dispose();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
         }
     }
 
@@ -417,6 +378,57 @@ internal static class RegenerateAssetGuid
         var result = new List<string>(paths);
         result.Sort(StringComparer.OrdinalIgnoreCase);
         return result;
+    }
+
+    private static bool ScenesAreSaved()
+    {
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            if (SceneManager.GetSceneAt(i).isDirty)
+                return false;
+        }
+        return true;
+    }
+
+    private static void ReloadScenes(SceneSetup[] setup, GuidToolLog log)
+    {
+        if (setup == null)
+            return;
+
+        // Untitled scenes have no file to reload; they were not dirty.
+        var saved = new List<SceneSetup>();
+        foreach (SceneSetup scene in setup)
+        {
+            if (!string.IsNullOrEmpty(scene.path))
+                saved.Add(scene);
+        }
+
+        if (saved.Count == 0)
+            return;
+
+        if (!saved.Exists(scene => scene.isActive && scene.isLoaded))
+        {
+            SceneSetup active = saved.Find(scene => scene.isLoaded) ?? saved[0];
+            foreach (SceneSetup scene in saved)
+                scene.isActive = scene == active;
+            active.isLoaded = true;
+        }
+
+        try
+        {
+            // Open an empty scene first so every scene is read again from disk
+            // instead of keeping in-memory objects with the old references.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EditorSceneManager.RestoreSceneManagerSetup(saved.ToArray());
+            log.Write("Reloaded open scenes from disk: " + saved.Count);
+        }
+        catch (Exception exception)
+        {
+            log.Write("Scene reload failure: " + exception);
+            Debug.LogWarning(
+                "GUID Tools could not reload the open scenes. Reopen them from disk " +
+                "without saving first:\n" + exception.Message);
+        }
     }
 
     private static List<Target> BuildTargets(
@@ -604,12 +616,15 @@ internal static class RegenerateAssetGuid
         return files;
     }
 
-    private static void ScanReferences(
+    internal static void ScanReferences(
         List<Target> targets,
         List<FileState> files,
         byte[] scanBuffer,
         GuidToolLog log)
     {
+        int reusedReferences = 0;
+        int scannedFiles = 0;
+
         for (int fileIndex = 0; fileIndex < files.Count; fileIndex++)
         {
             FileState file = files[fileIndex];
@@ -632,26 +647,18 @@ internal static class RegenerateAssetGuid
                         scanBuffer))
                 {
                     target.Occurrences[file.RelativePath] = new List<long>(cached.Offsets);
-                    log.Write("Cached reference reused: " + target.AssetPath + " <- " +
-                              file.RelativePath + " | occurrences: " + cached.Offsets.Count);
+                    reusedReferences++;
                     continue;
                 }
 
-                bool requiresScan =
-                    target.Cache == null ||
-                    hasCachedReference ||
-                    file.RelativePath.Equals(target.MetaRelativePath, StringComparison.OrdinalIgnoreCase) ||
-                    file.LastWriteUtcTicks >= target.Cache.ScanStartedUtcTicks;
-
-                if (requiresScan)
-                    targetsToScan.Add(target);
+                // Every other file is scanned. Moves, copies and some VCS
+                // checkouts keep old timestamps, so modification times cannot
+                // prove that an uncached file has no reference.
+                targetsToScan.Add(target);
             }
 
             if (targetsToScan.Count == 0)
                 continue;
-
-            log.Write("Scanning file: " + file.RelativePath +
-                      " | GUID candidates: " + targetsToScan.Count);
 
             if ((fileIndex & 31) == 0)
             {
@@ -665,22 +672,20 @@ internal static class RegenerateAssetGuid
 
             if (!LooksLikeText(file.FullPath, scanBuffer))
             {
-                Target binaryDependency;
-                if (UnitySerializedExtensions.Contains(Path.GetExtension(file.FullPath)) &&
-                    TryFindBinaryDependency(file.RelativePath, targetsToScan, out binaryDependency))
-                    throw new InvalidOperationException(
-                        "A binary-serialized Unity asset references a GUID being changed:\n" +
-                        file.RelativePath +
-                        "\n\nReferenced asset:\n" + binaryDependency.AssetPath +
-                        "\n\nReserialize the referencing asset as text before regenerating GUIDs.");
-
-                log.Write("Skipped non-text file with no selected GUID dependency: " +
-                          file.RelativePath);
+                ThrowIfBinaryDependency(
+                    file,
+                    targetsToScan,
+                    "A binary-serialized Unity asset references a GUID being changed:\n",
+                    log);
                 continue;
             }
 
             ScanOneFile(file, targetsToScan, false, scanBuffer, log);
+            scannedFiles++;
         }
+
+        log.Write("Preflight scan finished. Files scanned: " + scannedFiles +
+                  "; cached references reused: " + reusedReferences + ".");
     }
 
     private static bool CachedOffsetsStillMatch(
@@ -713,7 +718,7 @@ internal static class RegenerateAssetGuid
         }
     }
 
-    private static void ScanOneFile(
+    internal static void ScanOneFile(
         FileState file,
         List<Target> targets,
         bool useNewGuid,
@@ -788,15 +793,22 @@ internal static class RegenerateAssetGuid
             }
         }
 
+        // One line per file with matches keeps large batches from producing
+        // a line for every target/file pair.
+        int matchedTargets = 0;
+        int matchCount = 0;
         foreach (Target target in targets)
         {
             List<long> offsets;
-            int count = target.Occurrences.TryGetValue(file.RelativePath, out offsets)
-                ? offsets.Count
-                : 0;
-            log.Write("Scan result: " + target.AssetPath + " <- " + file.RelativePath +
-                      " | occurrences: " + count);
+            if (!target.Occurrences.TryGetValue(file.RelativePath, out offsets))
+                continue;
+            matchedTargets++;
+            matchCount += offsets.Count;
         }
+
+        if (matchCount > 0)
+            log.Write("Scan result: " + file.RelativePath + " | targets referenced: " +
+                      matchedTargets + " | occurrences: " + matchCount);
     }
 
     private static uint ReadPrefix(byte[] bytes, int offset)
@@ -807,7 +819,7 @@ internal static class RegenerateAssetGuid
                bytes[offset + 3];
     }
 
-    private static List<FilePatch> BuildPatches(
+    internal static List<FilePatch> BuildPatches(
         List<Target> targets,
         List<FileState> files,
         GuidToolLog log)
@@ -865,7 +877,7 @@ internal static class RegenerateAssetGuid
         return result;
     }
 
-    private static void ApplyPatches(
+    internal static void ApplyPatches(
         List<FilePatch> patches,
         List<WrittenOperation> written,
         GuidToolLog log)
@@ -921,10 +933,6 @@ internal static class RegenerateAssetGuid
                         written.Add(writtenOperation);
                         stream.Position = operation.Offset;
                         stream.Write(operation.Target.NewBytes, 0, GuidLength);
-                        log.Write("Patched offset " + operation.Offset + " in " +
-                                  patch.File.RelativePath + " | " +
-                                  operation.Target.OldGuid + " -> " +
-                                  operation.Target.NewGuid);
                     }
 
                     stream.Flush();
@@ -1004,12 +1012,11 @@ internal static class RegenerateAssetGuid
 
             if (!LooksLikeText(current.FullPath, scanBuffer))
             {
-                Target binaryDependency;
-                if (UnitySerializedExtensions.Contains(Path.GetExtension(current.FullPath)) &&
-                    TryFindBinaryDependency(current.RelativePath, targets, out binaryDependency))
-                    throw new InvalidOperationException(
-                        "Unity produced or modified a binary asset that references:\n" +
-                        binaryDependency.AssetPath + "\n\nFile:\n" + current.RelativePath);
+                ThrowIfBinaryDependency(
+                    current,
+                    targets,
+                    "Unity produced or modified a binary asset that references a changed GUID:\n",
+                    log);
                 continue;
             }
 
@@ -1099,7 +1106,7 @@ internal static class RegenerateAssetGuid
         }
     }
 
-    private static void RollBack(List<WrittenOperation> written, GuidToolLog log)
+    internal static void RollBack(List<WrittenOperation> written, GuidToolLog log)
     {
         var byFile = new Dictionary<string, List<WrittenOperation>>(StringComparer.OrdinalIgnoreCase);
         foreach (WrittenOperation operation in written)
@@ -1216,24 +1223,27 @@ internal static class RegenerateAssetGuid
         return true;
     }
 
-    private static bool TryFindBinaryDependency(
-        string relativePath,
+    private static void ThrowIfBinaryDependency(
+        FileState file,
         List<Target> targets,
-        out Target matchingTarget)
+        string message,
+        GuidToolLog log)
     {
-        matchingTarget = null;
-
-        if (!relativePath.StartsWith("Assets/", StringComparison.Ordinal) ||
-            relativePath.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+        if (!UnitySerializedExtensions.Contains(Path.GetExtension(file.FullPath)))
         {
-            // Binary project/package settings cannot be safely inspected here.
-            if (targets.Count == 0)
-                return false;
-            matchingTarget = targets[0];
-            return true;
+            log.Write("Skipped non-text file: " + file.RelativePath);
+            return;
         }
 
-        string[] dependencies = AssetDatabase.GetDependencies(relativePath, false);
+        // Binary files outside the AssetDatabase (for example ProjectSettings)
+        // cannot be inspected, so they block the run without naming a target.
+        if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(file.RelativePath)))
+            throw new InvalidOperationException(
+                "A binary-serialized Unity file cannot be checked for GUID references:\n" +
+                file.RelativePath +
+                "\n\nReserialize it as text before regenerating GUIDs.");
+
+        string[] dependencies = AssetDatabase.GetDependencies(file.RelativePath, false);
         foreach (string dependency in dependencies)
         {
             foreach (Target target in targets)
@@ -1241,12 +1251,14 @@ internal static class RegenerateAssetGuid
                 if (!dependency.Equals(target.AssetPath, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                matchingTarget = target;
-                return true;
+                throw new InvalidOperationException(
+                    message + file.RelativePath +
+                    "\n\nReferenced asset:\n" + target.AssetPath +
+                    "\n\nReserialize the referencing asset as text before regenerating GUIDs.");
             }
         }
 
-        return false;
+        log.Write("Skipped binary asset with no selected GUID dependency: " + file.RelativePath);
     }
 
     private static bool Matches(byte[] buffer, int offset, byte[] token)
@@ -1441,7 +1453,7 @@ internal sealed class GuidToolsWindow : EditorWindow
             "Cache: Library/RegenerateGuidCache",
             EditorStyles.miniLabel);
         EditorGUILayout.LabelField(
-            "Logs: beside RegenerateAssetGuid.cs under logs/",
+            "Logs: Logs/RiryGuidTools",
             EditorStyles.miniLabel);
     }
 
@@ -1457,12 +1469,23 @@ internal sealed class GuidToolLog : IDisposable
     private const long ArchiveLimit = 100L * 1024L * 1024L;
     private const string ActiveLogName = "guid-tools.log";
 
+    private static readonly UTF8Encoding LogEncoding = new UTF8Encoding(false);
+
     private StreamWriter writer;
     private bool writeFailureReported;
     private string operation;
+    private string activeLogPath;
+    private string archiveDirectory;
+    private long activeBytes;
 
     private GuidToolLog()
     {
+    }
+
+    /// <summary>A log that discards every message.</summary>
+    internal static GuidToolLog Disabled()
+    {
+        return new GuidToolLog();
     }
 
     internal static GuidToolLog Open(string operation)
@@ -1471,34 +1494,42 @@ internal sealed class GuidToolLog : IDisposable
 
         try
         {
-            string logDirectory = Path.Combine(RegenerateAssetGuid.ScriptDirectoryPath, "logs");
-            string archiveDirectory = Path.Combine(logDirectory, "archive");
-            string activeLogPath = Path.Combine(logDirectory, ActiveLogName);
-            var maintenanceMessages = new List<string>();
+            string logDirectory = RegenerateAssetGuid.LogDirectoryPath;
+            log.archiveDirectory = Path.Combine(logDirectory, "archive");
+            log.activeLogPath = Path.Combine(logDirectory, ActiveLogName);
 
             Directory.CreateDirectory(logDirectory);
-            RotateActiveLog(activeLogPath, archiveDirectory, maintenanceMessages);
-            TrimArchive(archiveDirectory, maintenanceMessages);
-
-            var stream = new FileStream(
-                activeLogPath,
-                FileMode.Append,
-                FileAccess.Write,
-                FileShare.ReadWrite);
-            log.writer = new StreamWriter(stream, new UTF8Encoding(false));
-            log.writer.AutoFlush = true;
+            List<string> maintenanceMessages = log.OpenWriter();
 
             log.Write("BEGIN " + operation);
-            log.Write("Log path: " + activeLogPath);
+            log.Write("Log path: " + log.activeLogPath);
             foreach (string message in maintenanceMessages)
                 log.Write(message);
         }
         catch (Exception exception)
         {
+            log.writer = null;
             Debug.LogWarning("GUID Tools could not open its diagnostic log:\n" + exception);
         }
 
         return log;
+    }
+
+    private List<string> OpenWriter()
+    {
+        var maintenanceMessages = new List<string>();
+        RotateActiveLog(activeLogPath, archiveDirectory, maintenanceMessages);
+        TrimArchive(archiveDirectory, maintenanceMessages);
+
+        var stream = new FileStream(
+            activeLogPath,
+            FileMode.Append,
+            FileAccess.Write,
+            FileShare.ReadWrite);
+        activeBytes = stream.Length;
+        writer = new StreamWriter(stream, LogEncoding);
+        writer.AutoFlush = true;
+        return maintenanceMessages;
     }
 
     internal void Write(string message)
@@ -1508,8 +1539,19 @@ internal sealed class GuidToolLog : IDisposable
 
         try
         {
-            writer.WriteLine("[" + DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture) +
-                             "] " + message);
+            string line = "[" + DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture) +
+                          "] " + message;
+            writer.WriteLine(line);
+            activeBytes += LogEncoding.GetByteCount(line) + writer.NewLine.Length;
+
+            // Enforce the limits during long runs, not only when a run starts.
+            if (activeBytes > ActiveLogLimit)
+            {
+                writer.Dispose();
+                writer = null;
+                foreach (string maintenance in OpenWriter())
+                    Write(maintenance);
+            }
         }
         catch (Exception exception)
         {

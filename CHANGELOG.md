@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.1 - 2026-10-24
+
+- GUID Tools: the reference cache no longer skips uncached files with old
+  timestamps, which could leave moved or copied references broken.
+- GUID Tools: require saved scenes and a closed Prefab Mode, and reload open
+  scenes from disk after a run or rollback.
+- GUID Tools: write logs to `Logs/RiryGuidTools`, log one line per matching file,
+  and rotate the active log during long runs.
+- GUID Tools: binary files that cannot be inspected now report the file instead
+  of naming an unrelated selected asset.
+- Clean Animation Keys: negative blendshape values and tangents that move a
+  curve between keys now keep the curve.
+- Blendshape Sync: plain ordinal name matching replaces per-call regexes; only
+  Undo/Redo of the tool's own passes stops automatic syncing.
+- Added `.meta` files for `package.json`, `README.md`, and `CHANGELOG.md`.
+- Added Edit Mode tests for Clean Animation Keys and GUID patching; Blendshape
+  Sync tests now run in a temporary scene.
+- Removed forced garbage collection after GUID runs.
+
 ## 0.3.0 - 2026-10-06
 
 - Added **Tools > Rirytools > Blendshape Sync** with expanding drag/drop child rows.

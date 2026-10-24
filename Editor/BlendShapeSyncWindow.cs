@@ -2,7 +2,6 @@
 // Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
@@ -17,6 +16,8 @@ namespace Riry.UnityWorkflow.Editor
     {
         private const double Interval = 0.5;
         private const string MenuPath = "Tools/Rirytools/Blendshape Sync";
+        private const string SyncUndoName = "Sync Blendshape Weights";
+        private const string RestoreUndoName = "Restore Original Blendshape Weights";
 
         [Serializable]
         internal sealed class ManualLink
@@ -115,7 +116,7 @@ namespace Riry.UnityWorkflow.Editor
             EditorApplication.update += EditorTick;
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
             EditorApplication.projectChanged += InvalidatePlan;
-            Undo.undoRedoPerformed += OnUndoRedo;
+            Undo.undoRedoEvent += OnUndoRedo;
         }
 
         private void OnDisable()
@@ -130,7 +131,7 @@ namespace Riry.UnityWorkflow.Editor
             EditorApplication.update -= EditorTick;
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             EditorApplication.projectChanged -= InvalidatePlan;
-            Undo.undoRedoPerformed -= OnUndoRedo;
+            Undo.undoRedoEvent -= OnUndoRedo;
             EditorApplication.delayCall -= ShowAmbiguityDialog;
             dialogPending = false;
         }
@@ -144,12 +145,22 @@ namespace Riry.UnityWorkflow.Editor
             Repaint();
         }
 
-        private void OnUndoRedo()
+        private void OnUndoRedo(in UndoRedoInfo undo)
         {
-            // Leave Undo effective: the next automatic tick must not undo the Undo.
-            runAutomatically = false;
             InvalidatePlan();
+            // Undoing another edit (for example a master weight) should simply
+            // resync. Undoing this tool's own pass must stay effective, so the
+            // next automatic tick may not reapply it.
+            if (!IsOwnUndo(undo.undoName)) return;
+            runAutomatically = false;
             result = "Automatic sync stopped after Undo/Redo.";
+        }
+
+        internal static bool IsOwnUndo(string undoName)
+        {
+            // An unnamed group cannot be identified; stop to be safe.
+            return string.IsNullOrEmpty(undoName) || undoName == SyncUndoName ||
+                undoName == RestoreUndoName;
         }
 
         private void InvalidatePlan()
@@ -508,18 +519,13 @@ namespace Riry.UnityWorkflow.Editor
 
         private static int FindUnique(string[] names, string name, bool exact)
         {
-            // Escape metacharacters and anchor the entire name: typing a name is
-            // never an arbitrary regex or a substring/prefix search.
-            RegexOptions options = RegexOptions.CultureInvariant;
-            if (!exact) options |= RegexOptions.IgnoreCase;
-            Regex pattern = exact ? null : new Regex("\\A" + Regex.Escape(name) + "\\z", options,
-                TimeSpan.FromMilliseconds(100));
+            // Whole-name literal comparison: never a pattern, substring or prefix search.
+            StringComparison comparison = exact
+                ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
             int match = -1;
             for (int i = 0; i < names.Length; i++)
             {
-                bool matches = exact ? string.Equals(names[i], name, StringComparison.Ordinal)
-                    : pattern.IsMatch(names[i]);
-                if (!matches) continue;
+                if (!string.Equals(names[i], name, comparison)) continue;
                 if (match >= 0) return -2;
                 match = i;
             }
@@ -610,7 +616,7 @@ namespace Riry.UnityWorkflow.Editor
                     }
                 }
                 int count = changes.Count;
-                ApplyChanges("Sync Blendshape Weights");
+                ApplyChanges(SyncUndoName);
                 result = "Synced " + linkCount + " links across " + plans.Count +
                     " children; " + count + " weights changed.";
             }
@@ -702,7 +708,7 @@ namespace Riry.UnityWorkflow.Editor
                         AddChange(state.Renderer, i, state.Weights[i]);
                     restored++;
                 }
-                ApplyChanges("Restore Original Blendshape Weights");
+                ApplyChanges(RestoreUndoName);
                 result = "Restored " + restored + " renderers. Automatic sync stopped.";
                 if (skipped > 0)
                     result += " Skipped " + skipped + " removed or changed renderer/mesh snapshots.";

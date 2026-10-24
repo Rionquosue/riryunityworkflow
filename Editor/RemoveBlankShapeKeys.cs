@@ -238,7 +238,7 @@ namespace Riry.UnityWorkflow.Editor
                 initiallyRemovedBindingCount);
         }
 
-        private static AnalysisResult Analyze(AnimationClip clip)
+        internal static AnalysisResult Analyze(AnimationClip clip)
         {
             AnalysisResult result = new AnalysisResult();
             Dictionary<string, CandidateGroup> groups =
@@ -378,8 +378,8 @@ namespace Riry.UnityWorkflow.Editor
             CandidateGroup candidate,
             out string reason)
         {
-            float highestPositiveValue = 0.0f;
-            bool containsPositiveValue = false;
+            float largestValue = 0.0f;
+            bool containsNonZeroValue = false;
 
             for (int curveIndex = 0;
                  curveIndex < candidate.Curves.Count;
@@ -403,20 +403,29 @@ namespace Riry.UnityWorkflow.Editor
                         return true;
                     }
 
-                    if (value > 0.0f)
+                    // Negative weights also deform the mesh.
+                    if (value != 0.0f)
                     {
-                        containsPositiveValue = true;
-                        highestPositiveValue = Mathf.Max(
-                            highestPositiveValue,
-                            value);
+                        containsNonZeroValue = true;
+                        if (Math.Abs(value) > Math.Abs(largestValue))
+                        {
+                            largestValue = value;
+                        }
                     }
+                }
+
+                if (!containsNonZeroValue && MovesBetweenKeys(keys))
+                {
+                    reason = "Keys are 0, but curve tangents move the value " +
+                        "between keys.";
+                    return true;
                 }
             }
 
-            if (containsPositiveValue)
+            if (containsNonZeroValue)
             {
-                reason = "Contains a value greater than 0 (maximum " +
-                    highestPositiveValue.ToString(
+                reason = "Contains a non-zero value (largest " +
+                    largestValue.ToString(
                         "0.###",
                         CultureInfo.InvariantCulture) + ").";
                 return true;
@@ -464,6 +473,14 @@ namespace Riry.UnityWorkflow.Editor
                 {
                     endpointChanged = true;
                 }
+
+                if (!endpointChanged && MovesBetweenKeys(keys))
+                {
+                    reason = candidate.TransformFamily +
+                        " start and finish match, but curve tangents move " +
+                        "the value between keys.";
+                    return true;
+                }
             }
 
             if (keyedTimes.Count > 2)
@@ -484,6 +501,28 @@ namespace Riry.UnityWorkflow.Editor
             }
 
             reason = null;
+            return false;
+        }
+
+        /// <summary>
+        /// True when a tangent bends the curve away from its key values inside
+        /// the clip. Infinite tangents are stepped and hold the key value; the
+        /// first key's in-tangent and last key's out-tangent are never evaluated.
+        /// </summary>
+        private static bool MovesBetweenKeys(Keyframe[] keys)
+        {
+            for (int i = 0; i < keys.Length - 1; i++)
+            {
+                float outTangent = keys[i].outTangent;
+                float inTangent = keys[i + 1].inTangent;
+
+                if ((IsFinite(outTangent) && outTangent != 0.0f) ||
+                    (IsFinite(inTangent) && inTangent != 0.0f))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
