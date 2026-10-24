@@ -50,6 +50,15 @@ enabled.
 
 Imported and read-only clips are never edited. Changes support Unity Undo.
 
+## Import Presets
+
+Right-click a folder (or empty space in it) and choose **Rirytools > Import
+Preset...** to pick a configuration from `Documents/UnityTools/ImportPresets`.
+New files in that folder and its subfolders then get those import settings on
+their first import; reimports and hand-edited settings are never changed. Save
+presets from any asset with **Rirytools > Save Import Settings to Preset
+Library...**. See [usage, rules, and limits](Documentation~/import-presets.md).
+
 ## Constraint Train
 
 Requires the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > Rirytools >

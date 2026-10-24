@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 - 2026-10-24
+
+- Added folder import presets: `ImportPreset.md` names a configuration from the
+  shared `Documents/UnityTools/ImportPresets` library, and new files in that
+  folder and its subfolders get its import settings on first import.
+- Added **Rirytools > Import Preset...** for folders and empty Project window
+  space, and **Rirytools > Save Import Settings to Preset Library...** for assets.
+- Hand-edited `ImportPreset.md` files and existing import settings are never
+  changed; applying to existing files is opt-in.
+- Added import preset tests, including an end-to-end texture import.
+
 ## 0.4.0 - 2026-10-24
 
 - Added **Tools > Rirytools > Constraint Train** (VRChat Avatars SDK 3.7.0+):
