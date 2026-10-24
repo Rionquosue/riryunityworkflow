@@ -9,6 +9,15 @@
   space, and **Rirytools > Save Import Settings to Preset Library...** for assets.
 - Hand-edited `ImportPreset.md` files and existing import settings are never
   changed; applying to existing files is opt-in.
+- `ImportPreset.md` sets a configuration, or one named preset, per file type,
+  with `none` to opt a type out.
+- `animations:` imports models as Generic first, copies every clip to
+  `Animations/`, then applies the model's preset (for example Humanoid).
+  **Rirytools > Extract Animations (Generic)** does this for existing models.
+- `betterfbx: blend` exports `.blend` files to FBX through Blender and the Better
+  FBX add-on; the FBX then follows the folder's FBX rules.
+- Exported FBX files and extracted clips are replaced only while unchanged since
+  the tool wrote them.
 - Added import preset tests, including an end-to-end texture import.
 
 ## 0.4.0 - 2026-10-24

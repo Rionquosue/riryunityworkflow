@@ -53,11 +53,13 @@ Imported and read-only clips are never edited. Changes support Unity Undo.
 ## Import Presets
 
 Right-click a folder (or empty space in it) and choose **Rirytools > Import
-Preset...** to pick a configuration from `Documents/UnityTools/ImportPresets`.
-New files in that folder and its subfolders then get those import settings on
-their first import; reimports and hand-edited settings are never changed. Save
-presets from any asset with **Rirytools > Save Import Settings to Preset
-Library...**. See [usage, rules, and limits](Documentation~/import-presets.md).
+Preset...** to set presets per file type (fbx, obj, png, tga, blend...) from
+`Documents/UnityTools/ImportPresets`. New files in that folder and its
+subfolders get them on their first import; reimports and hand-edited settings
+are never changed. Models can have their animations extracted to `Animations/`
+as Generic clips before a Humanoid preset applies, and `.blend` files can be
+exported with the Better FBX Blender add-on. Save presets from any asset with
+**Rirytools > Save Import Settings to Preset Library...**. See [usage, rules, and limits](Documentation~/import-presets.md).
 
 ## Constraint Train
 

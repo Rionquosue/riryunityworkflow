@@ -31,31 +31,109 @@ namespace Riry.UnityWorkflow.Editor.Tests
         [Test]
         public void GeneratedMarkerRoundTripsAndSurvivesLineEndings()
         {
-            string marker = ImportPresetMarker.Generate("Textures");
-            Assert.That(ImportPresetMarker.Parse(marker), Is.EqualTo("Textures"));
+            ImportPresetMarker.Rules rules = Example();
+            string marker = ImportPresetMarker.Generate(rules);
+            ImportPresetMarker.Rules parsed = ImportPresetMarker.Parse(marker);
+            Assert.That(parsed.DefaultConfiguration, Is.EqualTo("Textures"));
+            Assert.That(parsed.TypeRules.Count, Is.EqualTo(3));
+            Assert.That(parsed.ExtractAnimations, Is.EqualTo(new[] { "fbx" }));
+            Assert.That(parsed.BetterFbx, Is.EqualTo(new[] { "blend" }));
+            Assert.That(ImportPresetMarker.Generate(parsed), Is.EqualTo(marker));
             Assert.That(ImportPresetMarker.IsGenerated(marker), Is.True);
             // Git may check the file out with CRLF line endings.
             Assert.That(ImportPresetMarker.IsGenerated(marker.Replace("\n", "\r\n")), Is.True);
         }
 
         [Test]
-        public void HandEditedMarkerIsNotTreatedAsGenerated()
+        public void EachFileTypeGetsItsOwnTarget()
         {
-            string marker = ImportPresetMarker.Generate("Textures");
-            Assert.That(ImportPresetMarker.IsGenerated(marker + "My own note.\n"), Is.False);
-            Assert.That(ImportPresetMarker.IsGenerated(marker.Replace("Textures", "Models")), Is.True,
-                "Only the tool's own text counts, whatever name it holds.");
-            Assert.That(ImportPresetMarker.IsGenerated("preset: Textures"), Is.False);
+            ImportPresetMarker.Rules rules = ImportPresetMarker.Parse(ImportPresetMarker.Generate(Example()));
+            ImportPresetMarker.Target fbx = rules.For(".FBX");
+            Assert.That(fbx.Configuration, Is.EqualTo("Avatar"));
+            Assert.That(fbx.Preset, Is.Null);
+            ImportPresetMarker.Target png = rules.For("png");
+            Assert.That(png.Configuration, Is.EqualTo("Textures"));
+            Assert.That(png.Preset, Is.EqualTo("Texture png"));
+            Assert.That(rules.For("blend").Configuration, Is.Null, "none disables presets for the type");
+            Assert.That(rules.For("wav").Configuration, Is.EqualTo("Textures"), "unlisted types use the default");
         }
 
         [Test]
-        public void HandwrittenPresetLinesAreParsed()
+        public void HandEditedMarkerIsNotTreatedAsGenerated()
         {
-            Assert.That(ImportPresetMarker.Parse("Notes\npreset: `Textures`\n"), Is.EqualTo("Textures"));
-            Assert.That(ImportPresetMarker.Parse("  Preset :  My Set  \r\n"), Is.EqualTo("My Set"));
-            Assert.That(ImportPresetMarker.Parse("**preset**: Textures"), Is.Null);
-            Assert.That(ImportPresetMarker.Parse("preset:   \n"), Is.Null);
-            Assert.That(ImportPresetMarker.Parse(""), Is.Null);
+            string marker = ImportPresetMarker.Generate(Example());
+            Assert.That(ImportPresetMarker.IsGenerated(marker + "My own note.\n"), Is.False);
+            Assert.That(ImportPresetMarker.IsGenerated(marker.Replace("# Import preset", "# Character imports")), Is.False);
+            // Rules alone do not make a file hand-made: tool-shaped text with other rules is still the tool's.
+            Assert.That(ImportPresetMarker.IsGenerated(marker.Replace("fbx, obj: Avatar", "obj, fbx: Avatar")), Is.True);
+            Assert.That(ImportPresetMarker.IsGenerated("preset: Textures"), Is.False);
+            Assert.That(ImportPresetMarker.IsGenerated(""), Is.False);
+        }
+
+        [Test]
+        public void HandwrittenLinesAreParsedAndProseIsIgnored()
+        {
+            ImportPresetMarker.Rules rules = ImportPresetMarker.Parse(
+                "# My textures\n" +
+                "Some notes - with: a colon in prose\n" +
+                "- `preset`: a list item is ignored\n" +
+                "<!-- png: Hidden\n jpg: AlsoHidden -->\n" +
+                "  Preset :  `My Set`  \r\n" +
+                "PNG, .TGA : Textures/Texture png.preset\n" +
+                "jpg: none\n" +
+                "animations: FBX, obj\n");
+            Assert.That(rules.DefaultConfiguration, Is.EqualTo("My Set"));
+            Assert.That(rules.For("tga").Preset, Is.EqualTo("Texture png"));
+            Assert.That(rules.For("jpg").Configuration, Is.Null);
+            Assert.That(rules.ExtractAnimations, Is.EqualTo(new[] { "fbx", "obj" }));
+            Assert.That(rules.TypeRules.Count, Is.EqualTo(2), "prose, list items and comments add no rules");
+            Assert.That(ImportPresetMarker.Parse("**preset**: Textures").IsEmpty, Is.True);
+            Assert.That(ImportPresetMarker.Parse("preset:   \n").IsEmpty, Is.True);
+        }
+
+        [Test]
+        public void ExporterHelpersQuoteArgumentsAndValidateOptions()
+        {
+            Assert.That(BetterFbxExporter.QuoteArgument("plain"), Is.EqualTo("plain"));
+            Assert.That(BetterFbxExporter.QuoteArgument(""), Is.EqualTo("\"\""));
+            Assert.That(BetterFbxExporter.QuoteArgument(@"C:\Blender Foundation\"), Is.EqualTo("\"C:\\Blender Foundation\\\\\""));
+            Assert.That(BetterFbxExporter.QuoteArgument("a \"b\""), Is.EqualTo("\"a \\\"b\\\"\""));
+            Assert.That(BetterFbxExporter.OptionsError("use_selection=False, scale=1.5, name='x y'"), Is.Null);
+            Assert.That(BetterFbxExporter.OptionsError("a=__import__('os').system('x')"), Is.Not.Null);
+            Assert.That(BetterFbxExporter.FbxPathFor("Assets/Models/Rig.blend"), Is.EqualTo("Assets/Models/Rig.fbx"));
+            var folders = new List<string> { "Blender 4.10", "Blender 3.6", "Blender 4.2" };
+            folders.Sort(BetterFbxExporter.CompareVersionFolders);
+            Assert.That(folders, Is.EqualTo(new[] { "Blender 3.6", "Blender 4.2", "Blender 4.10" }));
+        }
+
+        [Test]
+        public void ClipFileNamesAreSafeAndUnique()
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Assert.That(ImportPresetAnimations.ClipFileName("Rig", "Armature|Walk", used), Is.EqualTo("Rig_Armature_Walk.anim"));
+            Assert.That(ImportPresetAnimations.ClipFileName("Rig", "Armature:Walk", used), Is.EqualTo("Rig_Armature_Walk_2.anim"));
+            Assert.That(ImportPresetAnimations.ClipFileName("Rig", "...", used), Is.EqualTo("Rig_Clip.anim"));
+        }
+
+        [Test]
+        public void OwnedFilesAreReplacedOnlyWhileUnchanged()
+        {
+            Directory.CreateDirectory(library);
+            ImportPresetOwnedFiles.StorePathOverride = Path.Combine(library, "owned.txt");
+            try
+            {
+                string file = Path.Combine(library, "Clip.anim");
+                File.WriteAllText(file, "first");
+                Assert.That(ImportPresetOwnedFiles.IsUnchanged(file), Is.False, "never written by the tool");
+                ImportPresetOwnedFiles.Record(file);
+                Assert.That(ImportPresetOwnedFiles.IsUnchanged(file), Is.True);
+                File.WriteAllText(file, "edited by hand");
+                Assert.That(ImportPresetOwnedFiles.IsUnchanged(file), Is.False);
+            }
+            finally
+            {
+                ImportPresetOwnedFiles.StorePathOverride = null;
+            }
         }
 
         [Test]
@@ -168,7 +246,10 @@ namespace Riry.UnityWorkflow.Editor.Tests
             string error;
             Assert.That(ImportPresetLibrary.ReadConfig(configuration, out error).rules.Count, Is.EqualTo(1));
 
-            File.WriteAllText(ImportPresetMarker.PathIn(assetFolder), ImportPresetMarker.Generate("Test"));
+            var rules = new ImportPresetMarker.Rules();
+            rules.TypeRules.Add(new ImportPresetMarker.TypeRule
+                { Extensions = new List<string> { "png" }, Configuration = "Test", Preset = "Texture png" });
+            File.WriteAllText(ImportPresetMarker.PathIn(assetFolder), ImportPresetMarker.Generate(rules));
             AssetDatabase.ImportAsset(ImportPresetMarker.PathIn(assetFolder));
             Directory.CreateDirectory(assetFolder + "/Sub");
             AssetDatabase.Refresh();
@@ -183,6 +264,19 @@ namespace Riry.UnityWorkflow.Editor.Tests
             AssetDatabase.ImportAsset(fresh, ImportAssetOptions.ForceUpdate);
             importer = (TextureImporter)AssetImporter.GetAtPath(fresh);
             Assert.That(importer.maxTextureSize, Is.EqualTo(128), "A reimport keeps manual changes.");
+        }
+
+        private static ImportPresetMarker.Rules Example()
+        {
+            var rules = new ImportPresetMarker.Rules { DefaultConfiguration = "Textures" };
+            rules.TypeRules.Add(new ImportPresetMarker.TypeRule
+                { Extensions = new List<string> { "fbx", "obj" }, Configuration = "Avatar" });
+            rules.TypeRules.Add(new ImportPresetMarker.TypeRule
+                { Extensions = new List<string> { "png", "tga" }, Configuration = "Textures", Preset = "Texture png" });
+            rules.TypeRules.Add(new ImportPresetMarker.TypeRule { Extensions = new List<string> { "blend" } });
+            rules.ExtractAnimations.Add("fbx");
+            rules.BetterFbx.Add("blend");
+            return rules;
         }
 
         private static string WritePng(string path)

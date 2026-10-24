@@ -240,10 +240,12 @@ namespace Riry.UnityWorkflow.Editor
         }
 
         /// <summary>
-        /// Applies the first preset of a configuration that suits this importer.
-        /// Returns false, without changes, when none does.
+        /// Applies one named preset of a configuration, or with presetName null,
+        /// the first of its presets that suits this importer. Returns false,
+        /// without changes, when none does.
         /// </summary>
-        internal static bool TryApply(AssetImporter importer, string configuration, out string applied)
+        internal static bool TryApply(AssetImporter importer, string configuration, string presetName,
+            out string applied)
         {
             applied = null;
             string path = ConfigurationPath(configuration);
@@ -253,12 +255,29 @@ namespace Riry.UnityWorkflow.Editor
                     "' was not found in " + RootPath + ".");
                 return false;
             }
-            string error;
-            Config config = ReadConfig(path, out error);
-            if (error != null) ReportOnce("config:" + path, error);
-
             string extension = Path.GetExtension(importer.assetPath);
-            foreach (Candidate candidate in OrderedPresets(extension, config, PresetFiles(path)))
+            List<string> files = PresetFiles(path);
+            List<Candidate> candidates;
+            if (presetName != null)
+            {
+                string file = FindFile(files, presetName);
+                if (file == null)
+                {
+                    ReportOnce("missing:" + configuration + "/" + presetName, "Import preset '" + presetName +
+                        "' was not found in configuration '" + configuration + "'.");
+                    return false;
+                }
+                candidates = new List<Candidate> { new Candidate { File = file, FromRule = true } };
+            }
+            else
+            {
+                string error;
+                Config config = ReadConfig(path, out error);
+                if (error != null) ReportOnce("config:" + path, error);
+                candidates = OrderedPresets(extension, config, files);
+            }
+
+            foreach (Candidate candidate in candidates)
             {
                 Preset preset = LoadPreset(Path.Combine(path, candidate.File));
                 if (preset == null) continue;
