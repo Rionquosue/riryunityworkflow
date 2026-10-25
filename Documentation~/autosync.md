@@ -39,7 +39,14 @@ Templates are `<name>.gitignore` and `<name>.gitattributes` files in
 `gameproject.gitattributes`. **Save** in the window stores the project's
 current files under a name. Without any templates, GitHub's
 [Unity.gitignore](https://github.com/github/gitignore/blob/main/Unity.gitignore)
-is downloaded as `Unity`, and a built-in LFS template is added as `UnityLFS`.
+and the gitattributes project's
+[Unity.gitattributes](https://github.com/gitattributes/gitattributes/blob/master/Unity.gitattributes)
+are downloaded as `Unity`, and a built-in LFS template is added as `UnityLFS`.
+
+Git reads `[attr]` macros (such as `lfs` in Unity.gitattributes) only from the
+repository's top-level `.gitattributes`. When the Unity project is in a
+subfolder of the repository, the macros are expanded as the template is copied,
+so its LFS rules still apply.
 
 When the project has no repository, Unity offers Configure Sync once per
 session (or never, after **Don't Ask Again**).

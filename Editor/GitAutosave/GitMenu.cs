@@ -276,6 +276,9 @@ namespace Riry.UnityWorkflow.Editor
         {
             if (option == KeepCurrent) return;
             string text = File.ReadAllText(GitTemplates.PathFor(option, extension));
+            // Macros such as "lfs" only work in the repository's top-level .gitattributes.
+            if (extension == GitTemplates.AttributesExtension && !IsRepositoryRoot(RegenerateAssetGuid.ProjectRootPath))
+                text = GitTemplates.ExpandMacros(text);
             if (File.Exists(ProjectFile(extension)) && File.ReadAllText(ProjectFile(extension)) != text &&
                 !EditorUtility.DisplayDialog("Configure Sync", "Replace the project's " + extension + " with " + option + extension + "?",
                     "Replace", "Keep Current"))
@@ -315,6 +318,11 @@ namespace Riry.UnityWorkflow.Editor
         {
             if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
         }
+
+        private static bool IsRepositoryRoot(string directory)
+        {
+            return GitRunner.Run(directory, null, 10000, "rev-parse", "--show-prefix").Output.Trim().Length == 0;
+        }
     }
 
     internal sealed class GitHelpWindow : EditorWindow
@@ -353,7 +361,8 @@ namespace Riry.UnityWorkflow.Editor
                 "LFS_ALLOW_PURE_SSH = true under [server] in app.ini; otherwise LFS falls back to HTTPS.");
             Section("Templates",
                 "Templates live in " + ImportPresetLibrary.RootPath + " as <name>.gitignore and <name>.gitattributes, for example " +
-                "vrcproject.gitignore. Without any, GitHub's Unity.gitignore is downloaded and a built-in LFS template is added.");
+                "vrcproject.gitignore. Without any, GitHub's Unity.gitignore and the gitattributes project's Unity.gitattributes " +
+                "are downloaded, and a built-in LFS template is added.");
             if (GUILayout.Button("Download Git (git-scm.com)", GUILayout.Height(26f)))
                 Application.OpenURL(GitNotInstalledException.DownloadUrl);
             if (GUILayout.Button("Open Template Folder"))

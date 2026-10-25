@@ -72,6 +72,8 @@ namespace Riry.UnityWorkflow.Editor
         internal const string IgnoreExtension = ".gitignore";
         internal const string AttributesExtension = ".gitattributes";
         internal const string UnityIgnoreUrl = "https://raw.githubusercontent.com/github/gitignore/main/Unity.gitignore";
+        internal const string UnityAttributesUrl =
+            "https://raw.githubusercontent.com/gitattributes/gitattributes/master/Unity.gitattributes";
 
         // Used when the library has no attributes template. Unity YAML stays
         // text; large binary formats go to Git LFS.
@@ -127,13 +129,53 @@ namespace Riry.UnityWorkflow.Editor
         }
 
         /// <summary>
-        /// With no templates, saves GitHub's Unity.gitignore as "Unity" and the
-        /// built-in LFS attributes as "UnityLFS", so there is always a choice.
+        /// With no templates, saves GitHub's Unity.gitignore as "Unity", and the
+        /// gitattributes project's Unity.gitattributes as "Unity" beside the built-in
+        /// "UnityLFS", so there is always a choice. The built-in template is saved
+        /// even when the download fails.
         /// </summary>
         internal static void EnsureDefaults()
         {
             if (Names(IgnoreExtension).Count == 0) Save("Unity", IgnoreExtension, Download(UnityIgnoreUrl));
-            if (Names(AttributesExtension).Count == 0) Save("UnityLFS", AttributesExtension, DefaultAttributes);
+            if (Names(AttributesExtension).Count > 0) return;
+            Save("UnityLFS", AttributesExtension, DefaultAttributes);
+            Save("Unity", AttributesExtension, Download(UnityAttributesUrl));
+        }
+
+        /// <summary>
+        /// Replaces [attr] macros (such as "lfs") with what they stand for. Git only
+        /// reads macros from the repository's top-level .gitattributes, so a template
+        /// written to a project in a subfolder needs them expanded to take effect.
+        /// </summary>
+        internal static string ExpandMacros(string text)
+        {
+            var macros = new Dictionary<string, string>(StringComparer.Ordinal);
+            var result = new StringBuilder();
+            foreach (string line in text.Replace("\r\n", "\n").Split('\n'))
+            {
+                string trimmed = line.Trim();
+                if (trimmed.StartsWith("[attr]", StringComparison.Ordinal))
+                {
+                    string[] definition = trimmed.Substring(6).Split((char[])null, 2, StringSplitOptions.RemoveEmptyEntries);
+                    if (definition.Length == 2) macros[definition[0]] = definition[1].Trim();
+                    result.Append("# ").Append(line).Append('\n');
+                    continue;
+                }
+                if (trimmed.Length == 0 || trimmed.StartsWith("#", StringComparison.Ordinal))
+                {
+                    result.Append(line).Append('\n');
+                    continue;
+                }
+                string[] fields = trimmed.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+                result.Append(fields[0]);
+                for (int i = 1; i < fields.Length; i++)
+                {
+                    string expansion;
+                    result.Append(' ').Append(macros.TryGetValue(fields[i], out expansion) ? expansion : fields[i]);
+                }
+                result.Append('\n');
+            }
+            return result.ToString().TrimEnd('\n') + "\n";
         }
 
         private static string Download(string url)

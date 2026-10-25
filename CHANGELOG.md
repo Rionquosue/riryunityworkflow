@@ -10,7 +10,9 @@
   pushes it. The checked-out branch and staged changes are never touched.
 - **Configure Sync** creates the repository from named `.gitignore` and
   `.gitattributes` templates kept with the import presets (GitHub's
-  Unity.gitignore and a built-in LFS template when there are none), enables Git
+  Unity.gitignore, the gitattributes project's Unity.gitattributes and a built-in
+  LFS template when there are none; attribute macros are expanded for projects in
+  a repository subfolder), enables Git
   LFS, lists large files LFS does not store, tests an LFS upload, and warns that
   HTTPS remotes behind Cloudflare must use SSH instead.
 - Git actions throw `GitNotInstalledException` when Git is missing.

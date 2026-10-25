@@ -157,6 +157,23 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(GitLfs.Check(project, null).NotTracked, Is.Empty);
         }
 
+        [Test]
+        public void AttributeMacrosExpandForSubfolderProjects()
+        {
+            string template = "# Macros\n[attr]lfs   filter=lfs diff=lfs merge=lfs -text\n" +
+                "[attr]unity-yaml merge=unityyamlmerge eol=lf\n\n*.png    lfs\r\n*.unity  unity-yaml\n*.cs text diff=csharp\n";
+            Assert.That(GitTemplates.ExpandMacros(template), Is.EqualTo(
+                "# Macros\n# [attr]lfs   filter=lfs diff=lfs merge=lfs -text\n# [attr]unity-yaml merge=unityyamlmerge eol=lf\n\n" +
+                "*.png filter=lfs diff=lfs merge=lfs -text\n*.unity merge=unityyamlmerge eol=lf\n*.cs text diff=csharp\n"));
+
+            // Git ignores macros outside the top-level file; the expanded rules still apply.
+            string repo = NewRepository();
+            File.WriteAllText(Path.Combine(repo, "Game", ".gitattributes"), template);
+            StringAssert.Contains("filter: unspecified", Git(repo, "check-attr", "filter", "--", "Game/a.png"));
+            File.WriteAllText(Path.Combine(repo, "Game", ".gitattributes"), GitTemplates.ExpandMacros(template));
+            StringAssert.Contains("filter: lfs", Git(repo, "check-attr", "filter", "--", "Game/a.png"));
+        }
+
         private string NewRepository()
         {
             root = Path.Combine(Path.GetTempPath(), "riry-autosave-" + Guid.NewGuid().ToString("N"));
