@@ -20,10 +20,15 @@ to Git and its credential manager.
 
 ## Configure Sync
 
+The repository is always the whole project folder: `.git` sits beside `Assets`,
+`Library`, `Packages`, `ProjectSettings` and the `.csproj` files. A project that
+only sits inside a repository higher up does not count; AutoSync refuses it and
+Configure Sync creates a separate repository in the project folder.
+
 Pick a `.gitignore` and a `.gitattributes` template, then **Apply**:
 
-1. A repository is created in the project folder if there is none.
-2. The chosen templates are copied to the project folder. A different existing
+1. `.git` is created in the project folder if it is not a repository yet.
+2. The chosen templates are copied to the top of the project folder. A different existing
    file is replaced only after confirmation.
 3. Git LFS is enabled for the repository (`git lfs install --local`).
 4. An optional remote URL is added.
@@ -42,11 +47,6 @@ current files under a name. Without any templates, GitHub's
 and the gitattributes project's
 [Unity.gitattributes](https://github.com/gitattributes/gitattributes/blob/master/Unity.gitattributes)
 are downloaded as `Unity`, and a built-in LFS template is added as `UnityLFS`.
-
-Git reads `[attr]` macros (such as `lfs` in Unity.gitattributes) only from the
-repository's top-level `.gitattributes`. When the Unity project is in a
-subfolder of the repository, the macros are expanded as the template is copied,
-so its LFS rules still apply.
 
 When the project has no repository, Unity offers Configure Sync once per
 session (or never, after **Don't Ask Again**).

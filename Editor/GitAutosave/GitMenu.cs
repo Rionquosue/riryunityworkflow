@@ -23,7 +23,7 @@ namespace Riry.UnityWorkflow.Editor
             SessionState.SetBool(DontAskKey, true);
             EditorApplication.delayCall += () =>
             {
-                if (!GitState.GitInstalled || GitState.RepositoryRoot != null) return;
+                if (!GitState.GitInstalled || GitState.RepositoryExists) return;
                 int choice = EditorUtility.DisplayDialogComplex("AutoSync",
                     "This project is not in a Git repository, so scenes and prefabs are not backed up.\n\n" +
                     "Set up a repository with a .gitignore and Git LFS now?", "Configure Sync...", "Not Now", "Don't Ask Again");
@@ -41,7 +41,7 @@ namespace Riry.UnityWorkflow.Editor
                 if (enable)
                 {
                     GitState.RequireGit();
-                    if (GitState.RepositoryRoot == null)
+                    if (!GitState.RepositoryExists)
                     {
                         if (EditorUtility.DisplayDialog("AutoSync", "AutoSync needs a Git repository. Configure one now?",
                                 "Configure Sync...", "Cancel"))
@@ -67,7 +67,7 @@ namespace Riry.UnityWorkflow.Editor
             Guard(() =>
             {
                 GitState.RequireGit();
-                if (GitState.RepositoryRoot == null) throw new InvalidOperationException(
+                if (!GitState.RepositoryExists) throw new InvalidOperationException(
                     "The project is not in a Git repository. Use GIT > Configure Sync... first.");
                 GitAutosave.ScheduleNow();
             });
@@ -94,7 +94,7 @@ namespace Riry.UnityWorkflow.Editor
         [MenuItem("GIT/Configure Sync...", true)]
         private static bool ValidateConfigureSync()
         {
-            return !GitState.GitInstalled || GitState.RepositoryRoot == null || !GitState.HasRemote;
+            return !GitState.GitInstalled || !GitState.RepositoryExists || !GitState.HasRemote;
         }
 
         [MenuItem("GIT/AutoSync Settings...", false, 41)]
@@ -197,8 +197,13 @@ namespace Riry.UnityWorkflow.Editor
         private void OnGUI()
         {
             scroll = EditorGUILayout.BeginScrollView(scroll);
-            EditorGUILayout.LabelField("Repository", GitState.RepositoryRoot ?? "None. One is created in the project folder.",
-                EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField("Repository", GitState.RepositoryExists
+                ? RegenerateAssetGuid.ProjectRootPath
+                : "None. Apply creates .git in the project folder.", EditorStyles.wordWrappedLabel);
+            if (GitState.EnclosingRepository != null)
+                EditorGUILayout.HelpBox("The project is inside the repository at " + GitState.EnclosingRepository +
+                    ". The repository must be the project folder itself, so Apply creates a separate one here; " +
+                    "the outer repository will see this folder as an embedded repository.", MessageType.Warning);
             EditorGUILayout.LabelField("Remote", GitState.HasRemote ? currentRemoteUrl : "None (local backups only)",
                 EditorStyles.wordWrappedLabel);
 
@@ -251,14 +256,14 @@ namespace Riry.UnityWorkflow.Editor
         {
             GitState.RequireGit();
             string project = RegenerateAssetGuid.ProjectRootPath;
-            if (GitState.RepositoryRoot == null)
+            if (!GitState.RepositoryExists)
             {
                 Check(GitRunner.Run(project, null, 30000, "init"), "Creating the repository");
                 Check(GitRunner.Run(project, null, 30000, "symbolic-ref", "HEAD", "refs/heads/" + GitAutosave.BaseBranch),
                     "Naming the first branch");
             }
 
-            // Written to the project folder: the templates' paths (/Library and so on) are relative to it.
+            // The project folder is the repository's top folder, so these are its top-level files.
             if (ignoreOptions.Length > 0) CopyTemplate(ignoreOptions[ignoreChoice], GitTemplates.IgnoreExtension);
             if (attributeOptions.Length > 0) CopyTemplate(attributeOptions[attributeChoice], GitTemplates.AttributesExtension);
 
@@ -276,9 +281,6 @@ namespace Riry.UnityWorkflow.Editor
         {
             if (option == KeepCurrent) return;
             string text = File.ReadAllText(GitTemplates.PathFor(option, extension));
-            // Macros such as "lfs" only work in the repository's top-level .gitattributes.
-            if (extension == GitTemplates.AttributesExtension && !IsRepositoryRoot(RegenerateAssetGuid.ProjectRootPath))
-                text = GitTemplates.ExpandMacros(text);
             if (File.Exists(ProjectFile(extension)) && File.ReadAllText(ProjectFile(extension)) != text &&
                 !EditorUtility.DisplayDialog("Configure Sync", "Replace the project's " + extension + " with " + option + extension + "?",
                     "Replace", "Keep Current"))
@@ -317,11 +319,6 @@ namespace Riry.UnityWorkflow.Editor
         private static void Check(GitRunner.Result result, string action)
         {
             if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
-        }
-
-        private static bool IsRepositoryRoot(string directory)
-        {
-            return GitRunner.Run(directory, null, 10000, "rev-parse", "--show-prefix").Output.Trim().Length == 0;
         }
     }
 

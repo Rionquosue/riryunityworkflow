@@ -11,10 +11,11 @@
 - **Configure Sync** creates the repository from named `.gitignore` and
   `.gitattributes` templates kept with the import presets (GitHub's
   Unity.gitignore, the gitattributes project's Unity.gitattributes and a built-in
-  LFS template when there are none; attribute macros are expanded for projects in
-  a repository subfolder), enables Git
+  LFS template when there are none), enables Git
   LFS, lists large files LFS does not store, tests an LFS upload, and warns that
   HTTPS remotes behind Cloudflare must use SSH instead.
+- The repository is always the whole project folder; a project inside another
+  repository is refused until Configure Sync creates one in the project folder.
 - Git actions throw `GitNotInstalledException` when Git is missing.
 - Added a GitHub Actions workflow that keeps AutoSync branches rebased on the
   base branch; AutoSync versions win conflicts.

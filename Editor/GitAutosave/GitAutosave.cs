@@ -49,7 +49,7 @@ namespace Riry.UnityWorkflow.Editor
         /// <summary>On by default once the project is in a Git repository.</summary>
         internal static bool Enabled
         {
-            get { return Get("Enabled", GitState.RepositoryRoot != null ? "1" : "0") == "1"; }
+            get { return Get("Enabled", GitState.RepositoryExists ? "1" : "0") == "1"; }
             set { Set("Enabled", value ? "1" : "0"); }
         }
 
@@ -224,10 +224,11 @@ namespace Riry.UnityWorkflow.Editor
         {
             var template = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(WorkflowTemplateGuid));
             if (template == null) throw new FileNotFoundException("The rebase workflow template is missing from the package.");
-            GitRunner.Result top = GitRunner.Run(RegenerateAssetGuid.ProjectRootPath, null, 30000, "rev-parse", "--show-toplevel");
-            if (!top.Succeeded) throw new InvalidOperationException(top.Describe("Locating the Git repository"));
+            GitState.Refresh(true);
+            if (!GitState.RepositoryExists)
+                throw new InvalidOperationException("The project folder is not a Git repository. Use GIT > Configure Sync... first.");
 
-            string path = Path.Combine(top.Output.Trim(), ".github", "workflows", WorkflowFileName);
+            string path = Path.Combine(RegenerateAssetGuid.ProjectRootPath, ".github", "workflows", WorkflowFileName);
             string text = WorkflowText(template.text.Replace("\r\n", "\n"), BaseBranch, Branch);
             if (File.Exists(path) && File.ReadAllText(path) != text && !mayReplace(path)) return null;
             Directory.CreateDirectory(Path.GetDirectoryName(path));

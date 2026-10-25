@@ -70,9 +70,15 @@ namespace Riry.UnityWorkflow.Editor
 
         internal void Open()
         {
-            GitRunner.Result top = GitRunner.Run(ProjectRoot, null, TimeoutMs, "rev-parse", "--show-toplevel");
-            if (!top.Succeeded) throw new InvalidOperationException("The project is not inside a Git repository.");
-            repoRoot = top.Output.Trim();
+            string[] location = GitState.Location(ProjectRoot);
+            if (location == null)
+                throw new InvalidOperationException("The project folder is not a Git repository. Use GIT > Configure Sync... to create one.");
+            // The repository is always the whole project folder, never a folder above it.
+            if (location[1].Length > 0)
+                throw new InvalidOperationException("The Git repository must be the project folder itself (" + ProjectRoot +
+                    "), but the project is inside the repository at " + location[0] +
+                    ". Use GIT > Configure Sync... to create one in the project folder.");
+            repoRoot = ProjectRoot;
             Directory.CreateDirectory(StateFolder);
 
             environment["GIT_INDEX_FILE"] = Path.Combine(StateFolder, "index");

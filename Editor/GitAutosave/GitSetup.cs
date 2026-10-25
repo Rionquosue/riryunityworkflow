@@ -10,13 +10,19 @@ using UnityEngine.Networking;
 
 namespace Riry.UnityWorkflow.Editor
 {
-    /// <summary>Whether git is installed and the project is in a repository with a remote, cached for a few seconds.</summary>
+    /// <summary>
+    /// Whether git is installed and the project folder is a repository with a
+    /// remote, cached for a few seconds. The repository is always the project
+    /// folder itself (with .git beside Assets); a project that only sits inside
+    /// another repository does not count.
+    /// </summary>
     internal static class GitState
     {
         private const double CacheSeconds = 5.0;
         private static double checkedAt = double.MinValue;
         private static bool installed;
-        private static string repositoryRoot;
+        private static bool repositoryExists;
+        private static string enclosingRepository;
         private static bool hasRemote;
 
         internal static bool GitInstalled
@@ -24,10 +30,16 @@ namespace Riry.UnityWorkflow.Editor
             get { Refresh(false); return installed; }
         }
 
-        /// <summary>The repository's top folder, or null when the project is not in one.</summary>
-        internal static string RepositoryRoot
+        /// <summary>True when the project folder is the top folder of a repository.</summary>
+        internal static bool RepositoryExists
         {
-            get { Refresh(false); return repositoryRoot; }
+            get { Refresh(false); return repositoryExists; }
+        }
+
+        /// <summary>A repository above the project folder that contains it, or null.</summary>
+        internal static string EnclosingRepository
+        {
+            get { Refresh(false); return enclosingRepository; }
         }
 
         internal static bool HasRemote
@@ -43,16 +55,30 @@ namespace Riry.UnityWorkflow.Editor
             try
             {
                 installed = GitRunner.Run(project, null, 10000, "--version").Succeeded;
-                GitRunner.Result top = GitRunner.Run(project, null, 10000, "rev-parse", "--show-toplevel");
-                repositoryRoot = top.Succeeded ? top.Output.Trim() : null;
-                hasRemote = repositoryRoot != null && GitRunner.Run(project, null, 10000, "remote").Output.Trim().Length > 0;
+                string[] location = Location(project);
+                repositoryExists = location != null && location[1].Length == 0;
+                enclosingRepository = location != null && !repositoryExists ? location[0] : null;
+                hasRemote = repositoryExists && GitRunner.Run(project, null, 10000, "remote").Output.Trim().Length > 0;
             }
             catch (GitNotInstalledException)
             {
                 installed = false;
-                repositoryRoot = null;
+                repositoryExists = false;
+                enclosingRepository = null;
                 hasRemote = false;
             }
+        }
+
+        /// <summary>
+        /// The repository's top folder and the directory's path inside it ("" at the
+        /// top), or null outside any repository.
+        /// </summary>
+        internal static string[] Location(string directory)
+        {
+            GitRunner.Result result = GitRunner.Run(directory, null, 10000, "rev-parse", "--show-toplevel", "--show-prefix");
+            if (!result.Succeeded) return null;
+            string[] lines = result.Output.Replace("\r", "").Split('\n');
+            return new[] { lines[0].Trim(), lines.Length > 1 ? lines[1].Trim() : "" };
         }
 
         /// <summary>Throws GitNotInstalledException when git is missing.</summary>
@@ -140,42 +166,6 @@ namespace Riry.UnityWorkflow.Editor
             if (Names(AttributesExtension).Count > 0) return;
             Save("UnityLFS", AttributesExtension, DefaultAttributes);
             Save("Unity", AttributesExtension, Download(UnityAttributesUrl));
-        }
-
-        /// <summary>
-        /// Replaces [attr] macros (such as "lfs") with what they stand for. Git only
-        /// reads macros from the repository's top-level .gitattributes, so a template
-        /// written to a project in a subfolder needs them expanded to take effect.
-        /// </summary>
-        internal static string ExpandMacros(string text)
-        {
-            var macros = new Dictionary<string, string>(StringComparer.Ordinal);
-            var result = new StringBuilder();
-            foreach (string line in text.Replace("\r\n", "\n").Split('\n'))
-            {
-                string trimmed = line.Trim();
-                if (trimmed.StartsWith("[attr]", StringComparison.Ordinal))
-                {
-                    string[] definition = trimmed.Substring(6).Split((char[])null, 2, StringSplitOptions.RemoveEmptyEntries);
-                    if (definition.Length == 2) macros[definition[0]] = definition[1].Trim();
-                    result.Append("# ").Append(line).Append('\n');
-                    continue;
-                }
-                if (trimmed.Length == 0 || trimmed.StartsWith("#", StringComparison.Ordinal))
-                {
-                    result.Append(line).Append('\n');
-                    continue;
-                }
-                string[] fields = trimmed.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
-                result.Append(fields[0]);
-                for (int i = 1; i < fields.Length; i++)
-                {
-                    string expansion;
-                    result.Append(' ').Append(macros.TryGetValue(fields[i], out expansion) ? expansion : fields[i]);
-                }
-                result.Append('\n');
-            }
-            return result.ToString().TrimEnd('\n') + "\n";
         }
 
         private static string Download(string url)

@@ -61,24 +61,24 @@ namespace Riry.UnityWorkflow.Editor.Tests
         public void SnapshotRecordsOnlyScenesPrefabsAndMetasWithoutTouchingTheCheckout()
         {
             string repo = NewRepository();
-            string project = Path.Combine(repo, "Game");
+            string project = repo;
             Write(project, "Assets/a.prefab.meta", "guid: aaaa-1\n");
             Write(project, "Assets/we*ird [1].prefab", "w\n");
             File.Delete(Path.Combine(project, "Assets/s.unity"));
             Write(project, "Assets/code.cs", "class B {}\n");
             Write(project, "Assets/Ignored/x.prefab", "ignored\n");
-            Git(repo, "add", "Game/Assets/code.cs");
+            Git(repo, "add", "Assets/code.cs");
             GitAutosaveJob job = NewJob(project, false);
 
             StringAssert.StartsWith("Saved snapshot", job.Execute());
             string tip = Git(repo, "rev-parse", "refs/heads/autosave/test");
-            Assert.That(Git(repo, "show", tip + ":Game/Assets/a.prefab.meta"), Is.EqualTo("guid: aaaa-1"));
-            Assert.That(Git(repo, "show", tip + ":Game/Assets/we*ird [1].prefab"), Is.EqualTo("w"));
-            Assert.That(Git(repo, "show", tip + ":Game/Assets/code.cs"), Is.EqualTo("class A {}"));
-            Assert.That(Exists(repo, tip + ":Game/Assets/s.unity"), Is.False);
-            Assert.That(Exists(repo, tip + ":Game/Assets/Ignored/x.prefab"), Is.False);
+            Assert.That(Git(repo, "show", tip + ":Assets/a.prefab.meta"), Is.EqualTo("guid: aaaa-1"));
+            Assert.That(Git(repo, "show", tip + ":Assets/we*ird [1].prefab"), Is.EqualTo("w"));
+            Assert.That(Git(repo, "show", tip + ":Assets/code.cs"), Is.EqualTo("class A {}"));
+            Assert.That(Exists(repo, tip + ":Assets/s.unity"), Is.False);
+            Assert.That(Exists(repo, tip + ":Assets/Ignored/x.prefab"), Is.False);
             Assert.That(Git(repo, "symbolic-ref", "HEAD"), Is.EqualTo("refs/heads/main"));
-            Assert.That(Git(repo, "diff", "--cached", "--name-only"), Is.EqualTo("Game/Assets/code.cs"));
+            Assert.That(Git(repo, "diff", "--cached", "--name-only"), Is.EqualTo("Assets/code.cs"));
 
             StringAssert.StartsWith("No changes", job.Execute());
             Assert.That(Git(repo, "rev-parse", "refs/heads/autosave/test"), Is.EqualTo(tip));
@@ -88,7 +88,7 @@ namespace Riry.UnityWorkflow.Editor.Tests
         public void PushReplaysLocalSnapshotsOntoARebasedRemoteBranch()
         {
             string repo = NewRepository();
-            string project = Path.Combine(repo, "Game");
+            string project = repo;
             string remote = Path.Combine(root, "remote.git");
             Git(root, "init", "-q", "--bare", remote);
             Git(repo, "remote", "add", "origin", remote);
@@ -102,23 +102,23 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Git(root, "clone", "-q", remote, other);
             Git(other, "config", "user.name", "Other");
             Git(other, "config", "user.email", "other@example.com");
-            Write(other, "Game/Assets/a.prefab.meta", "guid: aaaa-MAIN\n");
-            Write(other, "Game/Assets/b.prefab.meta", "guid: bbbb-MAIN\n");
+            Write(other, "Assets/a.prefab.meta", "guid: aaaa-MAIN\n");
+            Write(other, "Assets/b.prefab.meta", "guid: bbbb-MAIN\n");
             Git(other, "commit", "-q", "-am", "main moves");
             Git(other, "push", "-q", "origin", "main");
             string main = Git(other, "rev-parse", "HEAD");
             Git(repo, "fetch", "-q", "origin");
             string pushed = Git(repo, "rev-parse", "refs/remotes/origin/autosave/test");
             string rewritten = job.Replay(Git(repo, "merge-base", pushed, main), pushed, main);
-            Assert.That(Git(repo, "show", rewritten + ":Game/Assets/a.prefab.meta"), Is.EqualTo("guid: aaaa-2"));
-            Assert.That(Git(repo, "show", rewritten + ":Game/Assets/b.prefab.meta"), Is.EqualTo("guid: bbbb-MAIN"));
+            Assert.That(Git(repo, "show", rewritten + ":Assets/a.prefab.meta"), Is.EqualTo("guid: aaaa-2"));
+            Assert.That(Git(repo, "show", rewritten + ":Assets/b.prefab.meta"), Is.EqualTo("guid: bbbb-MAIN"));
             Assert.That(Git(repo, "log", "-1", "--format=%an", rewritten), Is.EqualTo("Tester"));
             Git(repo, "push", "-q", "--force", "origin", rewritten + ":refs/heads/autosave/test");
 
             Write(project, "Assets/a.prefab.meta", "guid: aaaa-3\n");
             StringAssert.Contains("Pushed", job.Execute());
             string tip = Git(remote, "rev-parse", "refs/heads/autosave/test");
-            Assert.That(Git(remote, "show", tip + ":Game/Assets/a.prefab.meta"), Is.EqualTo("guid: aaaa-3"));
+            Assert.That(Git(remote, "show", tip + ":Assets/a.prefab.meta"), Is.EqualTo("guid: aaaa-3"));
             Assert.That(GitRunner.Run(remote, null, 60000, "merge-base", "--is-ancestor", main, tip).Succeeded, Is.True);
         }
 
@@ -127,15 +127,27 @@ namespace Riry.UnityWorkflow.Editor.Tests
         {
             string repo = NewRepository();
             Git(repo, "checkout", "-q", "-b", "autosave/test");
-            var exception = Assert.Throws<InvalidOperationException>(() => NewJob(Path.Combine(repo, "Game"), false).Execute());
+            var exception = Assert.Throws<InvalidOperationException>(() => NewJob(repo, false).Execute());
             StringAssert.Contains("checked out", exception.Message);
+        }
+
+        [Test]
+        public void ProjectInsideAnotherRepositoryIsRefused()
+        {
+            string repo = NewRepository();
+            string nested = Path.Combine(repo, "Nested");
+            Write(nested, "Assets/n.prefab", "n\n");
+            var exception = Assert.Throws<InvalidOperationException>(() => NewJob(nested, false).Execute());
+            StringAssert.Contains("must be the project folder itself", exception.Message);
+            Assert.That(GitState.Location(nested)[1], Is.EqualTo("Nested/"));
+            Assert.That(GitState.Location(repo)[1], Is.Empty);
         }
 
         [Test]
         public void LfsCheckFindsUntrackedBinariesAndUploadsAProbe()
         {
             string repo = NewRepository();
-            string project = Path.Combine(repo, "Game");
+            string project = repo;
             Git(root, "init", "-q", "--bare", Path.Combine(root, "remote.git"));
             Git(repo, "remote", "add", "origin", Path.Combine(root, "remote.git"));
             if (!GitLfs.Installed(repo)) Assert.Ignore("Git LFS is not installed.");
@@ -157,23 +169,6 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(GitLfs.Check(project, null).NotTracked, Is.Empty);
         }
 
-        [Test]
-        public void AttributeMacrosExpandForSubfolderProjects()
-        {
-            string template = "# Macros\n[attr]lfs   filter=lfs diff=lfs merge=lfs -text\n" +
-                "[attr]unity-yaml merge=unityyamlmerge eol=lf\n\n*.png    lfs\r\n*.unity  unity-yaml\n*.cs text diff=csharp\n";
-            Assert.That(GitTemplates.ExpandMacros(template), Is.EqualTo(
-                "# Macros\n# [attr]lfs   filter=lfs diff=lfs merge=lfs -text\n# [attr]unity-yaml merge=unityyamlmerge eol=lf\n\n" +
-                "*.png filter=lfs diff=lfs merge=lfs -text\n*.unity merge=unityyamlmerge eol=lf\n*.cs text diff=csharp\n"));
-
-            // Git ignores macros outside the top-level file; the expanded rules still apply.
-            string repo = NewRepository();
-            File.WriteAllText(Path.Combine(repo, "Game", ".gitattributes"), template);
-            StringAssert.Contains("filter: unspecified", Git(repo, "check-attr", "filter", "--", "Game/a.png"));
-            File.WriteAllText(Path.Combine(repo, "Game", ".gitattributes"), GitTemplates.ExpandMacros(template));
-            StringAssert.Contains("filter: lfs", Git(repo, "check-attr", "filter", "--", "Game/a.png"));
-        }
-
         private string NewRepository()
         {
             root = Path.Combine(Path.GetTempPath(), "riry-autosave-" + Guid.NewGuid().ToString("N"));
@@ -183,11 +178,11 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Git(repo, "symbolic-ref", "HEAD", "refs/heads/main");
             Git(repo, "config", "user.name", "Tester");
             Git(repo, "config", "user.email", "tester@example.com");
-            Write(repo, ".gitignore", "Game/Library/\nGame/Assets/Ignored/\n");
-            Write(repo, "Game/Assets/a.prefab.meta", "guid: aaaa\n");
-            Write(repo, "Game/Assets/b.prefab.meta", "guid: bbbb\n");
-            Write(repo, "Game/Assets/s.unity", "scene\n");
-            Write(repo, "Game/Assets/code.cs", "class A {}\n");
+            Write(repo, ".gitignore", "Library/\nAssets/Ignored/\n");
+            Write(repo, "Assets/a.prefab.meta", "guid: aaaa\n");
+            Write(repo, "Assets/b.prefab.meta", "guid: bbbb\n");
+            Write(repo, "Assets/s.unity", "scene\n");
+            Write(repo, "Assets/code.cs", "class A {}\n");
             Git(repo, "add", "-A");
             Git(repo, "commit", "-q", "-m", "base");
             return repo;
