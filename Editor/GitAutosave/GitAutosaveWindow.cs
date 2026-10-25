@@ -8,13 +8,10 @@ namespace Riry.UnityWorkflow.Editor
 {
     internal sealed class GitAutosaveWindow : EditorWindow
     {
-        private const string MenuPath = "Tools/Rirytools/Git Autosave";
-
-        [MenuItem(MenuPath, false, 2050)]
-        private static void Open()
+        internal static void Open()
         {
             GitAutosaveWindow window = GetWindow<GitAutosaveWindow>();
-            window.titleContent = new GUIContent("Git Autosave");
+            window.titleContent = new GUIContent("AutoSync");
             window.minSize = new Vector2(380f, 300f);
             window.Show();
         }
@@ -22,13 +19,13 @@ namespace Riry.UnityWorkflow.Editor
         private void OnGUI()
         {
             EditorGUILayout.HelpBox(
-                "Commits scenes, prefabs and .meta files to the autosave branch a few seconds after they change, " +
+                "Commits scenes, prefabs and .meta files to the AutoSync branch a few seconds after they change, " +
                 "through a separate Git index: the checked-out branch and staged changes are never touched.",
                 MessageType.Info);
 
             EditorGUI.BeginChangeCheck();
-            bool enabled = EditorGUILayout.Toggle("Enabled", GitAutosave.Enabled);
-            string branch = EditorGUILayout.DelayedTextField("Autosave branch", GitAutosave.Branch).Trim();
+            bool enabled = EditorGUILayout.Toggle("AutoSync Scene\u2215Prefab", GitAutosave.Enabled);
+            string branch = EditorGUILayout.DelayedTextField("AutoSync branch", GitAutosave.Branch).Trim();
             string baseBranch = EditorGUILayout.DelayedTextField("Base branch", GitAutosave.BaseBranch).Trim();
             bool push = EditorGUILayout.Toggle("Push", GitAutosave.PushEnabled);
             string remote;

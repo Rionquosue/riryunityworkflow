@@ -71,7 +71,6 @@ namespace Riry.UnityWorkflow.Editor
         internal void Open()
         {
             GitRunner.Result top = GitRunner.Run(ProjectRoot, null, TimeoutMs, "rev-parse", "--show-toplevel");
-            if (top.ExitCode == GitRunner.NotFound) throw new InvalidOperationException(top.Error);
             if (!top.Succeeded) throw new InvalidOperationException("The project is not inside a Git repository.");
             repoRoot = top.Output.Trim();
             Directory.CreateDirectory(StateFolder);
@@ -79,13 +78,13 @@ namespace Riry.UnityWorkflow.Editor
             environment["GIT_INDEX_FILE"] = Path.Combine(StateFolder, "index");
             // commit-tree needs an identity; a repository without one still gets backups.
             if (Run("config", "user.name").Output.Trim().Length == 0)
-                environment["GIT_AUTHOR_NAME"] = environment["GIT_COMMITTER_NAME"] = "Riry Autosave";
+                environment["GIT_AUTHOR_NAME"] = environment["GIT_COMMITTER_NAME"] = "Riry AutoSync";
             if (Run("config", "user.email").Output.Trim().Length == 0)
                 environment["GIT_AUTHOR_EMAIL"] = environment["GIT_COMMITTER_EMAIL"] = "autosave@localhost";
 
             if (Run("symbolic-ref", "-q", "HEAD").Output.Trim() == BranchRef)
-                throw new InvalidOperationException("The autosave branch " + Branch +
-                    " is checked out. Switch to another branch; autosave never moves the checked-out branch.");
+                throw new InvalidOperationException("The AutoSync branch " + Branch +
+                    " is checked out. Switch to another branch; AutoSync never moves the checked-out branch.");
         }
 
         /// <summary>Commits the current files when they differ from the branch tip. Returns the commit, or null.</summary>
@@ -96,7 +95,7 @@ namespace Riry.UnityWorkflow.Editor
             if (!File.Exists(environment["GIT_INDEX_FILE"]) || !File.Exists(IndexBasePath) ||
                 File.ReadAllText(IndexBasePath) != (parent ?? ""))
             {
-                Check(parent == null ? Run("read-tree", "--empty") : Run("read-tree", parent), "Preparing the autosave index");
+                Check(parent == null ? Run("read-tree", "--empty") : Run("read-tree", parent), "Preparing the AutoSync index");
                 File.WriteAllText(IndexBasePath, parent ?? "", Utf8);
             }
 
@@ -106,7 +105,10 @@ namespace Riry.UnityWorkflow.Editor
                 foreach (string extension in SnapshotExtensions)
                     list.Add(":(glob)" + root + "/**/*." + extension);
             }
-            list.Add(":(literal)" + GuidRemapLedger.RelativePath);
+            // The ignore, attribute and LFS settings travel with the backup, so a
+            // checkout of the autosave branch restores LFS files correctly.
+            foreach (string file in new[] { GuidRemapLedger.RelativePath, ".gitignore", ".gitattributes", ".lfsconfig" })
+                list.Add(":(literal)" + file);
             string paths = Check(Run(list.ToArray()), "Listing scenes, prefabs and .meta files");
             if (paths.Length > 0)
             {
@@ -153,10 +155,10 @@ namespace Riry.UnityWorkflow.Editor
 
         private string Message(string parent)
         {
-            if (parent == null) return "Autosave: initial snapshot";
+            if (parent == null) return "AutoSync: initial snapshot";
             string[] changed = Check(Run("diff-index", "--cached", "--name-only", parent), "Listing changed files")
                 .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var message = new StringBuilder("Autosave: " + changed.Length + (changed.Length == 1 ? " file\n\n" : " files\n\n"));
+            var message = new StringBuilder("AutoSync: " + changed.Length + (changed.Length == 1 ? " file\n\n" : " files\n\n"));
             for (int i = 0; i < changed.Length && i < 20; i++) message.Append(changed[i]).Append('\n');
             if (changed.Length > 20) message.Append("...and ").Append(changed.Length - 20).Append(" more\n");
             return message.ToString();
@@ -186,7 +188,7 @@ namespace Riry.UnityWorkflow.Editor
                     ? pushedTip
                     : Run("merge-base", local, RemoteRef).Output.Trim();
                 if (from.Length == 0)
-                    throw new InvalidOperationException(Remote + "/" + Branch + " shares no history with the local autosave branch.");
+                    throw new InvalidOperationException(Remote + "/" + Branch + " shares no history with the local AutoSync branch.");
                 Check(Run("update-ref", "-m", "Riry autosave replay", BranchRef, Replay(from, local, Resolve(RemoteRef)), local),
                     "Moving " + Branch);
             }

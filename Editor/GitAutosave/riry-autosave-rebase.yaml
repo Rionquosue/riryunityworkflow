@@ -1,5 +1,5 @@
 # Keeps Riry autosave branches based on the latest base branch.
-# Installed by Tools > Rirytools > Git Autosave > Install Rebase Workflow.
+# Installed by GIT > AutoSync Settings... > Install Rebase Workflow.
 # Each autosave commit is replayed onto the base branch; when both changed a
 # file, the autosave version wins, so a backup is never lost to a conflict.
 name: Rebase autosave branches
@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - main
-      - 'autosave/**'
+      - 'AutoSync'
   schedule:
     - cron: '17 */6 * * *'
   workflow_dispatch:
@@ -22,7 +22,7 @@ permissions:
 
 env:
   BASE_BRANCH: main
-  AUTOSAVE_BRANCHES: 'autosave/**'
+  AUTOSAVE_BRANCHES: 'AutoSync'
 
 jobs:
   rebase:

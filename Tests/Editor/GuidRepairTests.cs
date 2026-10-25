@@ -88,6 +88,26 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(parser.Found.ContainsKey(Second), Is.False);
         }
 
+        [Test]
+        public void LoadGuardCountsOwnedObjectsAndNamesTheScript()
+        {
+            string scene = Path.Combine(root, "Broken.unity");
+            File.WriteAllText(scene, "%YAML 1.1\n--- !u!1 &100\nGameObject:\n--- !u!4 &101\n--- !u!1 &200 stripped\n" +
+                "--- !u!1001 &300\nPrefabInstance:\n--- !u!1 &400\n");
+            Assert.That(ScriptLoadGuard.CountSerializedObjects(scene), Is.EqualTo(3));
+            Assert.That(ScriptLoadGuard.LoadFailed(10, 0), Is.True);
+            Assert.That(ScriptLoadGuard.LoadFailed(10, 4), Is.True);
+            Assert.That(ScriptLoadGuard.LoadFailed(10, 5), Is.False);
+            Assert.That(ScriptLoadGuard.LoadFailed(0, 0), Is.False);
+
+            string trace = "UnityEngine.Debug:LogError (object)\n" +
+                "Pumpkin.Tools.SceneFixer:OnSceneOpened (UnityEngine.SceneManagement.Scene) " +
+                "(at ./Library/PackageCache/com.pumpkin.tools@1.0/Editor/SceneFixer.cs:42)\n";
+            Assert.That(ScriptLoadGuard.Suspects(trace),
+                Is.EqualTo(new[] { "Pumpkin.Tools.SceneFixer (Library/PackageCache/com.pumpkin.tools@1.0/Editor/SceneFixer.cs)" }));
+            Assert.That(ScriptLoadGuard.Suspects("UnityEngine.Debug:Log (object)\n"), Is.Empty);
+        }
+
         private static RegenerateAssetGuid.Target Target(string oldGuid, string newGuid, string path)
         {
             return new RegenerateAssetGuid.Target { OldGuid = oldGuid, NewGuid = newGuid, AssetPath = path };
@@ -95,8 +115,16 @@ namespace Riry.UnityWorkflow.Editor.Tests
 
         private static string Git(string directory, params string[] arguments)
         {
-            GitRunner.Result result = GitRunner.Run(directory, null, 60000, arguments);
-            if (result.ExitCode == GitRunner.NotFound) Assert.Ignore("Git is not installed.");
+            GitRunner.Result result;
+            try
+            {
+                result = GitRunner.Run(directory, null, 60000, arguments);
+            }
+            catch (GitNotInstalledException)
+            {
+                Assert.Ignore("Git is not installed.");
+                throw;
+            }
             Assert.That(result.Succeeded, Is.True, result.Describe("git " + string.Join(" ", arguments)));
             return result.Output.Trim();
         }

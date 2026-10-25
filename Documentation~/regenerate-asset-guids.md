@@ -71,12 +71,11 @@ within the limit.
 Every completed run appends `old GUID, new GUID, asset path, UTC time` to
 `ProjectSettings/RiryGuidRemap.tsv`. Commit this file.
 
-**Rirytools > Repair Missing GUID References** (or the GUID Tools window) scans
-the selected text assets and folders for `guid:` values with no asset behind
-them. Each one is resolved from the ledger first, then from the Git history of
-`.meta` files, including autosave branches and the reflog: the asset now at the
-path that last held the GUID is linked. A preview lists every relink and every
-GUID that could not be resolved before anything is written. Writes use the same
+**Rirytools > Repair Missing GUID References** (or the GUID Tools window) opens
+the Broken References window for the selected text assets and folders. Each
+missing GUID gets a redirect from the ledger, the GUID Tools logs, or the Git
+history of `.meta` files (AutoSync branches and the reflog included), or one you
+choose; see [AutoSync](autosync.md#broken-references). Writes use the same
 byte-exact patching and rollback as regeneration.
 
 ## Safety limits

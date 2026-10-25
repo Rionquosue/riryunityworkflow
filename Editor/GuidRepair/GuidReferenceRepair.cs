@@ -4,24 +4,41 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Riry.UnityWorkflow.Editor
 {
+    /// <summary>Missing GUIDs found in a set of files, with suggested redirects.</summary>
+    internal sealed class RepairPlan
+    {
+        public readonly List<string> Files = new List<string>();
+        /// <summary>File to the byte offset and value of each missing GUID in it.</summary>
+        public readonly Dictionary<string, List<KeyValuePair<long, string>>> References =
+            new Dictionary<string, List<KeyValuePair<long, string>>>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Missing GUID to the files that use it. Exact case: patches rewrite the bytes as found.</summary>
+        public readonly SortedDictionary<string, SortedSet<string>> Missing =
+            new SortedDictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+        public readonly Dictionary<string, string> Suggested = new Dictionary<string, string>(StringComparer.Ordinal);
+        public readonly Dictionary<string, string> Sources = new Dictionary<string, string>(StringComparer.Ordinal);
+        public readonly Dictionary<string, string> LastKnownPaths = new Dictionary<string, string>(StringComparer.Ordinal);
+    }
+
     /// <summary>
-    /// Relinks GUID references that no longer resolve in damaged or recovered
-    /// scenes, prefabs and other text assets. A missing GUID is looked up in the
-    /// remap ledger first, then in the Git history of .meta files (autosave
-    /// branches included): the asset now at the path that owned it is linked.
+    /// Finds GUID references that no longer resolve in damaged or recovered scenes,
+    /// prefabs and other text assets, suggests redirects from the remap ledger,
+    /// GUID Tools logs and the Git history of .meta files (AutoSync included), and
+    /// rewrites the chosen ones byte-exactly with rollback.
     /// </summary>
     internal static class GuidReferenceRepair
     {
         private const string MenuPath = "Assets/Rirytools/Repair Missing GUID References";
-        private const string Title = "Repair Missing GUID References";
-        private const int ListedLines = 12;
+        internal const string Title = "Broken References";
         private static readonly byte[] GuidKey = Encoding.ASCII.GetBytes("guid: ");
+        private static readonly Regex LogMapping = new Regex(
+            @"GUID mapping prepared: .* \| ([0-9a-fA-F]{32}) -> ([0-9a-fA-F]{32})", RegexOptions.CultureInvariant);
 
         // Every branch, remote and reflog entry (autosaves included), newest
         // first, for .meta files in the project folder.
@@ -34,166 +51,186 @@ namespace Riry.UnityWorkflow.Editor
         [MenuItem(MenuPath, false, 2004)]
         internal static void RepairSelected()
         {
-            GuidToolLog log = GuidToolLog.Open(Title);
-            var written = new List<RegenerateAssetGuid.WrittenOperation>();
-            bool reloadLocked = false;
-            bool committed = false;
-            SceneSetup[] sceneSetup = null;
+            BrokenReferenceWindow.Open(SelectedFiles(), "Selected in the Project window.");
+        }
+
+        [MenuItem(MenuPath, true)]
+        private static bool ValidateRepairSelected()
+        {
+            return RegenerateAssetGuid.HasValidSelection();
+        }
+
+        internal static RepairPlan Scan(IEnumerable<string> files, GuidToolLog log)
+        {
+            var plan = new RepairPlan();
+            plan.Files.AddRange(files);
+            var sample = new byte[4096];
             try
             {
-                if (EditorSettings.serializationMode != SerializationMode.ForceText)
+                for (int i = 0; i < plan.Files.Count; i++)
                 {
-                    EditorUtility.DisplayDialog("Force Text Required",
-                        "Set Edit > Project Settings > Editor > Asset Serialization to Force Text first.", "OK");
-                    return;
-                }
-                if (PrefabStageUtility.GetCurrentPrefabStage() != null)
-                {
-                    EditorUtility.DisplayDialog("Close Prefab Mode",
-                        "Save and close Prefab Mode before repairing references.", "OK");
-                    return;
-                }
-                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-                if (!RegenerateAssetGuid.ScenesAreSaved())
-                {
-                    EditorUtility.DisplayDialog("Save Scenes First",
-                        "Every open scene must be saved before repairing references.", "OK");
-                    return;
-                }
-                sceneSetup = EditorSceneManager.GetSceneManagerSetup();
-                AssetDatabase.SaveAssets();
-
-                string projectRoot = RegenerateAssetGuid.ProjectRootPath;
-                List<string> files = SelectedFiles();
-                var references = new Dictionary<string, List<KeyValuePair<long, string>>>(StringComparer.OrdinalIgnoreCase);
-                // Exact case: the patch rewrites the bytes exactly as they were found.
-                var missing = new HashSet<string>(StringComparer.Ordinal);
-                var sample = new byte[4096];
-                for (int i = 0; i < files.Count; i++)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + files[i], 0.4f * i / files.Count))
+                    string fullPath = Path.Combine(RegenerateAssetGuid.ProjectRootPath, plan.Files[i]);
+                    if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + plan.Files[i], (float)i / plan.Files.Count))
                         throw new OperationCanceledException();
-                    if (!RegenerateAssetGuid.LooksLikeText(Path.Combine(projectRoot, files[i]), sample))
+                    if (!File.Exists(fullPath) || !RegenerateAssetGuid.LooksLikeText(fullPath, sample))
                     {
-                        log.Write("Skipped binary file: " + files[i]);
+                        log.Write("Skipped missing or binary file: " + plan.Files[i]);
                         continue;
                     }
-                    List<KeyValuePair<long, string>> broken = FindGuidReferences(File.ReadAllBytes(Path.Combine(projectRoot, files[i])))
+                    List<KeyValuePair<long, string>> broken = FindGuidReferences(File.ReadAllBytes(fullPath))
                         .FindAll(reference => IsMissing(reference.Value));
                     if (broken.Count == 0) continue;
-                    references[files[i]] = broken;
-                    foreach (KeyValuePair<long, string> reference in broken) missing.Add(reference.Value);
-                    log.Write("Missing references: " + files[i] + " | " + broken.Count);
+                    plan.References[plan.Files[i]] = broken;
+                    foreach (KeyValuePair<long, string> reference in broken)
+                    {
+                        SortedSet<string> users;
+                        if (!plan.Missing.TryGetValue(reference.Value, out users))
+                            plan.Missing[reference.Value] = users = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+                        users.Add(plan.Files[i]);
+                    }
+                    log.Write("Missing references: " + plan.Files[i] + " | " + broken.Count);
                 }
+            }
+            finally
+            {
                 EditorUtility.ClearProgressBar();
-                if (missing.Count == 0)
-                {
-                    EditorUtility.DisplayDialog(Title, "No missing GUID references were found in " + files.Count + " file(s).", "OK");
-                    return;
-                }
+            }
+            return plan;
+        }
 
-                var resolved = new Dictionary<string, string>(StringComparer.Ordinal);
-                var report = new List<string>();
-                Dictionary<string, string> ledger = GuidRemapLedger.Load();
-                foreach (string guid in missing)
+        /// <summary>Suggests a redirect for each missing GUID: ledger, then GUID Tools logs, then Git history.</summary>
+        internal static void Suggest(RepairPlan plan, GuidToolLog log)
+        {
+            Dictionary<string, string> ledger = GuidRemapLedger.Load();
+            Dictionary<string, string> logged = LoggedMappings();
+            var remaining = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string guid in plan.Missing.Keys)
+            {
+                string found = GuidRemapLedger.Resolve(guid, ledger, candidate => !IsMissing(candidate));
+                string source = "the GUID remap ledger";
+                if (found == null)
                 {
-                    string found = GuidRemapLedger.Resolve(guid, ledger, candidate => !IsMissing(candidate));
-                    if (found == null) continue;
-                    resolved[guid] = found;
-                    report.Add(guid + " -> " + AssetDatabase.GUIDToAssetPath(found) + " (ledger)");
+                    found = GuidRemapLedger.Resolve(guid, logged, candidate => !IsMissing(candidate));
+                    source = "GUID Tools logs";
                 }
-                var unresolved = new List<string>();
-                if (resolved.Count < missing.Count)
+                if (found == null)
                 {
-                    var remaining = new HashSet<string>(missing, StringComparer.Ordinal);
-                    remaining.ExceptWith(resolved.Keys);
-                    Dictionary<string, string> history = FindInHistory(remaining, log);
-                    EditorUtility.ClearProgressBar();
-                    foreach (string guid in remaining)
+                    remaining.Add(guid);
+                    continue;
+                }
+                plan.Suggested[guid] = found;
+                plan.Sources[guid] = source;
+            }
+            if (remaining.Count == 0) return;
+
+            Dictionary<string, string> history;
+            try
+            {
+                history = FindInHistory(remaining, log);
+            }
+            catch (GitNotInstalledException exception)
+            {
+                log.Write("Git history not searched: " + exception.Message);
+                return;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+            foreach (KeyValuePair<string, string> entry in history)
+            {
+                plan.LastKnownPaths[entry.Key] = entry.Value;
+                string current = AssetDatabase.AssetPathToGUID(entry.Value, AssetPathToGUIDOptions.OnlyExistingAssets);
+                if (string.IsNullOrEmpty(current) || current == entry.Key) continue;
+                plan.Suggested[entry.Key] = current;
+                plan.Sources[entry.Key] = "Git history (" + entry.Value + ")";
+            }
+        }
+
+        /// <summary>Old to new GUIDs from GUID Tools logs, including runs before the ledger existed.</summary>
+        private static Dictionary<string, string> LoggedMappings()
+        {
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            string folder = RegenerateAssetGuid.LogDirectoryPath;
+            if (!Directory.Exists(folder)) return map;
+            var logs = new List<string>(Directory.GetFiles(folder, "*.log", SearchOption.AllDirectories));
+            // Oldest first, so a later run's mapping wins.
+            logs.Sort((left, right) => File.GetLastWriteTimeUtc(left).CompareTo(File.GetLastWriteTimeUtc(right)));
+            foreach (string file in logs)
+            {
+                using (var reader = new StreamReader(new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        string path;
-                        string current = history.TryGetValue(guid, out path)
-                            ? AssetDatabase.AssetPathToGUID(path, AssetPathToGUIDOptions.OnlyExistingAssets)
-                            : null;
-                        if (!string.IsNullOrEmpty(current) && !current.Equals(guid, StringComparison.OrdinalIgnoreCase))
-                        {
-                            resolved[guid] = current;
-                            report.Add(guid + " -> " + path + " (Git history)");
-                        }
-                        else
-                        {
-                            unresolved.Add(guid + (path != null ? " (last at " + path + ")" : ""));
-                        }
+                        Match match = LogMapping.Match(line);
+                        if (match.Success) map[match.Groups[1].Value] = match.Groups[2].Value;
                     }
                 }
-                foreach (string line in report) log.Write("Relink planned: " + line);
-                foreach (string line in unresolved) log.Write("Unresolved: " + line);
+            }
+            return map;
+        }
 
-                string summary = missing.Count + " missing GUID(s) in " + references.Count + " file(s).\n\n" +
-                    (report.Count > 0 ? "Relink:\n" + List(report) + "\n" : "") +
-                    (unresolved.Count > 0 ? "Not found:\n" + List(unresolved) : "");
-                if (resolved.Count == 0)
+        /// <summary>
+        /// Rewrites each missing GUID that has a redirect, then reloads the open scenes
+        /// from disk (discarding unsaved changes). Rolls back on failure. Returns the
+        /// number of files changed.
+        /// </summary>
+        internal static int Apply(RepairPlan plan, Dictionary<string, string> redirects, GuidToolLog log)
+        {
+            var written = new List<RegenerateAssetGuid.WrittenOperation>();
+            SceneSetup[] sceneSetup = EditorSceneManager.GetSceneManagerSetup();
+            bool committed = false;
+            var targets = new Dictionary<string, RegenerateAssetGuid.Target>(StringComparer.Ordinal);
+            foreach (KeyValuePair<string, string> entry in redirects)
+            {
+                targets[entry.Key] = new RegenerateAssetGuid.Target
                 {
-                    Debug.LogWarning(Title + ": nothing could be relinked.\n" + string.Join("\n", unresolved));
-                    EditorUtility.DisplayDialog(Title, summary, "OK");
-                    return;
-                }
-                if (!EditorUtility.DisplayDialog(Title, summary + "\nThis bypasses Unity Undo.", "Relink", "Cancel"))
-                    return;
+                    AssetPath = AssetDatabase.GUIDToAssetPath(entry.Value),
+                    OldGuid = entry.Key,
+                    NewGuid = entry.Value,
+                    OldBytes = Encoding.ASCII.GetBytes(entry.Key),
+                    NewBytes = Encoding.ASCII.GetBytes(entry.Value)
+                };
+                log.Write("Redirect: " + entry.Key + " -> " + entry.Value + " (" + targets[entry.Key].AssetPath + ")");
+            }
 
-                var targets = new Dictionary<string, RegenerateAssetGuid.Target>(StringComparer.Ordinal);
-                foreach (KeyValuePair<string, string> entry in resolved)
+            var patches = new List<RegenerateAssetGuid.FilePatch>();
+            foreach (KeyValuePair<string, List<KeyValuePair<long, string>>> file in plan.References)
+            {
+                var info = new FileInfo(Path.Combine(RegenerateAssetGuid.ProjectRootPath, file.Key));
+                var patch = new RegenerateAssetGuid.FilePatch
                 {
-                    targets[entry.Key] = new RegenerateAssetGuid.Target
+                    File = new RegenerateAssetGuid.FileState
                     {
-                        AssetPath = AssetDatabase.GUIDToAssetPath(entry.Value),
-                        OldGuid = entry.Key,
-                        NewGuid = entry.Value,
-                        OldBytes = Encoding.ASCII.GetBytes(entry.Key),
-                        NewBytes = Encoding.ASCII.GetBytes(entry.Value)
-                    };
-                }
-                var patches = new List<RegenerateAssetGuid.FilePatch>();
-                foreach (KeyValuePair<string, List<KeyValuePair<long, string>>> file in references)
-                {
-                    var info = new FileInfo(Path.Combine(projectRoot, file.Key));
-                    var patch = new RegenerateAssetGuid.FilePatch
-                    {
-                        File = new RegenerateAssetGuid.FileState
-                        {
-                            FullPath = info.FullName,
-                            RelativePath = file.Key,
-                            Length = info.Length,
-                            LastWriteUtcTicks = info.LastWriteTimeUtc.Ticks
-                        }
-                    };
-                    foreach (KeyValuePair<long, string> reference in file.Value)
-                    {
-                        RegenerateAssetGuid.Target target;
-                        if (targets.TryGetValue(reference.Value, out target))
-                            patch.Operations.Add(new RegenerateAssetGuid.PatchOperation { Target = target, Offset = reference.Key });
+                        FullPath = info.FullName,
+                        RelativePath = file.Key,
+                        Length = info.Length,
+                        LastWriteUtcTicks = info.LastWriteTimeUtc.Ticks
                     }
-                    if (patch.Operations.Count == 0) continue;
-                    RegenerateAssetGuid.EnsureWritable(info.FullName);
-                    patches.Add(patch);
+                };
+                foreach (KeyValuePair<long, string> reference in file.Value)
+                {
+                    RegenerateAssetGuid.Target target;
+                    if (targets.TryGetValue(reference.Value, out target))
+                        patch.Operations.Add(new RegenerateAssetGuid.PatchOperation { Target = target, Offset = reference.Key });
                 }
+                if (patch.Operations.Count == 0) continue;
+                RegenerateAssetGuid.EnsureWritable(info.FullName);
+                patches.Add(patch);
+            }
 
-                EditorApplication.LockReloadAssemblies();
-                reloadLocked = true;
+            EditorApplication.LockReloadAssemblies();
+            try
+            {
                 RegenerateAssetGuid.ApplyPatches(patches, written, log);
                 AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
                 committed = true;
                 RegenerateAssetGuid.ReloadScenes(sceneSetup, log);
-
-                Debug.Log(Title + ": relinked " + resolved.Count + " GUID(s) in " + patches.Count + " file(s)." +
-                    (unresolved.Count > 0 ? " Not found:\n" + string.Join("\n", unresolved) : ""));
-                log.Write("Completed. Relinked GUIDs: " + resolved.Count + "; files changed: " + patches.Count);
+                log.Write("Completed. Redirected GUIDs: " + redirects.Count + "; files changed: " + patches.Count);
+                return patches.Count;
             }
-            catch (OperationCanceledException)
-            {
-                log.Write("Cancelled before any file was changed.");
-            }
-            catch (Exception exception)
+            catch (Exception)
             {
                 if (!committed && written.Count > 0)
                 {
@@ -209,26 +246,17 @@ namespace Riry.UnityWorkflow.Editor
                         Debug.LogError(Title + ": rollback was incomplete:\n" + rollbackException);
                     }
                 }
-                log.Write("FAILURE: " + exception);
-                Debug.LogException(exception);
-                EditorUtility.DisplayDialog(Title + " Failed", exception.Message + "\n\nCheck the Console for details.", "OK");
+                throw;
             }
             finally
             {
                 EditorUtility.ClearProgressBar();
-                if (reloadLocked) EditorApplication.UnlockReloadAssemblies();
-                log.Dispose();
+                EditorApplication.UnlockReloadAssemblies();
             }
         }
 
-        [MenuItem(MenuPath, true)]
-        private static bool ValidateRepairSelected()
-        {
-            return RegenerateAssetGuid.HasValidSelection();
-        }
-
         /// <summary>Selected text-serialized Unity files; folders are expanded recursively.</summary>
-        private static List<string> SelectedFiles()
+        internal static List<string> SelectedFiles()
         {
             var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (UnityEngine.Object item in Selection.objects)
@@ -296,12 +324,6 @@ namespace Riry.UnityWorkflow.Editor
             if (cancelled) throw new OperationCanceledException();
             if (!result.Succeeded && !parser.Complete) log.Write(result.Describe("Searching Git history"));
             return parser.Found;
-        }
-
-        private static string List(List<string> lines)
-        {
-            string text = string.Join("\n", lines.GetRange(0, Math.Min(lines.Count, ListedLines)));
-            return text + (lines.Count > ListedLines ? "\n...and " + (lines.Count - ListedLines) + " more (see the log)\n" : "\n");
         }
 
         private static bool StartsWith(byte[] bytes, int offset, byte[] token)

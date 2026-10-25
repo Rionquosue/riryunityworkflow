@@ -32,8 +32,8 @@ namespace Riry.UnityWorkflow.Editor.Tests
         [Test]
         public void WorkflowTemplateTakesBaseAndAutosaveBranches()
         {
-            Assert.That(GitAutosave.WorkflowPattern("autosave/riry"), Is.EqualTo("autosave/**"));
-            Assert.That(GitAutosave.WorkflowPattern("backup"), Is.EqualTo("backup"));
+            Assert.That(GitAutosave.WorkflowPattern("backup/riry"), Is.EqualTo("backup/**"));
+            Assert.That(GitAutosave.WorkflowPattern("AutoSync"), Is.EqualTo("AutoSync"));
 
             // The template is found through its .meta GUID, as the installer does.
             var template = AssetDatabase.LoadAssetAtPath<TextAsset>(
@@ -44,7 +44,7 @@ namespace Riry.UnityWorkflow.Editor.Tests
             StringAssert.Contains("      - 'saves/**'\n", text);
             StringAssert.Contains("  BASE_BRANCH: 'develop'\n", text);
             StringAssert.Contains("  AUTOSAVE_BRANCHES: 'saves/**'\n", text);
-            StringAssert.DoesNotContain("autosave/**", text);
+            StringAssert.DoesNotContain("'AutoSync'", text);
             StringAssert.DoesNotContain("      - main\n", text);
         }
 
@@ -131,6 +131,32 @@ namespace Riry.UnityWorkflow.Editor.Tests
             StringAssert.Contains("checked out", exception.Message);
         }
 
+        [Test]
+        public void LfsCheckFindsUntrackedBinariesAndUploadsAProbe()
+        {
+            string repo = NewRepository();
+            string project = Path.Combine(repo, "Game");
+            Git(root, "init", "-q", "--bare", Path.Combine(root, "remote.git"));
+            Git(repo, "remote", "add", "origin", Path.Combine(root, "remote.git"));
+            if (!GitLfs.Installed(repo)) Assert.Ignore("Git LFS is not installed.");
+            GitLfs.Enable(repo);
+            File.WriteAllText(Path.Combine(project, ".gitattributes"), GitTemplates.LfsLine("fbx"));
+            var data = new byte[(int)GitLfs.LargeFileBytes + 1];
+            new System.Random(1).NextBytes(data);
+            File.WriteAllBytes(Path.Combine(project, "Assets", "a.fbx"), data);
+            File.WriteAllBytes(Path.Combine(project, "Assets", "b c.psd"), data);
+
+            GitLfs.Report report = GitLfs.Check(project, "origin");
+            Assert.That(report.NotTracked, Is.EqualTo(new[] { "Assets/b c.psd" }));
+            Assert.That(report.UploadWorks, Is.True, report.Upload);
+
+            GitLfs.Track(Path.Combine(project, ".gitattributes"), report.NotTrackedExtensions);
+            GitLfs.Track(Path.Combine(project, ".gitattributes"), report.NotTrackedExtensions);
+            Assert.That(File.ReadAllText(Path.Combine(project, ".gitattributes")).Split(new[] { "*.psd" }, StringSplitOptions.None).Length,
+                Is.EqualTo(2));
+            Assert.That(GitLfs.Check(project, null).NotTracked, Is.Empty);
+        }
+
         private string NewRepository()
         {
             root = Path.Combine(Path.GetTempPath(), "riry-autosave-" + Guid.NewGuid().ToString("N"));
@@ -165,8 +191,16 @@ namespace Riry.UnityWorkflow.Editor.Tests
 
         private static string Git(string directory, params string[] arguments)
         {
-            GitRunner.Result result = GitRunner.Run(directory, null, 60000, arguments);
-            if (result.ExitCode == GitRunner.NotFound) Assert.Ignore("Git is not installed.");
+            GitRunner.Result result;
+            try
+            {
+                result = GitRunner.Run(directory, null, 60000, arguments);
+            }
+            catch (GitNotInstalledException)
+            {
+                Assert.Ignore("Git is not installed.");
+                throw;
+            }
             Assert.That(result.Succeeded, Is.True, result.Describe("git " + string.Join(" ", arguments)));
             return result.Output.Trim();
         }

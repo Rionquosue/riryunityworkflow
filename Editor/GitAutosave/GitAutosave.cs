@@ -46,15 +46,17 @@ namespace Riry.UnityWorkflow.Editor
             if (SessionState.GetBool(PendingKey, false)) Schedule();
         }
 
+        /// <summary>On by default once the project is in a Git repository.</summary>
         internal static bool Enabled
         {
-            get { return Get("Enabled", "0") == "1"; }
+            get { return Get("Enabled", GitState.RepositoryRoot != null ? "1" : "0") == "1"; }
             set { Set("Enabled", value ? "1" : "0"); }
         }
 
+        /// <summary>"AutoSync" unless the user chose another branch, so backups always have a target.</summary>
         internal static string Branch
         {
-            get { return Get("Branch", "autosave/" + DefaultUser()); }
+            get { return Get("Branch", "AutoSync"); }
             set { Set("Branch", value); }
         }
 
@@ -85,12 +87,6 @@ namespace Riry.UnityWorkflow.Editor
         private static void Set(string name, string value)
         {
             EditorUserSettings.SetConfigValue(Prefix + name, value);
-        }
-
-        private static string DefaultUser()
-        {
-            string user = Regex.Replace(Environment.UserName ?? "", "[^A-Za-z0-9._-]", "").Trim('.', '-').ToLowerInvariant();
-            return user.Length > 0 ? user : "user";
         }
 
         /// <summary>Starts a pass after a short delay; repeated calls within the delay make one pass.</summary>
@@ -139,7 +135,7 @@ namespace Riry.UnityWorkflow.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("Git autosave: " + exception.Message);
+                Debug.LogWarning("AutoSync: " + exception.Message);
             }
         }
 
@@ -171,14 +167,14 @@ namespace Riry.UnityWorkflow.Editor
         {
             Status = DateTime.Now.ToString("HH:mm:ss") + " failed: " + message;
             // The same failure repeats on every save; the Console gets it once.
-            if (message != reported) Debug.LogWarning("Git autosave: " + message);
+            if (message != reported) Debug.LogWarning("AutoSync: " + message);
             reported = message;
         }
 
         internal static string SettingsError()
         {
-            return BranchNameError(Branch, "Autosave branch") ?? BranchNameError(BaseBranch, "Base branch") ??
-                (Branch == BaseBranch ? "The autosave branch must differ from the base branch." : null) ??
+            return BranchNameError(Branch, "AutoSync branch") ?? BranchNameError(BaseBranch, "Base branch") ??
+                (Branch == BaseBranch ? "The AutoSync branch must differ from the base branch." : null) ??
                 (Regex.IsMatch(Remote, @"^[A-Za-z0-9._/-]+$") && !Remote.StartsWith("-", StringComparison.Ordinal)
                     ? null
                     : "The remote name is not valid.");
@@ -199,7 +195,7 @@ namespace Riry.UnityWorkflow.Editor
 
         /// <summary>
         /// The branch filter for the rebase workflow: every branch in the autosave
-        /// branch's folder ("autosave/riry" gives "autosave/**"), else the name itself.
+        /// branch's folder ("backup/riry" gives "backup/**"), else the name itself ("AutoSync").
         /// </summary>
         internal static string WorkflowPattern(string branch)
         {
@@ -214,9 +210,9 @@ namespace Riry.UnityWorkflow.Editor
             string quotedPattern = "'" + WorkflowPattern(branch).Replace("'", "''") + "'";
             return template
                 .Replace("      - main\n", "      - " + quotedBase + "\n")
-                .Replace("      - 'autosave/**'\n", "      - " + quotedPattern + "\n")
+                .Replace("      - 'AutoSync'\n", "      - " + quotedPattern + "\n")
                 .Replace("  BASE_BRANCH: main\n", "  BASE_BRANCH: " + quotedBase + "\n")
-                .Replace("  AUTOSAVE_BRANCHES: 'autosave/**'\n", "  AUTOSAVE_BRANCHES: " + quotedPattern + "\n");
+                .Replace("  AUTOSAVE_BRANCHES: 'AutoSync'\n", "  AUTOSAVE_BRANCHES: " + quotedPattern + "\n");
         }
 
         /// <summary>

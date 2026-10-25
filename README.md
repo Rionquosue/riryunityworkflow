@@ -108,12 +108,13 @@ Every regeneration is recorded in `ProjectSettings/RiryGuidRemap.tsv`.
 resolve in damaged or recovered files, using that ledger and then Git history.
 See [GUID Tools](Documentation~/regenerate-asset-guids.md).
 
-## Git Autosave
+## AutoSync (GIT menu)
 
-Open **Tools > Rirytools > Git Autosave** and enable it. A few seconds after
-scenes, prefabs or `.meta` files change, they are committed to an autosave
-branch (default `autosave/<user>`) through a separate Git index and pushed.
-The checked-out branch and staged changes are never touched. **Install Rebase
-Workflow** adds a GitHub Actions job that keeps autosave branches rebased on
-the base branch. See [setup and recovery](Documentation~/git-autosave.md).
+The **GIT** menu backs up scenes, prefabs and `.meta` files to an `AutoSync`
+branch seconds after they change, through a separate Git index, and pushes it.
+**Configure Sync...** creates the repository from named `.gitignore` and
+`.gitattributes` templates in `Documents/UnityTools/ImportPresets`, enables Git
+LFS and checks that large files use it and can be pushed. AutoSync offers to fix
+broken references from its history, and blocks saving a scene or prefab that a
+script stopped from loading. See [AutoSync](Documentation~/autosync.md).
 

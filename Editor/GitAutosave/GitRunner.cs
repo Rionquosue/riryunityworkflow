@@ -11,6 +11,18 @@ using System.Threading.Tasks;
 
 namespace Riry.UnityWorkflow.Editor
 {
+    /// <summary>Thrown by every Git operation when git is not installed or not on PATH.</summary>
+    internal sealed class GitNotInstalledException : InvalidOperationException
+    {
+        internal const string DownloadUrl = "https://git-scm.com/install/";
+
+        internal GitNotInstalledException(Exception inner)
+            : base("Git is not installed or not on PATH. Install it from " + DownloadUrl +
+                " and restart Unity. See GIT > Help.", inner)
+        {
+        }
+    }
+
     /// <summary>
     /// Runs git without a console window or credential prompts. Safe to call
     /// from a worker thread: it uses no Unity API.
@@ -35,7 +47,6 @@ namespace Riry.UnityWorkflow.Editor
             }
         }
 
-        internal const int NotFound = -2;
         internal const int TimedOut = -1;
 
         private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false);
@@ -101,9 +112,7 @@ namespace Riry.UnityWorkflow.Editor
                 }
                 catch (Win32Exception exception)
                 {
-                    result.ExitCode = NotFound;
-                    result.Error = "Git was not found on PATH: " + exception.Message;
-                    return result;
+                    throw new GitNotInstalledException(exception);
                 }
 
                 process.BeginErrorReadLine();
