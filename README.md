@@ -42,8 +42,8 @@ The main-menu command uses the active clip from the focused Animation window. If
 another window is focused, it uses the selected AnimationClip in the Project
 window.
 
-The cleaner removes inactive blendshape curves and static two-endpoint bone
-transform curves. It rounds bone translation, rotation, and scale values to
+The cleaner removes inactive blendshape curves (every key at zero, with no
+tangent leaving zero) and static two-endpoint bone transform curves. It rounds bone translation, rotation, and scale values to
 three decimal places for endpoint comparison. Active or ambiguous curves are
 preserved in a review window unless **Remove keys anyways** is explicitly
 enabled.
@@ -63,12 +63,13 @@ expanded recursively; their own folder GUIDs are never changed.
 
 The tool generates a new GUID for every selected asset and updates exact GUID
 references in the project's text-serialized files without changing local
-file IDs. It requires **Force Text** asset serialization and bypasses Unity
-Undo, so commit or back up the project first.
+file IDs. It requires **Force Text** asset serialization, saved scenes, and a
+closed Prefab Mode. Open scenes are reloaded from disk afterwards. It bypasses
+Unity Undo, so commit or back up the project first.
 
 Reverse-reference indexes are cached under
 `Library/RegenerateGuidCache`. Delete them from the GUID Tools window or with
 **Tools > Rirytools > Delete GUID Reference Cache**. Diagnostic logs are written
-beside `RegenerateAssetGuid.cs` under `logs/`; the active log rotates at 10 MiB
-and archived logs are trimmed oldest-first above 100 MiB.
+to `Logs/RiryGuidTools/` in the project; the active log rotates at 10 MiB, also
+during a run, and archived logs are trimmed oldest-first above 100 MiB.
 

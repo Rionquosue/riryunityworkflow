@@ -5,7 +5,9 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Riry.UnityWorkflow.Editor.Tests
 {
@@ -13,11 +15,23 @@ namespace Riry.UnityWorkflow.Editor.Tests
     {
         private readonly List<UnityEngine.Object> owned = new List<UnityEngine.Object>();
         private BlendShapeSyncWindow window;
+        private Scene previousActive;
+        private Scene testScene;
 
         [SetUp]
         public void SetUp()
         {
             if (AnimationMode.InAnimationMode()) Assert.Ignore("Stop animation preview before testing.");
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (string.IsNullOrEmpty(scene.path) && scene.isDirty)
+                    Assert.Ignore("Save or discard the untitled scene before testing.");
+            }
+            // Test objects go into a throwaway scene, so the user's scenes are not dirtied.
+            previousActive = SceneManager.GetActiveScene();
+            testScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            SceneManager.SetActiveScene(testScene);
             Selection.activeObject = null;
             window = ScriptableObject.CreateInstance<BlendShapeSyncWindow>();
             owned.Add(window);
@@ -30,6 +44,9 @@ namespace Riry.UnityWorkflow.Editor.Tests
             for (int i = owned.Count - 1; i >= 0; i--)
                 if (owned[i] != null) UnityEngine.Object.DestroyImmediate(owned[i]);
             owned.Clear();
+            if (previousActive.IsValid() && previousActive.isLoaded)
+                SceneManager.SetActiveScene(previousActive);
+            if (testScene.IsValid()) EditorSceneManager.CloseScene(testScene, true);
             Undo.ClearAll();
         }
 
@@ -126,6 +143,20 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(first.GetBlendShapeWeight(1), Is.EqualTo(31));
             Assert.That(second.GetBlendShapeWeight(0), Is.EqualTo(150));
             Assert.That(second.GetBlendShapeWeight(1), Is.EqualTo(-25));
+        }
+
+        [Test]
+        public void NonFiniteMasterWeightIsNotCopied()
+        {
+            var master = Renderer("Master", "Blink", "Smile");
+            var child = Renderer("Child", "Blink", "Smile");
+            master.SetBlendShapeWeight(0, float.NaN);
+            master.SetBlendShapeWeight(1, 40);
+            child.SetBlendShapeWeight(0, 12);
+            Assign(master, child);
+            Call("SyncNow");
+            Assert.That(child.GetBlendShapeWeight(0), Is.EqualTo(12));
+            Assert.That(child.GetBlendShapeWeight(1), Is.EqualTo(40));
         }
 
         [Test]
@@ -251,6 +282,22 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(first.GetBlendShapeWeight(0), Is.EqualTo(12));
             Assert.That(second.GetBlendShapeWeight(0), Is.EqualTo(23));
             Assert.That(Get<bool>("runAutomatically"), Is.False);
+        }
+
+        [Test]
+        public void UnrelatedUndoKeepsAutomaticSyncRunning()
+        {
+            Assert.That(BlendShapeSyncWindow.IsOwnUndo("Sync Blendshape Weights"), Is.True);
+            Assert.That(BlendShapeSyncWindow.IsOwnUndo("Restore Original Blendshape Weights"), Is.True);
+            var other = Renderer("Other", "Blink");
+            Set("runAutomatically", true);
+            Undo.IncrementCurrentGroup();
+            Undo.RecordObject(other, "Change Unrelated Weight");
+            other.SetBlendShapeWeight(0, 40);
+            Undo.FlushUndoRecordObjects();
+            Undo.PerformUndo();
+            Assert.That(other.GetBlendShapeWeight(0), Is.EqualTo(0));
+            Assert.That(Get<bool>("runAutomatically"), Is.True);
         }
 
         [Test]

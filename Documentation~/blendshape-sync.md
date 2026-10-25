@@ -30,8 +30,8 @@ write the same destination. Incomplete links or missing names block the entire
 pass and show a message; a fully blank row is ignored. Unmatched automatic names
 are ignored, leaving those weights unchanged.
 
-Names are literal, complete names. Case-insensitive matching uses an anchored,
-escaped regex with culture-invariant comparison. Regex punctuation in names
+Names are literal, complete names. Case-insensitive matching uses an ordinal,
+culture-independent comparison of the whole name. Regex punctuation in names
 such as `Blink.Left` or `Smile[Wide]` has no special meaning. Spaces remain part
 of the name. There is no substring, suffix, or arbitrary-pattern matching.
 
@@ -60,9 +60,14 @@ Snapshots for deleted objects, different meshes, or reordered/renamed shapes are
 skipped and counted in the result. In-place mesh reimports do not overwrite the
 old baseline; mismatched snapshots are skipped to avoid restoring by wrong index.
 
+A master weight that is NaN or Infinity is never copied; the result message
+counts those skipped links.
+
 Each pass with actual weight changes is one Undo operation. No-op ticks add no
-Undo entries. Undo/Redo stops automatic syncing so it cannot immediately overwrite
-the Undo result. Prefab instance modifications are recorded normally.
+Undo entries. Undo/Redo of a sync or restore pass stops automatic syncing so it
+cannot immediately overwrite the Undo result. Undoing any other edit, such as a
+master weight change, leaves automatic syncing on. Prefab instance modifications
+are recorded normally.
 
 ## Editor guards and scheduling
 
@@ -94,9 +99,11 @@ Closing/reloading the window removes its editor event subscriptions.
 
 ## Tests
 
-The package includes 19 Edit Mode regression tests for literal/case matching,
-manual-link precedence, ambiguity, multi-child updates, cache restoration,
-mesh replacement, Undo, editor guards, timing, and automatic empty child rows.
+The package includes 21 Blendshape Sync Edit Mode regression tests for
+literal/case matching, non-finite weights, manual-link precedence, ambiguity, multi-child updates,
+cache restoration, mesh replacement, Undo, editor guards, timing, and automatic
+empty child rows. The same assembly also tests Clean Animation Keys and the GUID
+tool.
 
 For a Git Package Manager installation, add the package name to the existing
 `testables` array in your project's `Packages/manifest.json`:
@@ -106,8 +113,10 @@ For a Git Package Manager installation, add the package name to the existing
 ```
 
 Use the Unity Test Framework, open **Window > General > Test Runner**, select
-**EditMode**, and run `Riry.UnityWorkflow.Editor.Tests`. Run in a test scene with
-animation preview stopped and the Animator graph unfocused. The tests clear Undo
+**EditMode**, and run `Riry.UnityWorkflow.Editor.Tests`. Run with animation
+preview stopped and the Animator graph unfocused. Blendshape tests create their
+objects in a temporary additive scene, so your open scenes are not modified;
+they are skipped while a dirty untitled scene is open. The tests clear Undo
 history during cleanup. Manual checks: drag/drop, ambiguity dialog, prefab
 overrides, script reload retaining the baseline, and Play Mode transitions.
 
