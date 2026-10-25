@@ -19,8 +19,7 @@ The command intentionally chooses its source by invocation context:
   tangent bends the curve between keys. A static hold is removed even when it
   holds a non-default pose; review the result window if a clip relies on that.
 - Bone values are rounded to three decimal places before comparison.
-- NaN and Infinity values or key times, and curves Unity cannot read, are
-  preserved for safety.
+- NaN and Infinity values are preserved for safety.
 - Other float curves, object-reference curves, and animation events are parsed
   for the result summary and left untouched.
 - Whitelisted groups remain intact unless the user enables

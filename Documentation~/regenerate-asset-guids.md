@@ -48,12 +48,9 @@ Each processed asset receives a compact binary reverse-reference index under:
 Library/RegenerateGuidCache/
 ```
 
-On a later run for the same asset path and GUID, cached reference files whose
-size and modification time are unchanged are validated at their stored byte
-offsets instead of being rescanned. Every other eligible file is always scanned:
-moved, copied, or checked-out files can keep old timestamps, so a timestamp
-cannot prove that an uncached file has no reference. The cache is derived data
-and can be deleted at any time.
+On a later run for the same asset path and GUID, unchanged cached files are
+validated at their stored byte offsets; every other file is scanned. The cache
+is derived data and can be deleted at any time.
 
 ## Diagnostics
 
@@ -65,26 +62,20 @@ Logs/RiryGuidTools/guid-tools.log
 Logs/RiryGuidTools/archive/
 ```
 
-The log records one line per file that contains a selected GUID, not one line
-per asset and file. Whenever the active log grows past 10 MiB, including during
-a run, it is moved into the archive. If archived logs exceed 100 MiB, the oldest
-archived files are deleted until the archive is within the limit.
+An active log larger than 10 MiB is moved into the archive. If archived logs
+exceed 100 MiB, the oldest archived files are deleted until the archive is
+within the limit.
 
 ## Safety limits
 
 - Only target assets under `Assets` are accepted.
 - Read-only affected files abort the operation before any write.
 - Binary Unity assets with a detected dependency on a target abort the
-  operation and must be reserialized as text first. Binary Unity files outside
-  the Asset Database (for example in `ProjectSettings`) cannot be inspected and
-  also abort the operation.
-- Folders reached through symbolic links or junctions are scanned and updated
-  like real folders. A link loop stops the run instead of scanning forever.
-- Two project files whose paths differ only by letter case stop the run, since
-  their references could otherwise be confused.
-- Paths are compared in composed Unicode (NFC), so accented names reported in
-  decomposed form by macOS still match.
+  operation and must be reserialized as text first.
+- A symbolic link loop or two paths differing only by letter case stop the run.
 - Cache deletion removes only `Library/RegenerateGuidCache`.
+- Temporary scan collections, buffers, and index objects are cleared after a
+  run.
 
 ## Tests
 

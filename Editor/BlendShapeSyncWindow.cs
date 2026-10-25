@@ -612,15 +612,14 @@ namespace Riry.UnityWorkflow.Editor
                     CaptureOriginal(plan.Renderer);
                     foreach (IndexLink link in plan.Links)
                     {
-                        float weight = sourceWeights[link.Source];
                         // NaN or Infinity on the master must not spread to every child.
-                        if (float.IsNaN(weight) || float.IsInfinity(weight))
+                        if (float.IsNaN(sourceWeights[link.Source]) || float.IsInfinity(sourceWeights[link.Source]))
                         {
                             invalid++;
                             continue;
                         }
                         linkCount++;
-                        AddChange(plan.Renderer, link.Destination, weight);
+                        AddChange(plan.Renderer, link.Destination, sourceWeights[link.Source]);
                     }
                 }
                 int count = changes.Count;
