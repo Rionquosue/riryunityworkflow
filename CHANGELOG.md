@@ -21,6 +21,8 @@
 - Exported FBX files and extracted clips are replaced only while unchanged since
   the tool wrote them.
 - Added import preset tests, including an end-to-end texture import.
+- Added **Tools > Rirytools > Play Mode**: entering Play Mode keeps the tabs that
+  were in front, and a Game view opened only for Play Mode can be closed.
 
 ## 0.4.0 - 2026-10-24
 
