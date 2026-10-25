@@ -103,3 +103,17 @@ Reverse-reference indexes are cached under
 to `Logs/RiryGuidTools/` in the project; the active log rotates at 10 MiB, also
 during a run, and archived logs are trimmed oldest-first above 100 MiB.
 
+Every regeneration is recorded in `ProjectSettings/RiryGuidRemap.tsv`.
+**Rirytools > Repair Missing GUID References** relinks GUIDs that no longer
+resolve in damaged or recovered files, using that ledger and then Git history.
+See [GUID Tools](Documentation~/regenerate-asset-guids.md).
+
+## Git Autosave
+
+Open **Tools > Rirytools > Git Autosave** and enable it. A few seconds after
+scenes, prefabs or `.meta` files change, they are committed to an autosave
+branch (default `autosave/<user>`) through a separate Git index and pushed.
+The checked-out branch and staged changes are never touched. **Install Rebase
+Workflow** adds a GitHub Actions job that keeps autosave branches rebased on
+the base branch. See [setup and recovery](Documentation~/git-autosave.md).
+

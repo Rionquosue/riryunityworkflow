@@ -65,7 +65,7 @@ internal static class RegenerateAssetGuid
             ".shadervariants", ".inputactions", ".inputsettings", ".fnt"
         };
 
-    private static readonly HashSet<string> UnitySerializedExtensions =
+    internal static readonly HashSet<string> UnitySerializedExtensions =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             ".unity", ".prefab", ".mat", ".asset", ".controller",
@@ -269,6 +269,19 @@ internal static class RegenerateAssetGuid
             SaveCaches(targets, projectRoot, scanStartedUtcTicks, log);
             committed = true;
 
+            // The files are already updated, so a ledger failure only warns.
+            try
+            {
+                GuidRemapLedger.Append(targets);
+                log.Write("Recorded " + targets.Count + " GUID change(s) in " + GuidRemapLedger.RelativePath);
+            }
+            catch (Exception exception)
+            {
+                log.Write("Ledger write failure: " + exception);
+                Debug.LogWarning("GUID Tools could not record the GUID changes in " +
+                    GuidRemapLedger.RelativePath + ":\n" + exception.Message);
+            }
+
             ReloadScenes(sceneSetup, log);
 
             int referenceFileCount = CountReferenceFiles(targets);
@@ -382,7 +395,7 @@ internal static class RegenerateAssetGuid
         return result;
     }
 
-    private static bool ScenesAreSaved()
+    internal static bool ScenesAreSaved()
     {
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {
@@ -392,7 +405,7 @@ internal static class RegenerateAssetGuid
         return true;
     }
 
-    private static void ReloadScenes(SceneSetup[] setup, GuidToolLog log)
+    internal static void ReloadScenes(SceneSetup[] setup, GuidToolLog log)
     {
         if (setup == null)
             return;
@@ -1243,7 +1256,7 @@ internal static class RegenerateAssetGuid
                 failures);
     }
 
-    private static bool LooksLikeText(string fullPath, byte[] sample)
+    internal static bool LooksLikeText(string fullPath, byte[] sample)
     {
         const int sampleSize = 4096;
 
@@ -1311,7 +1324,7 @@ internal static class RegenerateAssetGuid
         return true;
     }
 
-    private static void EnsureWritable(string fullPath)
+    internal static void EnsureWritable(string fullPath)
     {
         if ((File.GetAttributes(fullPath) & FileAttributes.ReadOnly) != 0)
             throw new UnauthorizedAccessException("A file is read-only:\n" + fullPath);
@@ -1474,7 +1487,7 @@ internal sealed class GuidToolsWindow : EditorWindow
     {
         GuidToolsWindow window = GetWindow<GuidToolsWindow>();
         window.titleContent = new GUIContent("GUID Tools");
-        window.minSize = new Vector2(360f, 190f);
+        window.minSize = new Vector2(360f, 220f);
         window.Show();
     }
 
@@ -1491,6 +1504,12 @@ internal sealed class GuidToolsWindow : EditorWindow
         {
             if (GUILayout.Button("Regenerate Selected GUIDs", GUILayout.Height(30f)))
                 RegenerateAssetGuid.RegenerateSelectedGuids();
+        }
+
+        using (new EditorGUI.DisabledScope(!RegenerateAssetGuid.HasValidSelection()))
+        {
+            if (GUILayout.Button("Repair Missing GUID References", GUILayout.Height(24f)))
+                GuidReferenceRepair.RepairSelected();
         }
 
         GUILayout.Space(4f);

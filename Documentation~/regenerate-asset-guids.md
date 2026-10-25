@@ -66,6 +66,19 @@ An active log larger than 10 MiB is moved into the archive. If archived logs
 exceed 100 MiB, the oldest archived files are deleted until the archive is
 within the limit.
 
+## Remap ledger and repair
+
+Every completed run appends `old GUID, new GUID, asset path, UTC time` to
+`ProjectSettings/RiryGuidRemap.tsv`. Commit this file.
+
+**Rirytools > Repair Missing GUID References** (or the GUID Tools window) scans
+the selected text assets and folders for `guid:` values with no asset behind
+them. Each one is resolved from the ledger first, then from the Git history of
+`.meta` files, including autosave branches and the reflog: the asset now at the
+path that last held the GUID is linked. A preview lists every relink and every
+GUID that could not be resolved before anything is written. Writes use the same
+byte-exact patching and rollback as regeneration.
+
 ## Safety limits
 
 - Only target assets under `Assets` are accepted.
@@ -83,5 +96,6 @@ within the limit.
 with the target `.meta` written last, refusal to patch a changed file, rollback,
 the rule that the cache never hides an uncached file, case-only path
 collisions, short cache names for long asset names, and Unicode path matching. The tests use
-temporary files outside the project.
+temporary files outside the project. `GuidRepairTests` covers the GUID field
+scan, ledger chains and loops, and the Git history lookup.
 

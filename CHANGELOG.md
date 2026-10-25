@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 - 2026-10-25
+
+- Added **Tools > Rirytools > Git Autosave**: scenes, prefabs and `.meta` files
+  are committed to a per-user autosave branch shortly after they change, through
+  a separate Git index, and pushed. The checked-out branch and staged changes are
+  never touched.
+- Added a GitHub Actions workflow, installed from the window, that keeps autosave
+  branches rebased on the base branch; autosave versions win conflicts. The
+  editor replays unpushed snapshots when the workflow has rewritten the branch.
+- Regenerate GUID now records every change in `ProjectSettings/RiryGuidRemap.tsv`.
+- Added **Rirytools > Repair Missing GUID References**: relinks GUIDs that no
+  longer resolve, from the ledger and then from Git history.
+- Added Git autosave and GUID repair tests.
+
 ## 0.5.0 - 2026-10-24
 
 - Added folder import presets: `ImportPreset.md` names a configuration from the
