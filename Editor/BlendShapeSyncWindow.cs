@@ -9,11 +9,13 @@ using UnityEngine;
 
 namespace Riry.UnityWorkflow.Editor
 {
-    /// <summary>Copies renderer weights; never changes meshes or animation clips.</summary>
-    internal sealed class BlendShapeSyncWindow : EditorWindow
+    /// <summary>
+    /// Copies renderer weights; never changes meshes or animation clips. What the
+    /// window draws is in Editor/UI/BlendShapeSyncWindow.UI.cs.
+    /// </summary>
+    internal sealed partial class BlendShapeSyncWindow : EditorWindow
     {
         private const double Interval = 0.5;
-        private const string MenuPath = "Tools/Rirytools/Blendshape Sync";
         private const string SyncUndoName = "Sync Blendshape Weights";
         private const string RestoreUndoName = "Restore Original Blendshape Weights";
 
@@ -93,12 +95,6 @@ namespace Riry.UnityWorkflow.Editor
         [NonSerialized] private double nextTick;
         private Vector2 scroll;
 
-        [MenuItem(MenuPath, false, 2020)]
-        private static void Open()
-        {
-            GetWindow<BlendShapeSyncWindow>("Blendshape Sync");
-        }
-
         private void OnEnable()
         {
             minSize = new Vector2(440, 320);
@@ -165,124 +161,6 @@ namespace Riry.UnityWorkflow.Editor
         {
             planDirty = true;
             Repaint();
-        }
-
-        private void OnGUI()
-        {
-            string paused = GetPauseReason();
-            if (!string.IsNullOrEmpty(paused))
-                EditorGUILayout.HelpBox("Paused: " + paused, MessageType.Info);
-
-            using (new EditorGUI.DisabledScope(!string.IsNullOrEmpty(paused) || busy))
-            {
-                scroll = EditorGUILayout.BeginScrollView(scroll);
-                EditorGUI.BeginChangeCheck();
-                SkinnedMeshRenderer selected = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(
-                    "Master", master, typeof(SkinnedMeshRenderer), true);
-                if (selected != master && CanAssign(selected, -1))
-                {
-                    master = selected;
-                    CaptureOriginal(master);
-                }
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Children", EditorStyles.boldLabel);
-                EnsureChildRow();
-                int removeChild = -1;
-                // Render the current rows; add a new empty row after this layout.
-                int rowCount = children.Count;
-                for (int i = 0; i < rowCount; i++)
-                {
-                    ChildEntry child = children[i];
-                    using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-                    {
-                        using (new EditorGUILayout.HorizontalScope())
-                        {
-                            selected = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(
-                                "Child " + (i + 1), child.Renderer, typeof(SkinnedMeshRenderer), true);
-                            if (selected != child.Renderer && CanAssign(selected, i))
-                            {
-                                child.Renderer = selected;
-                                CaptureOriginal(selected);
-                            }
-                            if (GUILayout.Button("Remove", GUILayout.Width(65))) removeChild = i;
-                        }
-                        child.Expanded = EditorGUILayout.Foldout(child.Expanded, "Manual link", true);
-                        if (child.Expanded) DrawManualLinks(child);
-                    }
-                }
-                if (removeChild >= 0) children.RemoveAt(removeChild);
-                EnsureChildRow();
-                if (EditorGUI.EndChangeCheck() || removeChild >= 0) InvalidatePlan();
-                EditorGUILayout.EndScrollView();
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    bool automatic = EditorGUILayout.ToggleLeft("Run automatically", runAutomatically);
-                    if (automatic != runAutomatically)
-                    {
-                        runAutomatically = automatic;
-                        nextTick = EditorApplication.timeSinceStartup + Interval;
-                    }
-                    bool debug = GUILayout.Toggle(caseSensitive,
-                        new GUIContent("Debug", "Use exact, case-sensitive blendshape names."),
-                        "Button", GUILayout.Width(65));
-                    if (debug != caseSensitive)
-                    {
-                        caseSensitive = debug;
-                        lastAmbiguity = null;
-                        InvalidatePlan();
-                    }
-                }
-                EditorGUILayout.LabelField(caseSensitive
-                    ? "Debug: exact, case-sensitive names."
-                    : "Literal name matching, ignoring case.", EditorStyles.miniLabel);
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("Sync now")) SyncNow();
-                    using (new EditorGUI.DisabledScope(originals.Count == 0))
-                    {
-                        if (GUILayout.Button("Set all to original")) RestoreOriginals();
-                    }
-                }
-            }
-            if (!string.IsNullOrEmpty(planError))
-                EditorGUILayout.HelpBox(planError, MessageType.Warning);
-            EditorGUILayout.HelpBox(result ?? "Assign meshes to begin.", MessageType.Info);
-            EditorGUILayout.LabelField(
-                "Original values are kept while this window remains open.", EditorStyles.miniLabel);
-        }
-
-        private void DrawManualLinks(ChildEntry child)
-        {
-            if (child.Links == null) child.Links = new List<ManualLink>();
-            EnsureLinkRow(child);
-            int remove = -1;
-            for (int i = 0; i < child.Links.Count; i++)
-            {
-                ManualLink link = child.Links[i];
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    using (new EditorGUILayout.VerticalScope())
-                    {
-                        EditorGUILayout.LabelField(new GUIContent("Source", "Name on the master."),
-                            EditorStyles.miniLabel);
-                        link.Source = EditorGUILayout.TextField(link.Source);
-                    }
-                    using (new EditorGUILayout.VerticalScope())
-                    {
-                        EditorGUILayout.LabelField(new GUIContent("Destination", "Name on this child."),
-                            EditorStyles.miniLabel);
-                        link.Destination = EditorGUILayout.TextField(link.Destination);
-                    }
-                    if (GUILayout.Button("X", GUILayout.Width(22))) remove = i;
-                }
-            }
-            if (remove >= 0)
-            {
-                child.Links.RemoveAt(remove);
-                InvalidatePlan();
-            }
-            EnsureLinkRow(child);
         }
 
         private void EnsureChildRow()

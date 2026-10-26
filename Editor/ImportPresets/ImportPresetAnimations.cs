@@ -19,7 +19,6 @@ namespace Riry.UnityWorkflow.Editor
     internal static class ImportPresetAnimations
     {
         internal const string FolderName = "Animations";
-        private const string MenuPath = "Assets/Rirytools/Extract Animations (Generic)";
 
         /// <summary>Tests point pending markers at a temporary folder.</summary>
         internal static string PendingFolderOverride;
@@ -232,8 +231,7 @@ namespace Riry.UnityWorkflow.Editor
                 " that were edited or not created by this tool:\n" + string.Join("\n", skipped));
         }
 
-        [MenuItem(MenuPath, false, 2003)]
-        private static void ExtractSelected()
+        internal static void ExtractSelected()
         {
             foreach (ModelImporter importer in SelectedModels())
             {
@@ -254,8 +252,7 @@ namespace Riry.UnityWorkflow.Editor
             }
         }
 
-        [MenuItem(MenuPath, true)]
-        private static bool ValidateExtractSelected()
+        internal static bool ValidateExtractSelected()
         {
             return SelectedModels().Count > 0;
         }

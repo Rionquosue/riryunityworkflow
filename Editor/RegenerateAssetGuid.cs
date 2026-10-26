@@ -18,12 +18,11 @@ namespace Riry.UnityWorkflow.Editor
 /// <summary>
 /// Regenerates GUIDs for selected assets while preserving text-serialized
 /// references. Multi-selection and recursively selected folders are supported.
-/// Folder GUIDs are never changed.
+/// Folder GUIDs are never changed. Menu entries are in Editor/UI/RiryMenus.cs and
+/// the GUID Tools window is in Editor/UI/GuidToolsWindow.cs.
 /// </summary>
 internal static class RegenerateAssetGuid
 {
-    private const string ProjectMenuPath =
-        "Assets/Rirytools/Regenerate GUID";
     private const string CacheFolderName = "RegenerateGuidCache";
     private const string CacheExtension = ".rguiddb";
     private const int CacheNameLength = 40;
@@ -134,7 +133,6 @@ internal static class RegenerateAssetGuid
         public byte[] NewBytes;
     }
 
-    [MenuItem(ProjectMenuPath, false, 2000)]
     internal static void RegenerateSelectedGuids()
     {
         GuidToolLog log = GuidToolLog.Open("Regenerate GUID");
@@ -335,12 +333,6 @@ internal static class RegenerateAssetGuid
             log.Write("Temporary processing data released.");
             log.Dispose();
         }
-    }
-
-    [MenuItem(ProjectMenuPath, true)]
-    private static bool ValidateRegenerateSelectedGuids()
-    {
-        return HasValidSelection();
     }
 
     internal static bool HasValidSelection()
@@ -1475,59 +1467,6 @@ internal static class RegenerateAssetGuid
             patches.Clear();
         if (written != null)
             written.Clear();
-    }
-}
-
-internal sealed class GuidToolsWindow : EditorWindow
-{
-    private const string WindowMenuPath = "Tools/Rirytools/GUID Tools";
-
-    [MenuItem(WindowMenuPath, false, 2010)]
-    private static void OpenWindow()
-    {
-        GuidToolsWindow window = GetWindow<GuidToolsWindow>();
-        window.titleContent = new GUIContent("GUID Tools");
-        window.minSize = new Vector2(360f, 220f);
-        window.Show();
-    }
-
-    private void OnGUI()
-    {
-        GUILayout.Space(10f);
-        EditorGUILayout.LabelField("Asset GUID Tools", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox(
-            "Regenerates GUIDs for selected assets while preserving text-serialized references. " +
-            "Folders are expanded recursively without changing folder GUIDs.",
-            MessageType.Info);
-
-        using (new EditorGUI.DisabledScope(!RegenerateAssetGuid.HasValidSelection()))
-        {
-            if (GUILayout.Button("Regenerate Selected GUIDs", GUILayout.Height(30f)))
-                RegenerateAssetGuid.RegenerateSelectedGuids();
-        }
-
-        using (new EditorGUI.DisabledScope(!RegenerateAssetGuid.HasValidSelection()))
-        {
-            if (GUILayout.Button("Repair Missing GUID References", GUILayout.Height(24f)))
-                GuidReferenceRepair.RepairSelected();
-        }
-
-        GUILayout.Space(4f);
-        if (GUILayout.Button("Delete Reference Cache", GUILayout.Height(24f)))
-            ClearRegenerateGuidCache.DeleteCacheWithConfirmation();
-
-        GUILayout.Space(6f);
-        EditorGUILayout.LabelField(
-            "Cache: Library/RegenerateGuidCache",
-            EditorStyles.miniLabel);
-        EditorGUILayout.LabelField(
-            "Logs: Logs/RiryGuidTools",
-            EditorStyles.miniLabel);
-    }
-
-    private void OnSelectionChange()
-    {
-        Repaint();
     }
 }
 

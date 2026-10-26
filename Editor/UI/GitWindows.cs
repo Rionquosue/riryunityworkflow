@@ -1,152 +1,90 @@
 #if UNITY_EDITOR
 // Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 
 namespace Riry.UnityWorkflow.Editor
 {
-    /// <summary>The GIT menu in the main menu bar.</summary>
-    [InitializeOnLoad]
-    internal static class GitMenu
+    /// <summary>GIT > AutoSync Settings...: branch, base branch, remote, push and the rebase workflow.</summary>
+    internal sealed class GitAutosaveWindow : EditorWindow
     {
-        // U+2215 keeps "Scene/Prefab" on one menu item instead of a submenu.
-        private const string AutoSyncPath = "GIT/AutoSync Scene∕Prefab";
-        private const string DontAskKey = "Riry.GitAutosave.DontAskToConfigure";
-
-        static GitMenu()
+        internal static void Open()
         {
-            // Offer setup once per session when the project has no repository.
-            if (SessionState.GetBool(DontAskKey, false) || EditorUserSettings.GetConfigValue(DontAskKey) == "1") return;
-            SessionState.SetBool(DontAskKey, true);
-            EditorApplication.delayCall += () =>
+            GitAutosaveWindow window = GetWindow<GitAutosaveWindow>();
+            window.titleContent = new GUIContent("AutoSync");
+            window.minSize = new Vector2(380f, 300f);
+            window.Show();
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.HelpBox(
+                "Commits scenes, prefabs and .meta files to the AutoSync branch a few seconds after they change, " +
+                "through a separate Git index: the checked-out branch and staged changes are never touched.",
+                MessageType.Info);
+
+            EditorGUI.BeginChangeCheck();
+            bool enabled = EditorGUILayout.Toggle("AutoSync Scene\u2215Prefab", GitAutosave.Enabled);
+            string branch = EditorGUILayout.DelayedTextField("AutoSync branch", GitAutosave.Branch).Trim();
+            string baseBranch = EditorGUILayout.DelayedTextField("Base branch", GitAutosave.BaseBranch).Trim();
+            bool push = EditorGUILayout.Toggle("Push", GitAutosave.PushEnabled);
+            string remote;
+            using (new EditorGUI.DisabledScope(!push))
+                remote = EditorGUILayout.DelayedTextField("Remote", GitAutosave.Remote).Trim();
+            if (EditorGUI.EndChangeCheck())
             {
-                if (!GitState.GitInstalled || GitState.RepositoryExists) return;
-                int choice = EditorUtility.DisplayDialogComplex("AutoSync",
-                    "This project is not in a Git repository, so scenes and prefabs are not backed up.\n\n" +
-                    "Set up a repository with a .gitignore and Git LFS now?", "Configure Sync...", "Not Now", "Don't Ask Again");
-                if (choice == 0) GitConfigureWindow.Open();
-                if (choice == 2) EditorUserSettings.SetConfigValue(DontAskKey, "1");
-            };
-        }
+                GitAutosave.Enabled = enabled;
+                GitAutosave.Branch = branch;
+                GitAutosave.BaseBranch = baseBranch;
+                GitAutosave.PushEnabled = push;
+                GitAutosave.Remote = remote;
+                if (enabled) GitAutosave.ScheduleNow();
+            }
 
-        [MenuItem(AutoSyncPath, false, 1)]
-        private static void ToggleAutoSync()
-        {
-            Guard(() =>
+            if (GitAutosave.SettingsError() != null)
+                EditorGUILayout.HelpBox(GitAutosave.SettingsError(), MessageType.Error);
+            EditorGUILayout.LabelField("Last run", GitAutosave.Status ?? "Not run in this session.", EditorStyles.wordWrappedLabel);
+
+            using (new EditorGUI.DisabledScope(GitAutosave.SettingsError() != null))
             {
-                bool enable = !GitAutosave.Enabled;
-                if (enable)
-                {
-                    GitState.RequireGit();
-                    if (!GitState.RepositoryExists)
-                    {
-                        if (EditorUtility.DisplayDialog("AutoSync", "AutoSync needs a Git repository. Configure one now?",
-                                "Configure Sync...", "Cancel"))
-                            GitConfigureWindow.Open();
-                        return;
-                    }
-                }
-                GitAutosave.Enabled = enable;
-                if (enable) GitAutosave.ScheduleNow();
-            });
+                if (GUILayout.Button("Snapshot Now")) GitAutosave.ScheduleNow();
+                GUILayout.Space(8f);
+                EditorGUILayout.LabelField("Rebase workflow (GitHub Actions)", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(
+                    "Replays every " + GitAutosave.WorkflowPattern(GitAutosave.Branch) + " branch onto " +
+                    GitAutosave.BaseBranch + " whenever either is pushed. Commit and push the installed file.",
+                    EditorStyles.wordWrappedMiniLabel);
+                if (GUILayout.Button("Install Rebase Workflow")) Install();
+            }
         }
 
-        [MenuItem(AutoSyncPath, true)]
-        private static bool ValidateAutoSync()
+        private void OnInspectorUpdate()
         {
-            Menu.SetChecked(AutoSyncPath, GitAutosave.Enabled);
-            return true;
+            Repaint();
         }
 
-        [MenuItem("GIT/Sync Now", false, 2)]
-        private static void SyncNow()
-        {
-            Guard(() =>
-            {
-                GitState.RequireGit();
-                if (!GitState.RepositoryExists) throw new InvalidOperationException(
-                    "The project is not in a Git repository. Use GIT > Configure Sync... first.");
-                GitAutosave.ScheduleNow();
-            });
-        }
-
-        [MenuItem("GIT/Check for Broken References...", false, 20)]
-        private static void CheckBrokenReferences()
-        {
-            BrokenReferenceWindow.OpenForOpenScenes("Checked from the GIT menu.");
-        }
-
-        [MenuItem("GIT/Configure Sync...", false, 40)]
-        private static void ConfigureSync()
-        {
-            Guard(() =>
-            {
-                GitState.RequireGit();
-                GitConfigureWindow.Open();
-            });
-        }
-
-        // Offered while there is no repository or no remote. Without git it stays
-        // enabled, so choosing it explains what is missing.
-        [MenuItem("GIT/Configure Sync...", true)]
-        private static bool ValidateConfigureSync()
-        {
-            return !GitState.GitInstalled || !GitState.RepositoryExists || !GitState.HasRemote;
-        }
-
-        [MenuItem("GIT/AutoSync Settings...", false, 41)]
-        private static void Settings()
-        {
-            GitAutosaveWindow.Open();
-        }
-
-        [MenuItem("GIT/Help", false, 100)]
-        private static void Help()
-        {
-            GitHelpWindow.Open();
-        }
-
-        /// <summary>Runs a menu action; a missing git or a failed step is shown, and logged as an exception.</summary>
-        internal static void Guard(Action action)
+        private static void Install()
         {
             try
             {
-                action();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (GitNotInstalledException exception)
-            {
-                Debug.LogException(exception);
-                if (EditorUtility.DisplayDialog("Git Not Installed", exception.Message, "Download Git", "Close"))
-                    Application.OpenURL(GitNotInstalledException.DownloadUrl);
+                string path = GitAutosave.InstallWorkflow(existing => EditorUtility.DisplayDialog("Replace Rebase Workflow",
+                    existing + " already exists with different content. Replace it?", "Replace", "Keep"));
+                if (path != null)
+                    EditorUtility.DisplayDialog("Rebase Workflow Installed",
+                        "Written to:\n" + path + "\n\nCommit and push it to the base branch to activate it.", "OK");
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
-                EditorUtility.DisplayDialog("GIT", exception.Message, "OK");
+                EditorUtility.DisplayDialog("Rebase Workflow Not Installed", exception.Message, "OK");
             }
         }
     }
 
-    internal sealed class GitConfigureWindow : EditorWindow
+    /// <summary>What Configure Sync draws. State and actions are in Editor/GitAutosave/GitActions.cs.</summary>
+    internal sealed partial class GitConfigureWindow
     {
-        private const string KeepCurrent = "(keep current file)";
-
-        private string[] ignoreOptions;
-        private string[] attributeOptions;
-        private int ignoreChoice;
-        private int attributeChoice;
-        private string remoteUrl = "";
-        private string currentRemoteUrl = "";
-        private string templateName = "";
-        private GitLfs.Report report;
-        private Vector2 scroll;
-
         internal static void Open()
         {
             GitConfigureWindow window = GetWindow<GitConfigureWindow>(true, "Configure Sync");
@@ -160,39 +98,6 @@ namespace Riry.UnityWorkflow.Editor
             "uploads over 100 MB are rejected and large LFS files cannot be pushed. Use an SSH remote " +
             "(git@host:owner/repo.git) for servers behind Cloudflare, with LFS over SSH enabled on the server " +
             "(Gitea/Forgejo: LFS_ALLOW_PURE_SSH = true under [server]).";
-
-        private static bool IsHttps(string url)
-        {
-            return url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-                url.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string ProjectFile(string name)
-        {
-            return Path.Combine(RegenerateAssetGuid.ProjectRootPath, name);
-        }
-
-        private void Reload()
-        {
-            GitMenu.Guard(GitTemplates.EnsureDefaults);
-            ignoreOptions = Options(GitTemplates.IgnoreExtension);
-            attributeOptions = Options(GitTemplates.AttributesExtension);
-            ignoreChoice = Math.Max(0, Math.Min(ignoreChoice, ignoreOptions.Length - 1));
-            attributeChoice = Math.Max(0, Math.Min(attributeChoice, attributeOptions.Length - 1));
-            GitState.Refresh(true);
-            currentRemoteUrl = "";
-            if (GitState.HasRemote)
-                GitMenu.Guard(() => currentRemoteUrl = GitRunner.Run(RegenerateAssetGuid.ProjectRootPath, null, 10000,
-                    "remote", "get-url", GitAutosave.Remote).Output.Trim());
-        }
-
-        private static string[] Options(string extension)
-        {
-            var options = new List<string>();
-            if (File.Exists(ProjectFile(extension))) options.Add(KeepCurrent);
-            options.AddRange(GitTemplates.Names(extension));
-            return options.ToArray();
-        }
 
         private void OnGUI()
         {
@@ -218,7 +123,7 @@ namespace Riry.UnityWorkflow.Editor
             if (IsHttps(GitState.HasRemote ? currentRemoteUrl : remoteUrl))
                 EditorGUILayout.HelpBox(CloudflareWarning, MessageType.Warning);
 
-            if (GUILayout.Button("Apply", GUILayout.Height(28f))) GitMenu.Guard(Apply);
+            if (GUILayout.Button("Apply", GUILayout.Height(28f))) GitActions.Guard(Apply);
 
             GUILayout.Space(8f);
             EditorGUILayout.LabelField("Save the project's current files as named templates", EditorStyles.boldLabel);
@@ -241,7 +146,7 @@ namespace Riry.UnityWorkflow.Editor
             using (new EditorGUI.DisabledScope(!File.Exists(ProjectFile(extension))))
             {
                 if (!GUILayout.Button("Save " + extension)) return;
-                GitMenu.Guard(() =>
+                GitActions.Guard(() =>
                 {
                     if (File.Exists(GitTemplates.PathFor(templateName, extension)) &&
                         !EditorUtility.DisplayDialog("Save Template", templateName + extension + " exists. Replace it?", "Replace", "Cancel"))
@@ -250,42 +155,6 @@ namespace Riry.UnityWorkflow.Editor
                     Reload();
                 });
             }
-        }
-
-        private void Apply()
-        {
-            GitState.RequireGit();
-            string project = RegenerateAssetGuid.ProjectRootPath;
-            if (!GitState.RepositoryExists)
-            {
-                Check(GitRunner.Run(project, null, 30000, "init"), "Creating the repository");
-                Check(GitRunner.Run(project, null, 30000, "symbolic-ref", "HEAD", "refs/heads/" + GitAutosave.BaseBranch),
-                    "Naming the first branch");
-            }
-
-            // The project folder is the repository's top folder, so these are its top-level files.
-            if (ignoreOptions.Length > 0) CopyTemplate(ignoreOptions[ignoreChoice], GitTemplates.IgnoreExtension);
-            if (attributeOptions.Length > 0) CopyTemplate(attributeOptions[attributeChoice], GitTemplates.AttributesExtension);
-
-            GitLfs.Enable(project);
-            if (remoteUrl.Length > 0 && !GitState.HasRemote)
-                Check(GitRunner.Run(project, null, 30000, "remote", "add", GitAutosave.Remote, remoteUrl), "Adding the remote");
-            GitState.Refresh(true);
-
-            report = GitLfs.Check(project, GitState.HasRemote ? GitAutosave.Remote : null);
-            Reload();
-            GitAutosave.ScheduleNow();
-        }
-
-        private static void CopyTemplate(string option, string extension)
-        {
-            if (option == KeepCurrent) return;
-            string text = File.ReadAllText(GitTemplates.PathFor(option, extension));
-            if (File.Exists(ProjectFile(extension)) && File.ReadAllText(ProjectFile(extension)) != text &&
-                !EditorUtility.DisplayDialog("Configure Sync", "Replace the project's " + extension + " with " + option + extension + "?",
-                    "Replace", "Keep Current"))
-                return;
-            File.WriteAllText(ProjectFile(extension), text);
         }
 
         private void DrawReport()
@@ -303,7 +172,7 @@ namespace Riry.UnityWorkflow.Editor
                     MessageType.Warning);
                 if (GUILayout.Button("Track ." + string.Join(", .", report.NotTrackedExtensions) + " with LFS"))
                 {
-                    GitMenu.Guard(() =>
+                    GitActions.Guard(() =>
                     {
                         GitLfs.Track(ProjectFile(GitTemplates.AttributesExtension), report.NotTrackedExtensions);
                         report = GitLfs.Check(RegenerateAssetGuid.ProjectRootPath, GitState.HasRemote ? GitAutosave.Remote : null);
@@ -314,11 +183,6 @@ namespace Riry.UnityWorkflow.Editor
                 EditorGUILayout.HelpBox(report.OverProxyLimit.Count + " file(s) exceed 100 MB. Over HTTPS, a server behind " +
                     "Cloudflare rejects them; use an SSH remote.\n" +
                     string.Join("\n", report.OverProxyLimit.GetRange(0, Math.Min(8, report.OverProxyLimit.Count))), MessageType.Warning);
-        }
-
-        private static void Check(GitRunner.Result result, string action)
-        {
-            if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
         }
     }
 
@@ -375,4 +239,56 @@ namespace Riry.UnityWorkflow.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: GIT windows
+// The GIT menu entries are in RiryMenus.cs; what they do is in GitActions.
+// ============================================================================
+//
+// GitAutosaveWindow (GIT > AutoSync Settings..., this file)
+//   Open() / OnGUI()        Settings fields, last run, Snapshot Now, Install Rebase Workflow.
+//   Install()               Writes .github/workflows/riry-autosave-rebase.yaml (asks before replacing).
+//   Settings it edits (GitAutosave, Editor/GitAutosave/GitAutosave.cs; stored per user and project):
+//     GitAutosave.Enabled      bool    AutoSync on (default: on once the project is a repository).
+//     GitAutosave.Branch       string  Branch receiving snapshots (default "AutoSync").
+//     GitAutosave.BaseBranch   string  Base for a new branch and for the rebase workflow (default "main").
+//     GitAutosave.PushEnabled  bool    Push after each snapshot.
+//     GitAutosave.Remote       string  Push target (default "origin").
+//     GitAutosave.Status       string  Outcome of the last pass.
+//     GitAutosave.SettingsError()  Why the settings are invalid, or null.
+//     GitAutosave.ScheduleNow()    Runs a pass on the next editor update.
+//     GitAutosave.WorkflowPattern(branch)  Branch filter written into the workflow.
+//
+// GitConfigureWindow (GIT > Configure Sync...)
+//   UI (this file)
+//     Open()                Opens the window and loads templates.
+//     CloudflareWarning     const string  Warning shown for HTTPS remotes.
+//     OnGUI()               Repository and remote, template popups, remote URL, Apply, Save template, LFS report.
+//     SaveButton(extension) Saves the project's .gitignore or .gitattributes as a named template.
+//     DrawReport()          Git LFS check results and the Track button.
+//   FIELDS AND ACTIONS (GitActions.cs)
+//     ignoreOptions / attributeOptions  string[]  Template popup entries.
+//     ignoreChoice / attributeChoice    int       Selected entries.
+//     remoteUrl             string     Remote to add when there is none.
+//     currentRemoteUrl      string     URL of the configured remote.
+//     templateName          string     Name for Save template.
+//     report                GitLfs.Report  Last LFS check.
+//     scroll                Vector2    Scroll position.
+//     KeepCurrent           const string  "(keep current file)" popup entry.
+//     Reload()              Downloads default templates if needed, refreshes options and state.
+//     Options(extension)    Popup entries for one template type.
+//     Apply()               Creates the repository, copies templates, enables LFS, adds the remote, checks LFS.
+//     CopyTemplate(option, extension)  Copies one template into the project (asks before replacing).
+//     IsHttps(url) / ProjectFile(name) / Check(result, action)  Small helpers.
+//
+// GitHelpWindow (GIT > Help, this file)
+//   Open() / OnGUI() / Section(title, text)  What, why and how; Download Git; Open Template Folder.
+//
+// GitActions (Editor/GitAutosave/GitActions.cs)
+//   ToggleAutoSync()        Turns AutoSync on or off (offers Configure Sync without a repository).
+//   SyncNow()               Runs a pass now.
+//   ConfigureSync()         Opens Configure Sync (throws GitNotInstalledException without git).
+//   ConfigureSyncAvailable() True while there is no git, repository or remote.
+//   Guard(action)           Runs an action; shows a missing git or a failure as a dialog.
+//   Static constructor      Offers Configure Sync once per session without a repository.
 #endif

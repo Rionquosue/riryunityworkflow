@@ -12,13 +12,10 @@ namespace Riry.UnityWorkflow.Editor
 
 /// <summary>
 /// Deletes only the derived GUID-reference cache created by RegenerateAssetGuid.
+/// Its menu entry is in Editor/UI/RiryMenus.cs.
 /// </summary>
 internal static class ClearRegenerateGuidCache
 {
-    private const string MenuPath =
-        "Tools/Rirytools/Delete GUID Reference Cache";
-
-    [MenuItem(MenuPath, false, 2020)]
     internal static void DeleteCacheWithConfirmation()
     {
         using (GuidToolLog log = GuidToolLog.Open("Delete Reference Cache"))

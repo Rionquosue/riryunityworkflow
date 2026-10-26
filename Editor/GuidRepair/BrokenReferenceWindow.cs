@@ -14,12 +14,11 @@ namespace Riry.UnityWorkflow.Editor
     /// <summary>
     /// Lists every missing GUID in a set of files with a redirect field, filled in
     /// from the ledger, logs and AutoSync history where possible. A missing GUID
-    /// without a redirect is shown in red until one is chosen.
+    /// without a redirect is shown in red until one is chosen. State and actions;
+    /// the drawing is in Editor/UI/BrokenReferenceWindow.UI.cs.
     /// </summary>
-    internal sealed class BrokenReferenceWindow : EditorWindow
+    internal sealed partial class BrokenReferenceWindow : EditorWindow
     {
-        private static readonly Color Unresolved = new Color(1f, 0.35f, 0.35f);
-
         private List<string> files = new List<string>();
         private string reason = "";
         private RepairPlan plan;
@@ -85,58 +84,6 @@ namespace Riry.UnityWorkflow.Editor
             {
                 log.Dispose();
             }
-        }
-
-        private void OnGUI()
-        {
-            EditorGUILayout.LabelField(reason, EditorStyles.wordWrappedLabel);
-            EditorGUILayout.LabelField("Files: " + string.Join(", ", files), EditorStyles.wordWrappedMiniLabel);
-            if (GUILayout.Button("Rescan")) Rescan();
-            if (plan == null) return;
-            if (plan.Missing.Count == 0)
-            {
-                EditorGUILayout.HelpBox("No broken references were found.", MessageType.Info);
-                return;
-            }
-
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-            foreach (KeyValuePair<string, SortedSet<string>> missing in plan.Missing)
-            {
-                Object choice;
-                choices.TryGetValue(missing.Key, out choice);
-                Color previous = GUI.backgroundColor;
-                if (choice == null) GUI.backgroundColor = Unresolved;
-                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-                {
-                    GUI.backgroundColor = previous;
-                    string lastPath;
-                    plan.LastKnownPaths.TryGetValue(missing.Key, out lastPath);
-                    EditorGUILayout.LabelField("Missing " + missing.Key + (lastPath != null ? " (was " + lastPath + ")" : ""),
-                        EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField("Used in " + string.Join(", ", missing.Value), EditorStyles.wordWrappedMiniLabel);
-                    choices[missing.Key] = EditorGUILayout.ObjectField("Redirect to", choice, typeof(Object), false);
-                    EditorGUILayout.LabelField(Describe(missing.Key, choices[missing.Key]), EditorStyles.miniLabel);
-                }
-            }
-            EditorGUILayout.EndScrollView();
-
-            int ready = Redirects().Count;
-            using (new EditorGUI.DisabledScope(ready == 0))
-            {
-                if (GUILayout.Button("Apply " + ready + " Redirect(s)", GUILayout.Height(28f))) ApplyRedirects();
-            }
-        }
-
-        private string Describe(string guid, Object choice)
-        {
-            if (choice == null) return "Not found. Pick the asset this reference should use.";
-            string suggested;
-            string chosen;
-            long localId;
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(choice, out chosen, out localId) &&
-                plan.Suggested.TryGetValue(guid, out suggested) && suggested == chosen)
-                return "Suggested from " + plan.Sources[guid] + ".";
-            return "Chosen manually.";
         }
 
         private Dictionary<string, string> Redirects()
