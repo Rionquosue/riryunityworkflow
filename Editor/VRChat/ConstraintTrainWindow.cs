@@ -2,8 +2,6 @@
 // Target editor: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer.
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 using VRC.Dynamics;
@@ -14,10 +12,11 @@ namespace Riry.UnityWorkflow.Editor
     /// <summary>
     /// Sets up VRC Parent Constraints on a real bone chain and builds a Motion
     /// Time clip that moves the chain onto physics chains as a staggered train.
+    /// This file holds the state and the actions; everything drawn in the window,
+    /// and the menu entries that open it, are in ConstraintTrainWindow.UI.cs.
     /// </summary>
-    internal sealed class ConstraintTrainWindow : EditorWindow
+    internal sealed partial class ConstraintTrainWindow : EditorWindow
     {
-        private const string MenuPath = "Tools/Rirytools/Constraint Train";
         private const string UndoName = "Constraint Train";
 
         private sealed class Plan
@@ -48,10 +47,30 @@ namespace Riry.UnityWorkflow.Editor
         [NonSerialized] private string status;
         private Vector2 scroll;
 
-        [MenuItem(MenuPath, false, 2030)]
-        private static void Open()
+        /// <summary>
+        /// The active object becomes the chain start; another selected object below
+        /// it becomes the end (the deepest one when several are).
+        /// </summary>
+        private void UseSelection(Transform active, Transform[] selected)
         {
-            GetWindow<ConstraintTrainWindow>("Constraint Train");
+            Transform end = null;
+            foreach (Transform candidate in selected)
+            {
+                if (candidate != active && candidate.IsChildOf(active) && (end == null || candidate.IsChildOf(end)))
+                    end = candidate;
+            }
+            if (active != realStart)
+            {
+                // Chains and the avatar root found for the previous start do not apply to a new one.
+                if (previewing) StopPreview();
+                avatarRoot = null;
+                restStart = null;
+                chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
+                realEnd = null;
+            }
+            realStart = active;
+            if (end != null) realEnd = end;
+            Repaint();
         }
 
         private void OnEnable()
@@ -73,211 +92,46 @@ namespace Riry.UnityWorkflow.Editor
             StopPreview();
         }
 
-        private void OnGUI()
+        private void SaveToPrefab()
         {
-            bool blocked = EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling;
-            if (blocked)
+            if (previewing) StopPreview();
+            ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, component => component is VRCParentConstraint);
+            if (changes == null) return;
+            try
             {
-                StopPreview();
-                EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
-            }
-
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-            using (new EditorGUI.DisabledScope(blocked))
-            {
-                EditorGUI.BeginChangeCheck();
-                var realBones = new List<Transform>();
-                DrawRealChain(realBones);
-                EditorGUILayout.Space();
-                DrawTargets(realBones);
-                EditorGUILayout.Space();
-                DrawTiming();
-                bool changed = EditorGUI.EndChangeCheck();
-
-                EditorGUILayout.Space();
-                DrawOutput();
-                EditorGUILayout.Space();
-                DrawPreview(changed);
-            }
-            EditorGUILayout.EndScrollView();
-
-            if (!string.IsNullOrEmpty(status)) EditorGUILayout.HelpBox(status, MessageType.Info);
-        }
-
-        private void DrawRealChain(List<Transform> realBones)
-        {
-            EditorGUILayout.LabelField("Real bone chain", EditorStyles.boldLabel);
-            realStart = (Transform)EditorGUILayout.ObjectField("Start (RB1)", realStart, typeof(Transform), true);
-            realEnd = (Transform)EditorGUILayout.ObjectField("End", realEnd, typeof(Transform), true);
-            if (avatarRoot == null && realStart != null)
-                avatarRoot = ConstraintTrainChains.FindAvatarRoot(realStart);
-            avatarRoot = (Transform)EditorGUILayout.ObjectField(
-                new GUIContent("Avatar root", "Animation paths are relative to this Animator. " +
-                    "Defaults to the outermost Animator above the chain."),
-                avatarRoot, typeof(Transform), true);
-
-            string error;
-            if (realStart == null || realEnd == null) return;
-            if (!ConstraintTrainChains.TryCollectChain(realStart, realEnd, realBones, out error))
-            {
-                EditorGUILayout.HelpBox(error, MessageType.Warning);
-                return;
-            }
-            var names = new StringBuilder();
-            for (int i = 0; i < realBones.Count; i++)
-            {
-                if (i > 0) names.Append(" > ");
-                names.Append(realBones[i].name);
-            }
-            EditorGUILayout.LabelField(realBones.Count + " bones: " + names, EditorStyles.wordWrappedMiniLabel);
-        }
-
-        private void DrawTargets(List<Transform> realBones)
-        {
-            EditorGUILayout.LabelField("Targets", EditorStyles.boldLabel);
-            int chains = EditorGUILayout.IntSlider("Physics chains", chainCount, 1, ConstraintTrainPlanner.MaxChains);
-            if (chains != chainCount)
-            {
-                // Follow the default split while the user has not chosen another value.
-                if (Mathf.Approximately(trainEnd, ConstraintTrainPlanner.DefaultTrainEnd(chainCount)))
-                    trainEnd = ConstraintTrainPlanner.DefaultTrainEnd(chains);
-                chainCount = chains;
-            }
-            addEndpoints = EditorGUILayout.Toggle(
-                new GUIContent("Add endpoints", "Generated physics chains get an extra end bone that " +
-                    "repeats the offset between the last two real bones."), addEndpoints);
-
-            bool canGenerate = realBones.Count > 0 && GenerationError(realBones) == null;
-            restStart = DrawChainRow("Rest", restStart, realBones, ConstraintTrainChains.RestPrefix, false,
-                canGenerate);
-            for (int c = 0; c < chainCount; c++)
-            {
-                chainStarts[c] = DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,
-                    ConstraintTrainChains.ChainPrefix(c), addEndpoints, canGenerate);
-            }
-            using (new EditorGUI.DisabledScope(!canGenerate))
-            {
-                if (GUILayout.Button("Generate all missing chains")) GenerateMissing(realBones);
-            }
-            if (realBones.Count > 0 && !canGenerate)
-                EditorGUILayout.HelpBox(GenerationError(realBones), MessageType.Warning);
-        }
-
-        private Transform DrawChainRow(string label, Transform start, List<Transform> realBones,
-            string prefix, bool endpoint, bool canGenerate)
-        {
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                start = (Transform)EditorGUILayout.ObjectField(label, start, typeof(Transform), true);
-                using (new EditorGUI.DisabledScope(!canGenerate || start != null))
+                if (!changes.Immutable)
                 {
-                    if (GUILayout.Button(new GUIContent("Generate", "Create " + prefix + "* empties."),
-                        GUILayout.Width(75)))
-                        start = Generate(realBones, prefix, endpoint);
+                    if (changes.Count == 0)
+                    {
+                        status = "There are no generated chains or constraint changes to save.";
+                        return;
+                    }
+                    if (!EditorUtility.DisplayDialog("Constraint Train", "Apply " + changes.AddedChains.Count + " chain(s), " +
+                            changes.AddedConstraints.Count + " new constraint(s) and " + changes.ChangedConstraints.Count +
+                            " changed constraint(s) to " + changes.AssetPath + "?\n\nEvery instance of that prefab gets them.",
+                            "Apply", "Cancel"))
+                        return;
+                    ConstraintTrainPrefabs.ApplyToSource(changes, UndoName);
+                    status = "Saved the changes to " + changes.AssetPath + ".";
+                    return;
                 }
-            }
-            return start;
-        }
 
-        private void DrawTiming()
-        {
-            EditorGUILayout.LabelField("Timing", EditorStyles.boldLabel);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                trainEnd = EditorGUILayout.Slider(
-                    new GUIContent("Train end", "Value where every bone reaches its physics chain 1 bone."),
-                    trainEnd, 0.01f, 1f);
-                if (GUILayout.Button("Default", GUILayout.Width(65)))
-                    trainEnd = ConstraintTrainPlanner.DefaultTrainEnd(chainCount);
-            }
-            var unit = new Rect(0, 0, 1, 1);
-            stepCurve = EditorGUILayout.CurveField(
-                new GUIContent("Train step curve", "Shape of each move from one target to the next."),
-                stepCurve, Color.cyan, unit);
-            using (new EditorGUI.DisabledScope(chainCount < 2))
-            {
-                blendCurve = EditorGUILayout.CurveField(
-                    new GUIContent("Chain blend curve",
-                        "Influence of the next physics chain across each blend. Rescaled to run 0 to 1."),
-                    blendCurve, Color.green, unit);
-                using (new EditorGUILayout.HorizontalScope())
+                string path = ConstraintTrainPrefabs.RootPrefabPath(changes.AssetPath);
+                if (AssetDatabase.LoadMainAssetAtPath(path) != null)
                 {
-                    blendMidpoint = EditorGUILayout.Slider(
-                        new GUIContent("Next chain at halfway",
-                            "Builds a power curve with this influence halfway through a blend."),
-                        blendMidpoint, 0.05f, 0.95f);
-                    if (GUILayout.Button("Apply", GUILayout.Width(50)))
-                        blendCurve = ConstraintTrainPlanner.PowerCurve(
-                            ConstraintTrainPlanner.ExponentForMidpoint(blendMidpoint));
-                    if (GUILayout.Button("Linear", GUILayout.Width(55)))
-                        blendCurve = AnimationCurve.Linear(0, 0, 1, 1);
+                    int choice = EditorUtility.DisplayDialogComplex("Constraint Train", path + " already exists.",
+                        "Replace It", "Cancel", "Save a New Copy");
+                    if (choice == 1) return;
+                    if (choice == 2) path = AssetDatabase.GenerateUniqueAssetPath(path);
                 }
+                ConstraintTrainPrefabs.SaveAsRootVariant(changes, path);
+                status = "Saved to " + path + " and connected " + changes.InstanceRoot.name + " to it. Save the scene to keep the link.";
             }
-            string settingsError = ConstraintTrainPlanner.Validate(CurrentSettings(1));
-            if (settingsError != null) EditorGUILayout.HelpBox(settingsError, MessageType.Warning);
-        }
-
-        private void DrawOutput()
-        {
-            EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
-            clip = (AnimationClip)EditorGUILayout.ObjectField(
-                new GUIContent("Clip", "Leave empty to save a new clip. An assigned clip is replaced."),
-                clip, typeof(AnimationClip), false);
-            using (new EditorGUILayout.HorizontalScope())
+            catch (Exception exception)
             {
-                if (GUILayout.Button("Set up constraints")) SetUpConstraints();
-                if (GUILayout.Button("Build animation")) BuildAnimation();
+                Debug.LogException(exception);
+                status = "Saving to the prefab failed: " + exception.Message;
             }
-            EditorGUILayout.LabelField(
-                "Use the clip in a state with Motion Time driven by your float parameter.",
-                EditorStyles.wordWrappedMiniLabel);
-        }
-
-        private void DrawPreview(bool settingsChanged)
-        {
-            EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-            float value = EditorGUILayout.Slider("Value", previewValue, 0f, 1f);
-            bool valueChanged = !Mathf.Approximately(value, previewValue);
-            previewValue = value;
-
-            bool wantPreview = EditorGUILayout.Toggle(
-                new GUIContent("Preview in Scene", "Samples the generated weights with Animation Mode. " +
-                    "Set up constraints first."), previewing);
-            if (wantPreview && !previewing) StartPreview();
-            else if (!wantPreview && previewing) StopPreview();
-            else if (previewing && settingsChanged) RebuildPreview();
-            else if (previewing && valueChanged) SamplePreview();
-
-            Plan plan;
-            string error;
-            if (!TryGather(out plan, out error))
-            {
-                EditorGUILayout.HelpBox(error, MessageType.None);
-                return;
-            }
-            EditorGUILayout.LabelField(Readout(plan, previewValue), EditorStyles.wordWrappedMiniLabel);
-        }
-
-        private string Readout(Plan plan, float value)
-        {
-            var text = new StringBuilder();
-            for (int bone = 0; bone < plan.Real.Count; bone++)
-            {
-                var weights = new float[ConstraintTrainPlanner.SourceCount(bone, plan.Settings.ChainCount)];
-                ConstraintTrainPlanner.EvaluateWeights(plan.Settings, bone, value, weights);
-                text.Append(plan.Real[bone].name).Append(": ");
-                bool first = true;
-                for (int s = 0; s < weights.Length; s++)
-                {
-                    if (weights[s] < 0.0005f) continue;
-                    if (!first) text.Append(", ");
-                    first = false;
-                    text.Append(Target(plan, bone, s).name).Append(' ')
-                        .Append((weights[s] * 100f).ToString("0.#", CultureInfo.InvariantCulture)).Append('%');
-                }
-                text.Append('\n');
-            }
-            return text.ToString().TrimEnd();
         }
 
         private ConstraintTrainPlanner.Settings CurrentSettings(int boneCount)
