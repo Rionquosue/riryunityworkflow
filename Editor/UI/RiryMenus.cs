@@ -193,8 +193,7 @@ namespace Riry.RiryTools.Editor
             catch (VrcSdkNotFoundException exception)
             {
                 UnityEngine.Debug.LogException(exception);
-                if (EditorUtility.DisplayDialog("VRCSDK not found", exception.Message, "Get the VRChat SDK", "Close"))
-                    UnityEngine.Application.OpenURL(VrcSdkNotFoundException.DownloadUrl);
+                EditorUtility.DisplayDialog("VRCSDK not found", exception.Message, "OK");
             }
         }
 #endif

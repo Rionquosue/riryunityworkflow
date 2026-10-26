@@ -11,11 +11,9 @@ namespace Riry.RiryTools.Editor
     /// </summary>
     internal sealed class VrcSdkNotFoundException : InvalidOperationException
     {
-        internal const string DownloadUrl = "https://vrchat.com/home/download";
-
         internal VrcSdkNotFoundException(string tool)
             : base("VRCSDK not found. " + tool + " needs the VRChat Avatars SDK 3.7.0 or newer " +
-                "(com.vrchat.avatars). Add it to this project with the VRChat Creator Companion.")
+                "(com.vrchat.avatars), which is not in this project.")
         {
         }
     }
