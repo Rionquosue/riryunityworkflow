@@ -1,8 +1,8 @@
 {
   "name": "com.riry.unityworkflow",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "displayName": "Riry Unity Workflow",
-  "description": "Editor-only Unity tools for blendshape weight synchronization, conservative animation cleanup, reference-preserving asset GUID regeneration, and VRC constraint trains.",
+  "description": "Editor-only Unity tools for blendshape weight synchronization, conservative animation cleanup, reference-preserving asset GUID regeneration, VRC constraint trains, and folder import presets.",
   "unity": "2022.3",
   "author": {
     "name": "Riry"

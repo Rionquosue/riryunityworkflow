@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.0 - 2026-10-24
+
+- Added folder import presets: `ImportPreset.md` names a configuration from the
+  shared `Documents/UnityTools/ImportPresets` library, and new files in that
+  folder and its subfolders get its import settings on first import.
+- Added **Rirytools > Import Preset...** for folders and empty Project window
+  space, and **Rirytools > Save Import Settings to Preset Library...** for assets.
+- Hand-edited `ImportPreset.md` files and existing import settings are never
+  changed; applying to existing files is opt-in.
+- `ImportPreset.md` sets a configuration, or one named preset, per file type,
+  with `none` to opt a type out.
+- `animations:` imports models as Generic first, copies every clip to
+  `Animations/`, then applies the model's preset (for example Humanoid).
+  **Rirytools > Extract Animations (Generic)** does this for existing models.
+- `betterfbx: blend` exports `.blend` files to FBX through Blender and the Better
+  FBX extension (checked against 6.3.3): every action is exported, Edit or Pose
+  Mode files are switched to Object Mode, and failures are reported; the FBX
+  then follows the folder's FBX rules.
+- Exported FBX files and extracted clips are replaced only while unchanged since
+  the tool wrote them.
+- Added import preset tests, including an end-to-end texture import.
+- Added **Tools > Rirytools > Play Mode**: entering Play Mode keeps the tabs that
+  were in front, and a Game view opened only for Play Mode can be closed.
+
 ## 0.4.0 - 2026-10-24
 
 - Added **Tools > Rirytools > Constraint Train** (VRChat Avatars SDK 3.7.0+):

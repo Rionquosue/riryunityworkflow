@@ -50,6 +50,26 @@ enabled.
 
 Imported and read-only clips are never edited. Changes support Unity Undo.
 
+## Import Presets
+
+Right-click a folder (or empty space in it) and choose **Rirytools > Import
+Preset...** to set presets per file type (fbx, obj, png, tga, blend...) from
+`Documents/UnityTools/ImportPresets`. New files in that folder and its
+subfolders get them on their first import; reimports and hand-edited settings
+are never changed. Models can have their animations extracted to `Animations/`
+as Generic clips before a Humanoid preset applies, and `.blend` files can be
+exported with the Better FBX Blender add-on. Save presets from any asset with
+**Rirytools > Save Import Settings to Preset Library...**. See [usage, rules, and limits](Documentation~/import-presets.md).
+
+## Play Mode Windows
+
+Entering Play Mode normally brings the Game view to the front and focuses it.
+With **Tools > Rirytools > Play Mode > Keep Tabs in Front** (on by default), the
+tabs that were in front, and the window that had focus, come back after Play Mode
+starts, and a Game view that Play Mode opened is closed when it ends. **Close Game
+View Opened by Play Mode** closes such a Game view as soon as Play Mode starts.
+Both are per-user settings.
+
 ## Constraint Train
 
 Requires the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > Rirytools >
