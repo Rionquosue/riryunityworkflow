@@ -1,7 +1,9 @@
 # Constraint Train
 
 Target: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer (VRC
-Constraints). The window only compiles when that SDK is installed.
+Constraints). Without that SDK the window is left out of the build rather than
+failing to compile, and its menu entries throw `VrcSdkNotFoundException` and show
+a **VRCSDK not found** popup with a link to get the SDK.
 
 Open **Tools > Rirytools > Constraint Train**, or right-click a bone in the
 Hierarchy and choose **Rirytools > Constraint Train...**. From the Hierarchy, the

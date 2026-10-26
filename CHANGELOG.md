@@ -9,6 +9,9 @@
 - Added `Assets/RiryTools`: files in the package's `ProjectFolder~` are unpacked
   there on load without overwriting existing ones. Constraint Train clips and
   `_ROOT` variants of read-only prefabs are saved there by default.
+- Without the VRChat Avatars SDK 3.7.0+, the Constraint Train menu entries now
+  throw `VrcSdkNotFoundException` and show a **VRCSDK not found** popup instead
+  of being missing.
 - Added `TestProject~`, a minimal 2022.3 project that loads the package from the
   repository and runs its tests.
 

@@ -7,7 +7,8 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Menu entries for the VRChat tools. They live in this assembly, which only
     /// compiles with the VRChat SDK; every other entry is in Editor/UI/RiryMenus.cs,
-    /// where the editing tips also apply.
+    /// where the editing tips also apply. Without the SDK, RiryMenus.cs has the same
+    /// paths showing a "VRCSDK not found" popup, so keep both files in step.
     /// </summary>
     internal static class RiryVRChatMenus
     {

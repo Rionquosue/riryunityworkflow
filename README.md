@@ -31,8 +31,8 @@ from the repository (`"file:../../"`) and lists it under `testables`:
 
 Unity ignores folders ending in `~` inside a package, so `TestProject~` never
 reaches projects that install the package. Constraint Train's window needs the
-VRChat Avatars SDK, so it does not compile in the test project; its planner,
-chain and prefab tests do not need the SDK and still run.
+VRChat Avatars SDK, so it is left out of the test project; its planner, chain
+and prefab tests do not need the SDK and still run.
 
 To run the tests in your own project instead, add `"testables":
 ["com.riry.rirytools"]` to its `Packages/manifest.json`.
