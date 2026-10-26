@@ -11,13 +11,12 @@ namespace Riry.UnityWorkflow.Editor
     /// Entering Play Mode brings the Game view to the front of its dock area and
     /// focuses it. This puts the tabs that were in front back in front (and the
     /// window that had focus back in focus), and can close a Game view that Play
-    /// Mode opened when the layout had none.
+    /// Mode opened when the layout had none. Its menu toggles are in
+    /// Editor/UI/RiryMenus.cs.
     /// </summary>
     [InitializeOnLoad]
     internal static class PlayModeWindowKeeper
     {
-        private const string KeepTabsMenu = "Tools/Rirytools/Play Mode/Keep Tabs in Front";
-        private const string CloseGameViewMenu = "Tools/Rirytools/Play Mode/Close Game View Opened by Play Mode";
         private const string KeepTabsPref = "Riry.UnityWorkflow.PlayMode.KeepTabs";
         private const string CloseGameViewPref = "Riry.UnityWorkflow.PlayMode.CloseGameView";
         // Session state survives the script reload that entering Play Mode usually causes.
@@ -128,32 +127,6 @@ namespace Riry.UnityWorkflow.Editor
                 if (int.TryParse(part, out id)) ids.Add(id);
             }
             return ids;
-        }
-
-        [MenuItem(KeepTabsMenu, false, 2060)]
-        private static void ToggleKeepTabs()
-        {
-            KeepTabs = !KeepTabs;
-        }
-
-        [MenuItem(KeepTabsMenu, true)]
-        private static bool ValidateKeepTabs()
-        {
-            Menu.SetChecked(KeepTabsMenu, KeepTabs);
-            return true;
-        }
-
-        [MenuItem(CloseGameViewMenu, false, 2061)]
-        private static void ToggleCloseGameView()
-        {
-            CloseGameView = !CloseGameView;
-        }
-
-        [MenuItem(CloseGameViewMenu, true)]
-        private static bool ValidateCloseGameView()
-        {
-            Menu.SetChecked(CloseGameViewMenu, CloseGameView);
-            return true;
         }
     }
 }

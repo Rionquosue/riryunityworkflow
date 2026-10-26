@@ -19,6 +19,15 @@ Sync and restore pause during Play Mode transitions, animation preview/recording
 and Animator graph editing. Changes support Undo and prefab overrides.
 See [usage, cache behavior, and tests](Documentation~/blendshape-sync.md).
 
+## Editing the UI
+
+Every menu entry (Tools dropdown, Project and Hierarchy right-click, GIT menu)
+is in `Editor/UI/RiryMenus.cs`, except Constraint Train's, which are in
+`Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
+path or priority there to move an entry. Each window's drawing code is in
+`Editor/UI/` (Constraint Train's in `Editor/VRChat/ConstraintTrainWindow.UI.cs`),
+with a glossary of its fields and methods at the bottom of each file.
+
 ## Install
 
 In Unity Package Manager, choose **Add package from git URL** and enter:

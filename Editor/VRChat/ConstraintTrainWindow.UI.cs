@@ -11,35 +11,22 @@ using UnityEngine;
 namespace Riry.UnityWorkflow.Editor
 {
     /// <summary>
-    /// Everything the Constraint Train window draws, and the menu entries that
-    /// open it. The state and the actions behind the buttons are in
+    /// Everything the Constraint Train window draws. Its menu entries are in
+    /// RiryVRChatMenus.cs. The state and the actions behind the buttons are in
     /// ConstraintTrainWindow.cs; both files are one class, so methods and fields
     /// can be moved between them freely. A glossary is at the bottom.
     /// </summary>
     internal sealed partial class ConstraintTrainWindow
     {
-        private const string MenuPath = "Tools/Rirytools/Constraint Train";
-        private const string HierarchyMenuPath = "GameObject/Rirytools/Constraint Train...";
-
-        [MenuItem(MenuPath, false, 2030)]
-        private static void Open()
+        internal static void Open()
         {
             GetWindow<ConstraintTrainWindow>("Constraint Train");
         }
 
-        // GameObject/ items with a priority below 50 also appear in the Hierarchy's
-        // right-click menu. No MenuCommand parameter, so a multi-selection opens it once.
-        [MenuItem(HierarchyMenuPath, false, 20)]
-        private static void OpenFromHierarchy()
+        internal static void OpenFromHierarchy()
         {
             ConstraintTrainWindow window = GetWindow<ConstraintTrainWindow>("Constraint Train");
             window.UseSelection(Selection.activeTransform, Selection.transforms);
-        }
-
-        [MenuItem(HierarchyMenuPath, true)]
-        private static bool ValidateOpenFromHierarchy()
-        {
-            return Selection.activeTransform != null && !EditorUtility.IsPersistent(Selection.activeTransform);
         }
 
         private void OnGUI()
@@ -301,14 +288,13 @@ namespace Riry.UnityWorkflow.Editor
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
 //
-// CONSTANTS (ConstraintTrainWindow.UI.cs)
-//   MenuPath            "Tools/Rirytools/Constraint Train" (main menu bar).
-//   HierarchyMenuPath   "GameObject/Rirytools/Constraint Train..." (Hierarchy right-click).
+// MENU ENTRIES (Editor/VRChat/RiryVRChatMenus.cs)
+//   Tools/Rirytools/Constraint Train          -> Open()
+//   GameObject/Rirytools/Constraint Train...  -> OpenFromHierarchy() (Hierarchy right-click)
 //
 // UI METHODS (ConstraintTrainWindow.UI.cs)
-//   Open()                         Main menu entry: opens the window.
-//   OpenFromHierarchy()            Hierarchy entry: opens it and calls UseSelection.
-//   ValidateOpenFromHierarchy()    Enables the Hierarchy entry for scene objects only.
+//   Open()                         Opens the window (Tools menu).
+//   OpenFromHierarchy()            Opens it with the Hierarchy selection (calls UseSelection).
 //   OnGUI()                        Draws the sections in order; blocks them in Play Mode.
 //   DrawRealChain(realBones)       Start, end and avatar root fields; fills realBones.
 //   DrawTargets(realBones)         Chain count, endpoints, Rest/Physics rows, Generate buttons.

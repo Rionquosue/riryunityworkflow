@@ -34,7 +34,6 @@ namespace Riry.UnityWorkflow.Editor
     /// </summary>
     internal static class GuidReferenceRepair
     {
-        private const string MenuPath = "Assets/Rirytools/Repair Missing GUID References";
         internal const string Title = "Broken References";
         private static readonly byte[] GuidKey = Encoding.ASCII.GetBytes("guid: ");
         private static readonly Regex LogMapping = new Regex(
@@ -48,16 +47,9 @@ namespace Riry.UnityWorkflow.Editor
             "--no-ext-diff", "--no-renames", "--", ":(glob)**/*.meta"
         };
 
-        [MenuItem(MenuPath, false, 2004)]
         internal static void RepairSelected()
         {
             BrokenReferenceWindow.Open(SelectedFiles(), "Selected in the Project window.");
-        }
-
-        [MenuItem(MenuPath, true)]
-        private static bool ValidateRepairSelected()
-        {
-            return RegenerateAssetGuid.HasValidSelection();
         }
 
         internal static RepairPlan Scan(IEnumerable<string> files, GuidToolLog log)

@@ -2,6 +2,9 @@
 
 ## 0.6.0 - 2026-10-25
 
+- Moved all UI into `Editor/UI/`: every menu entry is in `RiryMenus.cs` (VRChat
+  entries in `Editor/VRChat/RiryVRChatMenus.cs`), and each window's drawing code
+  is in its own file with a glossary of its fields and methods. No behaviour change.
 - Added the **GIT** menu: **AutoSync Scene∕Prefab** (on by default in a Git
   repository), **Sync Now**, **Check for Broken References...**, **Configure
   Sync...**, **AutoSync Settings...** and **Help**.
