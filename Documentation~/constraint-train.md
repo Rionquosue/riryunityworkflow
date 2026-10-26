@@ -11,24 +11,35 @@ clears the chains and avatar root found for the previous one.
 
 ## What it builds
 
-A real bone chain RB1..RBn (RB1 is the start, closest to the root) gets one
-VRC Parent Constraint per bone. A single float, driven through **Motion Time**,
-moves the chain from its rest pose onto up to five physics chains:
+Terms used below:
 
-1. **Train (0 to Train end).** Each step is `Train end / n`. RBn, the tip,
-   moves from REST to PBC1-1 in the first step, then PBC1-2, and so on until it
-   reaches PBC1-n at Train end. Every bone toward the root follows one step
-   later, so RBn-1 is at PBC1-1 when RBn is at PBC1-2. At Train end every RBk is
-   fully on PBC1-k.
-2. **Chain blends (Train end to 1).** The remaining range is split evenly
-   between the physics chains. Each bone moves from PBC1-k to PBC2-k, then to
-   PBC3-k, and so on.
+- **Real bones** are the avatar's chain being animated, numbered from the root:
+  RB1 (real bone 1, the start, closest to the root) to RBn (the tip). "RBk"
+  means real bone number k.
+- **PBC1-k** is bone k of physics chain 1 (the copy of real bone k in that
+  chain); PBC2-k is the same bone in physics chain 2, and so on.
+- **REST** is the `Rest_` chain, a still copy of the starting pose.
 
-Example with 5 bones, 2 chains, and Train end 0.5: each step is 0.1, RB5 is at
-PBC1-2 at 0.2 while RB4 is at PBC1-1, every bone is on its PBC1 bone at 0.5, and
-at 0.75 every bone is 50% PBC1 and 50% PBC2 (with a linear blend curve).
+Each real bone gets one VRC Parent Constraint. A single float, driven through
+**Motion Time**, moves the chain from its rest pose onto up to five physics
+chains:
 
-Source order on bone RBk (used by the animation, so do not reorder it):
+1. **Train (0 to Train end).** The range is split into n equal steps. The tip
+   (RBn) moves from REST to physics chain 1's bone 1 in the first step, to its
+   bone 2 in the next, and so on, reaching its bone n at Train end. Each real
+   bone closer to the root starts one step later than the bone after it. At
+   Train end, every real bone sits on its own copy in physics chain 1 (real
+   bone 1 on PBC1-1, real bone 2 on PBC1-2, and so on).
+2. **Chain blends (Train end to 1).** The rest of the range is split evenly
+   between the physics chains. Every real bone moves from its copy in physics
+   chain 1 to its copy in physics chain 2, then to chain 3, and so on.
+
+Example with 5 bones, 2 chains, and Train end 0.5: each step is 0.1. At 0.2
+the tip is on PBC1-2 while real bone 4 is on PBC1-1. At 0.5 every real bone is
+on its own physics chain 1 bone, and at 0.75 every bone is halfway between its
+physics chain 1 and physics chain 2 bones (with a linear blend curve).
+
+Source order on real bone k (used by the animation, so do not reorder it):
 REST, PBC1-1 .. PBC1-k, then PBC2-k .. PBC5-k. Offsets are zero, so each bone
 snaps to the pose of its targets.
 
