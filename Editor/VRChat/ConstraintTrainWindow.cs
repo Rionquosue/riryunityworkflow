@@ -3,8 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using VRC.Dynamics;
 using VRC.SDK3.Dynamics.Constraint.Components;
@@ -259,6 +261,70 @@ namespace Riry.UnityWorkflow.Editor
             if (settingsError != null) EditorGUILayout.HelpBox(settingsError, MessageType.Warning);
         }
 
+        // Shown only for a prefab instance in a scene; in Prefab Mode the chains save with the prefab.
+        private void DrawPrefabSave()
+        {
+            if (realStart == null || EditorUtility.IsPersistent(realStart) || !PrefabUtility.IsPartOfPrefabInstance(realStart) ||
+                PrefabStageUtility.GetPrefabStage(realStart.gameObject) != null)
+                return;
+            // The outermost prefab receives the changes, even when the bones come from a model nested in it.
+            GameObject root = PrefabUtility.GetOutermostPrefabInstanceRoot(realStart);
+            string source = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(root);
+            if (!PrefabUtility.IsPartOfImmutablePrefab(root))
+            {
+                EditorGUILayout.HelpBox("These bones are in an instance of " + source + ". Generated chains and constraints " +
+                    "are overrides in this scene until saved to the prefab.", MessageType.Info);
+                if (GUILayout.Button("Save as Prefab Overrides")) SaveToPrefab();
+                return;
+            }
+            EditorGUILayout.HelpBox(source + " is a model or read-only prefab and cannot hold overrides. Saving creates " +
+                ConstraintTrainPrefabs.RootPrefabPath(source) + " as a variant of it with these changes, and connects " +
+                "this object to it.", MessageType.Info);
+            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) SaveToPrefab();
+        }
+
+        private void SaveToPrefab()
+        {
+            if (previewing) StopPreview();
+            ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, component => component is VRCParentConstraint);
+            if (changes == null) return;
+            try
+            {
+                if (!changes.Immutable)
+                {
+                    if (changes.Count == 0)
+                    {
+                        status = "There are no generated chains or constraint changes to save.";
+                        return;
+                    }
+                    if (!EditorUtility.DisplayDialog("Constraint Train", "Apply " + changes.AddedChains.Count + " chain(s), " +
+                            changes.AddedConstraints.Count + " new constraint(s) and " + changes.ChangedConstraints.Count +
+                            " changed constraint(s) to " + changes.AssetPath + "?\n\nEvery instance of that prefab gets them.",
+                            "Apply", "Cancel"))
+                        return;
+                    ConstraintTrainPrefabs.ApplyToSource(changes, UndoName);
+                    status = "Saved the changes to " + changes.AssetPath + ".";
+                    return;
+                }
+
+                string path = ConstraintTrainPrefabs.RootPrefabPath(changes.AssetPath);
+                if (AssetDatabase.LoadMainAssetAtPath(path) != null)
+                {
+                    int choice = EditorUtility.DisplayDialogComplex("Constraint Train", path + " already exists.",
+                        "Replace It", "Cancel", "Save a New Copy");
+                    if (choice == 1) return;
+                    if (choice == 2) path = AssetDatabase.GenerateUniqueAssetPath(path);
+                }
+                ConstraintTrainPrefabs.SaveAsRootVariant(changes, path);
+                status = "Saved to " + path + " and connected " + changes.InstanceRoot.name + " to it. Save the scene to keep the link.";
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                status = "Saving to the prefab failed: " + exception.Message;
+            }
+        }
+
         private void DrawOutput()
         {
             EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
@@ -270,6 +336,7 @@ namespace Riry.UnityWorkflow.Editor
                 if (GUILayout.Button("Set up constraints")) SetUpConstraints();
                 if (GUILayout.Button("Build animation")) BuildAnimation();
             }
+            DrawPrefabSave();
             EditorGUILayout.LabelField(
                 "Use the clip in a state with Motion Time driven by your float parameter.",
                 EditorStyles.wordWrappedMiniLabel);

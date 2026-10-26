@@ -37,6 +37,61 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Undo.ClearAll();
         }
 
+        [Test]
+        public void RootVariantPathSitsBesideTheModel()
+        {
+            Assert.That(ConstraintTrainPrefabs.RootPrefabPath("Assets/Avatars/Riry/Riry.fbx"),
+                Is.EqualTo("Assets/Avatars/Riry/Riry_ROOT.prefab"));
+            Assert.That(ConstraintTrainPrefabs.RootPrefabPath("Assets/Model.FBX"), Is.EqualTo("Assets/Model_ROOT.prefab"));
+            // A read-only package folder cannot take the variant.
+            Assert.That(ConstraintTrainPrefabs.RootPrefabPath("Packages/com.vendor.avatar/Body.fbx"),
+                Is.EqualTo("Assets/Body_ROOT.prefab"));
+            Assert.That(ConstraintTrainPrefabs.IsGeneratedChain("Phys3_Tail1"), Is.True);
+            Assert.That(ConstraintTrainPrefabs.IsGeneratedChain("Rest_Tail1"), Is.True);
+            Assert.That(ConstraintTrainPrefabs.IsGeneratedChain("Physics"), Is.False);
+        }
+
+        [Test]
+        public void GeneratedChainsAndConstraintsApplyToTheSourcePrefab()
+        {
+            string folder = AssetDatabase.CreateFolder("Assets", "RiryConstraintTrainTest");
+            string folderPath = AssetDatabase.GUIDToAssetPath(folder);
+            try
+            {
+                var source = new GameObject("Avatar").transform;
+                Transform tail1 = Child(Child(source, "Hips", Vector3.up, 0f), "Tail1", Vector3.back, 0f);
+                Child(tail1, "Tail2", Vector3.back, 0f);
+                string prefabPath = folderPath + "/Avatar.prefab";
+                PrefabUtility.SaveAsPrefabAsset(source.gameObject, prefabPath);
+                Object.DestroyImmediate(source.gameObject);
+
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), testScene);
+                Transform bone = instance.transform.Find("Hips/Tail1");
+                var real = new List<Transform>();
+                string error;
+                Assert.That(ConstraintTrainChains.TryCollectChain(bone, bone.Find("Tail2"), real, out error), Is.True, error);
+                ConstraintTrainChains.CreateChain(real, ConstraintTrainChains.ChainPrefix(0), true, "Test");
+                // A BoxCollider stands in for the VRC constraint, which needs the VRChat SDK.
+                bone.gameObject.AddComponent<BoxCollider>();
+
+                ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(bone, component => component is BoxCollider);
+                Assert.That(changes.Immutable, Is.False);
+                Assert.That(changes.AssetPath, Is.EqualTo(prefabPath));
+                Assert.That(changes.AddedChains.Count, Is.EqualTo(1));
+                Assert.That(changes.AddedConstraints.Count, Is.EqualTo(1));
+                ConstraintTrainPrefabs.ApplyToSource(changes, "Test");
+
+                GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                Assert.That(asset.transform.Find("Hips/Phys1_Tail1/Phys1_Tail2/Phys1_Tail2_End"), Is.Not.Null);
+                Assert.That(asset.transform.Find("Hips/Tail1").GetComponent<BoxCollider>(), Is.Not.Null);
+                Assert.That(ConstraintTrainPrefabs.Collect(bone, component => component is BoxCollider).Count, Is.EqualTo(0));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(folderPath);
+            }
+        }
+
         // RB1..RB5 are bones 0..4. Source 0 is REST and source k is PBC1-k.
         [Test]
         public void EveryBoneStartsAtRest()

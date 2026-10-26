@@ -63,6 +63,25 @@ With **Add endpoints**, each physics chain also gets
 the last real bone from the one before it. Rest chains never get an endpoint.
 Put your PhysBones on the physics chains.
 
+## Prefabs
+
+Chains can be generated and constraints set up directly in Prefab Mode; they
+save with the prefab like any other edit.
+
+On a prefab instance in a scene, the chains and constraints are instance
+overrides in that scene. The window then offers to save them:
+
+- **Save as Prefab Overrides** applies the generated `Rest_`/`Phys1_`..`Phys5_`
+  chains, new VRC Parent Constraints and changed constraints to the outermost
+  prefab, so every instance gets them. Chains are applied first, so the
+  constraints point at the prefab's own copies. It is one Undo step.
+- When that prefab is an FBX model or a read-only package prefab, it cannot hold
+  overrides. **Save to `<name>_ROOT.prefab`** instead saves the instance, with all
+  its overrides, as a Prefab Variant of the model in the model's folder (or in
+  `Assets` for a read-only package), and connects the scene object to it. Save
+  the scene to keep that link. An existing `_ROOT` prefab is replaced (keeping its
+  GUID) only after confirmation, or a new copy is saved beside it.
+
 ## Curves
 
 - **Train step curve** shapes each move between two neighboring targets.
