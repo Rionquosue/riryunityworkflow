@@ -12,6 +12,9 @@
 - Without the VRChat Avatars SDK 3.7.0+, the Constraint Train menu entries now
   throw `VrcSdkNotFoundException` and show a **VRCSDK not found** popup instead
   of being missing.
+- Moved the design documents from `Documentation~` to `Docs~/design`, and added a
+  tutorial for every tool in `Docs~/tutorials`. `Docs~` is not part of the
+  package in a project.
 - Added `TestProject~`, a minimal 2022.3 project that loads the package from the
   repository and runs its tests.
 

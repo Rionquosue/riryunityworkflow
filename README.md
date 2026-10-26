@@ -20,6 +20,12 @@ load, and tools save generated assets there when they have no better place
 there are never overwritten, so edits survive updates; delete a file to get the
 package's copy back. Shader applets will live there too.
 
+## Documentation
+
+Tutorials are in [`Docs~/tutorials`](Docs~/tutorials) and design notes in
+[`Docs~/design`](Docs~/design). Unity ignores folders ending in `~`, so `Docs~`
+is not part of the `com.riry.rirytools` package in a project.
+
 ## Testing
 
 `TestProject~` is a minimal Unity 2022.3.22f1 project that loads this package
@@ -52,7 +58,7 @@ reloads. Closing the window ends that cache.
 
 Sync and restore pause during Play Mode transitions, animation preview/recording,
 and Animator graph editing. Changes support Undo and prefab overrides.
-See [usage, cache behavior, and tests](Documentation~/blendshape-sync.md).
+See the [tutorial](Docs~/tutorials/blendshape-sync.md) and [design notes](Docs~/design/blendshape-sync.md).
 
 ## Editing the UI
 
@@ -83,6 +89,7 @@ preserved in a review window unless **Remove keys anyways** is explicitly
 enabled.
 
 Imported and read-only clips are never edited. Changes support Unity Undo.
+See the [tutorial](Docs~/tutorials/clean-animation-keys.md) and [design notes](Docs~/design/clean-animation-keys.md).
 
 ## Import Presets
 
@@ -93,7 +100,7 @@ subfolders get them on their first import; reimports and hand-edited settings
 are never changed. Models can have their animations extracted to `Animations/`
 as Generic clips before a Humanoid preset applies, and `.blend` files can be
 exported with the Better FBX Blender add-on. Save presets from any asset with
-**Rirytools > Save Import Settings to Preset Library...**. See [usage, rules, and limits](Documentation~/import-presets.md).
+**Rirytools > Save Import Settings to Preset Library...**. See the [tutorial](Docs~/tutorials/import-presets.md) and [design notes](Docs~/design/import-presets.md).
 
 ## Play Mode Windows
 
@@ -102,7 +109,7 @@ With **Tools > Rirytools > Play Mode > Keep Tabs in Front** (on by default), the
 tabs that were in front, and the window that had focus, come back after Play Mode
 starts, and a Game view that Play Mode opened is closed when it ends. **Close Game
 View Opened by Play Mode** closes such a Game view as soon as Play Mode starts.
-Both are per-user settings.
+Both are per-user settings. See the [tutorial](Docs~/tutorials/play-mode-windows.md).
 
 ## Constraint Train
 
@@ -113,7 +120,7 @@ with VRC Parent Constraints and a Motion Time clip. The tip leads a staggered
 "train" onto physics chain 1, then every bone blends from chain to chain along an
 editable curve. It can generate `Phys1_`..`Phys5_` and `Rest_` empty chains,
 with endpoints, without unpacking prefabs.
-See [usage and timing](Documentation~/constraint-train.md).
+See the [tutorial](Docs~/tutorials/constraint-train.md) and [design notes](Docs~/design/constraint-train.md).
 
 ## GUID Tools
 
@@ -141,7 +148,7 @@ during a run, and archived logs are trimmed oldest-first above 100 MiB.
 Every regeneration is recorded in `ProjectSettings/RiryGuidRemap.tsv`.
 **Rirytools > Repair Missing GUID References** relinks GUIDs that no longer
 resolve in damaged or recovered files, using that ledger and then Git history.
-See [GUID Tools](Documentation~/regenerate-asset-guids.md).
+See the [tutorial](Docs~/tutorials/guid-tools.md) and [design notes](Docs~/design/regenerate-asset-guids.md).
 
 ## AutoSync (GIT menu)
 
@@ -151,5 +158,5 @@ branch seconds after they change, through a separate Git index, and pushes it.
 `.gitattributes` templates in `Documents/UnityTools/ImportPresets`, enables Git
 LFS and checks that large files use it and can be pushed. AutoSync offers to fix
 broken references from its history, and blocks saving a scene or prefab that a
-script stopped from loading. See [AutoSync](Documentation~/autosync.md).
+script stopped from loading. See the [tutorial](Docs~/tutorials/autosync.md) and [design notes](Docs~/design/autosync.md).
 
