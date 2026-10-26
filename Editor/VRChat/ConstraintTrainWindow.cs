@@ -18,6 +18,7 @@ namespace Riry.UnityWorkflow.Editor
     internal sealed class ConstraintTrainWindow : EditorWindow
     {
         private const string MenuPath = "Tools/Rirytools/Constraint Train";
+        private const string HierarchyMenuPath = "GameObject/Rirytools/Constraint Train...";
         private const string UndoName = "Constraint Train";
 
         private sealed class Plan
@@ -52,6 +53,47 @@ namespace Riry.UnityWorkflow.Editor
         private static void Open()
         {
             GetWindow<ConstraintTrainWindow>("Constraint Train");
+        }
+
+        // GameObject/ items with a priority below 50 also appear in the Hierarchy's
+        // right-click menu. No MenuCommand parameter, so a multi-selection opens it once.
+        [MenuItem(HierarchyMenuPath, false, 20)]
+        private static void OpenFromHierarchy()
+        {
+            ConstraintTrainWindow window = GetWindow<ConstraintTrainWindow>("Constraint Train");
+            window.UseSelection(Selection.activeTransform, Selection.transforms);
+        }
+
+        [MenuItem(HierarchyMenuPath, true)]
+        private static bool ValidateOpenFromHierarchy()
+        {
+            return Selection.activeTransform != null && !EditorUtility.IsPersistent(Selection.activeTransform);
+        }
+
+        /// <summary>
+        /// The active object becomes the chain start; another selected object below
+        /// it becomes the end (the deepest one when several are).
+        /// </summary>
+        private void UseSelection(Transform active, Transform[] selected)
+        {
+            Transform end = null;
+            foreach (Transform candidate in selected)
+            {
+                if (candidate != active && candidate.IsChildOf(active) && (end == null || candidate.IsChildOf(end)))
+                    end = candidate;
+            }
+            if (active != realStart)
+            {
+                // Chains and the avatar root found for the previous start do not apply to a new one.
+                if (previewing) StopPreview();
+                avatarRoot = null;
+                restStart = null;
+                chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
+                realEnd = null;
+            }
+            realStart = active;
+            if (end != null) realEnd = end;
+            Repaint();
         }
 
         private void OnEnable()

@@ -53,7 +53,8 @@ Imported and read-only clips are never edited. Changes support Unity Undo.
 ## Constraint Train
 
 Requires the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > Rirytools >
-Constraint Train** to drive a real bone chain onto up to five physics chains
+Constraint Train** (or right-click a bone in the Hierarchy > **Rirytools >
+Constraint Train...**) to drive a real bone chain onto up to five physics chains
 with VRC Parent Constraints and a Motion Time clip. The tip leads a staggered
 "train" onto physics chain 1, then every bone blends from chain to chain along an
 editable curve. It can generate `Phys1_`..`Phys5_` and `Rest_` empty chains,

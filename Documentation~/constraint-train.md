@@ -3,7 +3,11 @@
 Target: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer (VRC
 Constraints). The window only compiles when that SDK is installed.
 
-Open **Tools > Rirytools > Constraint Train**.
+Open **Tools > Rirytools > Constraint Train**, or right-click a bone in the
+Hierarchy and choose **Rirytools > Constraint Train...**. From the Hierarchy, the
+right-clicked bone becomes the chain start (RB1). Select a second bone below it
+first (Ctrl/Cmd-click) to fill in the end as well. Switching to a new start
+clears the chains and avatar root found for the previous one.
 
 ## What it builds
 

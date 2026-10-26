@@ -4,7 +4,8 @@
 
 - Added **Tools > Rirytools > Constraint Train** (VRChat Avatars SDK 3.7.0+):
   staggered VRC Parent Constraint trains onto 1 to 5 physics chains, built as a
-  Motion Time clip.
+  Motion Time clip. Also in the Hierarchy's right-click menu under **Rirytools**,
+  where the selected bones fill in the chain start and end.
 - Added generated `Phys1_`..`Phys5_` and `Rest_` empty chains with automatic
   endpoints, added without unpacking prefabs.
 - Added editable train step and chain blend curves, a halfway-influence power
