@@ -104,3 +104,18 @@ Reverse-reference indexes are cached under
 to `Logs/RiryGuidTools/` in the project; the active log rotates at 10 MiB, also
 during a run, and archived logs are trimmed oldest-first above 100 MiB.
 
+Every regeneration is recorded in `ProjectSettings/RiryGuidRemap.tsv`.
+**Rirytools > Repair Missing GUID References** relinks GUIDs that no longer
+resolve in damaged or recovered files, using that ledger and then Git history.
+See [GUID Tools](Documentation~/regenerate-asset-guids.md).
+
+## AutoSync (GIT menu)
+
+The **GIT** menu backs up scenes, prefabs and `.meta` files to an `AutoSync`
+branch seconds after they change, through a separate Git index, and pushes it.
+**Configure Sync...** creates the repository from named `.gitignore` and
+`.gitattributes` templates in `Documents/UnityTools/ImportPresets`, enables Git
+LFS and checks that large files use it and can be pushed. AutoSync offers to fix
+broken references from its history, and blocks saving a scene or prefab that a
+script stopped from loading. See [AutoSync](Documentation~/autosync.md).
+

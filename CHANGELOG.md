@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.6.0 - 2026-10-25
+
+- Added the **GIT** menu: **AutoSync Scene∕Prefab** (on by default in a Git
+  repository), **Sync Now**, **Check for Broken References...**, **Configure
+  Sync...**, **AutoSync Settings...** and **Help**.
+- AutoSync commits scenes, prefabs and `.meta` files to the `AutoSync` branch (or
+  a chosen one) shortly after they change, through a separate Git index, and
+  pushes it. The checked-out branch and staged changes are never touched.
+- **Configure Sync** creates the repository from named `.gitignore` and
+  `.gitattributes` templates kept with the import presets (GitHub's
+  Unity.gitignore, the gitattributes project's Unity.gitattributes and a built-in
+  LFS template when there are none), enables Git
+  LFS, lists large files LFS does not store, tests an LFS upload, and warns that
+  HTTPS remotes behind Cloudflare must use SSH instead.
+- The repository is always the whole project folder; a project inside another
+  repository is refused until Configure Sync creates one in the project folder.
+- Git actions throw `GitNotInstalledException` when Git is missing.
+- Added a GitHub Actions workflow that keeps AutoSync branches rebased on the
+  base branch; AutoSync versions win conflicts.
+- Regenerate GUID records every change in `ProjectSettings/RiryGuidRemap.tsv`.
+- Added the Broken References window: redirects for missing GUIDs from the
+  ledger, logs and Git history, chosen manually where none is found. AutoSync
+  offers it when a scene or prefab opens with broken references.
+- Added **SCRIPT CAUSING FAILED LOAD**: a scene or prefab that loads with
+  far fewer objects than its file holds cannot be saved, and a modal window names
+  the suspected script until the load is resolved.
+- Added AutoSync, LFS, GUID repair and load-guard tests.
+
 ## 0.5.0 - 2026-10-24
 
 - Added folder import presets: `ImportPreset.md` names a configuration from the
