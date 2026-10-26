@@ -15,6 +15,9 @@
 - Moved the design documents from `Documentation~` to `Docs~/design`, and added a
   tutorial for every tool in `Docs~/tutorials`. `Docs~` is not part of the
   package in a project.
+- Added VPM publishing: every push to `main` asks a separate VPM repository to
+  build the package, publish it as a release and list it for the VRChat Creator
+  Companion. The VPM repository's files are in `VpmRepository~`.
 - Added `TestProject~`, a minimal 2022.3 project that loads the package from the
   repository and runs its tests.
 

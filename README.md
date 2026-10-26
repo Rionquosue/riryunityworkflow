@@ -13,6 +13,11 @@ https://github.com/Rionquosue/riryunityworkflow.git
 The private repository must already be accessible through your Git credentials.
 To pin a version, add `#<tag or commit>` to the URL.
 
+Or, once the VPM repository is set up, add its listing URL in the VRChat Creator
+Companion (**Settings > Packages > Add Repository**). Every new `"version"` in
+`package.json` pushed to `main` is published there automatically; see
+[publishing as a VPM package](Docs~/tutorials/vpm-publishing.md).
+
 The package's own files stay read-only in `Library/PackageCache`. Anything that
 has to live inside the project is unpacked into **`Assets/RiryTools`** on first
 load, and tools save generated assets there when they have no better place

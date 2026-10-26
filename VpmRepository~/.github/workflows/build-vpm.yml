@@ -1,0 +1,84 @@
+# Builds the RiryTools VPM package whenever the source repository's main branch
+# changes, publishes it as a release, and adds it to index.json (the listing the
+# VRChat Creator Companion reads through GitHub Pages).
+#
+# Repository settings (Settings > Secrets and variables > Actions):
+#   Variable SOURCE_REPOSITORY   owner/name of the source repository.
+#   Secret   SOURCE_REPO_TOKEN   Read access to it (only needed when it is private).
+name: Build VPM package
+
+on:
+  repository_dispatch:
+    types: [source-updated]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Source branch, tag or commit to build
+        default: main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-vpm
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      # The source repository comes from this repository's settings, never from
+      # the dispatch payload, so a dispatch can only choose which commit to build.
+      - name: Check out the source repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SOURCE_REPOSITORY }}
+          ref: ${{ github.event.client_payload.sha || inputs.ref || 'main' }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN || github.token }}
+          path: source
+          lfs: true
+
+      # A version is done once it is both released and listed. A run that failed
+      # halfway is repeated in full; the zip is byte-identical for the same source.
+      - name: Skip versions that are already published
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python3 scripts/build_vpm.py version --source source)
+          if python3 scripts/build_vpm.py listed --source source && gh release view "v$version" > /dev/null 2>&1; then
+            echo "Version $version is already published. Bump \"version\" in package.json to publish a new one."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the package and update the listing
+        id: build
+        if: steps.check.outputs.skip != 'true'
+        run: python3 scripts/build_vpm.py build --source source --repository "${{ github.repository }}"
+
+      - name: Publish the release
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.build.outputs.tag }}"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "${{ steps.build.outputs.zip }}" dist/package.json --clobber
+          else
+            gh release create "$tag" "${{ steps.build.outputs.zip }}" dist/package.json \
+              --title "${{ steps.build.outputs.name }} ${{ steps.build.outputs.version }}" \
+              --notes "Built from ${{ vars.SOURCE_REPOSITORY }}@$(git -C source rev-parse --short HEAD)."
+          fi
+
+      - name: Commit the listing
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Add ${{ steps.build.outputs.name }} ${{ steps.build.outputs.version }}"
+          git push
