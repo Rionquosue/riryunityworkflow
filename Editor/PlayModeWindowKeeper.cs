@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Entering Play Mode brings the Game view to the front of its dock area and
@@ -17,6 +17,7 @@ namespace Riry.UnityWorkflow.Editor
     [InitializeOnLoad]
     internal static class PlayModeWindowKeeper
     {
+        // Stored keys keep the package's former name so saved settings survive the rename.
         private const string KeepTabsPref = "Riry.UnityWorkflow.PlayMode.KeepTabs";
         private const string CloseGameViewPref = "Riry.UnityWorkflow.PlayMode.CloseGameView";
         // Session state survives the script reload that entering Play Mode usually causes.

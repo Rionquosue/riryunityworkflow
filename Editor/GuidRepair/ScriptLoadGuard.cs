@@ -9,7 +9,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Detects a scene or prefab that loaded with far fewer objects than its file
@@ -44,7 +44,7 @@ namespace Riry.UnityWorkflow.Editor
         // Unity stack frames: "Namespace.Type:Method (args) (at path:line)".
         private static readonly Regex Frame = new Regex(@"^(?<type>[\w.`+<>]+)[:.](?<method>[\w`<>]+) ?\(.*?\)(?: \(at (?<path>.+?):\d+\))?\s*$",
             RegexOptions.CultureInvariant);
-        private static readonly string[] EngineNamespaces = { "UnityEngine.", "UnityEditor.", "Unity.", "System.", "Mono.", "Riry.UnityWorkflow." };
+        private static readonly string[] EngineNamespaces = { "UnityEngine.", "UnityEditor.", "Unity.", "System.", "Mono.", "Riry.RiryTools." };
         private static readonly List<LoggedError> recent = new List<LoggedError>();
         private static readonly HashSet<string> overridden = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static double openingStarted;

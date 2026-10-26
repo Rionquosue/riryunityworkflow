@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0 - 2026-10-26
+
+- Renamed the package to `com.riry.rirytools` (RiryTools). Assemblies and
+  namespaces are now `Riry.RiryTools.Editor`, `Riry.RiryTools.Editor.VRChat` and
+  `Riry.RiryTools.Editor.Tests`. Saved settings keep their old keys, so nothing
+  is lost.
+- Added `Assets/RiryTools`: files in the package's `ProjectFolder~` are unpacked
+  there on load without overwriting existing ones. Constraint Train clips and
+  `_ROOT` variants of read-only prefabs are saved there by default.
+- Added `TestProject~`, a minimal 2022.3 project that loads the package from the
+  repository and runs its tests.
+
 ## 0.6.0 - 2026-10-25
 
 - Moved all UI into `Editor/UI/`: every menu entry is in `RiryMenus.cs` (VRChat

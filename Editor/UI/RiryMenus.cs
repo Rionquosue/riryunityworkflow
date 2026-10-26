@@ -2,7 +2,7 @@
 // Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using UnityEditor;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Every menu entry of this package in one place: the Tools dropdown, the

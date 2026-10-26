@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Lists every missing GUID in a set of files with a redirect field, filled in

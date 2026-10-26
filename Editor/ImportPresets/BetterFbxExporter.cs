@@ -10,7 +10,7 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Exports a .blend to an FBX beside it by running Blender in the background
@@ -20,6 +20,7 @@ namespace Riry.UnityWorkflow.Editor
     internal static class BetterFbxExporter
     {
         internal const string SourceExtension = "blend";
+        // Stored keys keep the package's former name so saved settings survive the rename.
         private const string BlenderPathPref = "Riry.UnityWorkflow.BlenderPath";
         private const string OptionsPref = "Riry.UnityWorkflow.BetterFbxOptions";
         private const int TimeoutSeconds = 600;

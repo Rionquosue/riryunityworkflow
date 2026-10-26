@@ -9,7 +9,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>Missing GUIDs found in a set of files, with suggested redirects.</summary>
     internal sealed class RepairPlan

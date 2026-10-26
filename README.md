@@ -1,6 +1,41 @@
-# Riry Unity Workflow
+# RiryTools
 
-Editor-only workflow tools targeting Unity 2022.3 LTS.
+`com.riry.rirytools`: editor-only workflow tools for Unity 2022.3 LTS.
+
+## Install
+
+In Unity Package Manager, choose **Add package from git URL** and enter:
+
+```text
+https://github.com/Rionquosue/riryunityworkflow.git
+```
+
+The private repository must already be accessible through your Git credentials.
+To pin a version, add `#<tag or commit>` to the URL.
+
+The package's own files stay read-only in `Library/PackageCache`. Anything that
+has to live inside the project is unpacked into **`Assets/RiryTools`** on first
+load, and tools save generated assets there when they have no better place
+(Constraint Train clips, `_ROOT` variants of read-only prefabs). Existing files
+there are never overwritten, so edits survive updates; delete a file to get the
+package's copy back. Shader applets will live there too.
+
+## Testing
+
+`TestProject~` is a minimal Unity 2022.3.22f1 project that loads this package
+from the repository (`"file:../../"`) and lists it under `testables`:
+
+1. In Unity Hub, choose **Add > Add project from disk** and pick the
+   `TestProject~` folder of a clone of this repository.
+2. Open it, then **Window > General > Test Runner > EditMode > Run All**.
+
+Unity ignores folders ending in `~` inside a package, so `TestProject~` never
+reaches projects that install the package. Constraint Train's window needs the
+VRChat Avatars SDK, so it does not compile in the test project; its planner,
+chain and prefab tests do not need the SDK and still run.
+
+To run the tests in your own project instead, add `"testables":
+["com.riry.rirytools"]` to its `Packages/manifest.json`.
 
 ## Blendshape Sync
 
@@ -27,16 +62,6 @@ is in `Editor/UI/RiryMenus.cs`, except Constraint Train's, which are in
 path or priority there to move an entry. Each window's drawing code is in
 `Editor/UI/` (Constraint Train's in `Editor/VRChat/ConstraintTrainWindow.UI.cs`),
 with a glossary of its fields and methods at the bottom of each file.
-
-## Install
-
-In Unity Package Manager, choose **Add package from git URL** and enter:
-
-```text
-https://github.com/Rionquosue/riryunityworkflow.git
-```
-
-The private repository must already be accessible through your Git credentials.
 
 ## Clean Animation Keys
 

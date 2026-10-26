@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>What the Broken References window draws. State and actions are in Editor/GuidRepair/BrokenReferenceWindow.cs.</summary>
     internal sealed partial class BrokenReferenceWindow

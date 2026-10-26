@@ -109,11 +109,11 @@ For a Git Package Manager installation, add the package name to the existing
 `testables` array in your project's `Packages/manifest.json`:
 
 ```json
-"testables": ["com.riry.unityworkflow"]
+"testables": ["com.riry.rirytools"]
 ```
 
 Use the Unity Test Framework, open **Window > General > Test Runner**, select
-**EditMode**, and run `Riry.UnityWorkflow.Editor.Tests`. Run with animation
+**EditMode**, and run `Riry.RiryTools.Editor.Tests`. Run with animation
 preview stopped and the Animator graph unfocused. Blendshape tests create their
 objects in a temporary additive scene, so your open scenes are not modified;
 they are skipped while a dirty untitled scene is open. The tests clear Undo

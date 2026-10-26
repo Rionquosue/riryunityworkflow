@@ -8,7 +8,7 @@ using System.Threading;
 using UnityEditor;
 using UnityEngine.Networking;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Whether git is installed and the project folder is a repository with a

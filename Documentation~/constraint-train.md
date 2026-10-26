@@ -89,7 +89,7 @@ overrides in that scene. The window then offers to save them:
 - When that prefab is an FBX model or a read-only package prefab, it cannot hold
   overrides. **Save to `<name>_ROOT.prefab`** instead saves the instance, with all
   its overrides, as a Prefab Variant of the model in the model's folder (or in
-  `Assets` for a read-only package), and connects the scene object to it. Save
+  `Assets/RiryTools` for a read-only package), and connects the scene object to it. Save
   the scene to keep that link. An existing `_ROOT` prefab is replaced (keeping its
   GUID) only after confirmation, or a new copy is saved beside it.
 

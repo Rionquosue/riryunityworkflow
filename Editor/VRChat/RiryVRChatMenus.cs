@@ -2,7 +2,7 @@
 // Target editor: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer.
 using UnityEditor;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Menu entries for the VRChat tools. They live in this assembly, which only

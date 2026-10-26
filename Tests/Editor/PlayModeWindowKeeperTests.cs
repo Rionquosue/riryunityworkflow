@@ -1,7 +1,7 @@
 #if UNITY_EDITOR && UNITY_INCLUDE_TESTS
 using NUnit.Framework;
 
-namespace Riry.UnityWorkflow.Editor.Tests
+namespace Riry.RiryTools.Editor.Tests
 {
     public sealed class PlayModeWindowKeeperTests
     {

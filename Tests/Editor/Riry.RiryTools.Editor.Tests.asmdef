@@ -1,8 +1,8 @@
 {
-  "name": "Riry.UnityWorkflow.Editor.Tests",
-  "rootNamespace": "Riry.UnityWorkflow.Editor.Tests",
+  "name": "Riry.RiryTools.Editor.Tests",
+  "rootNamespace": "Riry.RiryTools.Editor.Tests",
   "references": [
-    "Riry.UnityWorkflow.Editor",
+    "Riry.RiryTools.Editor",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner"
   ],

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>Finds bone chains and creates empty target chains for a constraint train.</summary>
     internal static class ConstraintTrainChains

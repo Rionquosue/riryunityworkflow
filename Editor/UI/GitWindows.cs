@@ -5,7 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>GIT > AutoSync Settings...: branch, base branch, remote, push and the rebase workflow.</summary>
     internal sealed class GitAutosaveWindow : EditorWindow

@@ -8,7 +8,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Moves Constraint Train changes made on a prefab instance in a scene into a
@@ -99,11 +99,11 @@ namespace Riry.UnityWorkflow.Editor
             Undo.CollapseUndoOperations(group);
         }
 
-        /// <summary>"&lt;folder&gt;/&lt;model name&gt;_ROOT.prefab" beside the source; under Assets when the source is read-only.</summary>
+        /// <summary>"&lt;folder&gt;/&lt;model name&gt;_ROOT.prefab" beside the source; in Assets/RiryTools when the source is read-only.</summary>
         internal static string RootPrefabPath(string sourceAssetPath)
         {
             string folder = Path.GetDirectoryName(sourceAssetPath).Replace('\\', '/');
-            if (folder != "Assets" && !folder.StartsWith("Assets/", StringComparison.Ordinal)) folder = "Assets";
+            if (folder != "Assets" && !folder.StartsWith("Assets/", StringComparison.Ordinal)) folder = RiryToolsProjectFolder.AssetPath;
             return folder + "/" + Path.GetFileNameWithoutExtension(sourceAssetPath) + RootSuffix + ".prefab";
         }
 
@@ -113,6 +113,7 @@ namespace Riry.UnityWorkflow.Editor
         /// </summary>
         internal static GameObject SaveAsRootVariant(Changes changes, string path)
         {
+            if (path.StartsWith(RiryToolsProjectFolder.AssetPath + "/", StringComparison.Ordinal)) RiryToolsProjectFolder.Ensure();
             bool success;
             GameObject asset = PrefabUtility.SaveAsPrefabAssetAndConnect(changes.InstanceRoot, path, InteractionMode.UserAction,
                 out success);
