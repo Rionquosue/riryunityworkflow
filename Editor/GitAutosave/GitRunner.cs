@@ -9,7 +9,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>Thrown by every Git operation when git is not installed or not on PATH.</summary>
     internal sealed class GitNotInstalledException : InvalidOperationException

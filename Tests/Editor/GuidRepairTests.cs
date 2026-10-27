@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using NUnit.Framework;
 
-namespace Riry.UnityWorkflow.Editor.Tests
+namespace Riry.RiryTools.Editor.Tests
 {
     public sealed class GuidRepairTests
     {

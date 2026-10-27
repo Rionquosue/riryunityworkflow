@@ -8,7 +8,7 @@ using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Removes inactive blendshape curves and static bone transform curves from

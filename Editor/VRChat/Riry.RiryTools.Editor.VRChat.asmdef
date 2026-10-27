@@ -1,8 +1,8 @@
 {
-  "name": "Riry.UnityWorkflow.Editor.VRChat",
-  "rootNamespace": "Riry.UnityWorkflow.Editor",
+  "name": "Riry.RiryTools.Editor.VRChat",
+  "rootNamespace": "Riry.RiryTools.Editor",
   "references": [
-    "Riry.UnityWorkflow.Editor"
+    "Riry.RiryTools.Editor"
   ],
   "includePlatforms": [
     "Editor"

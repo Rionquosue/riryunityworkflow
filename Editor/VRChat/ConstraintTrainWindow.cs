@@ -7,7 +7,7 @@ using UnityEngine;
 using VRC.Dynamics;
 using VRC.SDK3.Dynamics.Constraint.Components;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Sets up VRC Parent Constraints on a real bone chain and builds a Motion
@@ -366,7 +366,7 @@ namespace Riry.UnityWorkflow.Editor
                 foreach (char invalid in System.IO.Path.GetInvalidFileNameChars())
                     fileName = fileName.Replace(invalid, '_');
                 string path = EditorUtility.SaveFilePanelInProject("Save Constraint Train Clip",
-                    fileName, "anim", "Choose where to save the clip.");
+                    fileName, "anim", "Choose where to save the clip.", RiryToolsProjectFolder.Ensure());
                 if (string.IsNullOrEmpty(path)) return;
                 var created = new AnimationClip { frameRate = 60 };
                 WriteCurves(created, plan);

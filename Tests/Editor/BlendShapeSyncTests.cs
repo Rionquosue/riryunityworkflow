@@ -9,7 +9,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Riry.UnityWorkflow.Editor.Tests
+namespace Riry.RiryTools.Editor.Tests
 {
     public sealed class BlendShapeSyncTests
     {

@@ -2,13 +2,15 @@
 // Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using UnityEditor;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Every menu entry of this package in one place: the Tools dropdown, the
     /// Project window right-click menu (Assets/...), and the GIT menu. Constraint
     /// Train's entries (Tools and Hierarchy right-click) are in
     /// Editor/VRChat/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
+    /// Without the SDK, the same entries at the bottom of this file show a
+    /// "VRCSDK not found" popup instead.
     ///
     /// Editing tips:
     /// - Change a path to move or rename an entry; "/" makes a submenu.
@@ -164,6 +166,37 @@ namespace Riry.UnityWorkflow.Editor
 
         [MenuItem(GitHelp, false, 100)]
         private static void GitHelpItem() { GitHelpWindow.Open(); }
+
+#if !RIRY_VRC_CONSTRAINTS
+        // =====================================================================
+        // VRChat tools without the VRChat SDK
+        // With the SDK, these paths belong to RiryVRChatMenus.cs instead. Keep
+        // the paths and priorities of both files in step.
+        // =====================================================================
+
+        private const string ConstraintTrain = "Tools/Rirytools/Constraint Train";
+        private const string ConstraintTrainHierarchy = "GameObject/Rirytools/Constraint Train...";
+
+        [MenuItem(ConstraintTrain, false, 2030)]
+        private static void ConstraintTrainItem() { VrcSdkMissing("Constraint Train"); }
+
+        [MenuItem(ConstraintTrainHierarchy, false, 20)]
+        private static void ConstraintTrainHierarchyItem() { VrcSdkMissing("Constraint Train"); }
+
+        /// <summary>Throws VrcSdkNotFoundException and shows it as the "VRCSDK not found" popup.</summary>
+        private static void VrcSdkMissing(string tool)
+        {
+            try
+            {
+                throw new VrcSdkNotFoundException(tool);
+            }
+            catch (VrcSdkNotFoundException exception)
+            {
+                UnityEngine.Debug.LogException(exception);
+                EditorUtility.DisplayDialog("VRCSDK not found", exception.Message, "OK");
+            }
+        }
+#endif
     }
 }
 
@@ -177,7 +210,8 @@ namespace Riry.UnityWorkflow.Editor
 //   Tools/Rirytools/GUID Tools (2010)               -> GuidToolsWindow.OpenWindow (Editor/UI/GuidToolsWindow.cs)
 //   Tools/Rirytools/Blendshape Sync (2020)          -> BlendShapeSyncWindow.Open (Editor/UI/BlendShapeSyncWindow.UI.cs)
 //   Tools/Rirytools/Delete GUID Reference Cache (2020) -> ClearRegenerateGuidCache.DeleteCacheWithConfirmation (Editor/ClearRegenerateGuidCache.cs)
-//   Tools/Rirytools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/RiryVRChatMenus.cs)
+//   Tools/Rirytools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/RiryVRChatMenus.cs);
+//                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/Rirytools/Open Import Preset Library (2040) -> ImportPresetMenu.OpenLibrary (Editor/ImportPresets/ImportPresetMenu.cs)
 //   Tools/Rirytools/Play Mode/Keep Tabs in Front (2060)  [check mark] -> PlayModeWindowKeeper.KeepTabs (Editor/PlayModeWindowKeeper.cs)
 //   Tools/Rirytools/Play Mode/Close Game View Opened by Play Mode (2061) [check mark] -> PlayModeWindowKeeper.CloseGameView
@@ -191,7 +225,8 @@ namespace Riry.UnityWorkflow.Editor
 //   Assets/Tools/Remove blank shapekeys (2100)      -> RemoveBlankShapeKeys.RunFromProjectWindow
 //
 // HIERARCHY RIGHT-CLICK
-//   GameObject/Rirytools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy (Editor/VRChat/RiryVRChatMenus.cs)
+//   GameObject/Rirytools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy (Editor/VRChat/RiryVRChatMenus.cs);
+//                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //
 // GIT MENU (main menu bar)
 //   GIT/AutoSync Scene∕Prefab (1)  [check mark]     -> GitActions.ToggleAutoSync / GitAutosave.Enabled (Editor/GitAutosave/GitActions.cs)

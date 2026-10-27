@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.riry.rirytools": "file:../../",
+    "com.unity.test-framework": "1.1.33"
+  },
+  "testables": [
+    "com.riry.rirytools"
+  ]
+}

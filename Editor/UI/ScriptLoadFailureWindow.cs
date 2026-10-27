@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>A modal window that keeps the editor unusable until the failed load is dealt with.</summary>
     internal sealed class ScriptLoadFailureWindow : EditorWindow

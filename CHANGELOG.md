@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.7.0 - 2026-10-26
+
+- Renamed the package to `com.riry.rirytools` (RiryTools). Assemblies and
+  namespaces are now `Riry.RiryTools.Editor`, `Riry.RiryTools.Editor.VRChat` and
+  `Riry.RiryTools.Editor.Tests`. Saved settings keep their old keys, so nothing
+  is lost.
+- Added `Assets/RiryTools`: files in the package's `ProjectFolder~` are unpacked
+  there on load without overwriting existing ones. Constraint Train clips and
+  `_ROOT` variants of read-only prefabs are saved there by default.
+- Without the VRChat Avatars SDK 3.7.0+, the Constraint Train menu entries now
+  throw `VrcSdkNotFoundException` and show a **VRCSDK not found** popup instead
+  of being missing.
+- Moved the design documents from `Documentation~` to `Docs~/design`, and added a
+  tutorial for every tool in `Docs~/tutorials`. `Docs~` is not part of the
+  package in a project.
+- Added VPM publishing: every push to `main` asks Rionquosue/rirytools_vpm to
+  build the package, publish it as a release and list it for the VRChat Creator
+  Companion.
+- Added `TestProject~`, a minimal 2022.3 project that loads the package from the
+  repository and runs its tests.
+
 ## 0.6.0 - 2026-10-25
 
 - Moved all UI into `Editor/UI/`: every menu entry is in `RiryMenus.cs` (VRChat

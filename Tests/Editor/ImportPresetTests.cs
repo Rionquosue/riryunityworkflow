@@ -6,7 +6,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor.Tests
+namespace Riry.RiryTools.Editor.Tests
 {
     public sealed class ImportPresetTests
     {

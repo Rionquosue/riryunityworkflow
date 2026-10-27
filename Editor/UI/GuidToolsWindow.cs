@@ -3,7 +3,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     internal sealed class GuidToolsWindow : EditorWindow
     {

@@ -7,7 +7,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>What the Import Preset window draws. State and actions are in Editor/ImportPresets/ImportPresetWindowActions.cs.</summary>
     internal sealed partial class ImportPresetFolderWindow

@@ -1,7 +1,9 @@
 # Constraint Train
 
 Target: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer (VRC
-Constraints). The window only compiles when that SDK is installed.
+Constraints). Without that SDK the window is left out of the build rather than
+failing to compile, and its menu entries throw `VrcSdkNotFoundException` and show
+a **VRCSDK not found** popup saying the SDK is missing.
 
 Open **Tools > Rirytools > Constraint Train**, or right-click a bone in the
 Hierarchy and choose **Rirytools > Constraint Train...**. From the Hierarchy, the
@@ -89,7 +91,7 @@ overrides in that scene. The window then offers to save them:
 - When that prefab is an FBX model or a read-only package prefab, it cannot hold
   overrides. **Save to `<name>_ROOT.prefab`** instead saves the instance, with all
   its overrides, as a Prefab Variant of the model in the model's folder (or in
-  `Assets` for a read-only package), and connects the scene object to it. Save
+  `Assets/RiryTools` for a read-only package), and connects the scene object to it. Save
   the scene to keep that link. An existing `_ROOT` prefab is replaced (keeping its
   GUID) only after confirmation, or a new copy is saved beside it.
 

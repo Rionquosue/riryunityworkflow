@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// ImportPreset.md in a folder sets import presets for new files in that
@@ -98,7 +98,7 @@ namespace Riry.UnityWorkflow.Editor
                 text.Append(AnimationsKey).Append(": ").Append(string.Join(", ", rules.ExtractAnimations)).Append('\n');
             if (rules.BetterFbx.Count > 0)
                 text.Append(BetterFbxKey).Append(": ").Append(string.Join(", ", rules.BetterFbx)).Append('\n');
-            text.Append("\n<!-- Written by Riry Unity Workflow. Once edited by hand, the tool leaves this file alone. -->\n");
+            text.Append("\n<!-- Written by RiryTools. Once edited by hand, the tool leaves this file alone. -->\n");
             return text.ToString();
         }
 

@@ -9,7 +9,7 @@ using UnityEditor.Presets;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace Riry.UnityWorkflow.Editor
+namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Project-independent import preset configurations, stored under
@@ -96,7 +96,7 @@ namespace Riry.UnityWorkflow.Editor
             if (!File.Exists(readme))
             {
                 File.WriteAllText(readme,
-                    "Riry Unity Workflow import preset library\n\n" +
+                    "RiryTools import preset library\n\n" +
                     "Each folder here is one configuration. Put Unity .preset files for importers in it\n" +
                     "(Project window: right-click an asset > Rirytools > Save Import Settings to Preset Library).\n\n" +
                     "Optional config.json maps file extensions to presets; the first matching rule wins:\n" +

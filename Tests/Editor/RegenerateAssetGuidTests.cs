@@ -6,7 +6,7 @@ using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 
-namespace Riry.UnityWorkflow.Editor.Tests
+namespace Riry.RiryTools.Editor.Tests
 {
     // Works on temporary files outside the project; no assets are imported.
     public sealed class RegenerateAssetGuidTests

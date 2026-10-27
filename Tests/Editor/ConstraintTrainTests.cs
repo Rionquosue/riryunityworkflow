@@ -6,7 +6,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Riry.UnityWorkflow.Editor.Tests
+namespace Riry.RiryTools.Editor.Tests
 {
     public sealed class ConstraintTrainTests
     {
@@ -45,7 +45,7 @@ namespace Riry.UnityWorkflow.Editor.Tests
             Assert.That(ConstraintTrainPrefabs.RootPrefabPath("Assets/Model.FBX"), Is.EqualTo("Assets/Model_ROOT.prefab"));
             // A read-only package folder cannot take the variant.
             Assert.That(ConstraintTrainPrefabs.RootPrefabPath("Packages/com.vendor.avatar/Body.fbx"),
-                Is.EqualTo("Assets/Body_ROOT.prefab"));
+                Is.EqualTo("Assets/RiryTools/Body_ROOT.prefab"));
             Assert.That(ConstraintTrainPrefabs.IsGeneratedChain("Phys3_Tail1"), Is.True);
             Assert.That(ConstraintTrainPrefabs.IsGeneratedChain("Rest_Tail1"), Is.True);
             Assert.That(ConstraintTrainPrefabs.IsGeneratedChain("Physics"), Is.False);
