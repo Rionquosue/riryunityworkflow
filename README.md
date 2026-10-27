@@ -15,7 +15,7 @@ To pin a version, add `#<tag or commit>` to the URL.
 
 Or add `https://rionquosue.github.io/rirytools_vpm/index.json` in the VRChat
 Creator Companion (**Settings > Packages > Add Repository**). Every new `"version"` in
-`package.json` pushed to `main` is published there automatically; see
+`package.json` merged to `main` is published there after the owner approves it; see
 [publishing as a VPM package](Docs~/tutorials/vpm-publishing.md).
 
 The package's own files stay read-only in `Library/PackageCache`. Anything that
