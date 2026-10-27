@@ -1,9 +1,8 @@
-# Asks the VPM repository to build a package from this commit whenever main
-# changes. Only the commit is sent; the VPM repository checks out the code itself.
+# Asks Rionquosue/rirytools_vpm to build a VPM package from this commit whenever
+# main changes. Only the commit is sent; the VPM repository checks out the code itself.
 #
-# Repository settings (Settings > Secrets and variables > Actions):
-#   Variable VPM_REPOSITORY      owner/name of the VPM repository. Unset: does nothing.
-#   Secret   VPM_DISPATCH_TOKEN  Token allowed to dispatch to it (Contents: read and write).
+# Secret VPM_DISPATCH_TOKEN (Settings > Secrets and variables > Actions): a
+# fine-grained token with Contents: Read and write on the VPM repository.
 name: Notify VPM repository
 
 on:
@@ -11,15 +10,17 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  VPM_REPOSITORY: Rionquosue/rirytools_vpm
+
 jobs:
   notify:
-    if: vars.VPM_REPOSITORY != ''
     runs-on: ubuntu-latest
     steps:
       - name: Request a VPM build
         env:
           GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
         run: |
-          gh api "repos/${{ vars.VPM_REPOSITORY }}/dispatches" \
+          gh api "repos/$VPM_REPOSITORY/dispatches" \
             -f event_type=source-updated \
             -f "client_payload[sha]=${{ github.sha }}"
