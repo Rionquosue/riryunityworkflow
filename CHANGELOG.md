@@ -15,8 +15,8 @@
 - Moved the design documents from `Documentation~` to `Docs~/design`, and added a
   tutorial for every tool in `Docs~/tutorials`. `Docs~` is not part of the
   package in a project.
-- Added VPM publishing: Rionquosue/rirytools_vpm checks `main` hourly, builds
-  and releases new versions, and lists them for the VRChat Creator Companion
+- Added VPM publishing: every push to `main` starts a build in
+  Rionquosue/rirytools_vpm, which releases new versions and lists them for the VRChat Creator Companion
   after the owner approves the deployment.
 - Added `TestProject~`, a minimal 2022.3 project that loads the package from the
   repository and runs its tests.
