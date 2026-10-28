@@ -1,11 +1,8 @@
-# Starts Build Package in the VPM repository whenever main changes. Nothing is
-# sent but the request: that workflow reads this repository's main itself.
+# Starts Build Package in Rionquosue/rirytools_vpm whenever main changes. Nothing
+# is sent but the request: that workflow reads this repository's main itself.
 #
-# Settings > Secrets and variables > Actions:
-#   Secret VPM_DISPATCH_TOKEN: a fine-grained token for the VPM repository only,
-#   with Actions: Read and write.
-#   Variable VPM_REPOSITORY (optional): owner/name of the VPM repository, if it is
-#   not <owner>/rirytools_vpm.
+# Secret VPM_DISPATCH_TOKEN (Settings > Secrets and variables > Actions): a
+# fine-grained token for Rionquosue/rirytools_vpm only, with Actions: Read and write.
 name: Notify VPM repository
 
 on:
@@ -17,10 +14,12 @@ permissions: {}
 
 jobs:
   notify:
+    # Runs only in the main repository, not in forks such as the _dev staging copy.
+    if: github.repository == 'Rionquosue/riryunityworkflow'
     runs-on: ubuntu-latest
     steps:
       - name: Start Build Package
         env:
           GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
-          VPM_REPOSITORY: ${{ vars.VPM_REPOSITORY || format('{0}/rirytools_vpm', github.repository_owner) }}
+          VPM_REPOSITORY: Rionquosue/rirytools_vpm
         run: gh workflow run build-package.yml --repo "$VPM_REPOSITORY" --ref main
