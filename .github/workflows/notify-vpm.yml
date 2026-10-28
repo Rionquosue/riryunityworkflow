@@ -1,0 +1,23 @@
+# Starts Build Package in <owner>/rirytools_vpm whenever main changes. Nothing is
+# sent but the request: that workflow reads this repository's main itself.
+#
+# Secret VPM_DISPATCH_TOKEN (Settings > Secrets and variables > Actions): a
+# fine-grained token for rirytools_vpm only, with Actions: Read and write.
+name: Notify VPM repository
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start Build Package
+        env:
+          GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
+          VPM_REPOSITORY: ${{ github.repository_owner }}/rirytools_vpm
+        run: gh workflow run build-package.yml --repo "$VPM_REPOSITORY" --ref main
