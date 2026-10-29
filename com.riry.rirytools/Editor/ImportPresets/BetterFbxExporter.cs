@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,11 +18,10 @@ namespace Riry.RiryTools.Editor
     internal static class BetterFbxExporter
     {
         internal const string SourceExtension = "blend";
-        // Stored keys keep the package's former name so saved settings survive the rename.
-        private const string BlenderPathPref = "Riry.UnityWorkflow.BlenderPath";
-        private const string OptionsPref = "Riry.UnityWorkflow.BetterFbxOptions";
+        private const string BlenderPathPref = "RiryTools.BetterFbx.BlenderPath";
+        private const string OptionsPref = "RiryTools.BetterFbx.Options";
         private const int TimeoutSeconds = 600;
-        private const string SuccessMarker = "RIRY_BETTER_FBX_OK";
+        private const string SuccessMarker = "RIRYTOOLS_BETTER_FBX_OK";
 
         // Arguments arrive through sys.argv, never through the script text, and
         // options are parsed with ast.literal_eval, so names and paths cannot inject code.
@@ -178,7 +175,6 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         internal static string Export(string blendPath, bool force, out string message)
         {
-            message = null;
             bool upToDate;
             message = BlockedReason(blendPath, out upToDate);
             if (message != null) return null;
@@ -190,7 +186,7 @@ namespace Riry.RiryTools.Editor
             string blender = ResolveBlender();
             if (blender == null)
             {
-                message = "Blender was not found. Set its path in Rirytools > Import Preset... (Better FBX section).";
+                message = "Blender was not found. Set its path in RiryTools > Import Preset... (Better FBX section).";
                 return null;
             }
             string options = Options;
@@ -198,11 +194,11 @@ namespace Riry.RiryTools.Editor
             if (message != null) return null;
 
             string fbx = FbxPathFor(blendPath);
-            string script = Path.GetFullPath(Path.Combine("Library", "RiryImportPresets", "better_fbx_export.py"));
+            string script = Path.Combine(RiryToolsPaths.Library("ImportPresets"), "better_fbx_export.py");
             Directory.CreateDirectory(Path.GetDirectoryName(script));
             File.WriteAllText(script, Script, new UTF8Encoding(false));
 
-            string backup = File.Exists(fbx) ? Path.GetFullPath(Path.Combine("Library", "RiryImportPresets", "previous.fbx")) : null;
+            string backup = File.Exists(fbx) ? Path.Combine(RiryToolsPaths.Library("ImportPresets"), "previous.fbx") : null;
             if (backup != null) File.Copy(fbx, backup, true);
 
             // Keep Unity from importing a half-written FBX.
@@ -325,4 +321,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

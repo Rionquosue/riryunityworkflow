@@ -16,13 +16,13 @@
   ],
   "autoReferenced": false,
   "defineConstraints": [
-    "RIRY_VRC_CONSTRAINTS"
+    "RIRYTOOLS_VRC_CONSTRAINTS"
   ],
   "versionDefines": [
     {
       "name": "com.vrchat.avatars",
       "expression": "3.7.0",
-      "define": "RIRY_VRC_CONSTRAINTS"
+      "define": "RIRYTOOLS_VRC_CONSTRAINTS"
     }
   ],
   "noEngineReferences": false

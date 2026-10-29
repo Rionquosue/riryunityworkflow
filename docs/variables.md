@@ -1,0 +1,309 @@
+# Variables
+
+Every name RiryTools stores, reads or writes: settings keys, files and folders,
+Git names, GUIDs, build symbols, tunable constants, menu paths, and the
+publishing workflows' inputs, environment variables and secrets. Source paths
+are relative to `com.riry.rirytools/Editor/` unless they start with a repository
+name.
+
+## Naming rules
+
+- **Product name:** `RiryTools` in every label, menu, folder and key. Lower
+  case (`rirytools`) only where the format needs it: file names, Git refs, UI
+  Toolkit element names.
+- **Settings keys:** `RiryTools.<Tool>.<Setting>`.
+- **Folders:** `<Library|Logs|Documents>/RiryTools/<Tool>`, built by
+  `RiryToolsPaths.cs`. The project folder is `Assets/RiryTools`
+  (`RiryToolsProjectFolder.cs`).
+- **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
+  `RiryTools` the product.
+- **Tool names:** AutoSync, Blendshape Sync, Clean Animation Keys, Constraint
+  Train, GUID Tools, Import Presets, Play Mode Windows. Class, file, folder and
+  document names follow them.
+
+## Stored settings
+
+EditorPrefs: per user, shared by every project.
+
+| Key | Type | Default | Owner |
+|---|---|---|---|
+| `RiryTools.PlayMode.KeepTabs` | bool | `true` | `PlayModeWindowKeeper.KeepTabs` |
+| `RiryTools.PlayMode.CloseGameView` | bool | `false` | `PlayModeWindowKeeper.CloseGameView` |
+| `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
+| `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
+
+EditorUserSettings: per user and per project, in `UserSettings/`.
+
+| Key | Values | Default | Owner |
+|---|---|---|---|
+| `RiryTools.AutoSync.Enabled` | `1` / `0` | `1` in a Git repository, else `0` | `AutoSync.Enabled` |
+| `RiryTools.AutoSync.Branch` | branch name | `AutoSync` | `AutoSync.Branch` |
+| `RiryTools.AutoSync.BaseBranch` | branch name | `main` | `AutoSync.BaseBranch` |
+| `RiryTools.AutoSync.Remote` | remote name | `origin` | `AutoSync.Remote` |
+| `RiryTools.AutoSync.Push` | `1` / `0` | `1` | `AutoSync.PushEnabled` |
+| `RiryTools.AutoSync.DontAskToConfigure` | `1` | unset | `GitActions`: **Don't Ask Again** was chosen |
+
+SessionState: until the editor quits; survives script reloads.
+
+| Key | Type | Owner |
+|---|---|---|
+| `RiryTools.AutoSync.Pending` | bool | `AutoSync`: a pass was due when scripts reloaded |
+| `RiryTools.AutoSync.AskedToConfigure` | bool | `GitActions`: setup was offered this session |
+| `RiryTools.PlayMode.FrontTabs` | comma-separated instance IDs | `PlayModeWindowKeeper` |
+| `RiryTools.PlayMode.Focused` | instance ID | `PlayModeWindowKeeper` |
+| `RiryTools.PlayMode.HadGameView` | bool | `PlayModeWindowKeeper` |
+| `RiryTools.ScriptLoadGuard.Guarded` | newline-separated asset paths | `ScriptLoadGuard` |
+
+Window fields marked `[SerializeField]` survive script reloads while the window
+is open. Each window file lists them in its glossary.
+
+## Files and folders
+
+In the project:
+
+| Path | Contents | Owner |
+|---|---|---|
+| `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
+| `Library/RiryTools/AutoSync/` | `index`, `index-base`, `paths`, `replay-index` | `AutoSync.CreateJob` |
+| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateAssetGuid.CacheDirectoryPath` |
+| `Library/RiryTools/ImportPresets/` | `owned.txt`, `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `BetterFbxExporter` |
+| `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateAssetGuid.LogDirectoryPath`, `GuidToolLog` |
+| `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidRemapLedger.RelativePath` |
+| `.github/workflows/rirytools-autosync-rebase.yaml` | Rebase workflow, written by **Install Rebase Workflow** | `AutoSync.WorkflowFileName` |
+| `.gitignore`, `.gitattributes` | Copied from a template by **Configure Sync** | `GitTemplates` |
+| `<folder>/ImportPreset.md` | Import preset rules for a folder | `ImportPresetMarker.FileName` |
+| `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips | `ImportPresetAnimations.FolderName` |
+| `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
+| `<model>_ROOT.prefab` | Constraint Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
+
+In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
+a OneDrive redirect; `~/Documents` elsewhere):
+
+| Path | Contents | Owner |
+|---|---|---|
+| `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset`, optional `config.json` | `ImportPresetLibrary.RootPath` |
+| `Documents/RiryTools/ImportPresets/README.txt` | How the library works | `ImportPresetLibrary.EnsureRoot` |
+| `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
+
+## Git names (AutoSync)
+
+| Name | Value | Owner |
+|---|---|---|
+| AutoSync branch | `refs/heads/<Branch>` (default `AutoSync`) | `AutoSyncJob.BranchRef` |
+| Last pushed tip | `refs/rirytools/autosync-pushed/<Branch>` | `AutoSyncJob.PushedRef` |
+| Remote-tracking ref | `refs/remotes/<Remote>/<Branch>` | `AutoSyncJob.RemoteRef` |
+| Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset | `AutoSyncJob.Open` |
+| Reflog messages | `RiryTools AutoSync`, `RiryTools AutoSync replay` | `AutoSyncJob` |
+| Commit message | `AutoSync: <n> files`, then up to 20 paths; first commit `AutoSync: initial snapshot` | `AutoSyncJob.Message` |
+| Snapshot contents | `Assets/**` and `Packages/**` `*.unity`, `*.prefab`, `*.meta`, plus the ledger, `.gitignore`, `.gitattributes`, `.lfsconfig` | `AutoSyncJob.SnapshotRoots`, `SnapshotExtensions` |
+| LFS probe | content `RiryTools AutoSync Git LFS upload check`, name `rirytools-autosync-probe.bin` | `GitLfs.ProbeContent` |
+
+Environment variables set for every Git command (`GitRunner`):
+
+- `GIT_TERMINAL_PROMPT=0` and `GCM_INTERACTIVE=never`: never prompt.
+- `GIT_INDEX_FILE`: the AutoSync index, so the working index is never touched.
+- `GIT_LITERAL_PATHSPECS=1`: while staging the snapshot only.
+- `GIT_AUTHOR_*`, `GIT_COMMITTER_*`: the fallback identity, and the original
+  author during a replay.
+- Arguments: `-c core.quotepath=off` always; `-c core.fsync=committed` for AutoSync passes.
+
+Rebase workflow (`AutoSync/rirytools-autosync-rebase.yaml`, rewritten by `AutoSync.WorkflowText`):
+
+- `on.push.branches`: the base branch and the AutoSync branch pattern.
+- `env.BASE_BRANCH`: the base branch (default `main`).
+- `env.AUTOSYNC_BRANCHES`: `AutoSync`, or `<folder>/**` for a branch in a folder.
+- `concurrency.group`: `rirytools-autosync-rebase`.
+- Schedule: `17 */6 * * *`.
+
+## GUIDs and build symbols
+
+| Name | Value | Use |
+|---|---|---|
+| `AutoSync.WorkflowTemplateGuid` | `5a0f1f0c6b7e4f2d9c3a8e1b7d4c6f20` | GUID in `rirytools-autosync-rebase.yaml.meta`; the template is found by it. Never change it. |
+| `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
+| Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
+| `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
+
+Every file and folder in `com.riry.rirytools/` has a `.meta` with a fixed GUID.
+Moving or renaming a file must move its `.meta` with it.
+
+## Tunable constants
+
+AutoSync and Git:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `AutoSync.DelaySeconds` | `3.0` | Delay after a change before a pass |
+| `GitState.CacheSeconds` | `5.0` | How long Git and repository state is cached |
+| `AutoSyncJob.TimeoutMs` | `120000` | Timeout per Git command in a pass |
+| `AutoSyncJob.PushAttempts` | `3` | Push attempts after a rejected push |
+| `GitRunner.TimedOut` | `-1` | Exit code reported for a timed-out or cancelled command |
+| `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/` | **Download Git** link |
+| `GitLfs.LargeFileBytes` | 1 MiB | Binary files from this size should use LFS |
+| `GitLfs.ProxyLimitBytes` | 100 MiB | Cloudflare's proxied upload limit |
+| `GitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore` | Default `.gitignore` template, saved as `Unity` |
+| `GitTemplates.UnityAttributesUrl` | gitattributes project's `Unity.gitattributes` | Default `.gitattributes` template, saved as `Unity` |
+| `GitTemplates.DefaultAttributes` | built-in text | Built-in LFS template, saved as `UnityLFS` |
+| `ScriptLoadGuard.CaptureSeconds` | `5.0` | Errors this long before a prefab opens count as suspects |
+| `ScriptLoadGuard.RecentLimit` | `50` | Logged errors kept |
+| `BrokenReferenceMonitor.Threshold` / `WindowSeconds` | `3` in `30.0` s | Missing-reference log lines that trigger the prompt |
+
+GUID Tools:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `RegenerateAssetGuid.GuidLength` | `32` | Hex digits in a GUID |
+| `RegenerateAssetGuid.ScanBlockSize` | 256 KiB | Read block for scanning |
+| `RegenerateAssetGuid.MaxDirectoryDepth` | `64` | Stops symbolic link loops |
+| `RegenerateAssetGuid.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1` | Cache file format |
+| `RegenerateAssetGuid.CacheNameLength` | `40` | Readable part of a cache file name |
+| `RegenerateAssetGuid.TextExtensions` | list | Files scanned for references |
+| `RegenerateAssetGuid.UnitySerializedExtensions` | list | Files that must be text to be patched |
+| `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB | Log rotation and archive trim |
+| `GuidRemapLedger.MaxChain` | `64` | Longest old-to-new GUID chain followed |
+| `GuidReferenceRepair.Title` | `Broken References` | Window and dialog title |
+
+Import Presets and Better FBX:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `ImportPresetMarker.FileName` | `ImportPreset.md` | Folder marker |
+| `ImportPresetMarker.DefaultKey` / `AnimationsKey` / `BetterFbxKey` | `preset` / `animations` / `betterfbx` | Marker keys; reserved, so not usable as file types |
+| `ImportPresetLibrary.ConfigFileName` / `PresetExtension` | `config.json` / `.preset` | Configuration files |
+| `ImportPresetLibrary.ReservedNames` | `CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` | Names Windows refuses |
+| `BetterFbxExporter.SourceExtension` | `blend` | Only file type Blender exports |
+| `BetterFbxExporter.TimeoutSeconds` | `600` | Blender run limit |
+| `BetterFbxExporter.SuccessMarker` | `RIRYTOOLS_BETTER_FBX_OK` | Printed by the export script on success |
+
+Other tools:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `BlendshapeSyncWindow.Interval` | `0.5` s | Automatic sync period |
+| `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights` | Undo names; also mark the tool's own Undo steps |
+| `CleanAnimationKeys.DisplayName` | `Clean Animation Keys` | Dialog, window and Undo name |
+| `CleanAnimationKeys.BoneValueDecimalPlaces` | `3` | Rounding for bone endpoint comparison |
+| `CleanAnimationKeysButton.ScanIntervalSeconds` | `0.5` | How often the focused Animation window is checked |
+| `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys` | UI Toolkit name of the **Clean Keys** button |
+| `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
+| `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
+| `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
+| `PlayModeWindowKeeper.SettleUpdates` | `3` | Editor updates to wait before restoring tabs |
+| `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
+
+## Menu paths
+
+Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
+`VRChat/RiryVRChatMenus.cs` and use `RiryMenus.ConstraintTrain` and
+`RiryMenus.ConstraintTrainHierarchy`. The number is the priority.
+
+- **Tools:**
+  - `Tools/RiryTools/Clean Animation Keys` (2000)
+  - `Tools/RiryTools/GUID Tools` (2010)
+  - `Tools/RiryTools/Delete GUID Reference Cache` (2011)
+  - `Tools/RiryTools/Blendshape Sync` (2020)
+  - `Tools/RiryTools/Constraint Train` (2030)
+  - `Tools/RiryTools/Open Import Preset Library` (2040)
+  - `Tools/RiryTools/Play Mode/Keep Tabs in Front` (2060)
+  - `Tools/RiryTools/Play Mode/Close Game View Opened by Play Mode` (2061)
+- **Project window right-click:**
+  - `Assets/RiryTools/Regenerate GUID` (2000)
+  - `Assets/RiryTools/Import Preset...` (2001)
+  - `Assets/RiryTools/Save Import Settings to Preset Library...` (2002)
+  - `Assets/RiryTools/Extract Animations (Generic)` (2003)
+  - `Assets/RiryTools/Repair Missing GUID References` (2004)
+  - `Assets/RiryTools/Clean Animation Keys` (2005)
+- **Hierarchy right-click:** `GameObject/RiryTools/Constraint Train...` (20)
+- **Git menu:**
+  - `Git/AutoSync Scene∕Prefab` (1); U+2215 keeps `Scene∕Prefab` as one entry
+  - `Git/Sync Now` (2)
+  - `Git/Check for Broken References...` (20)
+  - `Git/Configure Sync...` (40)
+  - `Git/AutoSync Settings...` (41)
+  - `Git/Help` (100)
+
+## Publishing
+
+Source workflow: `riryunityworkflow/.github/workflows/notify-vpm.yml`
+
+| Name | Kind | Value |
+|---|---|---|
+| `VPM_DISPATCH_TOKEN` | secret | Fine-grained token for `Rionquosue/rirytools_vpm` only, **Actions: Read and write** |
+| `GH_TOKEN` | step env | `secrets.VPM_DISPATCH_TOKEN` |
+| `CHANNEL` | step env | `stable` for `main`, `beta` for `beta` |
+| `SHA` | step env | `github.sha`, the pushed commit |
+
+Destination workflow: `rirytools_vpm/.github/workflows/build-package.yml`
+
+| Name | Kind | Value |
+|---|---|---|
+| `channel` | input, required | `stable` or `beta` |
+| `sha` | input | 40 lowercase hex; empty for the head of the channel's branch |
+| `version` | input | `X.Y.Z` (stable) or `X.Y.Z-beta.N` (beta); empty for automatic |
+| `SOURCE_REPOSITORY` | workflow env | `Rionquosue/riryunityworkflow` |
+| `CHANNEL`, `SHA`, `VERSION` | step env | The inputs, passed only through the environment |
+| `GH_TOKEN` | step env | `github.token` |
+| `PREVIOUS`, `TAG`, `ZIP` | step env | Step outputs below |
+| `steps.inputs.outputs.ref` | step output | `sha`, or the channel's branch |
+| `steps.version.outputs.previous` / `version` | step output | From `build_vpm.py plan` |
+| `steps.build.outputs.tag` / `zip` / `version` / `digest` | step output | From `build_vpm.py build` |
+| `build-package` | concurrency group | Never cancelled |
+
+Destination workflow: `rirytools_vpm/.github/workflows/build-listing.yml`
+
+| Name | Kind | Value |
+|---|---|---|
+| `listPublishDirectory` | workflow env | `Website` |
+| `pathToCi` | workflow env | `ci` |
+| `GITHUB_TOKEN` | step env | `github.token` |
+| `github-pages` | environment | Deployment waits for the owner's approval |
+| `pages` | concurrency group | Deploy job only |
+
+Destination workflow: `rirytools_vpm/.github/workflows/issue-check.yml`
+
+| Name | Kind | Value |
+|---|---|---|
+| `TRIPWIRE_HASHES` | repository variable | Comma-separated canary hashes |
+| `GITHUB_TOKEN` | step env | `github.token` |
+| `issue-check-<issue number>` | concurrency group | One run per issue |
+
+Destination scripts (`rirytools_vpm/scripts/`):
+
+- `build_vpm.py`:
+  - `PACKAGE_NAME` = `com.riry.rirytools`: the source folder that is zipped,
+    the package name, and the zip name `com.riry.rirytools-<version>.zip`.
+  - `FIELDS` = `package.json`: the package fields; `version` and `url` are added.
+  - `STABLE`, `BETA`: version patterns.
+  - `LFS_POINTER`: refuses LFS pointer files.
+  - `FIXED_TIME` = 2020-01-01: zip timestamps, so builds are reproducible.
+- `verify_listing.py`:
+  - `REPOSITORY` = `Rionquosue/rirytools_vpm`, `PACKAGES` = `{com.riry.rirytools}`.
+  - `WEBSITE`, `SOURCE_JSON`, `TEMPLATED`: what the listing is checked against.
+- `issue_check.py`: `REVIEW_SCORE` = `0.45`, `BLOCK_SCORE` = `0.8`, and its label names.
+- `triage_read.py`: `REPOSITORY` = `Rionquosue/rirytools_vpm`.
+
+## Renamed
+
+These are the old names, with no fallback. Settings and caches under the old
+names reset. User files at the old paths have to be moved by hand once.
+
+| Old | New |
+|---|---|
+| `Documents/UnityTools/ImportPresets/` (presets) | `Documents/RiryTools/ImportPresets/` |
+| `Documents/UnityTools/ImportPresets/*.gitignore`, `*.gitattributes` | `Documents/RiryTools/GitTemplates/` |
+| `ProjectSettings/RiryGuidRemap.tsv` | `ProjectSettings/RiryToolsGuidRemap.tsv` |
+| `.github/workflows/riry-autosave-rebase.yaml` | `.github/workflows/rirytools-autosync-rebase.yaml`; delete the old file after installing the new one |
+| `Library/RegenerateGuidCache`, `Library/RiryImportPresets`, `Library/RiryGitAutosave` | `Library/RiryTools/GuidReferenceCache`, `ImportPresets`, `AutoSync` |
+| `Logs/RiryGuidTools` | `Logs/RiryTools/GuidTools` |
+| `refs/riry/autosave-pushed/<branch>` | `refs/rirytools/autosync-pushed/<branch>` |
+| `Riry.UnityWorkflow.PlayMode.*`, `Riry.UnityWorkflow.BlenderPath`, `Riry.UnityWorkflow.BetterFbxOptions` | `RiryTools.PlayMode.*`, `RiryTools.BetterFbx.BlenderPath`, `RiryTools.BetterFbx.Options` |
+| `Riry.GitAutosave.*`, `Riry.ScriptLoadGuard.Guarded` | `RiryTools.AutoSync.*`, `RiryTools.ScriptLoadGuard.Guarded` |
+| `RIRY_VRC_CONSTRAINTS` | `RIRYTOOLS_VRC_CONSTRAINTS` |
+| Menus `Rirytools/...`, `GIT/...`, `Assets/Tools/Remove blank shapekeys` | `RiryTools/...`, `Git/...`, `Assets/RiryTools/Clean Animation Keys` |
+| Blendshape Sync **Debug** | **Case-sensitive** |
+| `Docs~/` | `docs/` |
+
+`ImportPreset.md` files written before the rename still apply. The tool treats
+them as hand-edited, because their text names the old library path, so it no
+longer rewrites them.

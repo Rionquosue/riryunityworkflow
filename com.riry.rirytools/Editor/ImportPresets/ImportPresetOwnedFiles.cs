@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,17 +12,9 @@ namespace Riry.RiryTools.Editor
     /// </summary>
     internal static class ImportPresetOwnedFiles
     {
-        /// <summary>Tests point the record at a temporary file.</summary>
-        internal static string StorePathOverride;
-
         private static string StorePath
         {
-            get
-            {
-                return !string.IsNullOrEmpty(StorePathOverride)
-                    ? StorePathOverride
-                    : Path.Combine("Library", "RiryImportPresets", "owned.txt");
-            }
+            get { return Path.Combine(RiryToolsPaths.Library("ImportPresets"), "owned.txt"); }
         }
 
         internal static void Record(string path)
@@ -34,12 +24,6 @@ namespace Riry.RiryTools.Editor
             Dictionary<string, string> entries = Load();
             entries[path] = Stamp(path);
             Save(entries);
-        }
-
-        internal static void Forget(string path)
-        {
-            Dictionary<string, string> entries = Load();
-            if (entries.Remove(path)) Save(entries);
         }
 
         internal static bool IsUnchanged(string path)
@@ -71,7 +55,7 @@ namespace Riry.RiryTools.Editor
         private static void Save(Dictionary<string, string> entries)
         {
             string store = StorePath;
-            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(store)));
+            Directory.CreateDirectory(Path.GetDirectoryName(store));
             var text = new StringBuilder();
             foreach (KeyValuePair<string, string> entry in entries)
             {
@@ -81,4 +65,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -123,8 +121,8 @@ namespace Riry.RiryTools.Editor
                 foreach (string extension in extensions)
                 {
                     if (!seen.Add(extension)) return "." + extension + " is listed in more than one row.";
-                    if (extension == ImportPresetAnimations.FolderName.ToLowerInvariant() ||
-                        extension == "preset" || extension == "betterfbx")
+                    if (extension == ImportPresetMarker.DefaultKey || extension == ImportPresetMarker.AnimationsKey ||
+                        extension == ImportPresetMarker.BetterFbxKey)
                         return "'" + extension + "' is a reserved word in ImportPreset.md.";
                 }
                 if (row.Use == DefaultChoice && !row.Animations && !(row.BetterFbx && extensions.Contains(BetterFbxExporter.SourceExtension)))
@@ -293,7 +291,6 @@ namespace Riry.RiryTools.Editor
     }
 
     /// <summary>Saves the selected asset's import settings into the shared library.</summary>
-
     internal sealed partial class ImportPresetSaveWindow : EditorWindow
     {
         [SerializeField] private string assetPath;
@@ -333,4 +330,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -104,7 +102,7 @@ namespace Riry.RiryTools.Editor
 //   pending           Action   The button's action, run after the window closes.
 //   scroll            Vector2  Scroll position.
 //
-// ScriptLoadGuard (Editor/GuidRepair/ScriptLoadGuard.cs)
+// ScriptLoadGuard (Editor/AutoSync/ScriptLoadGuard.cs)
 //   Current           Failure  Path, Expected and Loaded object counts, Suspects, Errors.
 //   Guarded()         Paths whose saving is blocked (kept for the session).
 //   IsGuarded(path) / SetGuarded(path, guarded) / Override(path)
@@ -112,4 +110,3 @@ namespace Riry.RiryTools.Editor
 //   CountSerializedObjects(path)  GameObjects and prefab instances in a scene or prefab file.
 //   Suspects(stackTrace)          First stack frame outside Unity, .NET and this package.
 // ScriptLoadSaveBlocker (ScriptLoadGuard.cs): removes blocked files from every save.
-#endif

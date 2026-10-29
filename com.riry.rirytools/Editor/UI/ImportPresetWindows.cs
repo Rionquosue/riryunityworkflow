@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -58,7 +56,7 @@ namespace Riry.RiryTools.Editor
             if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Warning);
             if (configurations.Count == 0)
                 EditorGUILayout.HelpBox("The library is empty. Right-click an asset with the import settings you " +
-                    "want and choose Rirytools > Save Import Settings to Preset Library.", MessageType.Info);
+                    "want and choose RiryTools > Save Import Settings to Preset Library.", MessageType.Info);
             applyExisting = EditorGUILayout.ToggleLeft("Also apply to files already in the folder now", applyExisting);
             if (applyExisting)
                 EditorGUILayout.HelpBox("This replaces the current import settings of those files, including " +
@@ -70,7 +68,7 @@ namespace Riry.RiryTools.Editor
             if (!string.IsNullOrEmpty(message)) EditorGUILayout.HelpBox(message, MessageType.Info);
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Open library")) ImportPresetMenu.OpenLibrary();
+                if (GUILayout.Button("Open Library")) ImportPresetActions.OpenLibrary();
                 if (GUILayout.Button("Refresh")) configurations = LoadConfigurations(out message);
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(problem != null))
@@ -86,8 +84,11 @@ namespace Riry.RiryTools.Editor
             var options = new List<string> { NoneChoice };
             options.AddRange(configurations);
             int index = configuration == null ? 0 : IndexOf(configurations, configuration) + 1;
-            if (configuration != null && index == 0) options.Add(configuration + " (missing)");
-            if (configuration != null && index == 0) index = options.Count - 1;
+            if (configuration != null && index == 0)
+            {
+                options.Add(configuration + " (missing)");
+                index = options.Count - 1;
+            }
             using (new EditorGUILayout.HorizontalScope())
             {
                 int chosen = EditorGUILayout.Popup(index, options.ToArray());
@@ -272,7 +273,7 @@ namespace Riry.RiryTools.Editor
             GUILayout.FlexibleSpace();
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Open library")) ImportPresetMenu.OpenLibrary();
+                if (GUILayout.Button("Open Library")) ImportPresetActions.OpenLibrary();
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(error != null))
                 {
@@ -298,7 +299,7 @@ namespace Riry.RiryTools.Editor
 //     rows                  [S] List<Row>     Per-type rows.
 //     applyExisting         [S] bool          Also apply to files already in the folders.
 //     configurations            List<string>  Configurations found in the library.
-//     message                   string        Library problem shown at the top.
+//     message                   string        Library problem or the result of Apply, shown at the bottom.
 //     scroll                    Vector2       Scroll position.
 //     DefaultChoice / NoneChoice / AnyPreset  const string  Popup labels.
 //   Row: Extensions ("fbx, obj"), Use (Default, None or a configuration), Preset,
@@ -325,8 +326,7 @@ namespace Riry.RiryTools.Editor
 //           onlyThisExtension, configurations, message.
 //   Open(importer) / OnGUI()  (this file)    Save(importer, configuration)  (ImportPresetWindowActions.cs)
 //
-// ImportPresetMenu (Editor/ImportPresets/ImportPresetMenu.cs): selection helpers
+// ImportPresetActions (Editor/ImportPresets/ImportPresetActions.cs): selection helpers
 //   ChooseFolderPreset / ValidateChooseFolderPreset, SaveToLibrary / ValidateSaveToLibrary,
 //   OpenLibrary, SelectedFolders (selected folders, or the folder shown in the Project window),
 //   IsWritableFolder.
-#endif

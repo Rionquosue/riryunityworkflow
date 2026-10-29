@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -7,7 +5,7 @@ using Object = UnityEngine.Object;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>What the Broken References window draws. State and actions are in Editor/GuidRepair/BrokenReferenceWindow.cs.</summary>
+    /// <summary>What the Broken References window draws. State and actions are in Editor/GuidTools/BrokenReferenceWindow.cs.</summary>
     internal sealed partial class BrokenReferenceWindow
     {
         private static readonly Color Unresolved = new Color(1f, 0.35f, 0.35f);
@@ -68,7 +66,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Broken References window
-// Opened from GIT > Check for Broken References..., Project right-click > Rirytools >
+// Opened from Git > Check for Broken References..., Project right-click > RiryTools >
 // Repair Missing GUID References (both in RiryMenus.cs), the GUID Tools window, and
 // the AutoSync prompt (BrokenReferenceMonitor).
 // ============================================================================
@@ -78,7 +76,7 @@ namespace Riry.RiryTools.Editor
 //   OnGUI()               Reason, files, Rescan, one box per missing GUID, Apply.
 //   Describe(guid, choice) "Suggested from ...", "Chosen manually" or "Not found".
 //
-// FIELDS AND ACTIONS (Editor/GuidRepair/BrokenReferenceWindow.cs)
+// FIELDS AND ACTIONS (Editor/GuidTools/BrokenReferenceWindow.cs)
 //   files                 List<string>  Files scanned.
 //   reason                string        Why the window opened.
 //   plan                  RepairPlan    Missing GUIDs, their files and suggestions.
@@ -91,10 +89,9 @@ namespace Riry.RiryTools.Editor
 //   Redirects()           Missing GUID to chosen asset GUID.
 //   ApplyRedirects()      Checks, confirms, rewrites the GUIDs and reloads the scenes.
 //
-// RepairPlan (Editor/GuidRepair/GuidReferenceRepair.cs)
+// RepairPlan (Editor/GuidTools/GuidReferenceRepair.cs)
 //   Files, References (file to offsets), Missing (GUID to files), Suggested, Sources, LastKnownPaths.
 // GuidReferenceRepair: Scan(files, log), Suggest(plan, log), Apply(plan, redirects, log),
 //   SelectedFiles(), IsMissing(guid), FindGuidReferences(bytes), RepairSelected().
 // BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window when a file opens with
 //   missing GUIDs or Unity logs several missing-script or missing-prefab messages.
-#endif

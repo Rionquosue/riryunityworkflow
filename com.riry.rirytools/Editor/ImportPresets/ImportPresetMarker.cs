@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,9 +18,9 @@ namespace Riry.RiryTools.Editor
     internal static class ImportPresetMarker
     {
         internal const string FileName = "ImportPreset.md";
-        private const string DefaultKey = "preset";
-        private const string AnimationsKey = "animations";
-        private const string BetterFbxKey = "betterfbx";
+        internal const string DefaultKey = "preset";
+        internal const string AnimationsKey = "animations";
+        internal const string BetterFbxKey = "betterfbx";
         private const string NoneValue = "none";
 
         internal struct Target
@@ -33,7 +31,6 @@ namespace Riry.RiryTools.Editor
             public string Preset;
         }
 
-        [Serializable]
         internal sealed class TypeRule
         {
             public List<string> Extensions = new List<string>();
@@ -80,7 +77,7 @@ namespace Riry.RiryTools.Editor
             var text = new StringBuilder();
             text.Append("# Import preset\n\n" +
                 "New files imported into this folder and its subfolders get import settings from\n" +
-                "Documents/UnityTools/ImportPresets. Files that already have import settings are\n" +
+                "Documents/RiryTools/ImportPresets. Files that already have import settings are\n" +
                 "never changed. A closer ImportPreset.md overrides this one.\n\n" +
                 "- `preset`: configuration for file types not listed below\n" +
                 "- `ext, ext`: configuration, or configuration/preset, for those types; or `none`\n" +
@@ -272,4 +269,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

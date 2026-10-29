@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer.
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -13,7 +11,8 @@ namespace Riry.RiryTools.Editor
     /// Sets up VRC Parent Constraints on a real bone chain and builds a Motion
     /// Time clip that moves the chain onto physics chains as a staggered train.
     /// This file holds the state and the actions; everything drawn in the window,
-    /// and the menu entries that open it, are in ConstraintTrainWindow.UI.cs.
+    /// and the Open methods, are in ConstraintTrainWindow.UI.cs. The menu entries
+    /// are in RiryVRChatMenus.cs.
     /// </summary>
     internal sealed partial class ConstraintTrainWindow : EditorWindow
     {
@@ -474,4 +473,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.IO;
 using UnityEditor;
@@ -27,7 +25,7 @@ namespace Riry.RiryTools.Editor
             {
                 try
                 {
-                    if (Unpack(SourceFolder(), Path.Combine(RegenerateAssetGuid.ProjectRootPath, AssetPath)) > 0)
+                    if (Unpack(SourceFolder(), Path.Combine(RiryToolsPaths.ProjectRoot, AssetPath)) > 0)
                         AssetDatabase.Refresh();
                 }
                 catch (Exception exception)
@@ -72,4 +70,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

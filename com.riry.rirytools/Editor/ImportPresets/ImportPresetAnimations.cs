@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,17 +18,9 @@ namespace Riry.RiryTools.Editor
     {
         internal const string FolderName = "Animations";
 
-        /// <summary>Tests point pending markers at a temporary folder.</summary>
-        internal static string PendingFolderOverride;
-
         private static string PendingFolder
         {
-            get
-            {
-                return !string.IsNullOrEmpty(PendingFolderOverride)
-                    ? PendingFolderOverride
-                    : Path.Combine("Library", "RiryImportPresets", "Pending");
-            }
+            get { return Path.Combine(RiryToolsPaths.Library("ImportPresets"), "Pending"); }
         }
 
         // Pending markers are files because a first import can run in an import
@@ -269,4 +259,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

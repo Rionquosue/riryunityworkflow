@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS with the VRChat Avatars SDK 3.7.0 or newer.
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -289,8 +287,8 @@ namespace Riry.RiryTools.Editor
 //   UndoName            const string   Undo group name for every change.
 //
 // MENU ENTRIES (Editor/VRChat/RiryVRChatMenus.cs)
-//   Tools/Rirytools/Constraint Train          -> Open()
-//   GameObject/Rirytools/Constraint Train...  -> OpenFromHierarchy() (Hierarchy right-click)
+//   Tools/RiryTools/Constraint Train          -> Open()
+//   GameObject/RiryTools/Constraint Train...  -> OpenFromHierarchy() (Hierarchy right-click)
 //
 // UI METHODS (ConstraintTrainWindow.UI.cs)
 //   Open()                         Opens the window (Tools menu).
@@ -333,4 +331,3 @@ namespace Riry.RiryTools.Editor
 //     ExponentForMidpoint.
 //   ConstraintTrainPrefabs (Editor/ConstraintTrain/ConstraintTrainPrefabs.cs)
 //     Changes, Collect, IsGeneratedChain, ApplyToSource, RootPrefabPath, SaveAsRootVariant.
-#endif

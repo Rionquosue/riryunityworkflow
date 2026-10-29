@@ -1,12 +1,10 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using UnityEditor;
 
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Every menu entry of this package in one place: the Tools dropdown, the
-    /// Project window right-click menu (Assets/...), and the GIT menu. Constraint
+    /// Project window right-click menu (Assets/...), and the Git menu. Constraint
     /// Train's entries (Tools and Hierarchy right-click) are in
     /// Editor/VRChat/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
     /// Without the SDK, the same entries at the bottom of this file show a
@@ -25,54 +23,58 @@ namespace Riry.RiryTools.Editor
     internal static class RiryMenus
     {
         // ---- Tools dropdown -------------------------------------------------
-        private const string CleanAnimationKeys = "Tools/Rirytools/Clean Animation Keys";
-        private const string GuidTools = "Tools/Rirytools/GUID Tools";
-        private const string BlendshapeSync = "Tools/Rirytools/Blendshape Sync";
-        private const string DeleteGuidCache = "Tools/Rirytools/Delete GUID Reference Cache";
-        private const string OpenPresetLibrary = "Tools/Rirytools/Open Import Preset Library";
-        private const string KeepTabsInFront = "Tools/Rirytools/Play Mode/Keep Tabs in Front";
-        private const string CloseGameView = "Tools/Rirytools/Play Mode/Close Game View Opened by Play Mode";
+        private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
+        private const string GuidTools = "Tools/RiryTools/GUID Tools";
+        private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
+        private const string DeleteGuidCache = "Tools/RiryTools/Delete GUID Reference Cache";
+        private const string OpenPresetLibrary = "Tools/RiryTools/Open Import Preset Library";
+        private const string KeepTabsInFront = "Tools/RiryTools/Play Mode/Keep Tabs in Front";
+        private const string CloseGameView = "Tools/RiryTools/Play Mode/Close Game View Opened by Play Mode";
 
         // ---- Project window right-click -------------------------------------
-        private const string RegenerateGuid = "Assets/Rirytools/Regenerate GUID";
-        private const string ImportPreset = "Assets/Rirytools/Import Preset...";
-        private const string SaveImportPreset = "Assets/Rirytools/Save Import Settings to Preset Library...";
-        private const string ExtractAnimations = "Assets/Rirytools/Extract Animations (Generic)";
-        private const string RepairGuidReferences = "Assets/Rirytools/Repair Missing GUID References";
-        private const string RemoveBlankShapekeys = "Assets/Tools/Remove blank shapekeys";
+        private const string RegenerateGuid = "Assets/RiryTools/Regenerate GUID";
+        private const string ImportPreset = "Assets/RiryTools/Import Preset...";
+        private const string SaveImportPreset = "Assets/RiryTools/Save Import Settings to Preset Library...";
+        private const string ExtractAnimations = "Assets/RiryTools/Extract Animations (Generic)";
+        private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
+        private const string CleanAnimationKeysAssets = "Assets/RiryTools/Clean Animation Keys";
 
-        // ---- GIT menu -------------------------------------------------------
+        // ---- Git menu -------------------------------------------------------
         // U+2215 (division slash) keeps "Scene/Prefab" on one entry instead of a submenu.
-        private const string AutoSync = "GIT/AutoSync Scene∕Prefab";
-        private const string SyncNow = "GIT/Sync Now";
-        private const string CheckBrokenReferences = "GIT/Check for Broken References...";
-        private const string ConfigureSync = "GIT/Configure Sync...";
-        private const string AutoSyncSettings = "GIT/AutoSync Settings...";
-        private const string GitHelp = "GIT/Help";
+        private const string AutoSyncToggle = "Git/AutoSync Scene∕Prefab";
+        private const string SyncNow = "Git/Sync Now";
+        private const string CheckBrokenReferences = "Git/Check for Broken References...";
+        private const string ConfigureSync = "Git/Configure Sync...";
+        private const string AutoSyncSettings = "Git/AutoSync Settings...";
+        private const string GitHelp = "Git/Help";
+
+        // ---- VRChat tools (also used by RiryVRChatMenus.cs) -----------------
+        internal const string ConstraintTrain = "Tools/RiryTools/Constraint Train";
+        internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Train...";
 
         // =====================================================================
         // Tools dropdown
         // =====================================================================
 
-        [MenuItem(CleanAnimationKeys, false, 2000)]
-        private static void CleanAnimationKeysItem() { RemoveBlankShapeKeys.RunFromMainMenu(); }
+        [MenuItem(CleanAnimationKeysMenu, false, 2000)]
+        private static void CleanAnimationKeysItem() { CleanAnimationKeys.RunFromMenu(); }
 
-        [MenuItem(CleanAnimationKeys, true)]
-        private static bool CleanAnimationKeysValid() { return RemoveBlankShapeKeys.ValidateMainMenuCommand(); }
+        [MenuItem(CleanAnimationKeysMenu, true)]
+        private static bool CleanAnimationKeysValid() { return CleanAnimationKeys.ValidateMenu(); }
 
         [MenuItem(GuidTools, false, 2010)]
-        private static void GuidToolsItem() { GuidToolsWindow.OpenWindow(); }
+        private static void GuidToolsItem() { GuidToolsWindow.Open(); }
 
         [MenuItem(BlendshapeSync, false, 2020)]
-        private static void BlendshapeSyncItem() { BlendShapeSyncWindow.Open(); }
+        private static void BlendshapeSyncItem() { BlendshapeSyncWindow.Open(); }
 
-        [MenuItem(DeleteGuidCache, false, 2020)]
-        private static void DeleteGuidCacheItem() { ClearRegenerateGuidCache.DeleteCacheWithConfirmation(); }
+        [MenuItem(DeleteGuidCache, false, 2011)]
+        private static void DeleteGuidCacheItem() { GuidReferenceCache.DeleteWithConfirmation(); }
 
         // Constraint Train is 2030 (RiryVRChatMenus.cs).
 
         [MenuItem(OpenPresetLibrary, false, 2040)]
-        private static void OpenPresetLibraryItem() { ImportPresetMenu.OpenLibrary(); }
+        private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
 
         [MenuItem(KeepTabsInFront, false, 2060)]
         private static void KeepTabsInFrontItem() { PlayModeWindowKeeper.KeepTabs = !PlayModeWindowKeeper.KeepTabs; }
@@ -105,16 +107,16 @@ namespace Riry.RiryTools.Editor
         private static bool RegenerateGuidValid() { return RegenerateAssetGuid.HasValidSelection(); }
 
         [MenuItem(ImportPreset, false, 2001)]
-        private static void ImportPresetItem() { ImportPresetMenu.ChooseFolderPreset(); }
+        private static void ImportPresetItem() { ImportPresetActions.ChooseFolderPreset(); }
 
         [MenuItem(ImportPreset, true)]
-        private static bool ImportPresetValid() { return ImportPresetMenu.ValidateChooseFolderPreset(); }
+        private static bool ImportPresetValid() { return ImportPresetActions.ValidateChooseFolderPreset(); }
 
         [MenuItem(SaveImportPreset, false, 2002)]
-        private static void SaveImportPresetItem() { ImportPresetMenu.SaveToLibrary(); }
+        private static void SaveImportPresetItem() { ImportPresetActions.SaveToLibrary(); }
 
         [MenuItem(SaveImportPreset, true)]
-        private static bool SaveImportPresetValid() { return ImportPresetMenu.ValidateSaveToLibrary(); }
+        private static bool SaveImportPresetValid() { return ImportPresetActions.ValidateSaveToLibrary(); }
 
         [MenuItem(ExtractAnimations, false, 2003)]
         private static void ExtractAnimationsItem() { ImportPresetAnimations.ExtractSelected(); }
@@ -128,23 +130,23 @@ namespace Riry.RiryTools.Editor
         [MenuItem(RepairGuidReferences, true)]
         private static bool RepairGuidReferencesValid() { return RegenerateAssetGuid.HasValidSelection(); }
 
-        [MenuItem(RemoveBlankShapekeys, false, 2100)]
-        private static void RemoveBlankShapekeysItem() { RemoveBlankShapeKeys.RunFromProjectWindow(); }
+        [MenuItem(CleanAnimationKeysAssets, false, 2005)]
+        private static void CleanAnimationKeysAssetsItem() { CleanAnimationKeys.RunFromMenu(); }
 
-        [MenuItem(RemoveBlankShapekeys, true)]
-        private static bool RemoveBlankShapekeysValid() { return RemoveBlankShapeKeys.ValidateProjectWindowCommand(); }
+        [MenuItem(CleanAnimationKeysAssets, true)]
+        private static bool CleanAnimationKeysAssetsValid() { return CleanAnimationKeys.ValidateMenu(); }
 
         // =====================================================================
-        // GIT menu
+        // Git menu
         // =====================================================================
 
-        [MenuItem(AutoSync, false, 1)]
-        private static void AutoSyncItem() { GitActions.ToggleAutoSync(); }
+        [MenuItem(AutoSyncToggle, false, 1)]
+        private static void AutoSyncToggleItem() { GitActions.ToggleAutoSync(); }
 
-        [MenuItem(AutoSync, true)]
-        private static bool AutoSyncValid()
+        [MenuItem(AutoSyncToggle, true)]
+        private static bool AutoSyncToggleValid()
         {
-            Menu.SetChecked(AutoSync, GitAutosave.Enabled);
+            Menu.SetChecked(AutoSyncToggle, AutoSync.Enabled);
             return true;
         }
 
@@ -152,7 +154,7 @@ namespace Riry.RiryTools.Editor
         private static void SyncNowItem() { GitActions.SyncNow(); }
 
         [MenuItem(CheckBrokenReferences, false, 20)]
-        private static void CheckBrokenReferencesItem() { BrokenReferenceWindow.OpenForOpenScenes("Checked from the GIT menu."); }
+        private static void CheckBrokenReferencesItem() { BrokenReferenceWindow.OpenForOpenScenes("Checked from the Git menu."); }
 
         [MenuItem(ConfigureSync, false, 40)]
         private static void ConfigureSyncItem() { GitActions.ConfigureSync(); }
@@ -162,20 +164,17 @@ namespace Riry.RiryTools.Editor
         private static bool ConfigureSyncValid() { return GitActions.ConfigureSyncAvailable(); }
 
         [MenuItem(AutoSyncSettings, false, 41)]
-        private static void AutoSyncSettingsItem() { GitAutosaveWindow.Open(); }
+        private static void AutoSyncSettingsItem() { AutoSyncWindow.Open(); }
 
         [MenuItem(GitHelp, false, 100)]
         private static void GitHelpItem() { GitHelpWindow.Open(); }
 
-#if !RIRY_VRC_CONSTRAINTS
+#if !RIRYTOOLS_VRC_CONSTRAINTS
         // =====================================================================
         // VRChat tools without the VRChat SDK
         // With the SDK, these paths belong to RiryVRChatMenus.cs instead. Keep
-        // the paths and priorities of both files in step.
+        // the priorities of both files in step.
         // =====================================================================
-
-        private const string ConstraintTrain = "Tools/Rirytools/Constraint Train";
-        private const string ConstraintTrainHierarchy = "GameObject/Rirytools/Constraint Train...";
 
         [MenuItem(ConstraintTrain, false, 2030)]
         private static void ConstraintTrainItem() { VrcSdkMissing("Constraint Train"); }
@@ -206,40 +205,39 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // TOOLS DROPDOWN
-//   Tools/Rirytools/Clean Animation Keys (2000)     -> RemoveBlankShapeKeys.RunFromMainMenu (Editor/RemoveBlankShapeKeys.cs)
-//   Tools/Rirytools/GUID Tools (2010)               -> GuidToolsWindow.OpenWindow (Editor/UI/GuidToolsWindow.cs)
-//   Tools/Rirytools/Blendshape Sync (2020)          -> BlendShapeSyncWindow.Open (Editor/UI/BlendShapeSyncWindow.UI.cs)
-//   Tools/Rirytools/Delete GUID Reference Cache (2020) -> ClearRegenerateGuidCache.DeleteCacheWithConfirmation (Editor/ClearRegenerateGuidCache.cs)
-//   Tools/Rirytools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/RiryVRChatMenus.cs);
-//                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
-//   Tools/Rirytools/Open Import Preset Library (2040) -> ImportPresetMenu.OpenLibrary (Editor/ImportPresets/ImportPresetMenu.cs)
-//   Tools/Rirytools/Play Mode/Keep Tabs in Front (2060)  [check mark] -> PlayModeWindowKeeper.KeepTabs (Editor/PlayModeWindowKeeper.cs)
-//   Tools/Rirytools/Play Mode/Close Game View Opened by Play Mode (2061) [check mark] -> PlayModeWindowKeeper.CloseGameView
+//   Tools/RiryTools/Clean Animation Keys (2000)     -> CleanAnimationKeys.RunFromMenu (Editor/CleanAnimationKeys.cs)
+//   Tools/RiryTools/GUID Tools (2010)               -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
+//   Tools/RiryTools/Delete GUID Reference Cache (2011) -> GuidReferenceCache.DeleteWithConfirmation (Editor/GuidTools/GuidReferenceCache.cs)
+//   Tools/RiryTools/Blendshape Sync (2020)          -> BlendshapeSyncWindow.Open (Editor/UI/BlendshapeSyncWindow.UI.cs)
+//   Tools/RiryTools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
+//                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
+//   Tools/RiryTools/Open Import Preset Library (2040) -> ImportPresetActions.OpenLibrary (Editor/ImportPresets/ImportPresetActions.cs)
+//   Tools/RiryTools/Play Mode/Keep Tabs in Front (2060)  [check mark] -> PlayModeWindowKeeper.KeepTabs (Editor/PlayModeWindowKeeper.cs)
+//   Tools/RiryTools/Play Mode/Close Game View Opened by Play Mode (2061) [check mark] -> PlayModeWindowKeeper.CloseGameView
 //
 // PROJECT WINDOW RIGHT-CLICK
-//   Assets/Rirytools/Regenerate GUID (2000)         -> RegenerateAssetGuid.RegenerateSelectedGuids (Editor/RegenerateAssetGuid.cs)
-//   Assets/Rirytools/Import Preset... (2001)        -> ImportPresetMenu.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
-//   Assets/Rirytools/Save Import Settings to Preset Library... (2002) -> ImportPresetMenu.SaveToLibrary -> ImportPresetSaveWindow
-//   Assets/Rirytools/Extract Animations (Generic) (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)
-//   Assets/Rirytools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
-//   Assets/Tools/Remove blank shapekeys (2100)      -> RemoveBlankShapeKeys.RunFromProjectWindow
+//   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateAssetGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateAssetGuid.cs)
+//   Assets/RiryTools/Import Preset... (2001)        -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
+//   Assets/RiryTools/Save Import Settings to Preset Library... (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
+//   Assets/RiryTools/Extract Animations (Generic) (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)
+//   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
+//   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeys.RunFromMenu (the selected clip)
 //
 // HIERARCHY RIGHT-CLICK
-//   GameObject/Rirytools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy (Editor/VRChat/RiryVRChatMenus.cs);
+//   GameObject/RiryTools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy (entry in Editor/VRChat/RiryVRChatMenus.cs);
 //                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //
 // GIT MENU (main menu bar)
-//   GIT/AutoSync Scene∕Prefab (1)  [check mark]     -> GitActions.ToggleAutoSync / GitAutosave.Enabled (Editor/GitAutosave/GitActions.cs)
-//   GIT/Sync Now (2)                                -> GitActions.SyncNow
-//   GIT/Check for Broken References... (20)         -> BrokenReferenceWindow.OpenForOpenScenes (Editor/GuidRepair/BrokenReferenceWindow.cs)
-//   GIT/Configure Sync... (40)  [greyed out with a repository and remote] -> GitActions.ConfigureSync -> GitConfigureWindow (Editor/UI/GitWindows.cs)
-//   GIT/AutoSync Settings... (41)                   -> GitAutosaveWindow.Open (Editor/UI/GitWindows.cs)
-//   GIT/Help (100)                                  -> GitHelpWindow.Open (Editor/UI/GitWindows.cs)
+//   Git/AutoSync Scene∕Prefab (1)  [check mark]     -> GitActions.ToggleAutoSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
+//   Git/Sync Now (2)                                -> GitActions.SyncNow
+//   Git/Check for Broken References... (20)         -> BrokenReferenceWindow.OpenForOpenScenes (Editor/GuidTools/BrokenReferenceWindow.cs)
+//   Git/Configure Sync... (40)  [greyed out with a repository and remote] -> GitActions.ConfigureSync -> GitConfigureWindow (Editor/UI/GitWindows.cs)
+//   Git/AutoSync Settings... (41)                   -> AutoSyncWindow.Open (Editor/UI/GitWindows.cs)
+//   Git/Help (100)                                  -> GitHelpWindow.Open (Editor/UI/GitWindows.cs)
 //
 // OTHER UI OUTSIDE MENUS
-//   "Clean keys" button in the Animation window     -> Editor/UI/CleanAnimationKeysUI.cs
-//   Animation cleanup result window                 -> Editor/UI/CleanAnimationKeysUI.cs
+//   "Clean Keys" button in the Animation window    -> CleanAnimationKeysButton (Editor/UI/CleanAnimationKeysWindow.cs)
+//   Clean Animation Keys result window              -> CleanAnimationKeysWindow (Editor/UI/CleanAnimationKeysWindow.cs)
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/ScriptLoadFailureWindow.cs
 //   Constraint Train window                         -> Editor/VRChat/ConstraintTrainWindow.UI.cs
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.
-#endif

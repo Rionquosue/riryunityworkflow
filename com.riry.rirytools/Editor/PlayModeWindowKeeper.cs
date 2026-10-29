@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -17,13 +15,12 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class PlayModeWindowKeeper
     {
-        // Stored keys keep the package's former name so saved settings survive the rename.
-        private const string KeepTabsPref = "Riry.UnityWorkflow.PlayMode.KeepTabs";
-        private const string CloseGameViewPref = "Riry.UnityWorkflow.PlayMode.CloseGameView";
+        private const string KeepTabsPref = "RiryTools.PlayMode.KeepTabs";
+        private const string CloseGameViewPref = "RiryTools.PlayMode.CloseGameView";
         // Session state survives the script reload that entering Play Mode usually causes.
-        private const string FrontTabsKey = "Riry.UnityWorkflow.PlayMode.FrontTabs";
-        private const string FocusedKey = "Riry.UnityWorkflow.PlayMode.Focused";
-        private const string HadGameViewKey = "Riry.UnityWorkflow.PlayMode.HadGameView";
+        private const string FrontTabsKey = "RiryTools.PlayMode.FrontTabs";
+        private const string FocusedKey = "RiryTools.PlayMode.Focused";
+        private const string HadGameViewKey = "RiryTools.PlayMode.HadGameView";
         private const string GameViewType = "UnityEditor.GameView";
         // Unity raises the Game view during the first editor updates in Play Mode.
         private const int SettleUpdates = 3;
@@ -131,4 +128,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif

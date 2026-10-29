@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-// Target editor: Unity 2022.3 LTS (including 2022.3.22f1).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +11,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Project-independent import preset configurations, stored under
-    /// Documents/UnityTools/ImportPresets/&lt;configuration&gt;/. A configuration
+    /// Documents/RiryTools/ImportPresets/&lt;configuration&gt;/. A configuration
     /// folder holds Unity .preset files and an optional config.json whose rules
     /// map file extensions to them. Presets no rule mentions apply to every file
     /// their importer type accepts.
@@ -59,33 +57,9 @@ namespace Riry.RiryTools.Editor
             "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
         };
 
-        /// <summary>Tests point the library at a temporary folder.</summary>
-        internal static string RootOverride;
-
-        internal static string DocumentsPath
-        {
-            get
-            {
-                // Windows: the real Documents folder, including a OneDrive redirect.
-                // Mono maps MyDocuments to the home folder elsewhere, so use ~/Documents.
-                string documents = Application.platform == RuntimePlatform.WindowsEditor
-                    ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-                    : null;
-                if (!string.IsNullOrEmpty(documents)) return documents;
-                string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                if (string.IsNullOrEmpty(home)) home = Environment.GetEnvironmentVariable("HOME") ?? "";
-                return Path.Combine(home, "Documents");
-            }
-        }
-
         internal static string RootPath
         {
-            get
-            {
-                return !string.IsNullOrEmpty(RootOverride)
-                    ? RootOverride
-                    : Path.Combine(DocumentsPath, "UnityTools", "ImportPresets");
-            }
+            get { return RiryToolsPaths.Documents("ImportPresets"); }
         }
 
         internal static string EnsureRoot()
@@ -98,7 +72,7 @@ namespace Riry.RiryTools.Editor
                 File.WriteAllText(readme,
                     "RiryTools import preset library\n\n" +
                     "Each folder here is one configuration. Put Unity .preset files for importers in it\n" +
-                    "(Project window: right-click an asset > Rirytools > Save Import Settings to Preset Library).\n\n" +
+                    "(Project window: right-click an asset > RiryTools > Save Import Settings to Preset Library).\n\n" +
                     "Optional config.json maps file extensions to presets; the first matching rule wins:\n" +
                     "{ \"rules\": [ { \"extensions\": [\"png\", \"tga\"], \"preset\": \"Textures.preset\" } ] }\n" +
                     "Use \"*\" to match every extension. Presets that no rule mentions apply to every\n" +
@@ -391,4 +365,3 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
-#endif
