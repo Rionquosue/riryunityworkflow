@@ -4,18 +4,9 @@
 
 ## Install
 
-In Unity Package Manager, choose **Add package from git URL** and enter:
-
-```text
-https://github.com/Rionquosue/riryunityworkflow.git
-```
-
-The private repository must already be accessible through your Git credentials.
-To pin a version, add `#<tag or commit>` to the URL.
-
-Or add `https://rionquosue.github.io/rirytools_vpm/index.json` in the VRChat
-Creator Companion (**Settings > Packages > Add Repository**). Every new `"version"` in
-`package.json` merged to `main` is published there after the owner approves it; see
+Add `https://rionquosue.github.io/rirytools_vpm/index.json` in the VRChat
+Creator Companion (**Settings > Packages > Add Repository**). Every change merged
+to `main` is published there as a new version after the owner approves it; see
 [publishing as a VPM package](Docs~/tutorials/vpm-publishing.md).
 
 The package's own files stay read-only in `Library/PackageCache`. Anything that
@@ -36,9 +27,12 @@ is not part of the `com.riry.rirytools` package in a project.
 `TestProject~` is a minimal Unity 2022.3.22f1 project that loads this package
 from the repository (`"file:../../"`) and lists it under `testables`:
 
-1. In Unity Hub, choose **Add > Add project from disk** and pick the
-   `TestProject~` folder of a clone of this repository.
-2. Open it, then **Window > General > Test Runner > EditMode > Run All**.
+1. This repository has no `package.json`; `Rionquosue/rirytools_vpm` holds it.
+   Copy it into the root of your clone (it is ignored by Git):
+   `curl -o package.json https://raw.githubusercontent.com/Rionquosue/rirytools_vpm/main/package.json`
+2. In Unity Hub, choose **Add > Add project from disk** and pick the
+   `TestProject~` folder of the clone.
+3. Open it, then **Window > General > Test Runner > EditMode > Run All**.
 
 Unity ignores folders ending in `~` inside a package, so `TestProject~` never
 reaches projects that install the package. Constraint Train's window needs the
