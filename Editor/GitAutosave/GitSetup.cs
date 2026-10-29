@@ -102,8 +102,8 @@ namespace Riry.RiryTools.Editor
             "https://raw.githubusercontent.com/gitattributes/gitattributes/master/Unity.gitattributes";
 
         // Used when the library has no attributes template. Unity YAML stays
-        // text; large binary formats go to Git LFS.
-        internal const string DefaultAttributes =
+        // text; large binary formats go to Git LFS. Built by Lfs(), so it cannot be const.
+        internal static readonly string DefaultAttributes =
             "# Unity: text assets stay diffable, large binary files go to Git LFS.\n" +
             "* text=auto\n" +
             "*.cs diff=csharp text\n" +
