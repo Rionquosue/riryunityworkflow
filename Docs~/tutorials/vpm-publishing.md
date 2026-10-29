@@ -8,7 +8,7 @@ approves the deployment in GitHub.
 
 ```text
 this repository (main)  <--hourly read--  rirytools_vpm
-                                           1. Build Package: zips main (no Docs~, TestProject~, dot files) with its own package.json,
+                                           1. Build Package: zips main (no Docs~ or dot files) with its own package.json,
                                               releases v<next version>, refuses releases it did not make
                                            2. Build Repo Listing: builds index.json, verifies every zip,
                                               waits for the owner's approval, then deploys to GitHub Pages

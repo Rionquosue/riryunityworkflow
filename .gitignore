@@ -20,6 +20,3 @@
 
 .DS_Store
 Thumbs.db
-
-# Testing only: copied from Rionquosue/rirytools_vpm, which builds the package.
-/package.json

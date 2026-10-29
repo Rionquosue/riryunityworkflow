@@ -22,26 +22,6 @@ Tutorials are in [`Docs~/tutorials`](Docs~/tutorials) and design notes in
 [`Docs~/design`](Docs~/design). Unity ignores folders ending in `~`, so `Docs~`
 is not part of the `com.riry.rirytools` package in a project.
 
-## Testing
-
-`TestProject~` is a minimal Unity 2022.3.22f1 project that loads this package
-from the repository (`"file:../../"`) and lists it under `testables`:
-
-1. This repository has no `package.json`; `Rionquosue/rirytools_vpm` holds it.
-   Copy it into the root of your clone (it is ignored by Git):
-   `curl -o package.json https://raw.githubusercontent.com/Rionquosue/rirytools_vpm/main/package.json`
-2. In Unity Hub, choose **Add > Add project from disk** and pick the
-   `TestProject~` folder of the clone.
-3. Open it, then **Window > General > Test Runner > EditMode > Run All**.
-
-Unity ignores folders ending in `~` inside a package, so `TestProject~` never
-reaches projects that install the package. Constraint Train's window needs the
-VRChat Avatars SDK, so it is left out of the test project; its planner, chain
-and prefab tests do not need the SDK and still run.
-
-To run the tests in your own project instead, add `"testables":
-["com.riry.rirytools"]` to its `Packages/manifest.json`.
-
 ## Blendshape Sync
 
 Open **Tools > Rirytools > Blendshape Sync**. Drag in a master SkinnedMeshRenderer

@@ -97,29 +97,6 @@ changes/Undo, or when a mesh reference, shape count, or shape names/order change
 Regular ticks reuse them after a quick check of the current names.
 Closing/reloading the window removes its editor event subscriptions.
 
-## Tests
-
-The package includes 21 Blendshape Sync Edit Mode regression tests for
-literal/case matching, non-finite weights, manual-link precedence, ambiguity, multi-child updates,
-cache restoration, mesh replacement, Undo, editor guards, timing, and automatic
-empty child rows. The same assembly also tests Clean Animation Keys and the GUID
-tool.
-
-For a Git Package Manager installation, add the package name to the existing
-`testables` array in your project's `Packages/manifest.json`:
-
-```json
-"testables": ["com.riry.rirytools"]
-```
-
-Use the Unity Test Framework, open **Window > General > Test Runner**, select
-**EditMode**, and run `Riry.RiryTools.Editor.Tests`. Run with animation
-preview stopped and the Animator graph unfocused. Blendshape tests create their
-objects in a temporary additive scene, so your open scenes are not modified;
-they are skipped while a dirty untitled scene is open. The tests clear Undo
-history during cleanup. Manual checks: drag/drop, ambiguity dialog, prefab
-overrides, script reload retaining the baseline, and Play Mode transitions.
-
 ## Unity API references
 
 - [AnimationMode.InAnimationMode](https://docs.unity3d.com/2022.3/Documentation/ScriptReference/AnimationMode.InAnimationMode.html)
