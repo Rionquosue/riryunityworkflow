@@ -1,0 +1,28 @@
+# Starts Build Package in Rionquosue/rirytools_vpm on every push to main (stable) or
+# beta (beta). rirytools_vpm builds, versions, releases and lists the package.
+#
+# VPM_DISPATCH_TOKEN is a fine-grained token for Rionquosue/rirytools_vpm only, with
+# only Actions: Read and write: it can start workflows there and nothing else.
+name: Notify VPM
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    # Runs only in the main repository, never in forks such as riryunityworkflow_dev.
+    if: github.repository == 'Rionquosue/riryunityworkflow'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start Build Package in rirytools_vpm
+        env:
+          GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
+          CHANNEL: ${{ github.ref_name == 'main' && 'stable' || 'beta' }}
+          SHA: ${{ github.sha }}
+        run: gh workflow run build-package.yml --repo Rionquosue/rirytools_vpm --ref main -f channel="$CHANNEL" -f sha="$SHA"
