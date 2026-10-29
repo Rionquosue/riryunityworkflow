@@ -33,7 +33,8 @@ namespace Riry.RiryTools.Editor
                 remote = EditorGUILayout.DelayedTextField("Remote", AutoSync.Remote).Trim();
             if (EditorGUI.EndChangeCheck())
             {
-                AutoSync.Enabled = enabled;
+                // Only a changed toggle is stored, so the default still follows the repository.
+                if (enabled != AutoSync.Enabled) AutoSync.Enabled = enabled;
                 AutoSync.Branch = branch;
                 AutoSync.BaseBranch = baseBranch;
                 AutoSync.PushEnabled = push;

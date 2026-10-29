@@ -90,7 +90,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | Name | Value | Owner |
 |---|---|---|
 | AutoSync branch | `refs/heads/<Branch>` (default `AutoSync`) | `AutoSyncJob.BranchRef` |
-| Last pushed tip | `refs/rirytools/autosync-pushed/<Branch>` | `AutoSyncJob.PushedRef` |
+| Last pushed tip | `refs/rirytools/autosync-pushed/<Remote>/<Branch>` | `AutoSyncJob.PushedRef` |
 | Remote-tracking ref | `refs/remotes/<Remote>/<Branch>` | `AutoSyncJob.RemoteRef` |
 | Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset | `AutoSyncJob.Open` |
 | Reflog messages | `RiryTools AutoSync`, `RiryTools AutoSync replay` | `AutoSyncJob` |
@@ -233,6 +233,7 @@ Source workflow: `riryunityworkflow/.github/workflows/notify-vpm.yml`
 | `GH_TOKEN` | step env | `secrets.VPM_DISPATCH_TOKEN` |
 | `CHANNEL` | step env | `stable` for `main`, `beta` for `beta` |
 | `SHA` | step env | `github.sha`, the pushed commit |
+| `notify-vpm-<branch>` | concurrency group | One run at a time per branch, in push order |
 
 Destination workflow: `rirytools_vpm/.github/workflows/build-package.yml`
 
@@ -240,7 +241,7 @@ Destination workflow: `rirytools_vpm/.github/workflows/build-package.yml`
 |---|---|---|
 | `channel` | input, required | `stable` or `beta` |
 | `sha` | input | 40 lowercase hex; empty for the head of the channel's branch |
-| `version` | input | `X.Y.Z` (stable) or `X.Y.Z-beta.N` (beta); empty for automatic |
+| `version` | input | `X.Y.Z` (stable) or `X.Y.Z-beta.N` (beta), no leading zeros; empty for automatic |
 | `SOURCE_REPOSITORY` | workflow env | `Rionquosue/riryunityworkflow` |
 | `CHANNEL`, `SHA`, `VERSION` | step env | The inputs, passed only through the environment |
 | `GH_TOKEN` | step env | `github.token` |
@@ -274,7 +275,7 @@ Destination scripts (`rirytools_vpm/scripts/`):
   - `PACKAGE_NAME` = `com.riry.rirytools`: the source folder that is zipped,
     the package name, and the zip name `com.riry.rirytools-<version>.zip`.
   - `FIELDS` = `package.json`: the package fields; `version` and `url` are added.
-  - `STABLE`, `BETA`: version patterns.
+  - `NUMBER`, `STABLE`, `BETA`: version patterns; `NUMBER` has no leading zeros.
   - `LFS_POINTER`: refuses LFS pointer files.
   - `FIXED_TIME` = 2020-01-01: zip timestamps, so builds are reproducible.
 - `verify_listing.py`:

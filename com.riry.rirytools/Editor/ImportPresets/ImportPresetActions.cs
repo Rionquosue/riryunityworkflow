@@ -79,8 +79,8 @@ namespace Riry.RiryTools.Editor
         {
             if (folder == "Assets" || folder.StartsWith("Assets/", StringComparison.Ordinal)) return true;
             var package = UnityEditor.PackageManager.PackageInfo.FindForAssetPath(folder);
-            return package != null && (package.source == UnityEditor.PackageManager.PackageSource.Embedded ||
-                package.source == UnityEditor.PackageManager.PackageSource.Local);
+            // Marker files are written with System.IO, which only resolves Packages/... for embedded packages.
+            return package != null && package.source == UnityEditor.PackageManager.PackageSource.Embedded;
         }
 
         private static AssetImporter SelectedImporter()

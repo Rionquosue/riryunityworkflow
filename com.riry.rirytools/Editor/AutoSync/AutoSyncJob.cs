@@ -49,10 +49,10 @@ namespace Riry.RiryTools.Editor
             get { return Path.Combine(StateFolder, "paths"); }
         }
 
-        // The last tip the remote accepted; commits after it have not been pushed.
+        // The last tip this remote accepted; commits after it have not been pushed there.
         private string PushedRef
         {
-            get { return "refs/rirytools/autosync-pushed/" + Branch; }
+            get { return "refs/rirytools/autosync-pushed/" + Remote + "/" + Branch; }
         }
 
         /// <summary>Snapshots, then pushes when enabled. Returns a status line; throws on failure.</summary>

@@ -95,6 +95,27 @@ namespace Riry.RiryTools.Editor
             return Selection.activeObject is AnimationClip;
         }
 
+        internal static void RunFromProjectWindow()
+        {
+            AnimationClip clip = Selection.activeObject as AnimationClip;
+
+            if (clip == null)
+            {
+                EditorUtility.DisplayDialog(
+                    DisplayName,
+                    "Select an AnimationClip in the Project window first.",
+                    "OK");
+                return;
+            }
+
+            Run(clip, "Project window selection");
+        }
+
+        internal static bool ValidateProjectWindowCommand()
+        {
+            return Selection.activeObject is AnimationClip;
+        }
+
         internal sealed class WhitelistItem
         {
             internal readonly string Label;

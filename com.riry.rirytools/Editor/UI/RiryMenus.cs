@@ -131,10 +131,10 @@ namespace Riry.RiryTools.Editor
         private static bool RepairGuidReferencesValid() { return RegenerateGuid.HasValidSelection(); }
 
         [MenuItem(CleanAnimationKeysAssets, false, 2005)]
-        private static void CleanAnimationKeysAssetsItem() { CleanAnimationKeys.RunFromMenu(); }
+        private static void CleanAnimationKeysAssetsItem() { CleanAnimationKeys.RunFromProjectWindow(); }
 
         [MenuItem(CleanAnimationKeysAssets, true)]
-        private static bool CleanAnimationKeysAssetsValid() { return CleanAnimationKeys.ValidateMenu(); }
+        private static bool CleanAnimationKeysAssetsValid() { return CleanAnimationKeys.ValidateProjectWindowCommand(); }
 
         // =====================================================================
         // Git menu
@@ -221,7 +221,7 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Save Import Settings to Preset Library... (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
 //   Assets/RiryTools/Extract Animations (Generic) (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
-//   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeys.RunFromMenu (the selected clip)
+//   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeys.RunFromProjectWindow (the selected clip)
 //
 // HIERARCHY RIGHT-CLICK
 //   GameObject/RiryTools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy (entry in Editor/VRChat/RiryVRChatMenus.cs);
