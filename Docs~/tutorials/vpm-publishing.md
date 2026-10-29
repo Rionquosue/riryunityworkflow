@@ -1,5 +1,7 @@
 # Tutorial: Publishing RiryTools as a VPM package
 
+See the [design notes](../design/vpm-publishing.md) for which repository owns what.
+
 Every hour, [Rionquosue/rirytools_vpm](https://github.com/Rionquosue/rirytools_vpm)
 checks this repository's `main`. When it differs from the latest release, it
 builds the package, publishes it as the next version, and prepares a new listing for the
