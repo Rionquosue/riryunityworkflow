@@ -257,7 +257,7 @@ namespace Riry.RiryTools.Editor
                     string relative = file.Substring(projectRoot.Length + 1).Replace('\\', '/');
                     // Text or binary, a single file this large cannot pass the proxy.
                     if (length > ProxyLimitBytes) report.OverProxyLimit.Add(relative);
-                    if (!RegenerateAssetGuid.LooksLikeText(file, sample)) binary.Add(relative);
+                    if (!RegenerateGuid.LooksLikeText(file, sample)) binary.Add(relative);
                 }
             }
 

@@ -32,7 +32,7 @@ namespace Riry.RiryTools.Editor
         private const string CloseGameView = "Tools/RiryTools/Play Mode/Close Game View Opened by Play Mode";
 
         // ---- Project window right-click -------------------------------------
-        private const string RegenerateGuid = "Assets/RiryTools/Regenerate GUID";
+        private const string RegenerateGuidAssets = "Assets/RiryTools/Regenerate GUID";
         private const string ImportPreset = "Assets/RiryTools/Import Preset...";
         private const string SaveImportPreset = "Assets/RiryTools/Save Import Settings to Preset Library...";
         private const string ExtractAnimations = "Assets/RiryTools/Extract Animations (Generic)";
@@ -100,11 +100,11 @@ namespace Riry.RiryTools.Editor
         // Project window right-click
         // =====================================================================
 
-        [MenuItem(RegenerateGuid, false, 2000)]
-        private static void RegenerateGuidItem() { RegenerateAssetGuid.RegenerateSelectedGuids(); }
+        [MenuItem(RegenerateGuidAssets, false, 2000)]
+        private static void RegenerateGuidItem() { RegenerateGuid.RegenerateSelectedGuids(); }
 
-        [MenuItem(RegenerateGuid, true)]
-        private static bool RegenerateGuidValid() { return RegenerateAssetGuid.HasValidSelection(); }
+        [MenuItem(RegenerateGuidAssets, true)]
+        private static bool RegenerateGuidValid() { return RegenerateGuid.HasValidSelection(); }
 
         [MenuItem(ImportPreset, false, 2001)]
         private static void ImportPresetItem() { ImportPresetActions.ChooseFolderPreset(); }
@@ -128,7 +128,7 @@ namespace Riry.RiryTools.Editor
         private static void RepairGuidReferencesItem() { GuidReferenceRepair.RepairSelected(); }
 
         [MenuItem(RepairGuidReferences, true)]
-        private static bool RepairGuidReferencesValid() { return RegenerateAssetGuid.HasValidSelection(); }
+        private static bool RepairGuidReferencesValid() { return RegenerateGuid.HasValidSelection(); }
 
         [MenuItem(CleanAnimationKeysAssets, false, 2005)]
         private static void CleanAnimationKeysAssetsItem() { CleanAnimationKeys.RunFromMenu(); }
@@ -216,7 +216,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Play Mode/Close Game View Opened by Play Mode (2061) [check mark] -> PlayModeWindowKeeper.CloseGameView
 //
 // PROJECT WINDOW RIGHT-CLICK
-//   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateAssetGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateAssetGuid.cs)
+//   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
 //   Assets/RiryTools/Import Preset... (2001)        -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
 //   Assets/RiryTools/Save Import Settings to Preset Library... (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
 //   Assets/RiryTools/Extract Animations (Generic) (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)

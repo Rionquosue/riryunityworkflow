@@ -17,16 +17,16 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             GUILayout.Space(10f);
-            EditorGUILayout.LabelField("Asset GUID Tools", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("GUID Tools", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "Regenerates GUIDs for selected assets while preserving text-serialized references. " +
                 "Folders are expanded recursively without changing folder GUIDs.",
                 MessageType.Info);
 
-            using (new EditorGUI.DisabledScope(!RegenerateAssetGuid.HasValidSelection()))
+            using (new EditorGUI.DisabledScope(!RegenerateGuid.HasValidSelection()))
             {
                 if (GUILayout.Button("Regenerate GUID", GUILayout.Height(30f)))
-                    RegenerateAssetGuid.RegenerateSelectedGuids();
+                    RegenerateGuid.RegenerateSelectedGuids();
                 if (GUILayout.Button("Repair Missing GUID References", GUILayout.Height(24f)))
                     GuidReferenceRepair.RepairSelected();
             }
@@ -36,8 +36,8 @@ namespace Riry.RiryTools.Editor
                 GuidReferenceCache.DeleteWithConfirmation();
 
             GUILayout.Space(6f);
-            EditorGUILayout.LabelField("Cache: " + RegenerateAssetGuid.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);
-            EditorGUILayout.LabelField("Logs: " + RegenerateAssetGuid.LogDirectoryPath, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Cache: " + RegenerateGuid.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Logs: " + RegenerateGuid.LogDirectoryPath, EditorStyles.wordWrappedMiniLabel);
         }
 
         private void OnSelectionChange()
@@ -59,11 +59,11 @@ namespace Riry.RiryTools.Editor
 //   OnSelectionChange()  Repaints so buttons follow the Project selection.
 //
 // Called from the window
-//   RegenerateAssetGuid.HasValidSelection()       Any asset or folder under Assets is selected.
-//   RegenerateAssetGuid.RegenerateSelectedGuids() New GUIDs for the selection, references updated.
+//   RegenerateGuid.HasValidSelection()       Any asset or folder under Assets is selected.
+//   RegenerateGuid.RegenerateSelectedGuids() New GUIDs for the selection, references updated.
 //   GuidReferenceRepair.RepairSelected()          Broken References window for the selection.
 //   GuidReferenceCache.DeleteWithConfirmation()  Deletes Library/RiryTools/GuidReferenceCache.
 //
 // Locations shown
-//   Library/RiryTools/GuidReferenceCache   RegenerateAssetGuid.CacheDirectoryPath
-//   Logs/RiryTools/GuidTools               RegenerateAssetGuid.LogDirectoryPath
+//   Library/RiryTools/GuidReferenceCache   RegenerateGuid.CacheDirectoryPath
+//   Logs/RiryTools/GuidTools               RegenerateGuid.LogDirectoryPath

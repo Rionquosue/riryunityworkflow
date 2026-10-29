@@ -1,4 +1,4 @@
-# VPM publishing
+# VPM Publishing
 
 How RiryTools reaches the VRChat Creator Companion (VCC), and which repository
 owns what. For the steps, see the [tutorial](../tutorials/vpm-publishing.md).

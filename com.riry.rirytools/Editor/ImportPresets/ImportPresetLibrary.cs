@@ -361,7 +361,7 @@ namespace Riry.RiryTools.Editor
 
         internal static void ReportOnce(string key, string message)
         {
-            if (reported.Add(key)) Debug.LogWarning("Import presets: " + message);
+            if (reported.Add(key)) Debug.LogWarning("Import Presets: " + message);
         }
     }
 }

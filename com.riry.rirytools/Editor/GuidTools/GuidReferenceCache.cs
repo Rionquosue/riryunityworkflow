@@ -7,7 +7,7 @@ namespace Riry.RiryTools.Editor
 {
 
 /// <summary>
-/// Deletes only the derived GUID-reference cache created by RegenerateAssetGuid.
+/// Deletes only the derived GUID-reference cache created by RegenerateGuid.
 /// Its menu entry is in Editor/UI/RiryMenus.cs.
 /// </summary>
 internal static class GuidReferenceCache
@@ -18,7 +18,7 @@ internal static class GuidReferenceCache
         {
             try
             {
-                string cachePath = RegenerateAssetGuid.CacheDirectoryPath;
+                string cachePath = RegenerateGuid.CacheDirectoryPath;
                 log.Write("Resolved cache path: " + cachePath);
 
                 if (!Directory.Exists(cachePath))

@@ -17,7 +17,7 @@ namespace Riry.RiryTools.Editor
 /// Folder GUIDs are never changed. Menu entries are in Editor/UI/RiryMenus.cs and
 /// the GUID Tools window is in Editor/UI/GuidToolsWindow.cs.
 /// </summary>
-internal static class RegenerateAssetGuid
+internal static class RegenerateGuid
 {
     private const string CacheExtension = ".rguiddb";
     private const int CacheNameLength = 40;
@@ -188,7 +188,7 @@ internal static class RegenerateAssetGuid
 
             confirmation += "\n\nThis bypasses Unity Undo. Commit or back up the project first.";
 
-            if (!EditorUtility.DisplayDialog("Regenerate Asset GUID", confirmation, "Regenerate", "Cancel"))
+            if (!EditorUtility.DisplayDialog("Regenerate GUID", confirmation, "Regenerate", "Cancel"))
             {
                 log.Write("Cancelled at the confirmation dialog.");
                 return;
@@ -239,7 +239,7 @@ internal static class RegenerateAssetGuid
             Dictionary<string, FileState> postWriteStates = CapturePatchedFileStates(patches);
 
             EditorUtility.DisplayProgressBar(
-                "Regenerating Asset GUIDs",
+                "Regenerating GUIDs",
                 "Refreshing the Asset Database...",
                 0.88f);
 
@@ -698,7 +698,7 @@ internal static class RegenerateAssetGuid
             {
                 float progress = files.Count == 0 ? 0.1f : 0.05f + 0.55f * fileIndex / files.Count;
                 if (EditorUtility.DisplayCancelableProgressBar(
-                        "Regenerating Asset GUIDs",
+                        "Regenerating GUIDs",
                         "Scanning " + file.RelativePath,
                         progress))
                     throw new OperationCanceledException();
@@ -929,7 +929,7 @@ internal static class RegenerateAssetGuid
                     : 0.62f + 0.22f * patchIndex / patches.Count;
 
                 EditorUtility.DisplayProgressBar(
-                    "Regenerating Asset GUIDs",
+                    "Regenerating GUIDs",
                     "Updating " + patch.File.RelativePath,
                     progress);
 
@@ -1479,7 +1479,7 @@ internal sealed class GuidToolLog : IDisposable
 
         try
         {
-            string logDirectory = RegenerateAssetGuid.LogDirectoryPath;
+            string logDirectory = RegenerateGuid.LogDirectoryPath;
             log.archiveDirectory = Path.Combine(logDirectory, "archive");
             log.activeLogPath = Path.Combine(logDirectory, ActiveLogName);
 

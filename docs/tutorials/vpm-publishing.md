@@ -1,4 +1,4 @@
-# Tutorial: Publishing RiryTools as a VPM package
+# Tutorial: VPM Publishing
 
 See the [design notes](../design/vpm-publishing.md) for how it works.
 

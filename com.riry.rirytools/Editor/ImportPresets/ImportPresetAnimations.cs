@@ -88,7 +88,7 @@ namespace Riry.RiryTools.Editor
                     ImportPresetLibrary.TryApply(importer, target.Configuration, target.Preset, out applied))
                     importer.SaveAndReimport();
             }
-            Debug.Log("Import presets: extracted " + written + " clip(s) from " + assetPath + " to " +
+            Debug.Log("Import Presets: extracted " + written + " clip(s) from " + assetPath + " to " +
                 AnimationsFolder(assetPath) + (applied != null ? ", then applied " + applied + "." : "."));
         }
 
@@ -217,7 +217,7 @@ namespace Riry.RiryTools.Editor
         private static void ReportSkipped(string modelPath, List<string> skipped)
         {
             if (skipped.Count == 0) return;
-            Debug.LogWarning("Import presets: kept " + skipped.Count + " clip(s) from " + modelPath +
+            Debug.LogWarning("Import Presets: kept " + skipped.Count + " clip(s) from " + modelPath +
                 " that were edited or not created by this tool:\n" + string.Join("\n", skipped));
         }
 
@@ -238,7 +238,7 @@ namespace Riry.RiryTools.Editor
                 int written = ExtractPreservingSettings(importer,
                     path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), out skipped);
                 ReportSkipped(importer.assetPath, skipped);
-                Debug.Log("Import presets: extracted " + written + " clip(s) from " + importer.assetPath + ".");
+                Debug.Log("Import Presets: extracted " + written + " clip(s) from " + importer.assetPath + ".");
             }
         }
 

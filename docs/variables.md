@@ -65,9 +65,9 @@ In the project:
 |---|---|---|
 | `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
 | `Library/RiryTools/AutoSync/` | `index`, `index-base`, `paths`, `replay-index` | `AutoSync.CreateJob` |
-| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateAssetGuid.CacheDirectoryPath` |
+| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateGuid.CacheDirectoryPath` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt`, `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `BetterFbxExporter` |
-| `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateAssetGuid.LogDirectoryPath`, `GuidToolLog` |
+| `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateGuid.LogDirectoryPath`, `GuidToolLog` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidRemapLedger.RelativePath` |
 | `.github/workflows/rirytools-autosync-rebase.yaml` | Rebase workflow, written by **Install Rebase Workflow** | `AutoSync.WorkflowFileName` |
 | `.gitignore`, `.gitattributes` | Copied from a template by **Configure Sync** | `GitTemplates` |
@@ -153,13 +153,13 @@ GUID Tools:
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `RegenerateAssetGuid.GuidLength` | `32` | Hex digits in a GUID |
-| `RegenerateAssetGuid.ScanBlockSize` | 256 KiB | Read block for scanning |
-| `RegenerateAssetGuid.MaxDirectoryDepth` | `64` | Stops symbolic link loops |
-| `RegenerateAssetGuid.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1` | Cache file format |
-| `RegenerateAssetGuid.CacheNameLength` | `40` | Readable part of a cache file name |
-| `RegenerateAssetGuid.TextExtensions` | list | Files scanned for references |
-| `RegenerateAssetGuid.UnitySerializedExtensions` | list | Files that must be text to be patched |
+| `RegenerateGuid.GuidLength` | `32` | Hex digits in a GUID |
+| `RegenerateGuid.ScanBlockSize` | 256 KiB | Read block for scanning |
+| `RegenerateGuid.MaxDirectoryDepth` | `64` | Stops symbolic link loops |
+| `RegenerateGuid.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1` | Cache file format |
+| `RegenerateGuid.CacheNameLength` | `40` | Readable part of a cache file name |
+| `RegenerateGuid.TextExtensions` | list | Files scanned for references |
+| `RegenerateGuid.UnitySerializedExtensions` | list | Files that must be text to be patched |
 | `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB | Log rotation and archive trim |
 | `GuidRemapLedger.MaxChain` | `64` | Longest old-to-new GUID chain followed |
 | `GuidReferenceRepair.Title` | `Broken References` | Window and dialog title |

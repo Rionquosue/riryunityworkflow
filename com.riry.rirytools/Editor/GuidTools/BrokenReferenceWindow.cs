@@ -116,7 +116,7 @@ namespace Riry.RiryTools.Editor
             // open scenes are reloaded from disk instead of saved.
             if (!EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
                     "Rewrite " + Redirects().Count + " missing GUID(s) on disk, then reload the open scenes from disk?" +
-                    (RegenerateAssetGuid.ScenesAreSaved() ? "" : "\n\nUnsaved scene changes are discarded.") +
+                    (RegenerateGuid.ScenesAreSaved() ? "" : "\n\nUnsaved scene changes are discarded.") +
                     "\n\nThis bypasses Unity Undo.", "Apply", "Cancel"))
                 return;
 
@@ -180,7 +180,7 @@ namespace Riry.RiryTools.Editor
             {
                 string fullPath = System.IO.Path.Combine(RiryToolsPaths.ProjectRoot, path);
                 if (ScriptLoadGuard.IsGuarded(path) || !System.IO.File.Exists(fullPath) ||
-                    !RegenerateAssetGuid.LooksLikeText(fullPath, new byte[4096]))
+                    !RegenerateGuid.LooksLikeText(fullPath, new byte[4096]))
                     return;
                 foreach (KeyValuePair<long, string> reference in
                          GuidReferenceRepair.FindGuidReferences(System.IO.File.ReadAllBytes(fullPath)))

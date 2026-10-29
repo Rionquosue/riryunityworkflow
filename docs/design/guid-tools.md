@@ -1,4 +1,4 @@
-# Regenerate Asset GUIDs
+# GUID Tools
 
 ## Entry points
 

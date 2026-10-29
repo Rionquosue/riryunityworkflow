@@ -121,7 +121,7 @@ namespace Riry.RiryTools.Editor
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError("Import presets: animation extraction failed for " + model + ":\n" + exception);
+                    Debug.LogError("Import Presets: animation extraction failed for " + model + ":\n" + exception);
                 }
             }
         }
@@ -138,10 +138,10 @@ namespace Riry.RiryTools.Editor
                 if (fbx == null)
                 {
                     if (message != null && !message.EndsWith("is up to date.", StringComparison.Ordinal))
-                        Debug.LogWarning("Import presets: " + message);
+                        Debug.LogWarning("Import Presets: " + message);
                     return;
                 }
-                Debug.Log("Import presets: " + message);
+                Debug.Log("Import Presets: " + message);
 
                 // A new FBX is handled by its first import. An updated one keeps
                 // its settings, so its clips are refreshed here when configured.
@@ -151,12 +151,12 @@ namespace Riry.RiryTools.Editor
                 List<string> skipped;
                 int written = ImportPresetAnimations.ExtractPreservingSettings(importer,
                     ImportPresetOwnedFiles.IsUnchanged, out skipped);
-                Debug.Log("Import presets: refreshed " + written + " clip(s) from " + fbx +
+                Debug.Log("Import Presets: refreshed " + written + " clip(s) from " + fbx +
                     (skipped.Count > 0 ? "; kept " + skipped.Count + " edited clip(s)." : "."));
             }
             catch (Exception exception)
             {
-                Debug.LogError("Import presets: Better FBX export failed for " + source + ":\n" + exception);
+                Debug.LogError("Import Presets: Better FBX export failed for " + source + ":\n" + exception);
             }
         }
     }

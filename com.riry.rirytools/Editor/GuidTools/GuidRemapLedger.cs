@@ -23,11 +23,11 @@ namespace Riry.RiryTools.Editor
             get { return Path.Combine(RiryToolsPaths.ProjectRoot, RelativePath); }
         }
 
-        internal static void Append(IEnumerable<RegenerateAssetGuid.Target> targets)
+        internal static void Append(IEnumerable<RegenerateGuid.Target> targets)
         {
             var text = new StringBuilder(File.Exists(FullPath) ? "" : Header);
             string time = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-            foreach (RegenerateAssetGuid.Target target in targets)
+            foreach (RegenerateGuid.Target target in targets)
             {
                 // The path is informational; tabs or line breaks in it must not split the record.
                 text.Append(target.OldGuid).Append('\t').Append(target.NewGuid).Append('\t')
@@ -46,7 +46,7 @@ namespace Riry.RiryTools.Editor
             {
                 string[] fields = line.Split('\t');
                 if (fields.Length >= 2 && !line.StartsWith("#", StringComparison.Ordinal) &&
-                    fields[0].Length == RegenerateAssetGuid.GuidLength && fields[1].Length == RegenerateAssetGuid.GuidLength)
+                    fields[0].Length == RegenerateGuid.GuidLength && fields[1].Length == RegenerateGuid.GuidLength)
                     map[fields[0]] = fields[1];
             }
             return map;

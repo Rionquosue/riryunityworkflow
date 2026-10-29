@@ -7,7 +7,7 @@
 Add `https://rionquosue.github.io/rirytools_vpm/index.json` in the VRChat
 Creator Companion (**Settings > Packages > Add Repository**). Every change merged
 to `main` is published there as a new version after the owner approves it; see
-[publishing as a VPM package](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/vpm-publishing.md).
+[VPM Publishing](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/vpm-publishing.md).
 
 The package's own files are replaced on every update. Anything that
 has to live inside the project is unpacked into **`Assets/RiryTools`** on first
@@ -37,15 +37,6 @@ reloads. Closing the window ends that cache.
 Sync and restore pause during Play Mode transitions, animation preview/recording,
 and Animator graph editing. Changes support Undo and prefab overrides.
 See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/blendshape-sync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/blendshape-sync.md).
-
-## Editing the UI
-
-Every menu entry (Tools dropdown, Project and Hierarchy right-click, Git menu)
-is in `Editor/UI/RiryMenus.cs`, except Constraint Train's, which are in
-`Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
-path or priority there to move an entry. Each window's drawing code is in
-`Editor/UI/` (Constraint Train's in `Editor/VRChat/ConstraintTrainWindow.UI.cs`),
-with a glossary of its fields and methods at the bottom of each file.
 
 ## Clean Animation Keys
 
@@ -128,7 +119,7 @@ Every regeneration is recorded in `ProjectSettings/RiryToolsGuidRemap.tsv`.
 resolve in damaged or recovered files, using that ledger and then Git history.
 See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/guid-tools.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/guid-tools.md).
 
-## AutoSync (Git menu)
+## AutoSync
 
 The **Git** menu backs up scenes, prefabs and `.meta` files to an `AutoSync`
 branch seconds after they change, through a separate Git index, and pushes it.
@@ -138,3 +129,11 @@ LFS and checks that large files use it and can be pushed. AutoSync offers to fix
 broken references from its history, and blocks saving a scene or prefab that a
 script stopped from loading. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/autosync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/autosync.md).
 
+## Editing the UI
+
+Every menu entry (Tools dropdown, Project and Hierarchy right-click, Git menu)
+is in `Editor/UI/RiryMenus.cs`, except Constraint Train's, which are in
+`Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
+path or priority there to move an entry. Each window's drawing code is in
+`Editor/UI/` (Constraint Train's in `Editor/VRChat/ConstraintTrainWindow.UI.cs`),
+with a glossary of its fields and methods at the bottom of each file.

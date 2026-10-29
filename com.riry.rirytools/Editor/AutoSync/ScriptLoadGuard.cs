@@ -147,7 +147,7 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         internal static int CountSerializedObjects(string fullPath)
         {
-            if (!File.Exists(fullPath) || !RegenerateAssetGuid.LooksLikeText(fullPath, new byte[4096])) return -1;
+            if (!File.Exists(fullPath) || !RegenerateGuid.LooksLikeText(fullPath, new byte[4096])) return -1;
             int count = 0;
             foreach (string line in File.ReadLines(fullPath))
             {

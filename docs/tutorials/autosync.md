@@ -1,4 +1,4 @@
-# Tutorial: AutoSync (Git menu)
+# Tutorial: AutoSync
 
 Back up scenes and prefabs to Git a few seconds after every change, and recover
 when something breaks them.

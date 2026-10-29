@@ -62,7 +62,7 @@ namespace Riry.RiryTools.Editor
                     string fullPath = Path.Combine(RiryToolsPaths.ProjectRoot, plan.Files[i]);
                     if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + plan.Files[i], (float)i / plan.Files.Count))
                         throw new OperationCanceledException();
-                    if (!File.Exists(fullPath) || !RegenerateAssetGuid.LooksLikeText(fullPath, sample))
+                    if (!File.Exists(fullPath) || !RegenerateGuid.LooksLikeText(fullPath, sample))
                     {
                         log.Write("Skipped missing or binary file: " + plan.Files[i]);
                         continue;
@@ -141,7 +141,7 @@ namespace Riry.RiryTools.Editor
         private static Dictionary<string, string> LoggedMappings()
         {
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            string folder = RegenerateAssetGuid.LogDirectoryPath;
+            string folder = RegenerateGuid.LogDirectoryPath;
             if (!Directory.Exists(folder)) return map;
             var logs = new List<string>(Directory.GetFiles(folder, "*.log", SearchOption.AllDirectories));
             // Oldest first, so a later run's mapping wins.
@@ -168,13 +168,13 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         internal static int Apply(RepairPlan plan, Dictionary<string, string> redirects, GuidToolLog log)
         {
-            var written = new List<RegenerateAssetGuid.WrittenOperation>();
+            var written = new List<RegenerateGuid.WrittenOperation>();
             SceneSetup[] sceneSetup = EditorSceneManager.GetSceneManagerSetup();
             bool committed = false;
-            var targets = new Dictionary<string, RegenerateAssetGuid.Target>(StringComparer.Ordinal);
+            var targets = new Dictionary<string, RegenerateGuid.Target>(StringComparer.Ordinal);
             foreach (KeyValuePair<string, string> entry in redirects)
             {
-                targets[entry.Key] = new RegenerateAssetGuid.Target
+                targets[entry.Key] = new RegenerateGuid.Target
                 {
                     AssetPath = AssetDatabase.GUIDToAssetPath(entry.Value),
                     OldGuid = entry.Key,
@@ -185,13 +185,13 @@ namespace Riry.RiryTools.Editor
                 log.Write("Redirect: " + entry.Key + " -> " + entry.Value + " (" + targets[entry.Key].AssetPath + ")");
             }
 
-            var patches = new List<RegenerateAssetGuid.FilePatch>();
+            var patches = new List<RegenerateGuid.FilePatch>();
             foreach (KeyValuePair<string, List<KeyValuePair<long, string>>> file in plan.References)
             {
                 var info = new FileInfo(Path.Combine(RiryToolsPaths.ProjectRoot, file.Key));
-                var patch = new RegenerateAssetGuid.FilePatch
+                var patch = new RegenerateGuid.FilePatch
                 {
-                    File = new RegenerateAssetGuid.FileState
+                    File = new RegenerateGuid.FileState
                     {
                         FullPath = info.FullName,
                         RelativePath = file.Key,
@@ -201,22 +201,22 @@ namespace Riry.RiryTools.Editor
                 };
                 foreach (KeyValuePair<long, string> reference in file.Value)
                 {
-                    RegenerateAssetGuid.Target target;
+                    RegenerateGuid.Target target;
                     if (targets.TryGetValue(reference.Value, out target))
-                        patch.Operations.Add(new RegenerateAssetGuid.PatchOperation { Target = target, Offset = reference.Key });
+                        patch.Operations.Add(new RegenerateGuid.PatchOperation { Target = target, Offset = reference.Key });
                 }
                 if (patch.Operations.Count == 0) continue;
-                RegenerateAssetGuid.EnsureWritable(info.FullName);
+                RegenerateGuid.EnsureWritable(info.FullName);
                 patches.Add(patch);
             }
 
             EditorApplication.LockReloadAssemblies();
             try
             {
-                RegenerateAssetGuid.ApplyPatches(patches, written, log);
+                RegenerateGuid.ApplyPatches(patches, written, log);
                 AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
                 committed = true;
-                RegenerateAssetGuid.ReloadScenes(sceneSetup, log);
+                RegenerateGuid.ReloadScenes(sceneSetup, log);
                 log.Write("Completed. Redirected GUIDs: " + redirects.Count + "; files changed: " + patches.Count);
                 return patches.Count;
             }
@@ -226,9 +226,9 @@ namespace Riry.RiryTools.Editor
                 {
                     try
                     {
-                        RegenerateAssetGuid.RollBack(written, log);
+                        RegenerateGuid.RollBack(written, log);
                         AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-                        RegenerateAssetGuid.ReloadScenes(sceneSetup, log);
+                        RegenerateGuid.ReloadScenes(sceneSetup, log);
                     }
                     catch (Exception rollbackException)
                     {
@@ -251,7 +251,7 @@ namespace Riry.RiryTools.Editor
             var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (UnityEngine.Object item in Selection.objects)
             {
-                string path = RegenerateAssetGuid.NormalizeAssetPath(AssetDatabase.GetAssetPath(item));
+                string path = RegenerateGuid.NormalizeAssetPath(AssetDatabase.GetAssetPath(item));
                 if (string.IsNullOrEmpty(path) || !(path == "Assets" || path.StartsWith("Assets/", StringComparison.Ordinal)))
                     continue;
                 string[] paths = AssetDatabase.IsValidFolder(path)
@@ -259,8 +259,8 @@ namespace Riry.RiryTools.Editor
                     : new[] { path };
                 foreach (string candidate in paths)
                 {
-                    if (RegenerateAssetGuid.UnitySerializedExtensions.Contains(Path.GetExtension(candidate)))
-                        files.Add(RegenerateAssetGuid.NormalizeAssetPath(candidate));
+                    if (RegenerateGuid.UnitySerializedExtensions.Contains(Path.GetExtension(candidate)))
+                        files.Add(RegenerateGuid.NormalizeAssetPath(candidate));
                 }
             }
             var sorted = new List<string>(files);
@@ -281,17 +281,17 @@ namespace Riry.RiryTools.Editor
         internal static List<KeyValuePair<long, string>> FindGuidReferences(byte[] bytes)
         {
             var found = new List<KeyValuePair<long, string>>();
-            for (int i = 0; i + GuidKey.Length + RegenerateAssetGuid.GuidLength <= bytes.Length; i++)
+            for (int i = 0; i + GuidKey.Length + RegenerateGuid.GuidLength <= bytes.Length; i++)
             {
                 if (!StartsWith(bytes, i, GuidKey) || (i > 0 && IsWordByte(bytes[i - 1]))) continue;
                 int start = i + GuidKey.Length;
-                bool valid = start + RegenerateAssetGuid.GuidLength == bytes.Length ||
-                    !IsHex(bytes[start + RegenerateAssetGuid.GuidLength]);
-                for (int j = start; valid && j < start + RegenerateAssetGuid.GuidLength; j++) valid = IsHex(bytes[j]);
+                bool valid = start + RegenerateGuid.GuidLength == bytes.Length ||
+                    !IsHex(bytes[start + RegenerateGuid.GuidLength]);
+                for (int j = start; valid && j < start + RegenerateGuid.GuidLength; j++) valid = IsHex(bytes[j]);
                 if (!valid) continue;
                 found.Add(new KeyValuePair<long, string>(start,
-                    Encoding.ASCII.GetString(bytes, start, RegenerateAssetGuid.GuidLength)));
-                i = start + RegenerateAssetGuid.GuidLength - 1;
+                    Encoding.ASCII.GetString(bytes, start, RegenerateGuid.GuidLength)));
+                i = start + RegenerateGuid.GuidLength - 1;
             }
             return found;
         }
