@@ -7,14 +7,14 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>What the Import Preset window draws. State and actions are in Editor/ImportPresets/ImportPresetWindowActions.cs.</summary>
+    /// <summary>What the Set Folder Import Presets window draws. State and actions are in Editor/ImportPresets/ImportPresetWindowActions.cs.</summary>
     internal sealed partial class ImportPresetFolderWindow
     {
         internal static void Open(List<string> folders)
         {
             var window = CreateInstance<ImportPresetFolderWindow>();
             window.folders = folders;
-            window.titleContent = new GUIContent("Import Preset");
+            window.titleContent = new GUIContent("Set Folder Import Presets");
             window.minSize = new Vector2(480, 420);
             window.configurations = LoadConfigurations(out window.message);
             if (folders.Count > 0) window.LoadFrom(folders[0]);
@@ -56,7 +56,7 @@ namespace Riry.RiryTools.Editor
             if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Warning);
             if (configurations.Count == 0)
                 EditorGUILayout.HelpBox("The library is empty. Right-click an asset with the import settings you " +
-                    "want and choose RiryTools > Save Import Settings to Preset Library.", MessageType.Info);
+                    "want and choose RiryTools > Save Import Preset.", MessageType.Info);
             applyExisting = EditorGUILayout.ToggleLeft("Also apply to files already in the folder now", applyExisting);
             if (applyExisting)
                 EditorGUILayout.HelpBox("This replaces the current import settings of those files, including " +
@@ -286,9 +286,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Import Preset windows
-// Menu entries (Project right-click Import Preset and Save Import Settings to
-// Preset Library..., Tools > Open Import Preset Library) are in RiryMenus.cs.
+// GLOSSARY: Import Presets windows
+// Menu entries (Set Folder Import Presets, Save Import Preset, Extract Animation and
+// Open Import Preset Library, under Tools > RiryTools > Import Presets and the Project
+// right-click menu) are in RiryMenus.cs.
 // ============================================================================
 //
 // ImportPresetFolderWindow: edits ImportPreset.md for one or more folders

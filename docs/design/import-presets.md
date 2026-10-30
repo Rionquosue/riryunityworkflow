@@ -28,13 +28,13 @@ Each subfolder is one **configuration**, for example `Textures` or
   importer is applied.
 - A rule naming a missing preset is ignored. A rule whose preset is for another
   importer is skipped with a Console warning.
-- Open the folder with **Tools > RiryTools > Open Import Preset Library**. It is
+- Open the folder with **Tools > RiryTools > Import Presets > Open Import Preset Library**. It is
   created on first use, with a `README.txt`.
 
 ### Adding presets
 
 Right-click an asset whose import settings you want, then choose
-**RiryTools > Save Import Settings to Preset Library**. Pick or name a
+**RiryTools > Save Import Preset**. Pick or name a
 configuration and a preset name. With **Use only for .ext files** on, a rule
 limits the preset to that extension; otherwise it applies to every file that
 importer handles. Saving again under the same name replaces the preset and its
@@ -44,7 +44,7 @@ folder by hand.
 ## Choosing a folder's preset
 
 Right-click a folder, or empty space in a folder's contents, then choose
-**RiryTools > Import Preset**. Right-clicking a file uses the file's folder.
+**RiryTools > Set Folder Import Presets**. Right-clicking a file uses the file's folder.
 
 The dialog shows each folder's current state, lists the configurations, and
 summarizes the chosen one's rules. **Apply** writes `ImportPreset.md` into the
@@ -95,7 +95,7 @@ Then the FBX's preset (for example a Humanoid avatar preset) is applied and the
 FBX is reimported. There is one FBX, not a copy.
 
 - The copies are ordinary clips; edit or move them freely.
-- **RiryTools > Extract Animations (Generic)** on any model does the same later:
+- **RiryTools > Extract Animation** on any model does the same later:
   it imports as Generic temporarily, copies the clips, and restores the model's
   own settings.
 - A clip the tool wrote is refreshed automatically only while unchanged. One you

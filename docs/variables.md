@@ -195,18 +195,18 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
   - `Tools/RiryTools/GUID Tools` (2040): the window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache
-  - `Tools/RiryTools/Import Presets/Import Preset` (2050)
-  - `Tools/RiryTools/Import Presets/Save Import Settings to Preset Library` (2051)
-  - `Tools/RiryTools/Import Presets/Extract Animations (Generic)` (2052)
+  - `Tools/RiryTools/Import Presets/Set Folder Import Presets` (2050)
+  - `Tools/RiryTools/Import Presets/Save Import Preset` (2051)
+  - `Tools/RiryTools/Import Presets/Extract Animation` (2052)
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
   - `Tools/RiryTools/Menu Mockup` (2065): placeholder, does nothing yet
   - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
-  - `Assets/RiryTools/Import Preset` (2001)
-  - `Assets/RiryTools/Save Import Settings to Preset Library` (2002)
-  - `Assets/RiryTools/Extract Animations (Generic)` (2003)
+  - `Assets/RiryTools/Set Folder Import Presets` (2001)
+  - `Assets/RiryTools/Save Import Preset` (2002)
+  - `Assets/RiryTools/Extract Animation` (2003)
   - `Assets/RiryTools/Repair Missing GUID References` (2004)
   - `Assets/RiryTools/Clean Animation Keys` (2005)
 - **Hierarchy right-click:** `GameObject/RiryTools/Constraint Train` (20)

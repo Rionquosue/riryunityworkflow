@@ -28,9 +28,9 @@ namespace Riry.RiryTools.Editor
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
-        private const string ImportPresetTools = "Tools/RiryTools/Import Presets/Import Preset";
-        private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Settings to Preset Library";
-        private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animations (Generic)";
+        private const string ImportPresetTools = "Tools/RiryTools/Import Presets/Set Folder Import Presets";
+        private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Preset";
+        private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animation";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
@@ -41,9 +41,9 @@ namespace Riry.RiryTools.Editor
 
         // ---- Project window right-click -------------------------------------
         private const string RegenerateGuidAssets = "Assets/RiryTools/Regenerate GUID";
-        private const string ImportPreset = "Assets/RiryTools/Import Preset";
-        private const string SaveImportPreset = "Assets/RiryTools/Save Import Settings to Preset Library";
-        private const string ExtractAnimations = "Assets/RiryTools/Extract Animations (Generic)";
+        private const string ImportPreset = "Assets/RiryTools/Set Folder Import Presets";
+        private const string SaveImportPreset = "Assets/RiryTools/Save Import Preset";
+        private const string ExtractAnimations = "Assets/RiryTools/Extract Animation";
         private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
         private const string CleanAnimationKeysAssets = "Assets/RiryTools/Clean Animation Keys";
 
@@ -225,9 +225,9 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
-//   Tools/RiryTools/Import Presets/Import Preset (2050) -> ImportPresetActions.ChooseFolderPreset (Editor/ImportPresets/ImportPresetActions.cs)
-//   Tools/RiryTools/Import Presets/Save Import Settings to Preset Library (2051) -> ImportPresetActions.SaveToLibrary
-//   Tools/RiryTools/Import Presets/Extract Animations (Generic) (2052) -> ImportPresetAnimations.ExtractSelected
+//   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset (Editor/ImportPresets/ImportPresetActions.cs)
+//   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
+//   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ImportPresetAnimations.ExtractSelected
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs), a placeholder that does nothing yet
@@ -235,9 +235,9 @@ namespace Riry.RiryTools.Editor
 //
 // PROJECT WINDOW RIGHT-CLICK
 //   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
-//   Assets/RiryTools/Import Preset (2001)        -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
-//   Assets/RiryTools/Save Import Settings to Preset Library (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
-//   Assets/RiryTools/Extract Animations (Generic) (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)
+//   Assets/RiryTools/Set Folder Import Presets (2001) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
+//   Assets/RiryTools/Save Import Preset (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
+//   Assets/RiryTools/Extract Animation (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
 //   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //

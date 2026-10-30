@@ -72,7 +72,7 @@ namespace Riry.RiryTools.Editor
                 File.WriteAllText(readme,
                     "RiryTools import preset library\n\n" +
                     "Each folder here is one configuration. Put Unity .preset files for importers in it\n" +
-                    "(Project window: right-click an asset > RiryTools > Save Import Settings to Preset Library).\n\n" +
+                    "(Project window: right-click an asset > RiryTools > Save Import Preset).\n\n" +
                     "Optional config.json maps file extensions to presets; the first matching rule wins:\n" +
                     "{ \"rules\": [ { \"extensions\": [\"png\", \"tga\"], \"preset\": \"Textures.preset\" } ] }\n" +
                     "Use \"*\" to match every extension. Presets that no rule mentions apply to every\n" +

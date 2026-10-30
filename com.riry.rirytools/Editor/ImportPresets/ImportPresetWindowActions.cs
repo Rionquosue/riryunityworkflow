@@ -165,7 +165,7 @@ namespace Riry.RiryTools.Editor
             if (applyExisting && !rules.IsEmpty)
             {
                 foreach (string folder in folders) existing.AddRange(FilesGovernedBy(folder));
-                if (existing.Count > 0 && !EditorUtility.DisplayDialog("Import Preset",
+                if (existing.Count > 0 && !EditorUtility.DisplayDialog("Set Folder Import Presets",
                         "Apply these rules to " + existing.Count + " existing file(s)? Their import settings " +
                         "are replaced. This cannot be undone.", "Apply", "Cancel"))
                     return;
@@ -235,7 +235,7 @@ namespace Riry.RiryTools.Editor
                 for (int i = 0; i < paths.Count; i++)
                 {
                     string path = paths[i];
-                    if (EditorUtility.DisplayCancelableProgressBar("Import Preset", path, (float)i / paths.Count))
+                    if (EditorUtility.DisplayCancelableProgressBar("Set Folder Import Presets", path, (float)i / paths.Count))
                         break;
                     if (ImportPresetPostprocessor.ExportRules(path) != null)
                     {
