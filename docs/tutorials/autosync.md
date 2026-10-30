@@ -22,6 +22,8 @@ Only the saved files and their `.meta` files go into the commit.
 3. Every commit is now pushed. When the server asks you to sign in, Git's
    credential manager opens its own window.
 
+For a server behind Cloudflare, use an SSH address; the window warns about HTTPS.
+
 The same window picks other **.gitignore** and **.gitattributes** templates.
 To reuse your own setup in other projects, type a **Template name** and click
 **Save .gitignore** or **Save .gitattributes**.

@@ -15,6 +15,12 @@ namespace Riry.RiryTools.Editor
             window.Show();
         }
 
+        internal const string CloudflareWarning =
+            "This remote uses HTTPS. If the server is behind a Cloudflare proxy (including Zero Trust tunnels), " +
+            "uploads over 100 MB are rejected and large LFS files cannot be pushed. Use an SSH remote " +
+            "(git@host:owner/repo.git) for servers behind Cloudflare, with LFS over SSH enabled on the server " +
+            "(Gitea/Forgejo: LFS_ALLOW_PURE_SSH = true under [server]).";
+
         private void OnGUI()
         {
             scroll = EditorGUILayout.BeginScrollView(scroll);
@@ -32,6 +38,7 @@ namespace Riry.RiryTools.Editor
                 remoteUrl = EditorGUILayout.TextField(new GUIContent("Push to remote",
                     "Each Sync commit is pushed here as " + AutoSyncJob.Remote + ". Sign-in is handled by Git's credential manager."),
                     remoteUrl).Trim();
+            if (IsHttps(remoteUrl)) EditorGUILayout.HelpBox(CloudflareWarning, MessageType.Warning);
 
             if (GUILayout.Button("Apply", GUILayout.Height(28f))) GitActions.Guard(Apply);
 
@@ -76,7 +83,9 @@ namespace Riry.RiryTools.Editor
 // GitConfigureWindow (Configuration...)
 //   UI (this file)
 //     Open()                Opens the window and loads templates and the remote.
-//     OnGUI()               Repository, template popups, Push to remote, Apply, Save template, Open Template Folder.
+//     CloudflareWarning     const string  Warning shown under Push to remote for an HTTPS remote.
+//     OnGUI()               Repository, template popups, Push to remote (with the Cloudflare warning), Apply,
+//                           Save template, Open Template Folder.
 //     SaveButton(extension) Saves the project's .gitignore or .gitattributes as a named template.
 //   FIELDS AND ACTIONS (Editor/AutoSync/GitActions.cs)
 //     ignoreOptions / attributeOptions  string[]  Template popup entries.
@@ -89,6 +98,7 @@ namespace Riry.RiryTools.Editor
 //     Reload()              Creates default templates if needed, refreshes options and the remote.
 //     Options(extension)    Popup entries for one template type.
 //     Apply()               Copies the chosen templates (asks before replacing), adds or changes origin.
+//     IsHttps(url)          True for an http:// or https:// remote.
 //
 // GitActions (Editor/AutoSync/GitActions.cs)
 //   ToggleSync()            Turns Sync off, or on (asks for Git, creates the repository, enables Git LFS).

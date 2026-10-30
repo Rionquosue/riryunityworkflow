@@ -63,6 +63,15 @@ they are committed without pushing; the next push sends them.
 - **Push to remote**: the URL of `origin`. **Apply** adds it, or changes it when
   it differs. Needs a repository, so turn Sync on first.
 
+### Cloudflare
+
+Servers behind Cloudflare proxies, including Zero Trust tunnels to Gitea or
+Forgejo, reject any single HTTPS upload over 100 MB, and Git LFS cannot split
+uploads. Configuration warns under **Push to remote** when the URL uses HTTPS.
+Use an SSH remote (`git@host:owner/repo.git`) and enable LFS over SSH on the
+server (`LFS_ALLOW_PURE_SSH = true` under `[server]` in Gitea's or Forgejo's
+`app.ini`).
+
 ## Broken references
 
 GUID Tools offers **Check for Broken References** when an opened scene or prefab

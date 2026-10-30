@@ -133,6 +133,12 @@ namespace Riry.RiryTools.Editor
         private string templateName = "";
         private Vector2 scroll;
 
+        private static bool IsHttps(string url)
+        {
+            return url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                url.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+        }
+
         private void Reload()
         {
             GitActions.Guard(GitActions.EnsureTemplates);
