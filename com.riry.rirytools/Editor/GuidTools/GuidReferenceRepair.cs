@@ -81,14 +81,13 @@ namespace Riry.RiryTools.Editor
             get { return Commit != null; }
         }
 
-        /// <summary>Every check that found a break has Fix or Accept chosen.</summary>
-        public bool Ready
+        /// <summary>A break was found that has no Fix applied (accepted or not decided); it stays broken.</summary>
+        public bool Unfixed
         {
             get
             {
-                return (MissingReferences.Count == 0 || MissingDecision != BreakDecision.Undecided) &&
-                    (!PathTaken || PathDecision != BreakDecision.Undecided) &&
-                    (GuidInUseBy == null || GuidDecision != BreakDecision.Undecided);
+                return (MissingReferences.Count > 0 && MissingDecision != BreakDecision.Fix) ||
+                    (PathTaken && PathDecision != BreakDecision.Fix) || GuidInUseBy != null;
             }
         }
 

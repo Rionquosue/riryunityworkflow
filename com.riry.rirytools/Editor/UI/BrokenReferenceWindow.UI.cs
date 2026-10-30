@@ -191,7 +191,8 @@ namespace Riry.RiryTools.Editor
 //   Redirects()           Missing GUID to chosen asset GUID.
 //   Restores()            Chosen Git restores.
 //   FixMissingReferences(owner, restore)  Adds a restored file's missing references to the list, one level deeper.
-//   ApplyRedirects()      Checks every restore's breaks are decided, confirms, restores, rewrites, reloads.
+//   ApplyRedirects()      Warns when a restore's break has no Fix (ABORT / ACCEPT BROKEN REFERENCES),
+//                         confirms, restores, rewrites, reloads.
 //
 // RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidReferenceRepair.cs)
 //   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.

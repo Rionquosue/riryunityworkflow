@@ -103,8 +103,10 @@ candidate. A missing GUID with nothing chosen stays in a red box.
 
 When a Git restore is chosen, it is checked for what restoring only that file
 would break. If it breaks anything, an orange **Break detected** button appears;
-clicking it opens the problems, and each needs **Fix** or **Accept break** before
-Apply:
+clicking it opens the problems, each with **Fix** and **Accept break**. If any
+break has no Fix applied when you click Apply, a popup says "This repair will
+cause further broken references. Please run tool again afterwards." with
+**ABORT** and **ACCEPT BROKEN REFERENCES**. The breaks:
 
 - **It references assets that are missing now.** Fix adds those GUIDs to the
   list, each with its own candidates.

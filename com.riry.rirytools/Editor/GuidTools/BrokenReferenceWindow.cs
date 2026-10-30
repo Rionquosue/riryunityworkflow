@@ -176,13 +176,12 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             List<RepairCandidate> restores = Restores();
-            RepairCandidate undecided = restores.Find(restore => !restore.Ready);
-            if (undecided != null)
-            {
-                EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
-                    "Choose Fix or Accept break for each problem listed under the restore of " + undecided.Path + ".", "OK");
+            // A break without Fix (accepted, or not decided) stays broken after Apply.
+            if (restores.Exists(restore => restore.Unfixed) &&
+                !EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
+                    "This repair will cause further broken references. Please run tool again afterwards.",
+                    "ACCEPT BROKEN REFERENCES", "ABORT"))
                 return;
-            }
             // Saving a scene with broken references could overwrite the good file, so
             // open scenes are reloaded from disk instead of saved.
             if (!EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
