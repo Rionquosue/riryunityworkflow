@@ -276,7 +276,7 @@ namespace Riry.RiryTools.Editor
             return false;
         }
 
-        private static Preset LoadPreset(string fullPath)
+        internal static Preset LoadPreset(string fullPath)
         {
             var info = new FileInfo(fullPath);
             if (!info.Exists) return null;

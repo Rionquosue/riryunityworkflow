@@ -86,7 +86,7 @@ namespace Riry.RiryTools.Editor
             string applied = null;
             if (rules != null)
             {
-                ImportPresetMarker.Target target = rules.For(Path.GetExtension(assetPath));
+                ImportPresetMarker.Target target = rules.For(importer);
                 if (target.Configuration != null &&
                     ImportPresetLibrary.TryApply(importer, target.Configuration, target.Preset, out applied))
                     importer.SaveAndReimport();
@@ -131,14 +131,9 @@ namespace Riry.RiryTools.Editor
             return ImportPresetMarker.ParentFolder(modelPath) + "/" + FolderName;
         }
 
-        /// <summary>
-        /// Whether clips are extracted before the model's preset is applied: the
-        /// folder's rule for its file type, or the model's Automatically extract animations.
-        /// </summary>
-        internal static bool ShouldExtract(string modelPath, ImportPresetMarker.Rules rules)
+        /// <summary>Whether clips are extracted before the model's preset is applied: its Automatically extract animations.</summary>
+        internal static bool ShouldExtract(string modelPath)
         {
-            string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(modelPath));
-            if (rules != null && rules.ExtractAnimations.Contains(extension)) return true;
             AnimationExtractSettings settings = AnimationExtractSettings.Load(modelPath);
             return settings != null && settings.AutoExtract;
         }

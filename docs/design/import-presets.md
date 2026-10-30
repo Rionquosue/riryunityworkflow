@@ -41,65 +41,69 @@ importer handles. Saving again under the same name replaces the preset and its
 rule. Existing Unity `.preset` assets can also be copied into a configuration
 folder by hand.
 
-## Choosing a folder's preset
+## Choosing a folder's presets
 
-**Tools > RiryTools > Import Presets > Set Folder Import Presets** opens the
-full window for the selected folders. Selecting a file uses the file's folder.
+Presets are chosen per **file type**: everything one Unity importer reads, so one
+preset fits all of it. **Image files** covers every texture, **Model files** every
+model (including `.blend`), and likewise **Audio files**, **Video files** and
+**Font files**; any other importer shows as `<Type> files`. Scripts and files Unity
+does not import are not listed.
+
+**Tools > RiryTools > Import Presets > Set Folder Import Presets** opens a window
+for one folder:
+
+- **Folder**: a fuzzy search field over every folder in `Assets` (up to 8
+  suggestions, ranked by name or path). It starts on the folder shown in the
+  Project window.
+- One dropdown per file type directly in that folder, listing **None** and every
+  library preset that fits that type, as `Configuration/Preset`.
+- **Export .blend with Better FBX**, only when the folder holds `.blend` files,
+  with the Blender settings while it is on.
+- **Apply** and **Close**. The list is found again after a domain reload or an
+  import, keeping the choices.
 
 Right-clicking one or more folders, or empty space in a folder's contents, and
 choosing **RiryTools > Set Folder Import Presets** opens a small popup instead.
 **Apply to all** (on by default) gives one dropdown for every folder; turned off,
-each folder gets its own. The dropdowns list every configuration, with **Any
-(configuration rules)** or one of its presets. **Apply** sets each folder's
-default in its `ImportPreset.md` (its other rules are kept; a hand-edited one is
-left alone) and applies it to the files already in the folder; **Abort** closes
-the popup. **RiryTools > Extract Animation** in the same menu is enabled only for
-a model with embedded animations.
+each folder gets its own. Each dropdown lists **None** and every configuration;
+choosing one sets each file type to that configuration's preset for it. Its
+**File types** foldout gives each file type in its folders its own dropdown.
+**Abort** closes the popup. **RiryTools > Extract Animation** in the same menu is
+enabled only for a model with embedded animations.
 
-The full window shows each folder's current state, lists the configurations, and
-summarizes the chosen one's rules. **Apply** writes `ImportPreset.md` into the
-folder; **None** removes it. **Also apply to files already in the folder now**
-replaces the current settings of existing files (after confirmation, without
-Undo); subfolders with their own `ImportPreset.md` are skipped.
+**Apply**, in both, writes the folder's `ImportPreset.md` and applies each changed
+preset to the files of that type already in the folder, without Undo. A type set
+to **None**, or left unchanged, keeps its files' settings and nothing is
+reimported. Presets of file types not in the folder stay in `ImportPreset.md`.
 
 ## ImportPreset.md
 
-The dialog writes `ImportPreset.md`; you can also write it by hand:
+The tool writes `ImportPreset.md`; you can also write it by hand:
 
 ```markdown
-preset: Textures
-fbx, obj: Avatar
-png, tga, jpg, jpeg: Textures/Texture png
-blend: none
-animations: fbx
+Image files: Textures/Texture png
+Model files: Avatar/Humanoid
 betterfbx: blend
 ```
 
-- `preset:` is the configuration for file types not listed on their own line.
-- `ext, ext: Configuration` gives those types a configuration (its rules then pick
-  the preset). `Configuration/Preset` names one preset in it. `none` turns
-  presets off for those types.
-- `animations:` lists model types whose clips are extracted before their preset
-  applies (see below).
+- `<file type>: Configuration/Preset` gives that type one preset.
+  `Configuration` alone lets the configuration's rules pick the preset.
 - `betterfbx: blend` exports `.blend` files with Better FBX (see below).
-- It covers its folder and all subfolders. The closest `ImportPreset.md` wins.
+- It covers only the files directly in its folder, never its subfolders.
 - Rule lines are `name: value`. Headings, list items (`- ...`), HTML comments and
-  other text are ignored. Names may be wrapped in backticks, `*` or quotes, and
-  extensions and configuration names match without regard to case.
+  other text are ignored. Values may be wrapped in backticks, `*` or quotes, and
+  file types and configuration names match without regard to case.
 - Copy a folder that contains `ImportPreset.md` into the project, and its other
   new files are configured as they import, whatever the import order.
-- The dialog only rewrites or removes an `ImportPreset.md` whose text is exactly
-  what it generates. One you edited by hand is never touched; the dialog says so
+- The tool only rewrites or removes an `ImportPreset.md` whose text is exactly
+  what it generates. One you edited by hand is never touched; the window says so
   and offers to open it.
-
-In the dialog, each **file type** row has extensions, a configuration (or
-**Default** or **None**), an optional single preset, and the animation and
-Better FBX options. **+ Textures**, **+ Models** and **+ Blender** add common rows.
 
 ## Extracting animations before Humanoid
 
-With `animations: fbx`, a new FBX is first imported with Unity's default
-(Generic) rig. Every clip is copied to `Animations/` beside the FBX as
+With **Automatically extract animations** on (Extract Animation window), a new
+FBX is first imported with Unity's default (Generic) rig. Every clip is copied to
+`Animations/` beside the FBX as
 `<model>_<clip>.anim`, keeping plain bone curves with no Humanoid retargeting.
 Then the FBX's preset (for example a Humanoid avatar preset) is applied and the
 FBX is reimported. There is one FBX, not a copy.
@@ -116,7 +120,8 @@ FBX is reimported. There is one FBX, not a copy.
   - **Save animation extract settings** (only while cleaning): keeps the
     cleaning settings, so automatic extraction cleans too.
   - **Automatically extract animations**: the model is always extracted before
-    its preset is applied, as if its folder listed its type under `animations:`.
+    its preset is applied, on its first import and by **Apply** in Set Folder
+    Import Presets.
 - The window's settings are saved to `.<model>_ani-extract.json~` beside the
   model, only while Automatically extract animations or Save animation extract
   settings is on, and the file is removed otherwise. Unity skips names that start
@@ -132,10 +137,11 @@ FBX is reimported. There is one FBX, not a copy.
 
 With `betterfbx: blend`, importing or changing a `.blend` runs Blender in the
 background with the Better FBX add-on (`bpy.ops.better_export.fbx`) and writes
-`<name>.fbx` beside it. That FBX is a normal new file: the `fbx` line (or the
-default), and `animations: fbx`, apply to it. When the `.blend` changes, the FBX is
-exported again and keeps its import settings; with `animations: fbx`, its clips
-are refreshed.
+`<name>.fbx` beside it. That FBX is a normal new file: the `Model files` line
+applies to it, while the `.blend` itself gets no preset. When the `.blend`
+changes, the FBX is exported again and keeps its import settings; with
+Automatically extract animations on for the FBX, its clips are refreshed. Turning
+Better FBX on with **Apply** exports the folder's `.blend` files at once.
 
 - Better FBX is a paid Blender extension (Blender 4.2 or newer). Install and
   enable it in Blender and save Blender's preferences; background exports load

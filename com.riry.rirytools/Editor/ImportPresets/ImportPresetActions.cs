@@ -11,9 +11,10 @@ namespace Riry.RiryTools.Editor
     /// </summary>
     internal static class ImportPresetActions
     {
+        /// <summary>Tools menu: the Set Folder Import Presets window on the Project window's folder.</summary>
         internal static void ChooseFolderPreset()
         {
-            ImportPresetFolderWindow.Open(SelectedFolders());
+            ImportPresetFolderWindow.Open();
         }
 
         /// <summary>Project right-click: the small popup with one import preset for each folder, or for all.</summary>
@@ -64,7 +65,8 @@ namespace Riry.RiryTools.Editor
             return folders;
         }
 
-        private static string ActiveFolder()
+        /// <summary>The folder shown in the Project window, or null.</summary>
+        internal static string ActiveFolder()
         {
             // Unity has no public API for the folder shown in the Project window.
             MethodInfo method = typeof(ProjectWindowUtil).GetMethod("GetActiveFolderPath",

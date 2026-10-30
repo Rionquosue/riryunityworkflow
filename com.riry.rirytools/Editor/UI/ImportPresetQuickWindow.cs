@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,23 +7,32 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// The small Set Folder Import Presets popup from the Project right-click menu:
-    /// one import preset for all selected folders (Apply to all), or one per folder.
-    /// Apply sets each folder's default in its ImportPreset.md, keeping its other
-    /// rules, and applies it to the files already there. The full window, from the
-    /// Tools menu, is ImportPresetFolderWindow.
+    /// one configuration for all selected folders (Apply to all), or one per folder.
+    /// Each dropdown has a File types foldout with a preset for each file type in its
+    /// folders, starting from the configuration's. Apply writes each folder's
+    /// ImportPreset.md and applies the changed presets (ImportPresetFolderRules.Apply).
+    /// The full window, from the Tools menu, is ImportPresetFolderWindow.
     /// </summary>
     internal sealed class ImportPresetQuickWindow : EditorWindow
     {
-        private const string AnyPreset = "Any (configuration rules)";
+        /// <summary>One dropdown: its folders, configuration (null for None), foldout and per-type picks.</summary>
+        [Serializable]
+        private sealed class Group
+        {
+            public List<string> Folders = new List<string>();
+            public string Configuration;
+            public bool Expanded;
+            public List<ImportPresetFolderRules.Pick> Picks = new List<ImportPresetFolderRules.Pick>();
+        }
 
         [SerializeField] private List<string> folders = new List<string>();
         [SerializeField] private bool applyToAll = true;
-        [SerializeField] private int allChoice;
-        [SerializeField] private List<int> choices = new List<int>();
-        // Popup entries "Configuration/Preset" and what each sets: configuration, and preset or null.
-        [NonSerialized] private string[] labels;
-        [NonSerialized] private List<KeyValuePair<string, string>> targets;
-        [NonSerialized] private string message;
+        [SerializeField] private Group all;
+        [SerializeField] private List<Group> each = new List<Group>();
+        [NonSerialized] private List<string> configurations = new List<string>();
+        [NonSerialized] private string[] configurationNames = new string[0];
+        [NonSerialized] private List<ImportPresetFolderRules.FileType> allTypes = new List<ImportPresetFolderRules.FileType>();
+        [NonSerialized] private List<List<ImportPresetFolderRules.FileType>> eachTypes = new List<List<ImportPresetFolderRules.FileType>>();
         private Vector2 scroll;
 
         internal static void Open(List<string> folders)
@@ -32,78 +40,75 @@ namespace Riry.RiryTools.Editor
             var window = CreateInstance<ImportPresetQuickWindow>();
             window.folders = folders;
             window.titleContent = new GUIContent("Set Folder Import Presets");
-            window.minSize = new Vector2(380.0f, 120.0f);
-            window.Load();
-            foreach (string folder in folders) window.choices.Add(window.Current(folder));
-            window.allChoice = window.choices.Count > 0 ? window.choices[0] : 0;
+            window.minSize = new Vector2(380.0f, 140.0f);
+            window.all = NewGroup(folders);
+            window.each.Clear();
+            foreach (string folder in folders) window.each.Add(NewGroup(new List<string> { folder }));
+            window.Scan();
             window.ShowUtility();
         }
 
+        // After a domain reload (such as after an import) the file types are found again; the choices stay.
         private void OnEnable()
         {
-            Load();
+            if (all != null) Scan();
         }
 
-        private void Load()
+        private void OnProjectChange()
         {
-            var names = new List<string>();
-            targets = new List<KeyValuePair<string, string>>();
-            foreach (string configuration in ImportPresetFolderWindow.LoadConfigurations(out message))
+            Scan();
+            Repaint();
+        }
+
+        // Starts from the folders' ImportPreset.md: their presets, and the first one's configuration.
+        private static Group NewGroup(List<string> folders)
+        {
+            var group = new Group { Folders = new List<string>(folders) };
+            foreach (string folder in folders)
             {
-                names.Add(configuration + "/" + AnyPreset);
-                targets.Add(new KeyValuePair<string, string>(configuration, null));
-                foreach (string file in ImportPresetLibrary.PresetFiles(ImportPresetLibrary.ConfigurationPath(configuration)))
+                foreach (ImportPresetMarker.TypeRule rule in ImportPresetFolderRules.Read(folder).TypeRules)
                 {
-                    string preset = Path.GetFileNameWithoutExtension(file);
-                    names.Add(configuration + "/" + preset);
-                    targets.Add(new KeyValuePair<string, string>(configuration, preset));
+                    if (group.Picks.Exists(pick => string.Equals(pick.Label, rule.Label, StringComparison.OrdinalIgnoreCase))) continue;
+                    group.Picks.Add(new ImportPresetFolderRules.Pick { Label = rule.Label, Configuration = rule.Configuration, Preset = rule.Preset });
+                    if (group.Configuration == null) group.Configuration = rule.Configuration;
                 }
             }
-            labels = names.ToArray();
+            return group;
         }
 
-        // The entry for the folder's current default, or the first one.
-        private int Current(string folder)
+        private void Scan()
         {
-            string content = ImportPresetFolderWindow.ReadOrNull(ImportPresetMarker.PathIn(folder));
-            if (content == null) return 0;
-            ImportPresetMarker.Rules rules = ImportPresetMarker.Parse(content);
-            int index = targets.FindIndex(target =>
-                string.Equals(target.Key, rules.DefaultConfiguration, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(target.Value, rules.DefaultPreset, StringComparison.OrdinalIgnoreCase));
-            return Math.Max(0, index);
+            string error;
+            configurations = ImportPresetFolderWindow.LoadConfigurations(out error);
+            var names = new List<string> { ImportPresetFolderRules.NoneChoice };
+            names.AddRange(configurations);
+            configurationNames = names.ToArray();
+            allTypes = ImportPresetFolderRules.Types(all.Folders);
+            eachTypes.Clear();
+            foreach (Group group in each) eachTypes.Add(ImportPresetFolderRules.Types(group.Folders));
         }
 
         private void OnGUI()
         {
-            if (labels.Length == 0)
+            EditorGUILayout.Space(4.0f);
+            applyToAll = EditorGUILayout.ToggleLeft("Apply to all", applyToAll);
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            if (applyToAll)
             {
-                EditorGUILayout.HelpBox(message ?? "The library is empty. Right-click an asset with the import settings " +
-                    "you want and choose RiryTools > Save Import Preset.", MessageType.Info);
+                DrawGroup(all, folders.Count == 1 ? folders[0] : folders.Count + " folders", allTypes);
             }
             else
             {
-                applyToAll = EditorGUILayout.ToggleLeft("Apply to all", applyToAll);
-                scroll = EditorGUILayout.BeginScrollView(scroll);
-                if (applyToAll)
-                {
-                    allChoice = EditorGUILayout.Popup(folders.Count == 1 ? folders[0] : folders.Count + " folders",
-                        Clamp(allChoice), labels);
-                }
-                else
-                {
-                    for (int i = 0; i < folders.Count; i++)
-                        choices[i] = EditorGUILayout.Popup(folders[i], Clamp(choices[i]), labels);
-                }
-                EditorGUILayout.EndScrollView();
+                for (int i = 0; i < each.Count && i < eachTypes.Count; i++) DrawGroup(each[i], each[i].Folders[0], eachTypes[i]);
             }
+            EditorGUILayout.EndScrollView();
 
             GUILayout.FlexibleSpace();
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Abort", GUILayout.Width(80.0f))) Close();
-                using (new EditorGUI.DisabledScope(labels.Length == 0 || folders.Count == 0))
+                using (new EditorGUI.DisabledScope(folders.Count == 0))
                 {
                     if (GUILayout.Button("Apply", GUILayout.Width(80.0f))) Apply();
                 }
@@ -111,33 +116,57 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.Space(4.0f);
         }
 
-        private int Clamp(int index)
+        // The configuration dropdown, then the File types foldout with one dropdown per type.
+        private void DrawGroup(Group group, string title, List<ImportPresetFolderRules.FileType> types)
         {
-            return Math.Max(0, Math.Min(index, labels.Length - 1));
+            int index = group.Configuration == null ? 0 : Math.Max(0,
+                configurations.FindIndex(name => string.Equals(name, group.Configuration, StringComparison.OrdinalIgnoreCase)) + 1);
+            int chosen = EditorGUILayout.Popup(title, index, configurationNames);
+            if (chosen != index)
+            {
+                group.Configuration = chosen == 0 ? null : configurations[chosen - 1];
+                group.Picks.Clear();
+                foreach (ImportPresetFolderRules.FileType type in types)
+                    group.Picks.Add(ImportPresetFolderRules.FirstIn(type, group.Configuration));
+            }
+            group.Expanded = EditorGUILayout.Foldout(group.Expanded, "File types", true);
+            if (!group.Expanded) return;
+            using (new EditorGUI.IndentLevelScope())
+            {
+                if (types.Count == 0) EditorGUILayout.LabelField("No files take import presets.", EditorStyles.miniLabel);
+                foreach (ImportPresetFolderRules.FileType type in types)
+                {
+                    ImportPresetFolderRules.Pick pick = PickFor(group, type.Label);
+                    int current;
+                    string[] names = ImportPresetFolderRules.Entries(type, pick, out current);
+                    int picked = EditorGUILayout.Popup(type.Label, current, names);
+                    if (picked == current) continue;
+                    group.Picks.RemoveAll(item => string.Equals(item.Label, type.Label, StringComparison.OrdinalIgnoreCase));
+                    group.Picks.Add(ImportPresetFolderRules.Chosen(type, pick, picked));
+                }
+            }
         }
 
-        /// <summary>Sets each folder's default, then applies it to the files already in the folder.</summary>
+        // A type with no pick gets none, so it is left unchanged.
+        private static ImportPresetFolderRules.Pick PickFor(Group group, string label)
+        {
+            return group.Picks.Find(item => string.Equals(item.Label, label, StringComparison.OrdinalIgnoreCase)) ??
+                new ImportPresetFolderRules.Pick { Label = label };
+        }
+
+        /// <summary>Writes each folder's presets for the file types in it, then applies the changed ones.</summary>
         private void Apply()
         {
-            var set = new List<string>();
+            int processed = 0;
             var skipped = new List<string>();
             for (int i = 0; i < folders.Count; i++)
             {
-                string folder = folders[i];
-                KeyValuePair<string, string> target = targets[Clamp(applyToAll ? allChoice : choices[i])];
-                string content = ImportPresetFolderWindow.ReadOrNull(ImportPresetMarker.PathIn(folder));
-                ImportPresetMarker.Rules rules = content != null ? ImportPresetMarker.Parse(content) : new ImportPresetMarker.Rules();
-                rules.DefaultConfiguration = target.Key;
-                rules.DefaultPreset = target.Value;
-                bool changed;
-                if (ImportPresetFolderWindow.WriteMarker(folder, ImportPresetMarker.Generate(rules), out changed)) set.Add(folder);
-                else skipped.Add(folder);
+                Group group = applyToAll ? all : each[i];
+                var picks = new List<ImportPresetFolderRules.Pick>();
+                foreach (string label in ImportPresetFolderRules.InFolder(folders[i]).Keys) picks.Add(PickFor(group, label));
+                if (!ImportPresetFolderRules.Apply(folders[i], picks, null, ref processed)) skipped.Add(folders[i]);
             }
-
-            var existing = new List<string>();
-            foreach (string folder in set) existing.AddRange(ImportPresetFolderWindow.FilesGovernedBy(folder));
-            int processed = existing.Count > 0 ? ImportPresetFolderWindow.ApplyToExisting(existing) : 0;
-            Debug.Log("Import Presets: set " + set.Count + " folder(s); processed " + processed + " existing file(s).");
+            Debug.Log("Import Presets: set " + (folders.Count - skipped.Count) + " folder(s); applied to " + processed + " file(s).");
             if (skipped.Count > 0)
                 EditorUtility.DisplayDialog("Set Folder Import Presets", "Left hand-edited ImportPreset.md unchanged in:\n" +
                     string.Join("\n", skipped), "OK");
@@ -153,11 +182,10 @@ namespace Riry.RiryTools.Editor
 //
 // ImportPresetQuickWindow (this file)
 //   folders                  List<string>  Selected folders (ImportPresetActions.SelectedFolders).
-//   applyToAll               bool          Apply to all: one popup for every folder; off, one popup per folder.
-//   allChoice / choices      int / List<int>  Chosen entries, first the folder's current default.
-//   labels / targets         "Configuration/Preset" entries and the configuration and preset (or null) each sets.
-//   Open(folders)            Opens the popup.
-//   Current(folder)          The entry for the folder's current default.
-//   OnGUI()                  Apply to all; the popup(s); Abort; Apply.
-//   Apply()                  Sets the default in each ImportPreset.md (other rules kept; hand-edited ones are left
-//                            alone), then applies it to the files already in the folders.
+//   applyToAll               bool          Apply to all: one dropdown (all) for every folder; off, one per folder (each).
+//   Group                    Folders, Configuration (null for None), Expanded (File types foldout), Picks per file type.
+//   allTypes / eachTypes     The file types in each group's folders, with the presets that fit each.
+//   Open(folders)            Opens the popup, starting from the folders' ImportPreset.md.
+//   OnEnable() / OnProjectChange()  Find the file types again (after a domain reload or an import); the choices stay.
+//   DrawGroup(group, title, types)  Configuration dropdown (sets every type to its preset), then the File types foldout.
+//   Apply()                  ImportPresetFolderRules.Apply for each folder with the picks for the types in it.

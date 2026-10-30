@@ -88,9 +88,6 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ImportPresetTools, false, 2050)]
         private static void ImportPresetToolsItem() { ImportPresetActions.ChooseFolderPreset(); }
 
-        [MenuItem(ImportPresetTools, true)]
-        private static bool ImportPresetToolsValid() { return ImportPresetActions.ValidateChooseFolderPreset(); }
-
         [MenuItem(SaveImportPresetTools, false, 2051)]
         private static void SaveImportPresetToolsItem() { ImportPresetActions.SaveToLibrary(); }
 
@@ -227,7 +224,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
-//   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset (Editor/ImportPresets/ImportPresetActions.cs)
+//   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ExtractAnimationWindow.Open (Editor/UI/ExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Applies a folder's import presets to files imported for the first time;
+    /// Applies a folder's import presets to files imported for the first time directly in it;
     /// reimports never change settings, so manual changes stay. Animation
     /// extraction and Better FBX exports run after the import finishes.
     /// </summary>
@@ -30,9 +30,9 @@ namespace Riry.RiryTools.Editor
             string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path));
             // A Better FBX source is not configured itself; its exported FBX is.
             if (rules.BetterFbx.Contains(extension)) return;
-            ImportPresetMarker.Target target = rules.For(extension);
+            ImportPresetMarker.Target target = rules.For(assetImporter);
 
-            if (assetImporter is ModelImporter && ImportPresetAnimations.ShouldExtract(path, rules))
+            if (assetImporter is ModelImporter && ImportPresetAnimations.ShouldExtract(path))
             {
                 // Import with default (Generic) settings first; the preset is
                 // applied after the clips are copied out.
@@ -72,9 +72,7 @@ namespace Riry.RiryTools.Editor
             // (an .fbx would even overwrite itself) is ignored.
             string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path));
             if (extension != BetterFbxExporter.SourceExtension) return null;
-            string folder = ImportPresetMarker.FindMarkerFolder(path, File.Exists);
-            if (folder == null) return null;
-            ImportPresetMarker.Rules rules = ImportPresetMarker.ReadRules(folder);
+            ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(path);
             return rules != null && rules.BetterFbx.Contains(extension) ? rules : null;
         }
 
@@ -145,9 +143,8 @@ namespace Riry.RiryTools.Editor
 
                 // A new FBX is handled by its first import. An updated one keeps
                 // its settings, so its clips are refreshed here when configured.
-                ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(fbx);
                 var importer = AssetImporter.GetAtPath(fbx) as ModelImporter;
-                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx, rules)) return;
+                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx)) return;
                 List<string> skipped;
                 int written = ImportPresetAnimations.ExtractPreservingSettings(importer,
                     AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, out skipped);

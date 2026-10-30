@@ -15,30 +15,30 @@ the computer can use it. **Open Library** shows it.
 
 ## 2. Set a folder's presets
 
-For one preset per folder, right-click the folders (or empty space inside one)
-in the Project window, choose **RiryTools > Set Folder Import Presets**, pick the
-preset (turn off **Apply to all** for one per folder), and click **Apply**. It also
-applies to the files already in the folders. For per-type rules:
+1. Open the folder in the Project window and choose
+   **Tools > RiryTools > Import Presets > Set Folder Import Presets**, or type
+   part of another folder's name in **Folder** and pick it.
+2. Each file type in the folder (**Image files**, **Model files**, ...) has a
+   dropdown: choose a preset for it, or **None**.
+3. If the folder holds `.blend` files, turn on **Export .blend with Better FBX**
+   if you want them exported.
+4. Click **Apply**. The folder gets an `ImportPreset.md`, and the files of each
+   type whose preset changed are set to it now.
 
-1. Select a folder (or a file in it) in the Project window and choose
-   **Tools > RiryTools > Import Presets > Set Folder Import Presets**.
-2. Under **Default for unlisted file types**, choose a configuration.
-3. Under **File types**, add rows with **+ Textures**, **+ Models**, **+ Blender**
-   or **+ File type**, and choose what each row **Use**s.
-4. Optionally turn on **Also apply to files already in the folder now**.
-5. Click **Apply**. The folder gets an `ImportPreset.md` describing its rules.
+For several folders at once, select them (or right-click empty space inside one),
+right-click, choose **RiryTools > Set Folder Import Presets**, pick a configuration
+(turn off **Apply to all** for one per folder; open **File types** for a preset per
+type), and click **Apply**.
 
-From now on, every file imported into that folder (or its subfolders) for the
-first time gets these settings. Reimports and settings you change by hand are
-left alone.
+From now on, every file imported directly into that folder (not its subfolders)
+for the first time gets these settings. Reimports and settings you change by hand
+are left alone.
 
 ## 3. Models with animations
 
-On a model row, turn on **Extract animations to Animations/ first (models)**.
-New models are imported as Generic, every clip is copied to an `Animations`
-folder beside the model, and then the model's preset (for example Humanoid) is
-applied. For models already in the project, right-click one and choose
-**RiryTools > Extract Animation**, check **Destination**, and click **Extract**.
+Right-click a model and choose **RiryTools > Extract Animation**, check
+**Destination**, and click **Extract**: every clip is copied, as Generic clips, to
+an `Animations` folder beside the model.
 Turn on **Automatically clean keys** to clean the clips (**Configure** sets what
 is kept), and **Automatically extract animations** to extract that model before
 its preset every time. These settings are saved in `.<model>_ani-extract.json~`

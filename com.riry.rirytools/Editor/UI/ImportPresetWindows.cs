@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,164 +9,88 @@ namespace Riry.RiryTools.Editor
     /// <summary>What the Set Folder Import Presets window draws. State and actions are in Editor/ImportPresets/ImportPresetWindowActions.cs.</summary>
     internal sealed partial class ImportPresetFolderWindow
     {
-        internal static void Open(List<string> folders)
+        /// <summary>Opens the window on the folder shown in the Project window.</summary>
+        internal static void Open()
         {
-            var window = CreateInstance<ImportPresetFolderWindow>();
-            window.folders = folders;
-            window.titleContent = new GUIContent("Set Folder Import Presets");
-            window.minSize = new Vector2(480, 420);
-            window.configurations = LoadConfigurations(out window.message);
-            if (folders.Count > 0) window.LoadFrom(folders[0]);
-            window.ShowUtility();
+            ImportPresetFolderWindow window = GetWindow<ImportPresetFolderWindow>(true, "Set Folder Import Presets");
+            window.minSize = new Vector2(420, 240);
+            string active = ImportPresetActions.ActiveFolder();
+            window.Load(Usable(active) ? active : "Assets");
+            window.search = window.folder;
+            window.Show();
         }
 
         private void OnGUI()
         {
+            EditorGUILayout.Space(6);
+            string typed = EditorGUILayout.TextField(new GUIContent("Folder", "Type part of a folder's name or path."), search);
+            if (typed != search)
+            {
+                search = typed;
+                string path = typed.Trim().TrimEnd('/');
+                if (path != folder && Usable(path)) Load(path);
+            }
+            if (search.Trim().Length > 0 && search.Trim().TrimEnd('/') != folder)
+            {
+                foreach (string suggestion in Suggestions(search.Trim()))
+                {
+                    if (!GUILayout.Button(suggestion, EditorStyles.miniButton)) continue;
+                    Load(suggestion);
+                    search = suggestion;
+                    GUI.FocusControl(null);
+                    GUIUtility.ExitGUI();
+                }
+            }
+
+            EditorGUILayout.Space(6);
             scroll = EditorGUILayout.BeginScrollView(scroll);
-            EditorGUILayout.LabelField(folders.Count == 1 ? "Folder" : "Folders", EditorStyles.boldLabel);
-            foreach (string folder in folders) DrawFolderState(folder);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Default for unlisted file types", EditorStyles.boldLabel);
-            DrawTargetPopups(ref defaultConfiguration, ref defaultPreset);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("File types", EditorStyles.boldLabel);
-            int remove = -1;
-            for (int i = 0; i < rows.Count; i++)
+            if (!Usable(folder))
             {
-                if (DrawRow(rows[i])) remove = i;
+                EditorGUILayout.HelpBox("Choose a folder in Assets.", MessageType.Info);
             }
-            if (remove >= 0) rows.RemoveAt(remove);
-            using (new EditorGUILayout.HorizontalScope())
+            else
             {
-                if (GUILayout.Button("+ File type")) rows.Add(new Row());
-                if (GUILayout.Button("+ Textures")) rows.Add(new Row { Extensions = "png, tga, jpg, jpeg, psd" });
-                if (GUILayout.Button("+ Models")) rows.Add(new Row { Extensions = "fbx, obj" });
-                if (GUILayout.Button("+ Blender"))
-                    rows.Add(new Row { Extensions = BetterFbxExporter.SourceExtension, BetterFbx = true });
+                if (handEdited)
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.HelpBox("ImportPreset.md in this folder was edited by hand, so this tool will not change it.",
+                            MessageType.Warning);
+                        if (GUILayout.Button("Open", GUILayout.Width(50)))
+                            AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(ImportPresetMarker.PathIn(folder)));
+                    }
+                }
+                if (types.Count == 0)
+                    EditorGUILayout.HelpBox("No files directly in this folder take import presets.", MessageType.Info);
+                foreach (ImportPresetFolderRules.FileType type in types)
+                {
+                    ImportPresetFolderRules.Pick pick = PickFor(type.Label);
+                    int index;
+                    string[] names = ImportPresetFolderRules.Entries(type, pick, out index);
+                    int chosen = EditorGUILayout.Popup(type.Label, index, names);
+                    if (chosen != index) SetPick(ImportPresetFolderRules.Chosen(type, pick, chosen));
+                }
+                if (hasBlend)
+                {
+                    betterFbx = EditorGUILayout.ToggleLeft(new GUIContent("Export .blend with Better FBX",
+                        "Writes <name>.fbx beside each .blend; the FBX then gets the Model files preset."), betterFbx);
+                    if (betterFbx) DrawBlenderSettings();
+                }
             }
-
-            bool betterFbx = rows.Exists(row => row.BetterFbx && Lists(row, BetterFbxExporter.SourceExtension));
-            if (betterFbx) DrawBlenderSettings();
-
-            EditorGUILayout.Space();
-            string problem = Problem();
-            if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Warning);
-            if (configurations.Count == 0)
-                EditorGUILayout.HelpBox("The library is empty. Right-click an asset with the import settings you " +
-                    "want and choose RiryTools > Save Import Preset.", MessageType.Info);
-            applyExisting = EditorGUILayout.ToggleLeft("Also apply to files already in the folder now", applyExisting);
-            if (applyExisting)
-                EditorGUILayout.HelpBox("This replaces the current import settings of those files, including " +
-                    "manual changes, extracts configured animations and runs configured Better FBX exports. " +
-                    "Folders with their own ImportPreset.md are skipped.", MessageType.Warning);
-            EditorGUILayout.LabelField("Library: " + ImportPresetLibrary.RootPath, EditorStyles.wordWrappedMiniLabel);
             EditorGUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(message)) EditorGUILayout.HelpBox(message, MessageType.Info);
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Open Library")) ImportPresetActions.OpenLibrary();
-                if (GUILayout.Button("Refresh")) configurations = LoadConfigurations(out message);
                 GUILayout.FlexibleSpace();
-                using (new EditorGUI.DisabledScope(problem != null))
+                using (new EditorGUI.DisabledScope(!Usable(folder) || handEdited ||
+                    (hasBlend && betterFbx && BetterFbxExporter.OptionsError(BetterFbxExporter.Options) != null)))
                 {
                     if (GUILayout.Button("Apply", GUILayout.Width(80))) Apply();
                 }
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
-        }
-
-        private void DrawTargetPopups(ref string configuration, ref string preset)
-        {
-            var options = new List<string> { NoneChoice };
-            options.AddRange(configurations);
-            int index = configuration == null ? 0 : IndexOf(configurations, configuration) + 1;
-            if (configuration != null && index == 0)
-            {
-                options.Add(configuration + " (missing)");
-                index = options.Count - 1;
-            }
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                int chosen = EditorGUILayout.Popup(index, options.ToArray());
-                if (chosen != index)
-                {
-                    configuration = chosen == 0 ? null : configurations[chosen - 1];
-                    preset = null;
-                }
-                preset = PresetPopup(configuration, preset);
-            }
-        }
-
-        private string PresetPopup(string configuration, string preset)
-        {
-            using (new EditorGUI.DisabledScope(configuration == null))
-            {
-                var options = new List<string> { AnyPreset };
-                if (configuration != null)
-                {
-                    foreach (string file in ImportPresetLibrary.PresetFiles(ImportPresetLibrary.ConfigurationPath(configuration)))
-                        options.Add(Path.GetFileNameWithoutExtension(file));
-                }
-                int index = preset == null ? 0 : IndexOf(options, preset);
-                if (preset != null && index < 0)
-                {
-                    options.Add(preset + " (missing)");
-                    index = options.Count - 1;
-                }
-                int chosen = EditorGUILayout.Popup(index, options.ToArray());
-                if (chosen == index) return preset;
-                return chosen == 0 ? null : options[chosen];
-            }
-        }
-
-        /// <summary>Draws one file-type row; returns true when it should be removed.</summary>
-        private bool DrawRow(Row row)
-        {
-            bool remove = false;
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    row.Extensions = EditorGUILayout.TextField(
-                        new GUIContent("Extensions", "Comma-separated, for example: png, tga"), row.Extensions);
-                    remove = GUILayout.Button("Remove", GUILayout.Width(65));
-                }
-                var uses = new List<string> { DefaultChoice, NoneChoice };
-                uses.AddRange(configurations);
-                int index = IndexOf(uses, row.Use);
-                if (index < 0)
-                {
-                    uses.Add(row.Use + " (missing)");
-                    index = uses.Count - 1;
-                }
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    int chosen = EditorGUILayout.Popup("Use", index, uses.ToArray());
-                    if (chosen != index)
-                    {
-                        row.Use = uses[chosen];
-                        row.Preset = null;
-                    }
-                    bool named = row.Use != DefaultChoice && row.Use != NoneChoice;
-                    row.Preset = named ? PresetPopup(row.Use, row.Preset) : null;
-                    if (!named) PresetPopup(null, null);
-                }
-                row.Animations = EditorGUILayout.ToggleLeft(new GUIContent(
-                    "Extract animations to Animations/ first (models)",
-                    "Imports as Generic, copies every clip, then applies the preset (for example Humanoid)."),
-                    row.Animations);
-                if (Lists(row, BetterFbxExporter.SourceExtension))
-                {
-                    row.BetterFbx = EditorGUILayout.ToggleLeft(new GUIContent(
-                        "Export .blend with Better FBX",
-                        "Writes <name>.fbx beside the .blend; the FBX then follows the fbx row or the default."),
-                        row.BetterFbx);
-                }
-            }
-            return remove;
+            EditorGUILayout.Space(4);
         }
 
         private static void DrawBlenderSettings()
@@ -191,34 +114,6 @@ namespace Riry.RiryTools.Editor
                     "my_fbx_unit='m', use_triangulate=True. Every action is exported unless you set my_animation_type."), BetterFbxExporter.Options);
             string error = BetterFbxExporter.OptionsError(BetterFbxExporter.Options);
             if (error != null) EditorGUILayout.HelpBox(error, MessageType.Warning);
-        }
-
-        private void DrawFolderState(string folder)
-        {
-            string marker = ImportPresetMarker.PathIn(folder);
-            string text;
-            MessageType type = MessageType.None;
-            if (File.Exists(marker))
-            {
-                string content = ReadOrNull(marker);
-                text = folder + ": has ImportPreset.md";
-                if (content != null && !ImportPresetMarker.IsGenerated(content))
-                {
-                    text += ", edited by hand, so this tool will not change it.";
-                    type = MessageType.Warning;
-                }
-            }
-            else
-            {
-                string inherited = ImportPresetMarker.FindMarkerFolder(marker, File.Exists);
-                text = folder + ": " + (inherited != null ? "inherits from " + inherited : "no preset");
-            }
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                EditorGUILayout.HelpBox(text, type);
-                if (type == MessageType.Warning && GUILayout.Button("Open", GUILayout.Width(50)))
-                    AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(marker));
-            }
         }
     }
 
@@ -289,39 +184,40 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Import Presets windows
 // Menu entries (Set Folder Import Presets, Save Import Preset, Extract Animation and
 // Open Import Preset Library, under Tools > RiryTools > Import Presets and the Project
-// right-click menu) are in RiryMenus.cs.
+// right-click menu) are in RiryMenus.cs. The right-click Set Folder Import Presets popup
+// is Editor/UI/ImportPresetQuickWindow.cs.
 // ============================================================================
 //
-// ImportPresetFolderWindow: edits ImportPreset.md for one or more folders
+// ImportPresetFolderWindow: edits one folder's ImportPreset.md (Tools menu)
 //   FIELDS (ImportPresetWindowActions.cs; [S] = serialized)
-//     folders               [S] List<string>  Folders being edited.
-//     defaultConfiguration  [S] string        Configuration for types without a row.
-//     defaultPreset         [S] string        One preset of it, or null for its rules.
-//     rows                  [S] List<Row>     Per-type rows.
-//     applyExisting         [S] bool          Also apply to files already in the folders.
-//     configurations            List<string>  Configurations found in the library.
-//     message                   string        Library problem or the result of Apply, shown at the bottom.
-//     scroll                    Vector2       Scroll position.
-//     DefaultChoice / NoneChoice / AnyPreset  const string  Popup labels.
-//   Row: Extensions ("fbx, obj"), Use (Default, None or a configuration), Preset,
-//        Animations (extract to Animations/), BetterFbx (export .blend through Blender).
+//     folder                [S] string        The folder shown; first the Project window's (ImportPresetActions.ActiveFolder).
+//     search                [S] string        Folder field text; suggestions show while it is not the folder.
+//     picks                 [S] List<Pick>    The chosen preset (or none) per file type.
+//     betterFbx             [S] bool          Export .blend with Better FBX.
+//     types                     List<FileType>  File types directly in the folder, each with the presets that fit it.
+//     hasBlend / handEdited     bool          The folder holds .blend files / its ImportPreset.md was edited by hand.
+//     allFolders                List<string>  Every folder in Assets, for suggestions.
+//     message                   string        Result of Apply.
 //   UI METHODS (this file)
-//     Open(folders)         Opens the window for folders.
-//     OnGUI()               Folder state, default row, type rows, Blender settings, Apply.
-//     DrawTargetPopups(ref configuration, ref preset)  Configuration and preset popups.
-//     PresetPopup(configuration, preset)  Preset popup for one configuration.
-//     DrawRow(row)          One type row; returns true when Remove was clicked.
+//     Open()                Opens the window on the Project window's folder.
+//     OnGUI()               Folder with suggestions; one popup per file type; Better FBX (only with .blend files); Apply; Close.
 //     DrawBlenderSettings() Blender path and Better FBX options.
-//     DrawFolderState(folder)  Whether the folder's ImportPreset.md is generated or hand-edited.
 //   ACTIONS (ImportPresetWindowActions.cs)
-//     LoadConfigurations(out error)  Library configurations, or why there are none.
-//     LoadFrom(folder)      Fills the fields from a folder's ImportPreset.md.
-//     Problem()             Why the rows cannot be written, or null.
-//     BuildRules()          Rules from the fields.
-//     Apply()               Writes ImportPreset.md and optionally applies to existing files.
-//     WriteMarker(folder, text, out changed)  Writes or removes ImportPreset.md; false for a hand-edited one.
-//     FilesGovernedBy / ApplyToExisting / ApplyRules  Existing-file application (also used by ImportPresetQuickWindow).
-//     Lists(row, extension) / IndexOf(list, value)  Small helpers.
+//     OnEnable() / OnProjectChange()  Find the file types again (after a domain reload or an import); the picks stay.
+//     LoadConfigurations(out error)  Library configurations, or why there are none (Save Import Preset).
+//     Load(folder)          Shows a folder with the picks from its ImportPreset.md.
+//     Scan()                Finds the file types, .blend files and a hand-edited marker.
+//     Suggestions(typed)    Up to 8 folders, ranked by FuzzyMatch.Score on name or path.
+//     Apply()               ImportPresetFolderRules.Apply for the folder.
+//
+// ImportPresetFolderRules (Editor/ImportPresets/ImportPresetFolderRules.cs): shared with the right-click popup
+//   Label(importer)          "Image files", "Model files", "Audio files", "Video files", "Font files", else "<Type> files".
+//   InFolder(folder)         Importers of the files directly in the folder, by file type.
+//   Types(folders)           The file types with the library presets that fit each (Preset.CanBeAppliedTo).
+//   Entries / Chosen / FirstIn  Popup entries ("None", "Configuration/Preset"), the pick for an entry, a configuration's preset.
+//   Apply(folder, picks, betterFbx, ref processed)  Writes ImportPreset.md; applies only changed presets to the folder's
+//                            files (none and unchanged types are not reimported); exports .blend files when Better FBX is turned on.
+//   WriteMarker / ReadOrNull / Read / HandEdited  ImportPreset.md helpers; a hand-edited one is never changed.
 //
 // ImportPresetSaveWindow: saves an asset's import settings to the library
 //   FIELDS: assetPath, choice (configuration index), newConfiguration, presetName,
@@ -329,6 +225,6 @@ namespace Riry.RiryTools.Editor
 //   Open(importer) / OnGUI()  (this file)    Save(importer, configuration)  (ImportPresetWindowActions.cs)
 //
 // ImportPresetActions (Editor/ImportPresets/ImportPresetActions.cs): selection helpers
-//   ChooseFolderPreset / ValidateChooseFolderPreset, SaveToLibrary / ValidateSaveToLibrary,
-//   OpenLibrary, SelectedFolders (selected folders, or the folder shown in the Project window),
+//   ChooseFolderPreset, QuickFolderPreset / ValidateChooseFolderPreset, SaveToLibrary / ValidateSaveToLibrary,
+//   OpenLibrary, SelectedFolders (selected folders, or the folder shown in the Project window), ActiveFolder,
 //   IsWritableFolder.

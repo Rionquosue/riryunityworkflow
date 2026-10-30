@@ -156,7 +156,9 @@ Import Presets and Better FBX:
 | Constant | Value | Meaning |
 |---|---|---|
 | `ImportPresetMarker.FileName` | `ImportPreset.md` | Folder marker |
-| `ImportPresetMarker.DefaultKey` / `AnimationsKey` / `BetterFbxKey` | `preset` / `animations` / `betterfbx` | Marker keys; reserved, so not usable as file types |
+| `ImportPresetMarker.BetterFbxKey` | `betterfbx` | Marker key for Better FBX |
+| `ImportPresetFolderRules.Labels` | `Image files`, `Model files`, `Audio files`, `Video files`, `Font files` | File type names; other importers show as `<Type> files` |
+| `ImportPresetFolderWindow.MaxSuggestions` | `8` | Folder suggestions in Set Folder Import Presets |
 | `ImportPresetLibrary.ConfigFileName` / `PresetExtension` | `config.json` / `.preset` | Configuration files |
 | `ImportPresetLibrary.ReservedNames` | `CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` | Names Windows refuses |
 | `BetterFbxExporter.SourceExtension` | `blend` | Only file type Blender exports |

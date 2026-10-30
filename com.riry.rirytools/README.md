@@ -56,14 +56,14 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 
 ## Import Presets
 
-Open **Tools > RiryTools > Import Presets > Set Folder Import Presets** to set
-presets per file type (fbx, obj, png, tga, blend...) from
+Open **Tools > RiryTools > Import Presets > Set Folder Import Presets** to set a
+preset per file type (Image files, Model files...) for a folder from
 `Documents/RiryTools/ImportPresets`; right-clicking folders and choosing
-**RiryTools > Set Folder Import Presets** gives a small popup that sets one
-preset per folder (or for all) and applies it. New files in that folder and its
-subfolders get them on their first import; reimports and hand-edited settings
-are never changed. Models can have their animations extracted to `Animations/`
-as Generic clips before a Humanoid preset applies (per folder, or per model in
+**RiryTools > Set Folder Import Presets** gives a small popup for several folders.
+Apply sets the files already there; new files directly in the folder (not its
+subfolders) get them on their first import, and reimports and hand-edited
+settings are never changed. Models can have their animations extracted to
+`Animations/` as Generic clips before a Humanoid preset applies (with
 **RiryTools > Extract Animation**, which can also clean the keys), and `.blend` files can be
 exported with the Better FBX Blender add-on. Save presets from any asset with
 **RiryTools > Save Import Preset**. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/import-presets.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/import-presets.md).

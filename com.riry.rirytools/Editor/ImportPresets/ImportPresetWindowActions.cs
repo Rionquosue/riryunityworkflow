@@ -1,48 +1,44 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Edits the ImportPreset.md of one or more folders: a default configuration
-    /// and per-file-type rows, with animation extraction and Better FBX options.
-    /// State and actions; the drawing is in Editor/UI/ImportPresetWindows.cs.
+    /// Set Folder Import Presets: one folder, chosen with a fuzzy search field, and a
+    /// preset for each file type directly in it, plus Better FBX when it holds .blend
+    /// files. State and actions; the drawing is in Editor/UI/ImportPresetWindows.cs.
+    /// Rules are written by ImportPresetFolderRules.
     /// </summary>
     internal sealed partial class ImportPresetFolderWindow : EditorWindow
     {
-        private const string DefaultChoice = "Default";
-        private const string NoneChoice = "None";
-        private const string AnyPreset = "Any (configuration rules)";
+        private const int MaxSuggestions = 8;
 
-        [Serializable]
-        private sealed class Row
-        {
-            public string Extensions = "";
-            // DefaultChoice, NoneChoice or a configuration name.
-            public string Use = DefaultChoice;
-            public string Preset;
-            public bool Animations;
-            public bool BetterFbx;
-        }
-
-        [SerializeField] private List<string> folders = new List<string>();
-        [SerializeField] private string defaultConfiguration;
-        [SerializeField] private string defaultPreset;
-        [SerializeField] private List<Row> rows = new List<Row>();
-        [SerializeField] private bool applyExisting;
-        [NonSerialized] private List<string> configurations = new List<string>();
+        [SerializeField] private string folder = "";
+        [SerializeField] private string search = "";
+        [SerializeField] private List<ImportPresetFolderRules.Pick> picks = new List<ImportPresetFolderRules.Pick>();
+        [SerializeField] private bool betterFbx;
+        [NonSerialized] private List<ImportPresetFolderRules.FileType> types = new List<ImportPresetFolderRules.FileType>();
+        [NonSerialized] private bool hasBlend;
+        [NonSerialized] private bool handEdited;
+        [NonSerialized] private List<string> allFolders;
         [NonSerialized] private string message;
         private Vector2 scroll;
 
+        // After a domain reload (such as after an import) the file types are found again; the choices stay.
         private void OnEnable()
         {
-            if (folders == null) folders = new List<string>();
-            if (rows == null) rows = new List<Row>();
-            configurations = LoadConfigurations(out message);
+            if (picks == null) picks = new List<ImportPresetFolderRules.Pick>();
+            Scan();
+        }
+
+        private void OnProjectChange()
+        {
+            allFolders = null;
+            Scan();
+            Repaint();
         }
 
         /// <summary>Lists configurations, or reports why the library is unavailable.</summary>
@@ -62,240 +58,88 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private void LoadFrom(string folder)
+        private static bool Usable(string path)
         {
-            string content = ReadOrNull(ImportPresetMarker.PathIn(folder));
-            if (content == null) return;
-            ImportPresetMarker.Rules rules = ImportPresetMarker.Parse(content);
-            defaultConfiguration = rules.DefaultConfiguration;
-            defaultPreset = rules.DefaultPreset;
-            rows.Clear();
-            var listed = new HashSet<string>();
+            return !string.IsNullOrEmpty(path) && AssetDatabase.IsValidFolder(path) && ImportPresetActions.IsWritableFolder(path);
+        }
+
+        /// <summary>Shows a folder with the choices in its ImportPreset.md.</summary>
+        private void Load(string path)
+        {
+            folder = path;
+            message = null;
+            ImportPresetMarker.Rules rules = ImportPresetFolderRules.Read(path);
+            picks.Clear();
             foreach (ImportPresetMarker.TypeRule rule in rules.TypeRules)
-            {
-                rows.Add(new Row
-                {
-                    Extensions = string.Join(", ", rule.Extensions),
-                    Use = rule.Configuration ?? NoneChoice,
-                    Preset = rule.Preset,
-                    Animations = rule.Extensions.TrueForAll(rules.ExtractAnimations.Contains),
-                    BetterFbx = rule.Extensions.Contains(BetterFbxExporter.SourceExtension) &&
-                        rules.BetterFbx.Contains(BetterFbxExporter.SourceExtension)
-                });
-                listed.UnionWith(rule.Extensions);
-            }
-            // Options for types that use the default become rows using "Default".
-            var flagged = new List<string>(rules.ExtractAnimations);
-            foreach (string extension in rules.BetterFbx) if (!flagged.Contains(extension)) flagged.Add(extension);
-            foreach (string extension in flagged)
-            {
-                if (listed.Contains(extension)) continue;
-                rows.Add(new Row
-                {
-                    Extensions = extension,
-                    Animations = rules.ExtractAnimations.Contains(extension),
-                    BetterFbx = rules.BetterFbx.Contains(extension)
-                });
-            }
+                picks.Add(new ImportPresetFolderRules.Pick { Label = rule.Label, Configuration = rule.Configuration, Preset = rule.Preset });
+            betterFbx = rules.BetterFbx.Contains(BetterFbxExporter.SourceExtension);
+            Scan();
         }
 
-        private static bool Lists(Row row, string extension)
+        // Finds the file types in the folder and the library presets for each.
+        private void Scan()
         {
-            return ImportPresetMarker.ParseExtensions(row.Extensions ?? "").Contains(extension);
+            types = Usable(folder) ? ImportPresetFolderRules.Types(new[] { folder }) : new List<ImportPresetFolderRules.FileType>();
+            hasBlend = Usable(folder) && ImportPresetFolderRules.HasBlend(folder);
+            handEdited = Usable(folder) && ImportPresetFolderRules.HandEdited(folder);
         }
 
-        private static int IndexOf(List<string> list, string value)
+        private ImportPresetFolderRules.Pick PickFor(string label)
         {
-            return list.FindIndex(item => string.Equals(item, value, StringComparison.OrdinalIgnoreCase));
+            ImportPresetFolderRules.Pick pick = picks.Find(item => string.Equals(item.Label, label, StringComparison.OrdinalIgnoreCase));
+            if (pick != null) return pick;
+            pick = new ImportPresetFolderRules.Pick { Label = label };
+            picks.Add(pick);
+            return pick;
         }
 
-        /// <summary>Why the rows cannot be written, or null.</summary>
-        private string Problem()
+        private void SetPick(ImportPresetFolderRules.Pick pick)
         {
-            var seen = new HashSet<string>();
-            foreach (Row row in rows)
+            picks.RemoveAll(item => string.Equals(item.Label, pick.Label, StringComparison.OrdinalIgnoreCase));
+            picks.Add(pick);
+        }
+
+        // Folders whose name or path matches the typed text, best first (FuzzyMatch.Score).
+        private List<string> Suggestions(string typed)
+        {
+            if (allFolders == null)
             {
-                List<string> extensions = ImportPresetMarker.ParseExtensions(row.Extensions ?? "");
-                if (extensions.Count == 0)
-                    return "'" + row.Extensions + "' is not a list of file extensions such as: png, tga";
-                foreach (string extension in extensions)
-                {
-                    if (!seen.Add(extension)) return "." + extension + " is listed in more than one row.";
-                    if (extension == ImportPresetMarker.DefaultKey || extension == ImportPresetMarker.AnimationsKey ||
-                        extension == ImportPresetMarker.BetterFbxKey)
-                        return "'" + extension + "' is a reserved word in ImportPreset.md.";
-                }
-                if (row.Use == DefaultChoice && !row.Animations && !(row.BetterFbx && extensions.Contains(BetterFbxExporter.SourceExtension)))
-                    return "Row '" + row.Extensions + "' uses the default and has no options, so it does nothing.";
+                allFolders = new List<string>();
+                AddFolders("Assets");
             }
-            return BetterFbxExporter.OptionsError(BetterFbxExporter.Options);
+            var scored = new List<KeyValuePair<int, string>>();
+            foreach (string path in allFolders)
+            {
+                int score = Math.Max(FuzzyMatch.Score(Path.GetFileName(path), typed), FuzzyMatch.Score(path, typed));
+                if (score > 0) scored.Add(new KeyValuePair<int, string>(score, path));
+            }
+            scored.Sort((left, right) => left.Key != right.Key
+                ? right.Key.CompareTo(left.Key)
+                : string.Compare(left.Value, right.Value, StringComparison.OrdinalIgnoreCase));
+            var result = new List<string>();
+            for (int i = 0; i < scored.Count && i < MaxSuggestions; i++) result.Add(scored[i].Value);
+            return result;
         }
 
-        private ImportPresetMarker.Rules BuildRules()
+        private void AddFolders(string parent)
         {
-            var rules = new ImportPresetMarker.Rules
-            {
-                DefaultConfiguration = defaultConfiguration,
-                DefaultPreset = defaultConfiguration != null ? defaultPreset : null
-            };
-            foreach (Row row in rows)
-            {
-                List<string> extensions = ImportPresetMarker.ParseExtensions(row.Extensions);
-                if (row.Use != DefaultChoice)
-                {
-                    bool none = row.Use == NoneChoice;
-                    rules.TypeRules.Add(new ImportPresetMarker.TypeRule
-                    {
-                        Extensions = extensions,
-                        Configuration = none ? null : row.Use,
-                        Preset = none ? null : row.Preset
-                    });
-                }
-                if (row.Animations) rules.ExtractAnimations.AddRange(extensions);
-                if (row.BetterFbx && extensions.Contains(BetterFbxExporter.SourceExtension))
-                    rules.BetterFbx.Add(BetterFbxExporter.SourceExtension);
-            }
-            return rules;
+            allFolders.Add(parent);
+            foreach (string child in AssetDatabase.GetSubFolders(parent)) AddFolders(child);
         }
 
         private void Apply()
         {
-            ImportPresetMarker.Rules rules = BuildRules();
-            var existing = new List<string>();
-            if (applyExisting && !rules.IsEmpty)
-            {
-                foreach (string folder in folders) existing.AddRange(FilesGovernedBy(folder));
-                if (existing.Count > 0 && !EditorUtility.DisplayDialog("Set Folder Import Presets",
-                        "Apply these rules to " + existing.Count + " existing file(s)? Their import settings " +
-                        "are replaced. This cannot be undone.", "Apply", "Cancel"))
-                    return;
-            }
-
-            string generated = rules.IsEmpty ? null : ImportPresetMarker.Generate(rules);
-            var skipped = new List<string>();
-            int written = 0;
-            foreach (string folder in folders)
-            {
-                bool changed;
-                if (!WriteMarker(folder, generated, out changed)) skipped.Add(folder);
-                else if (changed) written++;
-            }
-
-            int applied = existing.Count > 0 ? ApplyToExisting(existing) : 0;
-            message = "Updated " + written + " ImportPreset.md file(s).";
-            if (applied > 0) message += " Processed " + applied + " existing file(s).";
-            if (skipped.Count > 0)
-                message += " Left hand-edited ImportPreset.md unchanged in: " + string.Join(", ", skipped) + ".";
-            Repaint();
-        }
-
-        /// <summary>
-        /// Writes the folder's ImportPreset.md, or removes it when generated is null.
-        /// Returns false for a hand-edited one, which belongs to the user and is never changed.
-        /// </summary>
-        internal static bool WriteMarker(string folder, string generated, out bool changed)
-        {
-            changed = false;
-            string marker = ImportPresetMarker.PathIn(folder);
-            if (File.Exists(marker))
-            {
-                string content = ReadOrNull(marker);
-                if (content == null || !ImportPresetMarker.IsGenerated(content)) return false;
-                if (generated == null)
-                {
-                    AssetDatabase.DeleteAsset(marker);
-                    changed = true;
-                    return true;
-                }
-                if (content.Replace("\r\n", "\n") == generated) return true;
-            }
-            else if (generated == null)
-            {
-                return true;
-            }
-            File.WriteAllText(marker, generated, new UTF8Encoding(false));
-            AssetDatabase.ImportAsset(marker);
-            changed = true;
-            return true;
-        }
-
-        internal static List<string> FilesGovernedBy(string folder)
-        {
-            var paths = new List<string>();
-            foreach (string guid in AssetDatabase.FindAssets("", new[] { folder }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (string.IsNullOrEmpty(path) || AssetDatabase.IsValidFolder(path) || paths.Contains(path)) continue;
-                if (Path.GetFileName(path) == ImportPresetMarker.FileName) continue;
-                // A deeper ImportPreset.md governs its own folder.
-                string governing = ImportPresetMarker.FindMarkerFolder(path, File.Exists);
-                if (governing != null && governing != folder) continue;
-                paths.Add(path);
-            }
-            return paths;
-        }
-
-        internal static int ApplyToExisting(List<string> paths)
-        {
+            var chosen = new List<ImportPresetFolderRules.Pick>();
+            foreach (ImportPresetFolderRules.FileType type in types) chosen.Add(PickFor(type.Label));
             int processed = 0;
-            try
+            if (!ImportPresetFolderRules.Apply(folder, chosen, hasBlend ? betterFbx : (bool?)null, ref processed))
             {
-                for (int i = 0; i < paths.Count; i++)
-                {
-                    string path = paths[i];
-                    if (EditorUtility.DisplayCancelableProgressBar("Set Folder Import Presets", path, (float)i / paths.Count))
-                        break;
-                    if (ImportPresetPostprocessor.ExportRules(path) != null)
-                    {
-                        EditorUtility.ClearProgressBar();
-                        ImportPresetPostprocessor.ExportOne(path, false);
-                        processed++;
-                        continue;
-                    }
-                    if (ApplyRules(path)) processed++;
-                }
+                message = "ImportPreset.md in " + folder + " was edited by hand, so it was left unchanged.";
+                return;
             }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
-            return processed;
-        }
-
-        private static bool ApplyRules(string path)
-        {
-            ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(path);
-            AssetImporter importer = AssetImporter.GetAtPath(path);
-            if (rules == null || importer == null) return false;
-            string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path));
-            bool extracted = false;
-            var model = importer as ModelImporter;
-            if (model != null && ImportPresetAnimations.ShouldExtract(path, rules))
-            {
-                List<string> skipped;
-                ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
-                    ImportPresetOwnedFiles.IsUnchanged, out skipped);
-                extracted = true;
-            }
-            ImportPresetMarker.Target target = rules.For(extension);
-            string applied;
-            if (target.Configuration == null ||
-                !ImportPresetLibrary.TryApply(importer, target.Configuration, target.Preset, out applied))
-                return extracted;
-            importer.SaveAndReimport();
-            return true;
-        }
-
-        internal static string ReadOrNull(string path)
-        {
-            try
-            {
-                return File.Exists(path) ? File.ReadAllText(path) : null;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            message = "Saved " + folder + ". Applied to " + processed + " file(s).";
+            Scan();
+            Repaint();
         }
     }
 
