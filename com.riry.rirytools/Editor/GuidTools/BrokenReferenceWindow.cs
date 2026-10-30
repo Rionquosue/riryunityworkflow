@@ -23,6 +23,8 @@ namespace Riry.RiryTools.Editor
         // Missing GUID to the chosen candidate index; Other (the list's length) uses others.
         private readonly Dictionary<string, int> choices = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Dictionary<string, Object> others = new Dictionary<string, Object>(StringComparer.Ordinal);
+        // Restores whose Break detected button is open.
+        private readonly HashSet<RepairCandidate> expanded = new HashSet<RepairCandidate>();
         private Vector2 scroll;
 
         internal static void Open(List<string> files, string reason)
@@ -68,6 +70,7 @@ namespace Riry.RiryTools.Editor
                 GuidReferenceRepair.Suggest(plan, null, log);
                 choices.Clear();
                 others.Clear();
+                expanded.Clear();
                 PreselectSingles();
             }
             catch (OperationCanceledException)
@@ -142,12 +145,12 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>Fix for a restored file's missing references: adds them to the list, with their own candidates.</summary>
-        private void FixMissingReferences(RepairCandidate restore)
+        private void FixMissingReferences(string owner, RepairCandidate restore)
         {
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
-                GuidReferenceRepair.AddDependencies(plan, restore, log);
+                GuidReferenceRepair.AddDependencies(plan, owner, restore, log);
                 restore.MissingDecision = BreakDecision.Fix;
                 PreselectSingles();
             }

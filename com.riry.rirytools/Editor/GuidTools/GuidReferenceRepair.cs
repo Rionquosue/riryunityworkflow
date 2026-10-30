@@ -23,6 +23,24 @@ namespace Riry.RiryTools.Editor
         public readonly Dictionary<string, List<RepairCandidate>> Candidates =
             new Dictionary<string, List<RepairCandidate>>(StringComparer.Ordinal);
         public readonly Dictionary<string, string> LastKnownPaths = new Dictionary<string, string>(StringComparer.Ordinal);
+        /// <summary>
+        /// How many Fixes led to a missing GUID: 0 for one found in the scanned files,
+        /// 1 for one a restored file needs, and so on.
+        /// </summary>
+        public readonly Dictionary<string, int> Depth = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Breaks are repaired at most two levels deep in one go. A restore at the third
+        /// level that still breaks something is a recursive break: references stay broken
+        /// until the tool runs again.
+        /// </summary>
+        public const int MaxFixDepth = 2;
+
+        public int DepthOf(string guid)
+        {
+            int depth;
+            return Depth.TryGetValue(guid, out depth) ? depth : 0;
+        }
     }
 
     internal enum BreakDecision
@@ -296,10 +314,11 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>
-        /// Adds the restored file's missing references to the plan, so each gets its
-        /// own candidates (the Fix for that break). Returns the GUIDs added.
+        /// Adds the restored file's missing references to the plan, one level deeper
+        /// than <paramref name="owner"/>, the missing GUID the restore is for, so each
+        /// gets its own candidates (the Fix for that break). Returns the GUIDs added.
         /// </summary>
-        internal static List<string> AddDependencies(RepairPlan plan, RepairCandidate restore, GuidToolLog log)
+        internal static List<string> AddDependencies(RepairPlan plan, string owner, RepairCandidate restore, GuidToolLog log)
         {
             var added = new List<string>();
             foreach (string guid in restore.MissingReferences)
@@ -308,6 +327,7 @@ namespace Riry.RiryTools.Editor
                 if (!plan.Missing.TryGetValue(guid, out users))
                 {
                     plan.Missing[guid] = users = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+                    plan.Depth[guid] = plan.DepthOf(owner) + 1;
                     added.Add(guid);
                 }
                 users.Add(restore.Path + " (restored)");

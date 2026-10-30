@@ -102,7 +102,9 @@ Nothing is chosen for you, except when a missing GUID has exactly one
 candidate. A missing GUID with nothing chosen stays in a red box.
 
 When a Git restore is chosen, it is checked for what restoring only that file
-would break, and each problem needs **Fix** or **Accept break** before Apply:
+would break. If it breaks anything, an orange **Break detected** button appears;
+clicking it opens the problems, and each needs **Fix** or **Accept break** before
+Apply:
 
 - **It references assets that are missing now.** Fix adds those GUIDs to the
   list, each with its own candidates.
@@ -110,6 +112,12 @@ would break, and each problem needs **Fix** or **Accept break** before Apply:
   name; Accept break overwrites it.
 - **Another asset uses that GUID now.** Accept break only; Unity then gives one
   of them a new GUID.
+
+Breaks are repaired at most two levels deep in one go: a missing reference added
+by a Fix can itself be restored and fixed once more. A restore at the third level
+that still breaks something shows a red **RECURSIVE BREAK DETECTED** button with
+the same options and the note "* Broken references are inevitable. Please run
+tool again after applying."
 
 **Apply** restores the chosen assets (through Git's filters, so Git LFS files
 come back as their content), then rewrites the redirected GUIDs byte-exactly in

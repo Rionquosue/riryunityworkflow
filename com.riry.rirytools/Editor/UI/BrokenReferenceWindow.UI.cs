@@ -10,6 +10,9 @@ namespace Riry.RiryTools.Editor
     internal sealed partial class BrokenReferenceWindow
     {
         private static readonly Color Unresolved = new Color(1f, 0.35f, 0.35f);
+        private static readonly Color BreakColor = new Color(1f, 0.6f, 0.1f);
+        private static readonly Color RecursiveColor = new Color(1f, 0.2f, 0.2f);
+        private const string RecursiveNote = "* Broken references are inevitable. Please run tool again after applying.";
 
         private void OnGUI()
         {
@@ -72,13 +75,32 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.LabelField(string.Join("; ", candidate.Sources), EditorStyles.wordWrappedMiniLabel);
                 if (!candidate.IsRestore || !on) return;
+                if (candidate.MissingReferences.Count == 0 && !candidate.PathTaken && candidate.GuidInUseBy == null) return;
+                // Past the second level of fixes, what this restore breaks stays broken until the next run.
+                bool recursive = plan.DepthOf(missing) >= RepairPlan.MaxFixDepth;
+                Color previous = GUI.backgroundColor;
+                GUI.backgroundColor = recursive ? RecursiveColor : BreakColor;
+                bool open = expanded.Contains(candidate);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Space(EditorGUI.indentLevel * 15f);
+                    if (GUILayout.Button(recursive ? "RECURSIVE BREAK DETECTED" : "Break detected", EditorStyles.miniButton))
+                    {
+                        if (open) expanded.Remove(candidate);
+                        else expanded.Add(candidate);
+                        GUI.backgroundColor = previous;
+                        GUIUtility.ExitGUI();
+                    }
+                }
+                GUI.backgroundColor = previous;
+                if (!open) return;
                 if (candidate.MissingReferences.Count > 0)
                     DrawBreak("It references " + candidate.MissingReferences.Count + " asset(s) that are missing now.",
                         "Repair them too", candidate.MissingDecision,
                         // Adds boxes to the list, so after this GUI pass.
                         () => EditorApplication.delayCall += () =>
                         {
-                            FixMissingReferences(candidate);
+                            FixMissingReferences(missing, candidate);
                             Repaint();
                         },
                         decision => candidate.MissingDecision = decision);
@@ -90,6 +112,7 @@ namespace Riry.RiryTools.Editor
                 if (candidate.GuidInUseBy != null)
                     DrawBreak(candidate.GuidInUseBy + " uses this GUID now; Unity would give one of them a new GUID.",
                         null, candidate.GuidDecision, null, decision => candidate.GuidDecision = decision);
+                if (recursive) EditorGUILayout.LabelField(RecursiveNote, EditorStyles.wordWrappedMiniLabel);
             }
         }
 
@@ -144,7 +167,10 @@ namespace Riry.RiryTools.Editor
 // UI (this file)
 //   Unresolved            Color   Red tint for a missing GUID with nothing chosen.
 //   OnGUI()               Reason, files, Rescan, one box per missing GUID, Apply.
-//   DrawCandidate(missing, index, candidate)  A radio choice, how it was found, and a chosen restore's breaks.
+//   BreakColor / RecursiveColor  Orange "Break detected" and red "RECURSIVE BREAK DETECTED" buttons.
+//   RecursiveNote         const string  Shown under a recursive break's options.
+//   DrawCandidate(missing, index, candidate)  A radio choice, how it was found, and for a chosen restore
+//                         that breaks something, the Break detected button that opens its options.
 //   DrawBreak(problem, fixLabel, decision, fix, decide)  A break with Fix and Accept break.
 //   DrawOther(missing, index)  "Other:" with any asset.
 //
@@ -153,6 +179,7 @@ namespace Riry.RiryTools.Editor
 //   reason                string        Why the window opened.
 //   plan                  RepairPlan    Missing GUIDs, their files and candidates.
 //   choices               Dictionary<string, int>  Chosen candidate per missing GUID (its list length = Other).
+//   expanded              HashSet<RepairCandidate>  Restores whose break options are open.
 //   others                Dictionary<string, Object>  The asset picked under Other.
 //   scroll                Vector2       Scroll position.
 //   Open(files, reason)   Opens the window and scans.
@@ -163,14 +190,15 @@ namespace Riry.RiryTools.Editor
 //   Chosen(guid) / OtherChosen(guid)  The chosen candidate, or whether Other is chosen.
 //   Redirects()           Missing GUID to chosen asset GUID.
 //   Restores()            Chosen Git restores.
-//   FixMissingReferences(restore)  Adds a restored file's missing references to the list.
+//   FixMissingReferences(owner, restore)  Adds a restored file's missing references to the list, one level deeper.
 //   ApplyRedirects()      Checks every restore's breaks are decided, confirms, restores, rewrites, reloads.
 //
 // RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidReferenceRepair.cs)
 //   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.
 //   RepairCandidate: TargetGuid or a restore (Commit, RepoPath), Path, Sources, and the restore's
 //     breaks: MissingReferences, PathTaken, GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept).
-// GuidReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, restore, log),
+// RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): fix levels; deeper breaks are recursive.
+// GuidReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, owner, restore, log),
 //   Apply(plan, redirects, restores, log), SelectedFiles(), IsMissing(guid), FindGuidReferences(bytes), RepairSelected().
 // BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window when a file opens with
 //   missing GUIDs or Unity logs several missing-script or missing-prefab messages.
