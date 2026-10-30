@@ -66,9 +66,9 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Broken References window
-// Opened from Git > Check for Broken References..., Tools > RiryTools > GUID Tools,
-// Project right-click > RiryTools > Repair Missing GUID References (all in RiryMenus.cs),
-// the GUID Tools window, and the BrokenReferenceMonitor prompt.
+// Opened from the GUID Tools window (Check for Broken References and Repair Missing GUID
+// References), Project right-click > RiryTools > Repair Missing GUID References (RiryMenus.cs),
+// and the BrokenReferenceMonitor prompt. Git history is searched when the project is in a repository.
 // ============================================================================
 //
 // UI (this file)

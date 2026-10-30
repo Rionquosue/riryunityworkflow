@@ -49,7 +49,6 @@ namespace Riry.RiryTools.Editor
         // ---- Git menu -------------------------------------------------------
         private const string Sync = "Git/Sync";
         private const string Configuration = "Git/Configuration...";
-        private const string CheckBrokenReferences = "Git/Check for Broken References...";
 
         // ---- VRChat tools (also used by RiryVRChatMenus.cs) -----------------
         // "&T" makes T its menu key (Clean Animation Keys has C). The space before it is
@@ -179,9 +178,6 @@ namespace Riry.RiryTools.Editor
         [MenuItem(Configuration, false, 2)]
         private static void ConfigurationItem() { GitActions.OpenConfiguration(); }
 
-        [MenuItem(CheckBrokenReferences, false, 20)]
-        private static void CheckBrokenReferencesItem() { BrokenReferenceWindow.OpenForOpenScenes("Checked from the Git menu."); }
-
 #if !RIRYTOOLS_VRC_CONSTRAINTS
         // =====================================================================
         // VRChat tools without the VRChat SDK
@@ -247,7 +243,6 @@ namespace Riry.RiryTools.Editor
 // GIT MENU (main menu bar)
 //   Git/Sync (1)  [check mark]                      -> GitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
 //   Git/Configuration... (2)                        -> GitActions.OpenConfiguration -> GitConfigureWindow (Editor/UI/GitWindows.cs)
-//   Git/Check for Broken References... (20)         -> BrokenReferenceWindow.OpenForOpenScenes (Editor/GuidTools/BrokenReferenceWindow.cs)
 //
 // OTHER UI OUTSIDE MENUS
 //   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/CleanAnimationKeysWindow.cs)

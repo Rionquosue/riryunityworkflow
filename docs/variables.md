@@ -210,7 +210,6 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
 - **Git menu:**
   - `Git/Sync` (1), check mark
   - `Git/Configuration...` (2)
-  - `Git/Check for Broken References...` (20)
 
 ## Publishing
 

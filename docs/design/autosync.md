@@ -11,8 +11,6 @@ menu in the main menu bar:
 - **Sync**: a check-mark toggle, off until you turn it on.
 - **Configuration...**: templates and the push remote.
 
-**Git > Check for Broken References...** is part of GUID Tools.
-
 ## Turning Sync on
 
 1. Without Git installed, a dialog offers the download page
