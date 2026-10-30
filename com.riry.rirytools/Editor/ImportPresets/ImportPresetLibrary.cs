@@ -321,11 +321,10 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// Saves an importer's settings as presetName.preset in a configuration.
-        /// With onlyThisExtension, a rule limits it to that extension; otherwise
-        /// any rules for it are removed so it applies to its whole importer type.
+        /// Any config.json rules for it are removed, so it applies to its whole
+        /// importer type (file type).
         /// </summary>
-        internal static string SavePreset(AssetImporter importer, string configuration, string presetName,
-            bool onlyThisExtension)
+        internal static string SavePreset(AssetImporter importer, string configuration, string presetName)
         {
             EnsureRoot();
             string path = ConfigurationPath(configuration);
@@ -345,17 +344,9 @@ namespace Riry.RiryTools.Editor
             string error;
             Config config = ReadConfig(path, out error);
             if (error != null) throw new InvalidOperationException(error + " Fix or delete it, then save again.");
-            config.rules.RemoveAll(rule => rule == null ||
+            int removed = config.rules.RemoveAll(rule => rule == null ||
                 string.Equals(FindFile(new[] { file }, rule.preset ?? ""), file, StringComparison.Ordinal));
-            if (onlyThisExtension)
-            {
-                config.rules.Add(new Rule
-                {
-                    extensions = new List<string> { NormalizeExtension(Path.GetExtension(importer.assetPath)) },
-                    preset = file
-                });
-            }
-            WriteConfig(path, config);
+            if (removed > 0) WriteConfig(path, config);
             return Path.Combine(path, file);
         }
 

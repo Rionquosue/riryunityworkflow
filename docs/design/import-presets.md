@@ -35,10 +35,10 @@ Each subfolder is one **configuration**, for example `Textures` or
 
 Right-click an asset whose import settings you want, then choose
 **RiryTools > Save Import Preset**. Pick or name a
-configuration and a preset name. With **Use only for .ext files** on, a rule
-limits the preset to that extension; otherwise it applies to every file that
-importer handles. Saving again under the same name replaces the preset and its
-rule. Existing Unity `.preset` assets can also be copied into a configuration
+configuration and a preset name, and click **Save**; a missing or invalid name
+is reported only then. The preset applies to every file of its type (every file
+that importer handles). Saving again under the same name replaces the preset and
+removes any `config.json` rule for it. Existing Unity `.preset` assets can also be copied into a configuration
 folder by hand.
 
 ## Choosing a folder's presets

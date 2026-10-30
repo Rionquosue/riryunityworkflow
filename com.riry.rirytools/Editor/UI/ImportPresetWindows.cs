@@ -152,17 +152,12 @@ namespace Riry.RiryTools.Editor
             choice = EditorGUILayout.Popup("Configuration", choice, options.ToArray());
             if (choice == 0) newConfiguration = EditorGUILayout.TextField("New name", newConfiguration);
             presetName = EditorGUILayout.TextField("Preset name", presetName);
-            string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(assetPath));
-            using (new EditorGUI.DisabledScope(extension.Length == 0))
-            {
-                onlyThisExtension = EditorGUILayout.ToggleLeft(
-                    "Use only for ." + extension + " files (otherwise every " + importer.GetType().Name + " file)",
-                    onlyThisExtension && extension.Length > 0);
-            }
 
             string configuration = choice == 0 ? newConfiguration : configurations[choice - 1];
             string error = ImportPresetLibrary.ValidateName(configuration) ?? ImportPresetLibrary.ValidateName(presetName);
-            if (error != null) EditorGUILayout.HelpBox(error, MessageType.Warning);
+            // A name problem shows only after Save was clicked with it.
+            if (error == null) saveTried = false;
+            if (error != null && saveTried) EditorGUILayout.HelpBox(error, MessageType.Warning);
             if (!string.IsNullOrEmpty(message)) EditorGUILayout.HelpBox(message, MessageType.Info);
 
             GUILayout.FlexibleSpace();
@@ -170,9 +165,10 @@ namespace Riry.RiryTools.Editor
             {
                 if (GUILayout.Button("Open Library")) ImportPresetActions.OpenLibrary();
                 GUILayout.FlexibleSpace();
-                using (new EditorGUI.DisabledScope(error != null))
+                if (GUILayout.Button("Save", GUILayout.Width(80)))
                 {
-                    if (GUILayout.Button("Save", GUILayout.Width(80))) Save(importer, configuration);
+                    if (error != null) saveTried = true;
+                    else Save(importer, configuration);
                 }
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
@@ -221,7 +217,7 @@ namespace Riry.RiryTools.Editor
 //
 // ImportPresetSaveWindow: saves an asset's import settings to the library
 //   FIELDS: assetPath, choice (configuration index), newConfiguration, presetName,
-//           onlyThisExtension, configurations, message.
+//           saveTried (shows a name problem after Save), configurations, message.
 //   Open(importer) / OnGUI()  (this file)    Save(importer, configuration)  (ImportPresetWindowActions.cs)
 //
 // ImportPresetActions (Editor/ImportPresets/ImportPresetActions.cs): selection helpers

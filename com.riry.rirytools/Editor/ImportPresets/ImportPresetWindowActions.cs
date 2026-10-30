@@ -150,7 +150,7 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private int choice;
         [SerializeField] private string newConfiguration = "";
         [SerializeField] private string presetName = "";
-        [SerializeField] private bool onlyThisExtension = true;
+        [NonSerialized] private bool saveTried;
         [NonSerialized] private List<string> configurations = new List<string>();
         [NonSerialized] private string message;
 
@@ -169,7 +169,7 @@ namespace Riry.RiryTools.Editor
                 return;
             try
             {
-                string saved = ImportPresetLibrary.SavePreset(importer, configuration, presetName, onlyThisExtension);
+                string saved = ImportPresetLibrary.SavePreset(importer, configuration, presetName);
                 configurations = ImportPresetFolderWindow.LoadConfigurations(out message);
                 choice = configurations.FindIndex(name =>
                     string.Equals(name, configuration, StringComparison.OrdinalIgnoreCase)) + 1;
