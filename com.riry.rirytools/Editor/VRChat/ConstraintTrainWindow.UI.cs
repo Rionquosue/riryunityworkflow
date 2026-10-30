@@ -205,9 +205,6 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Build animation")) BuildAnimation();
             }
             DrawPrefabSave();
-            EditorGUILayout.LabelField(
-                "Use the clip in a state with Motion Time driven by your float parameter.",
-                EditorStyles.wordWrappedMiniLabel);
         }
 
         private void DrawPreview(bool settingsChanged)
