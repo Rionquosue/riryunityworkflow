@@ -9,7 +9,7 @@ show **VRCSDK not found**.
 ## 1. Open the window on the chain
 
 Right-click the first bone of the chain in the Hierarchy (the one closest to the
-root) and choose **RiryTools > Constraint Train...**. To fill in the last bone
+root) and choose **RiryTools > Constraint Train**. To fill in the last bone
 too, Ctrl/Cmd-click it first so both are selected.
 
 You can also choose **Tools > RiryTools > Constraint Train** and drag the bones

@@ -57,13 +57,13 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 ## Import Presets
 
 Right-click a folder (or empty space in it) and choose **RiryTools > Import
-Preset...** to set presets per file type (fbx, obj, png, tga, blend...) from
+Preset** to set presets per file type (fbx, obj, png, tga, blend...) from
 `Documents/RiryTools/ImportPresets`. New files in that folder and its
 subfolders get them on their first import; reimports and hand-edited settings
 are never changed. Models can have their animations extracted to `Animations/`
 as Generic clips before a Humanoid preset applies, and `.blend` files can be
 exported with the Better FBX Blender add-on. Save presets from any asset with
-**RiryTools > Save Import Settings to Preset Library...**. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/import-presets.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/import-presets.md).
+**RiryTools > Save Import Settings to Preset Library**. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/import-presets.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/import-presets.md).
 
 ## Stop Auto Game
 
@@ -76,7 +76,7 @@ per-user setting. See the [tutorial](https://github.com/Rionquosue/riryunitywork
 
 Requires the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > RiryTools >
 Constraint Train** (or right-click a bone in the Hierarchy > **RiryTools >
-Constraint Train...**) to drive a real bone chain onto up to five physics chains
+Constraint Train**) to drive a real bone chain onto up to five physics chains
 with VRC Parent Constraints and a Motion Time clip. The tip leads a staggered
 "train" onto physics chain 1, then every bone blends from chain to chain along an
 editable curve. It can generate `Phys1_`..`Phys5_` and `Rest_` empty chains,
@@ -116,7 +116,7 @@ and prefab save to the checked-out branch, titled with the time of the save, and
 pushes it when there is a remote. Turning it on offers to download Git when it is
 missing, creates the repository from the Unity `.gitignore` and `.gitattributes`
 templates in `Documents/RiryTools/GitTemplates`, and enables Git LFS.
-**Configuration...** picks other templates and sets **Push to remote**; sign-in
+**Configuration** picks other templates and sets **Push to remote**; sign-in
 goes through Git's credential manager. AutoSync also blocks saving a scene or
 prefab that a script stopped from loading. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/autosync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/autosync.md).
 

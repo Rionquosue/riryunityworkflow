@@ -7,7 +7,7 @@ settings you want, without touching files you already set up by hand.
 
 1. Select an asset whose import settings you like (for example a texture).
 2. Right-click it and choose **RiryTools > Save Import Settings to Preset
-   Library...**.
+   Library**.
 3. Pick a **Configuration** (a group of presets, for example `Avatar`) or type a
    **New name**, name the preset, and click **Save**.
 
@@ -17,7 +17,7 @@ the computer can use it. **Open Library** shows it.
 ## 2. Set a folder's presets
 
 1. Right-click a folder (or empty space inside it) in the Project window and
-   choose **RiryTools > Import Preset...**.
+   choose **RiryTools > Import Preset**.
 2. Under **Default for unlisted file types**, choose a configuration.
 3. Under **File types**, add rows with **+ Textures**, **+ Models**, **+ Blender**
    or **+ File type**, and choose what each row **Use**s.

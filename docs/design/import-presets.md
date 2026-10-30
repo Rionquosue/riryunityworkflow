@@ -34,7 +34,7 @@ Each subfolder is one **configuration**, for example `Textures` or
 ### Adding presets
 
 Right-click an asset whose import settings you want, then choose
-**RiryTools > Save Import Settings to Preset Library...**. Pick or name a
+**RiryTools > Save Import Settings to Preset Library**. Pick or name a
 configuration and a preset name. With **Use only for .ext files** on, a rule
 limits the preset to that extension; otherwise it applies to every file that
 importer handles. Saving again under the same name replaces the preset and its
@@ -44,7 +44,7 @@ folder by hand.
 ## Choosing a folder's preset
 
 Right-click a folder, or empty space in a folder's contents, then choose
-**RiryTools > Import Preset...**. Right-clicking a file uses the file's folder.
+**RiryTools > Import Preset**. Right-clicking a file uses the file's folder.
 
 The dialog shows each folder's current state, lists the configurations, and
 summarizes the chosen one's rules. **Apply** writes `ImportPreset.md` into the

@@ -17,7 +17,7 @@ Only the saved files and their `.meta` files go into the commit.
 
 ## 3. Push to a server (optional)
 
-1. Choose **Tools > RiryTools > AutoSync > Configuration...**.
+1. Choose **Tools > RiryTools > AutoSync > Configuration**.
 2. Enter the server address in **Push to remote** and click **Add Remote**.
 3. Every commit is now pushed. When the server asks you to sign in, Git's
    credential manager opens its own window.

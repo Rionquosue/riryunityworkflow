@@ -6,7 +6,7 @@ failing to compile, and its menu entries throw `VrcSdkNotFoundException` and sho
 a **VRCSDK not found** popup saying the SDK is missing.
 
 Open **Tools > RiryTools > Constraint Train**, or right-click a bone in the
-Hierarchy and choose **RiryTools > Constraint Train...**. From the Hierarchy, the
+Hierarchy and choose **RiryTools > Constraint Train**. From the Hierarchy, the
 right-clicked bone becomes the chain start (RB1). Select a second bone below it
 first (Ctrl/Cmd-click) to fill in the end as well. Switching to a new start
 clears the chains and avatar root found for the previous one.

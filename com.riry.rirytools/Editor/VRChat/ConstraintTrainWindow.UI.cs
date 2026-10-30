@@ -218,7 +218,7 @@ namespace Riry.RiryTools.Editor
 //
 // MENU ENTRIES (Editor/VRChat/RiryVRChatMenus.cs)
 //   Tools/RiryTools/Constraint Train          -> Open()
-//   GameObject/RiryTools/Constraint Train...  -> OpenFromHierarchy() (Hierarchy right-click)
+//   GameObject/RiryTools/Constraint Train  -> OpenFromHierarchy() (Hierarchy right-click)
 //
 // UI METHODS (ConstraintTrainWindow.UI.cs)
 //   Open()                         Opens the window (Tools menu).

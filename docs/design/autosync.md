@@ -9,7 +9,7 @@ The same entries are under **Tools > RiryTools > AutoSync** and in the **Git**
 menu in the main menu bar:
 
 - **Sync**: a check-mark toggle, off until you turn it on.
-- **Configuration...**: templates and the push remote.
+- **Configuration**: templates and the push remote.
 
 ## Turning Sync on
 

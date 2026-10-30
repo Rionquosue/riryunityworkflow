@@ -251,7 +251,7 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Asset", assetPath, EditorStyles.wordWrappedLabel);
             EditorGUILayout.LabelField("Importer", importer.GetType().Name);
 
-            var options = new List<string> { "New configuration..." };
+            var options = new List<string> { "New configuration" };
             options.AddRange(configurations);
             choice = Mathf.Clamp(choice, 0, options.Count - 1);
             choice = EditorGUILayout.Popup("Configuration", choice, options.ToArray());
@@ -287,7 +287,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Import Preset windows
-// Menu entries (Project right-click Import Preset... and Save Import Settings to
+// Menu entries (Project right-click Import Preset and Save Import Settings to
 // Preset Library..., Tools > Open Import Preset Library) are in RiryMenus.cs.
 // ============================================================================
 //

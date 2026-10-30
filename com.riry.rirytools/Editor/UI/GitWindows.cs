@@ -161,7 +161,7 @@ namespace Riry.RiryTools.Editor
 // The menu entries are in RiryMenus.cs; what they do is in GitActions.
 // ============================================================================
 //
-// GitConfigureWindow (Configuration...)
+// GitConfigureWindow (Configuration)
 //   UI (this file)
 //     Open()                Opens the window and loads templates, branches and remotes.
 //     CloudflareWarning     const string  Warning for an HTTP(S) remote (also in Large Files).

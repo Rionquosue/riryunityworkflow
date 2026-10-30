@@ -31,6 +31,6 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 // GLOSSARY: VRChat menu entries
 //   Tools/RiryTools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs)
-//   GameObject/RiryTools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy: the active
+//   GameObject/RiryTools/Constraint Train (20)   -> ConstraintTrainWindow.OpenFromHierarchy: the active
 //                                                      object becomes the chain start, a selected descendant the end.
 // ============================================================================

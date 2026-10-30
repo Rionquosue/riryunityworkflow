@@ -186,7 +186,7 @@ namespace Riry.RiryTools.Editor
             string blender = ResolveBlender();
             if (blender == null)
             {
-                message = "Blender was not found. Set its path in RiryTools > Import Preset... (Better FBX section).";
+                message = "Blender was not found. Set its path in RiryTools > Import Preset (Better FBX section).";
                 return null;
             }
             string options = Options;
