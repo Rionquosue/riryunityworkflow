@@ -37,12 +37,15 @@ EditorUserSettings: per user and per project, in `UserSettings/`.
 | Key | Values | Default | Owner |
 |---|---|---|---|
 | `RiryTools.AutoSync.Enabled` | `1` / `0` | `0` | `AutoSync.Enabled` (**Sync**) |
+| `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `GitRemotes.Selected` (**Remote**) |
+| `RiryTools.AutoSync.LargeFileNoticeOff` | remote URLs, one per line | unset | `AutoSync.LargeFileNotice`: **Do Not Show Again** |
 
 SessionState: until the editor quits; survives script reloads.
 
 | Key | Type | Owner |
 |---|---|---|
 | `RiryTools.AutoSync.Pending` | one save per line: title, then paths, tab-separated | `AutoSync`: saves not yet committed when scripts reloaded |
+| `RiryTools.AutoSync.LargeFileNoticeShown` | remote URLs, one per line | `AutoSync.LargeFileNotice`: **Push Held** was shown this session |
 | `RiryTools.PlayMode.FrontTabs` | comma-separated instance IDs | `PlayModeWindowKeeper` |
 | `RiryTools.PlayMode.Focused` | instance ID | `PlayModeWindowKeeper` |
 | `RiryTools.PlayMode.HadGameView` | bool | `PlayModeWindowKeeper` |
@@ -63,6 +66,7 @@ In the project:
 | `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateGuid.LogDirectoryPath`, `GuidToolLog` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidRemapLedger.RelativePath` |
 | `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration** | `GitActions.CopyTemplate` |
+| `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits | `GitLargeFiles.Ignore` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder | `ImportPresetMarker.FileName` |
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips | `ImportPresetAnimations.FolderName` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
@@ -82,7 +86,10 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | Name | Value | Owner |
 |---|---|---|
 | Branch | The checked-out branch | `AutoSyncJob.Commit` |
-| Remote | `origin`, or the branch's upstream | `AutoSyncJob.Remote`, `AutoSyncJob.PushBranch` |
+| Remote | The one chosen in Configuration; **Add Remote** adds `origin` | `GitRemotes.DefaultName`, `AutoSyncJob.PushBranch` |
+| Reflog message | `RiryTools AutoSync: drop large files` | `GitLargeFiles.Ignore` |
+| `.gitignore` lines | `/<path>`, pattern characters escaped | `GitLargeFiles.AppendToGitignore` |
+| LFS query | HTTP(S): `POST <remote>.git/info/lfs/objects/batch` (or `remote.<name>.lfsurl`, `lfs.url`), one all-zero object; SSH: `git-lfs-authenticate <path> download` with `core.sshCommand` or `ssh` | `GitLfsQuery` |
 | Commit title | Time of the save, `yyyy-MM-dd'T'HH:mm:sszzz` (`2026-10-30T14:05:12+01:00`) | `AutoSync.TimeFormat` |
 | Commit contents | The saved `.unity` and `.prefab` files and their `.meta` files | `AutoSyncJob.Commit` |
 | Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset | `AutoSyncJob.Open` |
@@ -117,6 +124,8 @@ AutoSync and Git:
 | `GitState.CacheSeconds` | `5.0` | How long Git and repository state is cached |
 | `AutoSyncJob.TimeoutMs` | `120000` | Timeout per Git command |
 | `AutoSyncJob.PushTimeoutMs` | `600000` | Push timeout, long enough to sign in |
+| `GitLargeFiles.ProxyLimitBytes` | 100 MiB | Cloudflare's proxied upload limit: the ! button and held pushes |
+| `GitLfsQuery.TimeoutMs` | `30000` | LFS query timeout |
 | `GitRunner.TimedOut` | `-1` | Exit code reported for a timed-out or cancelled command |
 | `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/` | **Download Git** link |
 | `GitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore` | Default `.gitignore` template, saved as `Unity` |

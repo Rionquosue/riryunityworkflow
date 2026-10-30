@@ -19,11 +19,14 @@ namespace Riry.RiryTools.Editor
         private const string EnabledKey = "RiryTools.AutoSync.Enabled";
         private const string PendingKey = "RiryTools.AutoSync.Pending";
         private const string TimeFormat = "yyyy-MM-dd'T'HH:mm:sszzz";
+        // Remote URLs, one per line: the large-file notice was shown this session / turned off.
+        private const string NoticeShownKey = "RiryTools.AutoSync.LargeFileNoticeShown";
+        private const string NoticeOffKey = "RiryTools.AutoSync.LargeFileNoticeOff";
 
         // One save: the commit title and the saved files. Saves made in the same editor update are one save.
         private static readonly List<AutoSyncJob.Save> queue = new List<AutoSyncJob.Save>();
         private static AutoSyncJob.Save collecting;
-        private static Task worker;
+        private static Task<AutoSyncJob.Held> worker;
         private static List<AutoSyncJob.Save> running;
         private static string reported;
 
@@ -102,6 +105,27 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        /// <summary>
+        /// Commits every pending save now, without pushing (the next push sends them),
+        /// so a branch switch or history rewrite starts from a settled branch.
+        /// </summary>
+        internal static void CommitNow()
+        {
+            Wait();
+            if (worker != null && !worker.IsCompleted)
+                throw new InvalidOperationException("Sync is still committing; try again in a moment.");
+            if (worker != null)
+            {
+                Report(worker);
+                worker = null;
+                running = null;
+            }
+            List<AutoSyncJob.Save> saves = Unfinished();
+            queue.Clear();
+            collecting = null;
+            if (saves.Count > 0) CreateJob(saves, false).Execute();
+        }
+
         // A running pass has the index; give it a moment to finish.
         private static void Wait()
         {
@@ -120,20 +144,58 @@ namespace Riry.RiryTools.Editor
 
         private static AutoSyncJob CreateJob(List<AutoSyncJob.Save> saves, bool push)
         {
-            return new AutoSyncJob { ProjectRoot = RiryToolsPaths.ProjectRoot, Saves = saves, Push = push };
+            string project = RiryToolsPaths.ProjectRoot;
+            return new AutoSyncJob
+            {
+                ProjectRoot = project,
+                Saves = saves,
+                Push = push,
+                Remote = GitRemotes.Selected(GitRemotes.Names(project))
+            };
         }
 
-        private static void Report(Task finished)
+        private static void Report(Task<AutoSyncJob.Held> finished)
         {
             if (!finished.IsFaulted)
             {
                 reported = null;
+                if (finished.Result != null) LargeFileNotice(finished.Result);
                 return;
             }
             string message = finished.Exception.GetBaseException().Message;
             // The same failure repeats on every save; the Console gets it once.
             if (message != reported) Debug.LogWarning("AutoSync: " + message);
             reported = message;
+        }
+
+        /// <summary>
+        /// Says the push is held because of files over 100 MiB: once per remote per
+        /// session, never again for a remote after Do Not Show Again.
+        /// </summary>
+        private static void LargeFileNotice(AutoSyncJob.Held held)
+        {
+            List<string> shown = Lines(SessionState.GetString(NoticeShownKey, ""));
+            List<string> off = Lines(EditorUserSettings.GetConfigValue(NoticeOffKey));
+            if (shown.Contains(held.Url) || off.Contains(held.Url)) return;
+            shown.Add(held.Url);
+            SessionState.SetString(NoticeShownKey, string.Join("\n", shown));
+            Debug.LogWarning("AutoSync: not pushing to " + held.Remote + " while commits hold files over 100 MiB.");
+            int choice = EditorUtility.DisplayDialogComplex("Push Held",
+                held.Files.Count + " file(s) over 100 MiB are in commits not yet pushed to " + held.Remote + " (" + held.Url +
+                "). If the server is behind Cloudflare, the push will fail, so Sync commits without pushing until they are " +
+                "removed.\n\n" + string.Join("\n", held.Files.GetRange(0, Math.Min(8, held.Files.Count))),
+                "Fix Now", "Close", "Do Not Show Again");
+            if (choice == 0) LargeFilesWindow.Open();
+            if (choice == 2)
+            {
+                off.Add(held.Url);
+                EditorUserSettings.SetConfigValue(NoticeOffKey, string.Join("\n", off));
+            }
+        }
+
+        private static List<string> Lines(string text)
+        {
+            return new List<string>((text ?? "").Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries));
         }
 
         // Session state holds one save per line: the title, then each path, separated by tabs.

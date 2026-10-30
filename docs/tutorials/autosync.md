@@ -23,6 +23,15 @@ Only the saved files and their `.meta` files go into the commit.
    credential manager opens its own window.
 
 For a server behind Cloudflare, use an SSH address; the window warns about HTTPS.
+With several remotes, **Remote** picks the one to push to. The window also shows
+whether the server has Git LFS enabled.
+
+If a tracked file is over 100 MiB, a yellow **!** appears beside the remote
+button. Click it, click a file to find it in the Project window, mark **Add to
+ignore** on the ones that should not be in Git, and click **OK**. When a save
+would push such a file over HTTP(S), Sync holds the push and offers **Fix Now**.
+
+**Branch** at the top of Configuration switches to another branch.
 
 The same window picks other **.gitignore** and **.gitattributes** templates.
 To reuse your own setup in other projects, type a **Template name** and click

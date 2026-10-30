@@ -39,11 +39,18 @@ changes commits nothing. The title is the time of the save, for example
 `2026-10-30T14:05:12+01:00`. Commits are flushed to disk before Git reports
 success (Git 2.36+).
 
-After the commits, the branch is pushed to its upstream, or to `origin` with
-`--set-upstream` when it has none. Without `origin` or an upstream, or on a
-detached HEAD, nothing is pushed. A sign-in goes through Git's credential
-manager, which shows its own window; Git never waits on a terminal prompt. A
-failed commit or push is logged in the Console once.
+After the commits, the branch is pushed to the remote chosen in Configuration
+(by default `origin`, else the first remote), with `--set-upstream` when the
+branch has none. Without a remote, or on a detached HEAD, nothing is pushed. A
+sign-in goes through Git's credential manager, which shows its own window; Git
+never waits on a terminal prompt. A failed commit or push is logged in the
+Console once.
+
+To an HTTP(S) remote, the push is held while the commits not yet on that remote
+hold a file over 100 MiB: Sync keeps committing, and the **Push Held** dialog
+says the push would fail behind Cloudflare and lists the files. **Fix Now** opens
+**Large Files**; **Do Not Show Again** turns the dialog off for that remote. It
+shows once per remote per editor session, so a different remote gets its own.
 
 Saves not yet committed when scripts reload are committed afterwards. On quit,
 they are committed without pushing; the next push sends them.
@@ -60,11 +67,33 @@ they are committed without pushing; the next push sends them.
   and the gitattributes project's
   [Unity.gitattributes](https://github.com/gitattributes/gitattributes/blob/master/Unity.gitattributes)
   are downloaded as `Unity`, and a built-in LFS template is added as `UnityLFS`.
-- **Push to remote**: the URL of `origin`. **Add Remote** adds it when there is
-  no `origin`; **Change Remote** saves a different URL once it exists. Needs a
-  repository, so turn Sync on first.
+- **Branch**: the local branches, then the chosen remote's branches with no
+  local branch. Choosing one offers to save modified scenes, commits pending
+  saves, and runs `git switch`.
+- **Remote** (with several remotes): which one Sync pushes to, per user and
+  per project.
+- **Push to remote**: the chosen remote's URL. **Add Remote** adds `origin` when
+  there is no remote; **Change Remote** saves a different URL once one exists.
+  Needs a repository, so turn Sync on first.
+- **!** (yellow, right of the remote button): shown for an HTTP(S) remote while
+  any tracked file is over 100 MiB. It opens **Large Files**.
+- **Git LFS status**: when the window opens, when another remote is chosen, and
+  after Add Remote or Change Remote, the remote's server is asked whether Git
+  LFS is enabled. Nothing is uploaded: over HTTP(S) it is an LFS batch download
+  request for one object that does not exist (an LFS server answers 200, a
+  server without LFS 404), signed in through Git's credential manager if the
+  server asks; over SSH it is `git-lfs-authenticate <path> download`.
 - **Apply**: copies the chosen templates into the project, asking before
   replacing a different file, then saves **Push to remote** when it changed.
+
+### Large Files
+
+Lists every tracked file over 100 MiB under the Cloudflare warning. Clicking a
+file selects it in the Project window. **Add to ignore** marks it; **OK** adds
+the marked files to `.gitignore` and takes them out of every commit not yet on
+the chosen remote, leaving them on disk. Those commits are rewritten (new
+hashes; a commit that only held those files is dropped) and the index matches,
+so the files are not committed again. Unpushed merges cannot be rewritten.
 
 ### Cloudflare
 
