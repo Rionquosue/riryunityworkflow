@@ -174,6 +174,7 @@ Other tools:
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
 | `StopAutoGame.HandleDelayMs` | `100` | Delay after Play Mode starts before focus is restored |
+| `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
 
 ## Menu paths
@@ -198,6 +199,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Import Presets/Extract Animations (Generic)` (2052)
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
+  - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
   - `Assets/RiryTools/Import Preset...` (2001)

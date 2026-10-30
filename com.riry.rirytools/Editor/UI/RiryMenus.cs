@@ -37,6 +37,10 @@ namespace Riry.RiryTools.Editor
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animations (Generic)";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
+        private const string Documentation = "Tools/RiryTools/Documentation";
+
+        // Where Documentation leads. Change it here when the wiki is up.
+        internal const string DocumentationLink = "https://github.com/Rionquosue/riryunityworkflow";
 
         // ---- Project window right-click -------------------------------------
         private const string RegenerateGuidAssets = "Assets/RiryTools/Regenerate GUID";
@@ -134,6 +138,9 @@ namespace Riry.RiryTools.Editor
             Menu.SetChecked(StopAutoGameMenu, StopAutoGame.Enabled);
             return true;
         }
+
+        [MenuItem(Documentation, false, 2070)]
+        private static void DocumentationItem() { UnityEngine.Application.OpenURL(DocumentationLink); }
 
         // =====================================================================
         // Project window right-click
@@ -247,6 +254,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Extract Animations (Generic) (2052) -> ImportPresetAnimations.ExtractSelected
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
+//   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
 //
 // PROJECT WINDOW RIGHT-CLICK
 //   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
