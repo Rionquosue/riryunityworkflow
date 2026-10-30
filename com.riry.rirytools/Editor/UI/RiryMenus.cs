@@ -32,6 +32,7 @@ namespace Riry.RiryTools.Editor
         private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Settings to Preset Library...";
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animations (Generic)";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
+        private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
         private const string Documentation = "Tools/RiryTools/Documentation";
 
@@ -104,6 +105,9 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
+
+        [MenuItem(MenuMockupMenu, false, 2055)]
+        private static void MenuMockupItem() { MenuMockup.Open(); }
 
         [MenuItem(StopAutoGameMenu, false, 2060)]
         private static void StopAutoGameItem() { StopAutoGame.Enabled = !StopAutoGame.Enabled; }
@@ -225,6 +229,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Save Import Settings to Preset Library... (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animations (Generic) (2052) -> ImportPresetAnimations.ExtractSelected
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
+//   Tools/RiryTools/Menu Mockup (2055)              -> MenuMockup.Open (Editor/MenuMockup.cs), a placeholder that does nothing yet
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
 //
