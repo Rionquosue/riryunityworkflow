@@ -32,11 +32,12 @@ chains:
    bone closer to the root starts one step later than the bone after it. At
    Train end, every real bone sits on its own copy in physics chain 1 (real
    bone 1 on PBC1-1, real bone 2 on PBC1-2, and so on).
-2. **Chain blends (Train end to 1).** The rest of the range is split evenly
-   between the physics chains. Every real bone moves from its copy in physics
-   chain 1 to its copy in physics chain 2, then to chain 3, and so on.
+2. **Chain blends (Train end to the last chain end).** Every real bone moves
+   from its copy in physics chain 1 to its copy in physics chain 2, arriving at
+   **Chain 2 end**, then to chain 3, arriving at **Chain 3 end**, and so on.
+   With one physics chain there are no blends.
 
-Example with 5 bones, 2 chains, and Train end 0.5: each step is 0.1. At 0.2
+Example with 5 bones, 2 chains, Train end 0.5 and Chain 2 end 1: each step is 0.1. At 0.2
 the tip is on PBC1-2 while real bone 4 is on PBC1-1. At 0.5 every real bone is
 on its own physics chain 1 bone, and at 0.75 every bone is halfway between its
 physics chain 1 and physics chain 2 bones (with a linear blend curve).
@@ -53,7 +54,10 @@ snaps to the pose of its targets.
 2. Choose 1 to 5 **Physics chains**. Assign each chain's start, or click
    **Generate** (or **Generate all missing chains**). A **Rest** chain is also
    needed: it holds the REST targets.
-3. Adjust **Train end**. **Default** splits the range evenly: 1/chains.
+3. Adjust **Train end** (**Default** sets 1/chains) and each **Chain X end**.
+   Changing the number of chains spreads the chain ends evenly from Train end
+   to 1; Train end itself only changes when you set it. Each chain end must be
+   after the one before it.
 4. Click **Set up constraints**, then **Build animation**.
 5. Put the clip in an Animator state, enable **Motion Time**, and drive it with
    your float parameter.
@@ -100,8 +104,6 @@ overrides in that scene. The window then offers to save them:
 - **Train step curve** shapes each move between two neighboring targets.
 - **Chain blend curve** is the influence of the next physics chain across each
   blend. Both curves are rescaled to run from 0 to 1.
-- **Next chain at halfway** with **Apply** builds a power curve. For example,
-  75% gives 75% PBC2 at 0.75 in the 5-bone example. **Linear** resets it.
 
 Curves are sampled adaptively: straight-line keys stay within 0.2% of the exact
 weights, and keys on straight spans are removed.
@@ -116,11 +118,8 @@ weights, and keys on straight spans are removed.
   Animator references.
 - Every change supports Undo.
 
-## Preview
-
-The **Value** slider shows each bone's weights. **Preview in Scene** samples the
-generated weights with Animation Mode on the set-up constraints, and stops before
-setup or build. Nothing is saved while previewing.
+Check the result in the Animation window by scrubbing the clip; physics do not
+run in Edit Mode.
 
 ## Names and other limits
 

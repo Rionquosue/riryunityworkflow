@@ -10,7 +10,8 @@ namespace Riry.RiryTools.Editor
     /// Bone b (1-based, chain root first) of n moves from its rest target along
     /// physics chain 1, one chain bone per step, and arrives at chain-1 bone b at
     /// TrainEnd. The tip leads; each bone toward the root starts one step later.
-    /// The remaining range blends every bone from chain 1 to 2, then 2 to 3, etc.
+    /// After that, every bone blends from chain 1 to 2, ending at ChainEnds[0],
+    /// then from 2 to 3, ending at ChainEnds[1], and so on.
     /// </summary>
     internal static class ConstraintTrainPlanner
     {
@@ -24,6 +25,8 @@ namespace Riry.RiryTools.Editor
             public int BoneCount;
             public int ChainCount;
             public float TrainEnd;
+            // Value where the blend into chain c+2 ends, for c = 0 .. ChainCount-2.
+            public float[] ChainEnds;
             public AnimationCurve StepCurve;
             public AnimationCurve BlendCurve;
         }
@@ -67,6 +70,15 @@ namespace Riry.RiryTools.Editor
             return 1f / Mathf.Max(1, chainCount);
         }
 
+        /// <summary>Chain ends spread evenly from the train end to 1.</summary>
+        internal static float[] DefaultChainEnds(float trainEnd, int chainCount)
+        {
+            var ends = new float[MaxChains - 1];
+            for (int c = 0; c < ends.Length; c++)
+                ends[c] = chainCount > 1 ? Mathf.Min(1f, trainEnd + (1f - trainEnd) * (c + 1) / (chainCount - 1)) : 1f;
+            return ends;
+        }
+
         internal static string Validate(Settings settings)
         {
             if (settings.BoneCount < 1) return "The real bone chain needs at least one bone.";
@@ -74,8 +86,15 @@ namespace Riry.RiryTools.Editor
                 return "Use between 1 and " + MaxChains + " physics chains.";
             if (!(settings.TrainEnd > 0f) || settings.TrainEnd > 1f)
                 return "The train end must be above 0 and at most 1.";
-            if (settings.ChainCount > 1 && settings.TrainEnd >= 1f)
-                return "Leave room after the train end to blend between physics chains.";
+            float previous = settings.TrainEnd;
+            for (int c = 0; c < settings.ChainCount - 1; c++)
+            {
+                float end = settings.ChainEnds[c];
+                if (!(end > previous))
+                    return "Chain " + (c + 2) + " end must be after " + (c == 0 ? "the train end." : "chain " + (c + 1) + " end.");
+                if (end > 1f) return "Chain " + (c + 2) + " end must be at most 1.";
+                previous = end;
+            }
             return null;
         }
 
@@ -112,17 +131,20 @@ namespace Riry.RiryTools.Editor
                 return;
             }
 
-            float segment = (1f - settings.TrainEnd) / (chains - 1);
-            float x = (t - settings.TrainEnd) / segment;
-            if (x >= chains - 1)
+            float start = settings.TrainEnd;
+            for (int from = 0; from < chains - 1; from++)
             {
-                weights[ChainSource(bone, chains - 1)] = 1f;
-                return;
+                float end = settings.ChainEnds[from];
+                if (t < end)
+                {
+                    float blend = Shape(settings.BlendCurve, (t - start) / (end - start));
+                    weights[ChainSource(bone, from)] = 1f - blend;
+                    weights[ChainSource(bone, from + 1)] = blend;
+                    return;
+                }
+                start = end;
             }
-            int from = (int)Math.Floor(x);
-            float blend = Shape(settings.BlendCurve, x - from);
-            weights[ChainSource(bone, from)] = 1f - blend;
-            weights[ChainSource(bone, from + 1)] = blend;
+            weights[ChainSource(bone, chains - 1)] = 1f;
         }
 
         /// <summary>Values where a weight can change slope even with linear curves.</summary>
@@ -132,8 +154,8 @@ namespace Riry.RiryTools.Editor
             for (int q = 0; q <= settings.BoneCount; q++)
                 times.Add(settings.TrainEnd * q / settings.BoneCount);
             int chains = settings.ChainCount;
-            for (int m = 1; m < chains; m++)
-                times.Add(settings.TrainEnd + (1f - settings.TrainEnd) * m / (chains - 1));
+            for (int c = 0; c < chains - 1; c++)
+                times.Add(settings.ChainEnds[c]);
             times.Add(1f);
             times.Sort();
             for (int i = times.Count - 1; i > 0; i--)
@@ -274,31 +296,6 @@ namespace Riry.RiryTools.Editor
             if (!(Mathf.Abs(end - start) >= 1e-6f) || float.IsInfinity(end - start)) return u;
             float value = (curve.Evaluate(u) - start) / (end - start);
             return float.IsNaN(value) ? u : Mathf.Clamp01(value);
-        }
-
-        /// <summary>Exponent that puts a power curve at <paramref name="midpoint"/> halfway.</summary>
-        internal static float ExponentForMidpoint(float midpoint)
-        {
-            midpoint = Mathf.Clamp(midpoint, 0.01f, 0.99f);
-            return Mathf.Log(midpoint) / Mathf.Log(0.5f);
-        }
-
-        /// <summary>Sampled u^exponent curve with tangents from its derivative.</summary>
-        internal static AnimationCurve PowerCurve(float exponent)
-        {
-            const int segments = 16;
-            const float limit = 20f;
-            var keys = new Keyframe[segments + 1];
-            for (int q = 0; q <= segments; q++)
-            {
-                float u = (float)q / segments;
-                float slope = u > 0f
-                    ? exponent * Mathf.Pow(u, exponent - 1f)
-                    : (exponent < 1f ? limit : exponent > 1f ? 0f : 1f);
-                slope = Mathf.Min(slope, limit);
-                keys[q] = new Keyframe(u, Mathf.Pow(u, exponent), slope, slope);
-            }
-            return new AnimationCurve(keys);
         }
 
         /// <summary>Animated property for one VRC constraint source weight.</summary>

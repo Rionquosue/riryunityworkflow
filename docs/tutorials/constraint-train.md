@@ -29,12 +29,12 @@ avatar's Animator.
 
 ## 3. Tune the timing
 
-- **Train end** is the value where every bone has arrived on physics chain 1;
-  **Default** resets it.
+- **Train end** is the value where the train ends: every bone has arrived on
+  physics chain 1. **Default** resets it.
+- **Chain 2 end**, **Chain 3 end** and so on are the values where every bone
+  has arrived on that physics chain. They appear with two or more chains.
 - **Train step curve** shapes each bone's move from one target to the next.
 - **Chain blend curve** shapes the move from one physics chain to the next.
-  **Next chain at halfway** with **Apply** makes a curve with that much of the
-  next chain halfway through; **Linear** resets it.
 
 ## 4. Build it
 
@@ -46,8 +46,8 @@ avatar's Animator.
 
 ## 5. Check it
 
-Move **Value** under **Preview** to read each bone's weights, or turn on
-**Preview in Scene** to see the bones move.
+Open the clip in the Animation window and scrub it to see the bones move. Physics
+do not run in Edit Mode, so check the final motion in Play Mode.
 
 ## 6. Keep it in the prefab
 

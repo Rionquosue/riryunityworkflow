@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEditor;
@@ -30,28 +29,19 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             bool blocked = EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling;
-            if (blocked)
-            {
-                StopPreview();
-                EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
-            }
+            if (blocked) EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
 
             scroll = EditorGUILayout.BeginScrollView(scroll);
             using (new EditorGUI.DisabledScope(blocked))
             {
-                EditorGUI.BeginChangeCheck();
                 var realBones = new List<Transform>();
                 DrawRealChain(realBones);
                 EditorGUILayout.Space();
                 DrawTargets(realBones);
                 EditorGUILayout.Space();
                 DrawTiming();
-                bool changed = EditorGUI.EndChangeCheck();
-
                 EditorGUILayout.Space();
                 DrawOutput();
-                EditorGUILayout.Space();
-                DrawPreview(changed);
             }
             EditorGUILayout.EndScrollView();
 
@@ -92,9 +82,8 @@ namespace Riry.RiryTools.Editor
             int chains = EditorGUILayout.IntSlider("Physics chains", chainCount, 1, ConstraintTrainPlanner.MaxChains);
             if (chains != chainCount)
             {
-                // Follow the default split while the user has not chosen another value.
-                if (Mathf.Approximately(trainEnd, ConstraintTrainPlanner.DefaultTrainEnd(chainCount)))
-                    trainEnd = ConstraintTrainPlanner.DefaultTrainEnd(chains);
+                // The chain ends spread out again after the train end; the train end stays.
+                chainEnds = ConstraintTrainPlanner.DefaultChainEnds(trainEnd, chains);
                 chainCount = chains;
             }
             addEndpoints = EditorGUILayout.Toggle(
@@ -154,18 +143,12 @@ namespace Riry.RiryTools.Editor
                     new GUIContent("Chain blend curve",
                         "Influence of the next physics chain across each blend. Rescaled to run 0 to 1."),
                     blendCurve, Color.green, unit);
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    blendMidpoint = EditorGUILayout.Slider(
-                        new GUIContent("Next chain at halfway",
-                            "Builds a power curve with this influence halfway through a blend."),
-                        blendMidpoint, 0.05f, 0.95f);
-                    if (GUILayout.Button("Apply", GUILayout.Width(50)))
-                        blendCurve = ConstraintTrainPlanner.PowerCurve(
-                            ConstraintTrainPlanner.ExponentForMidpoint(blendMidpoint));
-                    if (GUILayout.Button("Linear", GUILayout.Width(55)))
-                        blendCurve = AnimationCurve.Linear(0, 0, 1, 1);
-                }
+            }
+            for (int c = 0; c < chainCount - 1; c++)
+            {
+                chainEnds[c] = EditorGUILayout.Slider(
+                    new GUIContent("Chain " + (c + 2) + " end", "Value where every bone reaches physics chain " + (c + 2) + "."),
+                    chainEnds[c], 0.01f, 1f);
             }
             string settingsError = ConstraintTrainPlanner.Validate(CurrentSettings(1));
             if (settingsError != null) EditorGUILayout.HelpBox(settingsError, MessageType.Warning);
@@ -206,53 +189,6 @@ namespace Riry.RiryTools.Editor
             }
             DrawPrefabSave();
         }
-
-        private void DrawPreview(bool settingsChanged)
-        {
-            EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-            float value = EditorGUILayout.Slider("Value", previewValue, 0f, 1f);
-            bool valueChanged = !Mathf.Approximately(value, previewValue);
-            previewValue = value;
-
-            bool wantPreview = EditorGUILayout.Toggle(
-                new GUIContent("Preview in Scene", "Samples the generated weights with Animation Mode. " +
-                    "Set up constraints first."), previewing);
-            if (wantPreview && !previewing) StartPreview();
-            else if (!wantPreview && previewing) StopPreview();
-            else if (previewing && settingsChanged) RebuildPreview();
-            else if (previewing && valueChanged) SamplePreview();
-
-            Plan plan;
-            string error;
-            if (!TryGather(out plan, out error))
-            {
-                EditorGUILayout.HelpBox(error, MessageType.None);
-                return;
-            }
-            EditorGUILayout.LabelField(Readout(plan, previewValue), EditorStyles.wordWrappedMiniLabel);
-        }
-
-        private string Readout(Plan plan, float value)
-        {
-            var text = new StringBuilder();
-            for (int bone = 0; bone < plan.Real.Count; bone++)
-            {
-                var weights = new float[ConstraintTrainPlanner.SourceCount(bone, plan.Settings.ChainCount)];
-                ConstraintTrainPlanner.EvaluateWeights(plan.Settings, bone, value, weights);
-                text.Append(plan.Real[bone].name).Append(": ");
-                bool first = true;
-                for (int s = 0; s < weights.Length; s++)
-                {
-                    if (weights[s] < 0.0005f) continue;
-                    if (!first) text.Append(", ");
-                    first = false;
-                    text.Append(Target(plan, bone, s).name).Append(' ')
-                        .Append((weights[s] * 100f).ToString("0.#", CultureInfo.InvariantCulture)).Append('%');
-                }
-                text.Append('\n');
-            }
-            return text.ToString().TrimEnd();
-        }
     }
 }
 
@@ -271,14 +207,11 @@ namespace Riry.RiryTools.Editor
 //   restStart       [S] Transform      First bone of the Rest_ chain (source 0, "REST").
 //   chainStarts     [S] Transform[]    First bone of each physics chain (Phys1_..Phys5_).
 //   addEndpoints    [S] bool           Generated physics chains get an extra _End bone.
-//   trainEnd        [S] float          Value where every bone reaches physics chain 1.
+//   trainEnd        [S] float          Value where every bone reaches physics chain 1 (the train ends).
+//   chainEnds       [S] float[]        Value where every bone reaches physics chain c+2 (Chain 2 end, ...).
 //   stepCurve       [S] AnimationCurve Shape of each move from one target to the next.
 //   blendCurve      [S] AnimationCurve Influence of the next chain across a blend.
-//   blendMidpoint   [S] float          Influence halfway through a blend for the power-curve preset.
 //   clip            [S] AnimationClip  Output clip; empty saves a new one.
-//   previewValue    [S] float          Motion Time value sampled by the preview.
-//   previewing          bool           Animation Mode preview is running.
-//   previewClip         AnimationClip  Temporary clip sampled by the preview.
 //   status              string         Message shown at the bottom of the window.
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
@@ -294,15 +227,13 @@ namespace Riry.RiryTools.Editor
 //   DrawRealChain(realBones)       Start, end and avatar root fields; fills realBones.
 //   DrawTargets(realBones)         Chain count, endpoints, Rest/Physics rows, Generate buttons.
 //   DrawChainRow(...)              One target row: object field plus Generate button.
-//   DrawTiming()                   Train end, step curve, blend curve and presets.
+//   DrawTiming()                   Train end, step curve, blend curve, Chain 2 end ... Chain N end.
 //   DrawOutput()                   Clip field, Set up constraints, Build animation.
 //   DrawPrefabSave()               Save as Prefab Overrides / Save to <name>_ROOT (prefab instances only).
-//   DrawPreview(settingsChanged)   Preview slider and toggle, and the weight readout.
-//   Readout(plan, value)           Text listing each bone's source weights at a value.
 //
 // ACTIONS AND HELPERS (ConstraintTrainWindow.cs)
 //   UseSelection(active, selected) Sets realStart (and realEnd from a selected descendant).
-//   OnEnable() / OnDisable()       Window size and field repair / stops the preview.
+//   OnEnable()                     Window size and field repair.
 //   SaveToPrefab()                 Applies overrides to the prefab, or saves a _ROOT variant.
 //   CurrentSettings(boneCount)     Planner settings from the timing fields.
 //   GenerationError(realBones)     Why chains cannot be generated, or null.
@@ -315,7 +246,6 @@ namespace Riry.RiryTools.Editor
 //   BuildAnimation()               Writes the Motion Time clip.
 //   IsInImmutablePackage(asset)    True for assets in read-only packages.
 //   WriteCurves(clip, plan)        Writes every source-weight curve into a clip.
-//   StartPreview() / RebuildPreview() / SamplePreview() / StopPreview()  Animation Mode preview.
 //   Plan                           Real bones, Rest and physics chains, settings and root.
 //
 // OTHER FILES
@@ -323,8 +253,7 @@ namespace Riry.RiryTools.Editor
 //     RestPrefix, ChainPrefix(c), EndpointSuffix, TryCollectChain, TryFollowChain,
 //     FindExisting, AnimationPathError, FindSharedTarget, FindAvatarRoot, CreateChain.
 //   ConstraintTrainPlanner (Editor/ConstraintTrain/ConstraintTrainPlanner.cs)
-//     MaxChains, Settings, DefaultTrainEnd, Validate, SourceCount, ChainSource, EvaluateWeights,
-//     BreakTimes, Shape, DescribeSource, BuildCurves, SourceWeightProperty, PowerCurve,
-//     ExponentForMidpoint.
+//     MaxChains, Settings, DefaultTrainEnd, DefaultChainEnds, Validate, SourceCount, ChainSource,
+//     EvaluateWeights, BreakTimes, Shape, DescribeSource, BuildCurves, SourceWeightProperty.
 //   ConstraintTrainPrefabs (Editor/ConstraintTrain/ConstraintTrainPrefabs.cs)
 //     Changes, Collect, IsGeneratedChain, ApplyToSource, RootPrefabPath, SaveAsRootVariant.

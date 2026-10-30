@@ -37,12 +37,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private float trainEnd = 0.5f;
         [SerializeField] private AnimationCurve stepCurve = AnimationCurve.Linear(0, 0, 1, 1);
         [SerializeField] private AnimationCurve blendCurve = AnimationCurve.Linear(0, 0, 1, 1);
-        [SerializeField] private float blendMidpoint = 0.75f;
+        [SerializeField] private float[] chainEnds = ConstraintTrainPlanner.DefaultChainEnds(0.5f, 2);
         [SerializeField] private AnimationClip clip;
-        [SerializeField] private float previewValue;
 
-        [NonSerialized] private bool previewing;
-        [NonSerialized] private AnimationClip previewClip;
         [NonSerialized] private string status;
         private Vector2 scroll;
 
@@ -61,7 +58,6 @@ namespace Riry.RiryTools.Editor
             if (active != realStart)
             {
                 // Chains and the avatar root found for the previous start do not apply to a new one.
-                if (previewing) StopPreview();
                 avatarRoot = null;
                 restStart = null;
                 chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
@@ -84,16 +80,12 @@ namespace Riry.RiryTools.Editor
             }
             if (stepCurve == null) stepCurve = AnimationCurve.Linear(0, 0, 1, 1);
             if (blendCurve == null) blendCurve = AnimationCurve.Linear(0, 0, 1, 1);
-        }
-
-        private void OnDisable()
-        {
-            StopPreview();
+            if (chainEnds == null || chainEnds.Length != ConstraintTrainPlanner.MaxChains - 1)
+                chainEnds = ConstraintTrainPlanner.DefaultChainEnds(trainEnd, chainCount);
         }
 
         private void SaveToPrefab()
         {
-            if (previewing) StopPreview();
             ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, component => component is VRCParentConstraint);
             if (changes == null) return;
             try
@@ -140,6 +132,7 @@ namespace Riry.RiryTools.Editor
                 BoneCount = boneCount,
                 ChainCount = chainCount,
                 TrainEnd = trainEnd,
+                ChainEnds = chainEnds,
                 StepCurve = stepCurve,
                 BlendCurve = blendCurve
             };
@@ -264,7 +257,6 @@ namespace Riry.RiryTools.Editor
 
         private void SetUpConstraints()
         {
-            StopPreview();
             Plan plan;
             string error;
             if (!TryGather(out plan, out error))
@@ -350,7 +342,6 @@ namespace Riry.RiryTools.Editor
 
         private void BuildAnimation()
         {
-            StopPreview();
             Plan plan;
             string error;
             if (!TryGather(out plan, out error))
@@ -418,58 +409,6 @@ namespace Riry.RiryTools.Editor
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(target);
             settings.loopTime = false;
             AnimationUtility.SetAnimationClipSettings(target, settings);
-        }
-
-        private void StartPreview()
-        {
-            Plan plan;
-            string error;
-            if (!TryGather(out plan, out error))
-            {
-                status = error;
-                return;
-            }
-            if (AnimationMode.InAnimationMode())
-            {
-                status = "Another tool is using Animation Mode. Stop its preview first.";
-                return;
-            }
-            previewClip = new AnimationClip { hideFlags = HideFlags.HideAndDontSave };
-            WriteCurves(previewClip, plan);
-            AnimationMode.StartAnimationMode();
-            previewing = true;
-            SamplePreview();
-        }
-
-        private void RebuildPreview()
-        {
-            Plan plan;
-            string error;
-            if (!TryGather(out plan, out error)) return;
-            previewClip.ClearCurves();
-            WriteCurves(previewClip, plan);
-            SamplePreview();
-        }
-
-        private void SamplePreview()
-        {
-            if (!AnimationMode.InAnimationMode() || avatarRoot == null || previewClip == null)
-            {
-                StopPreview();
-                return;
-            }
-            AnimationMode.BeginSampling();
-            AnimationMode.SampleAnimationClip(avatarRoot.gameObject, previewClip, previewValue);
-            AnimationMode.EndSampling();
-            SceneView.RepaintAll();
-        }
-
-        private void StopPreview()
-        {
-            if (previewing && AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
-            previewing = false;
-            if (previewClip != null) DestroyImmediate(previewClip);
-            previewClip = null;
         }
     }
 }
