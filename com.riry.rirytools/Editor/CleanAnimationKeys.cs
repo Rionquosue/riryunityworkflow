@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Removes inactive blendshape curves and static bone transform curves from
-    /// the active clip of the focused Animation window, else the AnimationClip
-    /// selected in the Project window. Its menu entries are in Editor/UI/RiryMenus.cs;
-    /// the result window and the Animation window button are in
-    /// Editor/UI/CleanAnimationKeysWindow.cs.
+    /// Removes blank blendshape curves and static bone transform curves from
+    /// animations that key every bone and shapekey. What is kept is decided by the
+    /// options (the built-in rules), the whitelist (names), and, always, curves that
+    /// cannot be read or hold NaN or Infinity. The window is in
+    /// Editor/UI/CleanAnimationKeysWindow.cs; its menu entries are in Editor/UI/RiryMenus.cs.
     /// </summary>
     internal static class CleanAnimationKeys
     {
@@ -20,480 +19,159 @@ namespace Riry.RiryTools.Editor
         private const string BlendshapePrefix = "blendShape.";
         private const int BoneValueDecimalPlaces = 3;
 
-        private enum CandidateKind
+        /// <summary>The built-in keep rules, each a checkbox in the window.</summary>
+        [Serializable]
+        internal sealed class Options
         {
-            Blendshape,
-            BoneTransform
+            public bool KeepNonZeroShapekeys = true;
+            public bool KeepShapekeyTangentMotion = true;
+            public bool KeepMovingBones = true;
+            public bool KeepBoneMidKeys = true;
         }
 
-        private sealed class CurveRecord
+        /// <summary>The curves of one shapekey, or of one bone's translation, rotation or scale.</summary>
+        internal sealed class Group
         {
-            internal readonly EditorCurveBinding Binding;
-            internal readonly AnimationCurve Curve;
+            internal readonly bool IsBlendshape;
+            // The shapekey name, or the bone's own name (the last part of its path): what the whitelist matches.
+            internal readonly string Name;
+            internal readonly List<EditorCurveBinding> Bindings = new List<EditorCurveBinding>();
+            internal readonly List<AnimationCurve> Curves = new List<AnimationCurve>();
 
-            internal CurveRecord(EditorCurveBinding binding, AnimationCurve curve)
+            internal Group(bool isBlendshape, string name)
             {
-                Binding = binding;
-                Curve = curve;
+                IsBlendshape = isBlendshape;
+                Name = name;
             }
-        }
 
-        private sealed class CandidateGroup
-        {
-            internal readonly CandidateKind Kind;
-            internal readonly string Label;
-            internal readonly string TransformFamily;
-            internal readonly List<CurveRecord> Curves = new List<CurveRecord>();
-
-            internal CandidateGroup(
-                CandidateKind kind,
-                string label,
-                string transformFamily)
+            internal string Label
             {
-                Kind = kind;
-                Label = label;
-                TransformFamily = transformFamily;
+                get { return (IsBlendshape ? "Shapekey: " : "Bone: ") + Name; }
             }
         }
 
-        internal static void RunFromMenu()
+        /// <summary>Every shapekey and bone group keyed in the clip.</summary>
+        internal static List<Group> Groups(AnimationClip clip)
         {
-            AnimationWindow animationWindow =
-                EditorWindow.focusedWindow as AnimationWindow;
-
-            if (animationWindow != null)
+            var groups = new Dictionary<string, Group>(StringComparer.Ordinal);
+            foreach (EditorCurveBinding binding in AnimationUtility.GetCurveBindings(clip))
             {
-                RunFromAnimationWindow(animationWindow);
-                return;
-            }
-
-            AnimationClip clip = Selection.activeObject as AnimationClip;
-
-            if (clip == null)
-            {
-                EditorUtility.DisplayDialog(
-                    DisplayName,
-                    "Focus an Animation window with an active clip, or select " +
-                    "an AnimationClip in the Project window first.",
-                    "OK");
-                return;
-            }
-
-            Run(clip, "Project window selection");
-        }
-
-        internal static bool ValidateMenu()
-        {
-            AnimationWindow animationWindow =
-                EditorWindow.focusedWindow as AnimationWindow;
-
-            if (animationWindow != null)
-            {
-                return animationWindow.animationClip != null;
-            }
-
-            return Selection.activeObject is AnimationClip;
-        }
-
-        internal static void RunFromProjectWindow()
-        {
-            AnimationClip clip = Selection.activeObject as AnimationClip;
-
-            if (clip == null)
-            {
-                EditorUtility.DisplayDialog(
-                    DisplayName,
-                    "Select an AnimationClip in the Project window first.",
-                    "OK");
-                return;
-            }
-
-            Run(clip, "Project window selection");
-        }
-
-        internal static bool ValidateProjectWindowCommand()
-        {
-            return Selection.activeObject is AnimationClip;
-        }
-
-        internal sealed class WhitelistItem
-        {
-            internal readonly string Label;
-            internal readonly string Reason;
-            internal readonly EditorCurveBinding[] Bindings;
-
-            internal WhitelistItem(
-                string label,
-                string reason,
-                EditorCurveBinding[] bindings)
-            {
-                Label = label;
-                Reason = reason;
-                Bindings = bindings;
-            }
-        }
-
-        internal sealed class AnalysisResult
-        {
-            internal int FloatCurveCount;
-            internal int FloatKeyCount;
-            internal int ObjectCurveCount;
-            internal int ObjectKeyCount;
-            internal int AnimationEventCount;
-            internal int OtherFloatCurveCount;
-            internal int RemovedGroupCount;
-
-            internal readonly List<EditorCurveBinding> RemovableBindings =
-                new List<EditorCurveBinding>();
-
-            internal readonly List<WhitelistItem> Whitelist =
-                new List<WhitelistItem>();
-        }
-
-        internal static void RunFromAnimationWindow(AnimationWindow animationWindow)
-        {
-            AnimationClip clip = animationWindow != null
-                ? animationWindow.animationClip
-                : null;
-
-            if (clip == null)
-            {
-                EditorUtility.DisplayDialog(
-                    DisplayName,
-                    "The Animation window has no active AnimationClip.",
-                    "OK");
-                return;
-            }
-
-            Run(clip, "Animation window");
-        }
-
-        private static void Run(AnimationClip clip, string sourceLabel)
-        {
-            string validationError;
-            if (!TryValidateEditableClip(clip, out validationError))
-            {
-                EditorUtility.DisplayDialog(
-                    DisplayName,
-                    validationError,
-                    "OK");
-                return;
-            }
-
-            AnalysisResult result;
-
-            try
-            {
-                result = Analyze(clip);
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-                EditorUtility.DisplayDialog(
-                    DisplayName,
-                    "The clip could not be analyzed.\n\n" + exception.Message,
-                    "OK");
-                return;
-            }
-
-            int initiallyRemovedBindingCount = result.RemovableBindings.Count;
-
-            if (initiallyRemovedBindingCount > 0)
-            {
-                string removalError;
-                if (!TryRemoveBindings(
-                        clip,
-                        result.RemovableBindings,
-                        DisplayName,
-                        out removalError))
-                {
-                    EditorUtility.DisplayDialog(
-                        DisplayName,
-                        removalError,
-                        "OK");
-                    return;
-                }
-            }
-
-            result.RemovableBindings.Clear();
-            RepaintAnimationWindows();
-            EditorApplication.RepaintProjectWindow();
-
-            CleanAnimationKeysWindow.ShowResult(
-                clip,
-                sourceLabel,
-                result,
-                initiallyRemovedBindingCount);
-        }
-
-        internal static AnalysisResult Analyze(AnimationClip clip)
-        {
-            AnalysisResult result = new AnalysisResult();
-            Dictionary<string, CandidateGroup> groups =
-                new Dictionary<string, CandidateGroup>(StringComparer.Ordinal);
-
-            EditorCurveBinding[] floatBindings =
-                AnimationUtility.GetCurveBindings(clip);
-
-            result.FloatCurveCount = floatBindings.Length;
-
-            for (int i = 0; i < floatBindings.Length; i++)
-            {
-                EditorCurveBinding binding = floatBindings[i];
-                AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
-
-                if (curve != null)
-                {
-                    result.FloatKeyCount += curve.length;
-                }
-
-                string groupKey;
-                CandidateGroup group;
-
+                string key;
+                Group group;
                 if (IsBlendshape(binding))
                 {
-                    groupKey = BuildGroupKey(
-                        "shape",
-                        binding.path,
-                        binding.type,
-                        binding.propertyName);
-
-                    if (!groups.TryGetValue(groupKey, out group))
-                    {
-                        string shapeName = binding.propertyName.Substring(
-                            BlendshapePrefix.Length);
-
-                        group = new CandidateGroup(
-                            CandidateKind.Blendshape,
-                            "Blendshape: " + DisplayPath(binding.path) +
-                            " / " + shapeName,
-                            null);
-
-                        groups.Add(groupKey, group);
-                    }
+                    key = "shape\n" + binding.path + "\n" + binding.propertyName;
+                    if (!groups.TryGetValue(key, out group))
+                        groups.Add(key, group = new Group(true, binding.propertyName.Substring(BlendshapePrefix.Length)));
                 }
                 else
                 {
-                    string transformFamily;
-                    if (!TryGetTransformFamily(binding, out transformFamily))
-                    {
-                        result.OtherFloatCurveCount++;
-                        continue;
-                    }
-
-                    groupKey = BuildGroupKey(
-                        "bone",
-                        binding.path,
-                        binding.type,
-                        transformFamily);
-
-                    if (!groups.TryGetValue(groupKey, out group))
-                    {
-                        group = new CandidateGroup(
-                            CandidateKind.BoneTransform,
-                            "Bone: " + DisplayPath(binding.path) +
-                            " / " + transformFamily,
-                            transformFamily);
-
-                        groups.Add(groupKey, group);
-                    }
+                    string family;
+                    if (!TryGetTransformFamily(binding, out family)) continue;
+                    key = "bone\n" + binding.path + "\n" + family;
+                    if (!groups.TryGetValue(key, out group))
+                        groups.Add(key, group = new Group(false, BoneName(binding.path)));
                 }
-
-                group.Curves.Add(new CurveRecord(binding, curve));
+                group.Bindings.Add(binding);
+                group.Curves.Add(AnimationUtility.GetEditorCurve(clip, binding));
             }
-
-            EditorCurveBinding[] objectBindings =
-                AnimationUtility.GetObjectReferenceCurveBindings(clip);
-
-            result.ObjectCurveCount = objectBindings.Length;
-
-            for (int i = 0; i < objectBindings.Length; i++)
-            {
-                ObjectReferenceKeyframe[] keys =
-                    AnimationUtility.GetObjectReferenceCurve(
-                        clip,
-                        objectBindings[i]);
-
-                if (keys != null)
-                {
-                    result.ObjectKeyCount += keys.Length;
-                }
-            }
-
-            AnimationEvent[] events = AnimationUtility.GetAnimationEvents(clip);
-            result.AnimationEventCount = events != null ? events.Length : 0;
-
-            List<CandidateGroup> orderedGroups =
-                new List<CandidateGroup>(groups.Values);
-
-            orderedGroups.Sort(delegate(CandidateGroup left, CandidateGroup right)
-            {
-                return string.Compare(
-                    left.Label,
-                    right.Label,
-                    StringComparison.OrdinalIgnoreCase);
-            });
-
-            for (int i = 0; i < orderedGroups.Count; i++)
-            {
-                CandidateGroup candidate = orderedGroups[i];
-                string whitelistReason;
-
-                bool whitelisted = candidate.Kind == CandidateKind.Blendshape
-                    ? ShouldWhitelistBlendshape(candidate, out whitelistReason)
-                    : ShouldWhitelistBoneTransform(candidate, out whitelistReason);
-
-                EditorCurveBinding[] bindings = GetBindings(candidate);
-
-                if (whitelisted)
-                {
-                    result.Whitelist.Add(new WhitelistItem(
-                        candidate.Label,
-                        whitelistReason,
-                        bindings));
-                }
-                else
-                {
-                    result.RemovedGroupCount++;
-                    result.RemovableBindings.AddRange(bindings);
-                }
-            }
-
-            return result;
+            return new List<Group>(groups.Values);
         }
 
-        private static bool ShouldWhitelistBlendshape(
-            CandidateGroup candidate,
-            out string reason)
+        /// <summary>The groups Clean would remove from the clip.</summary>
+        internal static List<Group> Removable(AnimationClip clip, Options options, ICollection<string> whitelist)
         {
-            float largestValue = 0.0f;
-            bool containsNonZeroValue = false;
-
-            for (int curveIndex = 0;
-                 curveIndex < candidate.Curves.Count;
-                 curveIndex++)
+            var removable = new List<Group>();
+            foreach (Group group in Groups(clip))
             {
-                AnimationCurve curve = candidate.Curves[curveIndex].Curve;
-                if (curve == null)
+                if (whitelist.Contains(group.Name)) continue;
+                if (group.IsBlendshape ? KeepBlendshape(group, options) : KeepBone(group, options)) continue;
+                removable.Add(group);
+            }
+            return removable;
+        }
+
+        /// <summary>
+        /// Cleans every editable clip as one Undo step. Imported and read-only clips
+        /// are skipped. Returns the summary line; throws when curves cannot be removed.
+        /// </summary>
+        internal static string Clean(IList<AnimationClip> clips, Options options, ICollection<string> whitelist)
+        {
+            int removedCurves = 0, cleaned = 0, skipped = 0;
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName(DisplayName);
+            foreach (AnimationClip clip in clips)
+            {
+                string error;
+                if (!TryValidateEditableClip(clip, out error))
                 {
-                    // A curve that cannot be read was never checked, so keep it.
-                    reason = "The curve could not be read; preserved for safety.";
-                    return true;
+                    skipped++;
+                    continue;
                 }
+                var bindings = new List<EditorCurveBinding>();
+                foreach (Group group in Removable(clip, options, whitelist)) bindings.AddRange(group.Bindings);
+                if (!TryRemoveBindings(clip, bindings, DisplayName, out error)) throw new InvalidOperationException(error);
+                removedCurves += bindings.Count;
+                cleaned++;
+            }
+            Undo.CollapseUndoOperations(undoGroup);
+            RepaintAnimationWindows();
+            EditorApplication.RepaintProjectWindow();
+            return "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
+                (skipped > 0 ? " Skipped " + skipped + " imported or read-only " + (skipped == 1 ? "animation." : "animations.") : "");
+        }
 
-                Keyframe[] keys = curve.keys;
-
-                for (int keyIndex = 0; keyIndex < keys.Length; keyIndex++)
+        // A curve that cannot be read, or holds NaN or Infinity, was never checked, so it is always kept.
+        private static bool Unsafe(Group group)
+        {
+            foreach (AnimationCurve curve in group.Curves)
+            {
+                if (curve == null) return true;
+                foreach (Keyframe key in curve.keys)
                 {
-                    float value = keys[keyIndex].value;
-
-                    if (!IsFinite(value) || !IsFinite(keys[keyIndex].time))
-                    {
-                        reason = "Contains NaN or Infinity; preserved for safety.";
-                        return true;
-                    }
-
-                    // Negative weights also deform the mesh.
-                    if (value != 0.0f)
-                    {
-                        containsNonZeroValue = true;
-                        if (Math.Abs(value) > Math.Abs(largestValue))
-                        {
-                            largestValue = value;
-                        }
-                    }
-                }
-
-                if (!containsNonZeroValue && MovesBetweenKeys(keys))
-                {
-                    reason = "Keys are 0, but curve tangents move the value " +
-                        "between keys.";
-                    return true;
+                    if (!IsFinite(key.time) || !IsFinite(key.value)) return true;
                 }
             }
-
-            if (containsNonZeroValue)
-            {
-                reason = "Contains a non-zero value (largest " +
-                    largestValue.ToString(
-                        "0.###",
-                        CultureInfo.InvariantCulture) + ").";
-                return true;
-            }
-
-            reason = null;
             return false;
         }
 
-        private static bool ShouldWhitelistBoneTransform(
-            CandidateGroup candidate,
-            out string reason)
+        private static bool KeepBlendshape(Group group, Options options)
         {
-            HashSet<float> keyedTimes = new HashSet<float>();
-            bool endpointChanged = false;
-
-            for (int curveIndex = 0;
-                 curveIndex < candidate.Curves.Count;
-                 curveIndex++)
+            if (Unsafe(group)) return true;
+            bool nonZero = false, tangentsMove = false;
+            foreach (AnimationCurve curve in group.Curves)
             {
-                AnimationCurve curve = candidate.Curves[curveIndex].Curve;
-                if (curve == null)
-                {
-                    // A curve that cannot be read was never checked, so keep it.
-                    reason = "The curve could not be read; preserved for safety.";
-                    return true;
-                }
-
                 Keyframe[] keys = curve.keys;
+                // Negative weights also deform the mesh.
+                foreach (Keyframe key in keys) nonZero |= key.value != 0.0f;
+                tangentsMove |= MovesBetweenKeys(keys);
+            }
+            return (options.KeepNonZeroShapekeys && nonZero) ||
+                (options.KeepShapekeyTangentMotion && !nonZero && tangentsMove);
+        }
 
-                for (int keyIndex = 0; keyIndex < keys.Length; keyIndex++)
-                {
-                    Keyframe key = keys[keyIndex];
-
-                    if (!IsFinite(key.time) || !IsFinite(key.value))
-                    {
-                        reason = "Contains NaN or Infinity; preserved for safety.";
-                        return true;
-                    }
-
-                    keyedTimes.Add(key.time);
-                }
-
-                if (keys.Length >= 2 &&
-                    RoundBoneValue(keys[0].value) !=
-                    RoundBoneValue(keys[keys.Length - 1].value))
-                {
+        private static bool KeepBone(Group group, Options options)
+        {
+            if (Unsafe(group)) return true;
+            var keyedTimes = new HashSet<float>();
+            bool endpointChanged = false, tangentsMove = false;
+            foreach (AnimationCurve curve in group.Curves)
+            {
+                Keyframe[] keys = curve.keys;
+                foreach (Keyframe key in keys) keyedTimes.Add(key.time);
+                if (keys.Length >= 2 && RoundBoneValue(keys[0].value) != RoundBoneValue(keys[keys.Length - 1].value))
                     endpointChanged = true;
-                }
-
-                if (!endpointChanged && MovesBetweenKeys(keys))
-                {
-                    reason = candidate.TransformFamily +
-                        " start and finish match, but curve tangents move " +
-                        "the value between keys.";
-                    return true;
-                }
+                tangentsMove |= MovesBetweenKeys(keys);
             }
+            return (options.KeepMovingBones && endpointChanged) ||
+                (options.KeepBoneMidKeys && (keyedTimes.Count > 2 || (!endpointChanged && tangentsMove)));
+        }
 
-            if (keyedTimes.Count > 2)
-            {
-                reason = candidate.TransformFamily + " has " +
-                    keyedTimes.Count.ToString(CultureInfo.InvariantCulture) +
-                    " keyed times, not only a start and finish.";
-                return true;
-            }
-
-            if (endpointChanged)
-            {
-                reason = "Start and finish values differ after rounding to " +
-                    BoneValueDecimalPlaces.ToString(
-                        CultureInfo.InvariantCulture) +
-                    " decimal places.";
-                return true;
-            }
-
-            reason = null;
-            return false;
+        private static string BoneName(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return "<root>";
+            int slash = path.LastIndexOf('/');
+            return slash < 0 ? path : path.Substring(slash + 1);
         }
 
         /// <summary>
@@ -516,19 +194,6 @@ namespace Riry.RiryTools.Editor
             }
 
             return false;
-        }
-
-        private static EditorCurveBinding[] GetBindings(CandidateGroup candidate)
-        {
-            EditorCurveBinding[] bindings =
-                new EditorCurveBinding[candidate.Curves.Count];
-
-            for (int i = 0; i < candidate.Curves.Count; i++)
-            {
-                bindings[i] = candidate.Curves[i].Binding;
-            }
-
-            return bindings;
         }
 
         private static bool IsBlendshape(EditorCurveBinding binding)
@@ -591,23 +256,6 @@ namespace Riry.RiryTools.Editor
             }
 
             return false;
-        }
-
-        private static string BuildGroupKey(
-            string category,
-            string path,
-            Type type,
-            string propertyGroup)
-        {
-            return category + "\n" +
-                   (path ?? string.Empty) + "\n" +
-                   (type != null ? type.AssemblyQualifiedName : string.Empty) +
-                   "\n" + (propertyGroup ?? string.Empty);
-        }
-
-        private static string DisplayPath(string path)
-        {
-            return string.IsNullOrEmpty(path) ? "<root>" : path;
         }
 
         private static double RoundBoneValue(float value)

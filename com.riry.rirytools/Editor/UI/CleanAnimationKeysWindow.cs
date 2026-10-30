@@ -1,244 +1,291 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>The Clean Animation Keys result window: what was removed, and the curves it kept for review.</summary>
+    /// <summary>
+    /// The Clean Animation Keys window: the animations to clean, the whitelist,
+    /// the keep rules and Clean. Logic is in Editor/CleanAnimationKeys.cs.
+    /// </summary>
     internal sealed class CleanAnimationKeysWindow : EditorWindow
     {
-        private AnimationClip clip;
-        private string sourceLabel;
-        private List<CleanAnimationKeys.WhitelistItem> whitelist;
-        private Vector2 scrollPosition;
-        private bool removeKeysAnyway;
-        private bool overrideRemovalCompleted;
-        private int floatCurveCount;
-        private int floatKeyCount;
-        private int objectCurveCount;
-        private int objectKeyCount;
-        private int animationEventCount;
-        private int otherFloatCurveCount;
-        private int removedGroupCount;
-        private int removedBindingCount;
+        private const int MaxAnimations = 64;
+        private const float AnimationListHeight = 150.0f;
+        private const int MaxSuggestions = 8;
 
-        internal static void ShowResult(
-            AnimationClip clip,
-            string sourceLabel,
-            CleanAnimationKeys.AnalysisResult result,
-            int removedBindingCount)
+        [SerializeField] private List<AnimationClip> animations = new List<AnimationClip>();
+        [SerializeField] private List<string> whitelist = new List<string>();
+        [SerializeField] private CleanAnimationKeys.Options options = new CleanAnimationKeys.Options();
+        [SerializeField] private string search = "";
+        [SerializeField] private string summary;
+        private Vector2 animationScroll;
+        private Vector2 whitelistScroll;
+        // Every shapekey and bone name keyed in the listed animations, for suggestions.
+        private List<string> keyedNames;
+
+        /// <summary>Opens the window and adds the clips that are not listed yet.</summary>
+        internal static void Open(IEnumerable<AnimationClip> clips)
         {
-            CleanAnimationKeysWindow window =
-                ScriptableObject.CreateInstance<CleanAnimationKeysWindow>();
+            CleanAnimationKeysWindow window = GetWindow<CleanAnimationKeysWindow>(true, CleanAnimationKeys.DisplayName);
+            window.minSize = new Vector2(480.0f, 520.0f);
+            foreach (AnimationClip clip in clips) window.Add(clip);
+            window.Show();
+        }
 
-            window.clip = clip;
-            window.sourceLabel = sourceLabel;
-            window.whitelist =
-                new List<CleanAnimationKeys.WhitelistItem>(result.Whitelist);
-            window.floatCurveCount = result.FloatCurveCount;
-            window.floatKeyCount = result.FloatKeyCount;
-            window.objectCurveCount = result.ObjectCurveCount;
-            window.objectKeyCount = result.ObjectKeyCount;
-            window.animationEventCount = result.AnimationEventCount;
-            window.otherFloatCurveCount = result.OtherFloatCurveCount;
-            window.removedGroupCount = result.RemovedGroupCount;
-            window.removedBindingCount = removedBindingCount;
+        private void Add(AnimationClip clip)
+        {
+            if (clip == null || animations.Contains(clip) || animations.Count >= MaxAnimations) return;
+            animations.Add(clip);
+            keyedNames = null;
+        }
 
-            window.titleContent = new GUIContent(CleanAnimationKeys.DisplayName);
-            window.minSize = new Vector2(560.0f, 320.0f);
-            window.maxSize = new Vector2(760.0f, 680.0f);
+        internal void AddToWhitelist(IEnumerable<string> names)
+        {
+            foreach (string name in names)
+            {
+                if (!whitelist.Contains(name)) whitelist.Add(name);
+            }
+            summary = null;
+            Repaint();
+        }
 
-            float windowHeight = Mathf.Clamp(
-                330.0f + window.whitelist.Count * 24.0f,
-                360.0f,
-                620.0f);
-            Rect mainWindow = EditorGUIUtility.GetMainWindowPosition();
+        internal CleanAnimationKeys.Options Options
+        {
+            get { return options; }
+        }
 
-            window.position = new Rect(
-                mainWindow.center.x - 320.0f,
-                mainWindow.center.y - windowHeight * 0.5f,
-                640.0f,
-                windowHeight);
-
-            window.ShowModalUtility();
+        internal List<string> Whitelist
+        {
+            get { return whitelist; }
         }
 
         private void OnGUI()
         {
-            if (whitelist == null)
-            {
-                Close();
-                return;
-            }
+            EditorGUILayout.Space(6.0f);
+            EditorGUILayout.LabelField("Utility for removing blank animation shapekeys from imported animations that " +
+                "automatically key every bone and shapekey.", EditorStyles.wordWrappedLabel);
 
-            EditorGUILayout.Space(8.0f);
-            EditorGUILayout.LabelField(
-                CleanAnimationKeys.DisplayName,
-                EditorStyles.boldLabel);
+            EditorGUILayout.Space(6.0f);
+            EditorGUILayout.LabelField("Animations", EditorStyles.boldLabel);
+            DrawAnimations();
 
-            EditorGUILayout.LabelField(
-                "Clip",
-                clip != null ? clip.name : "<missing>");
-            EditorGUILayout.LabelField("Source", sourceLabel ?? "Unknown");
+            EditorGUILayout.Space(6.0f);
+            EditorGUILayout.LabelField("Whitelist", EditorStyles.boldLabel);
+            DrawWhitelist();
 
-            EditorGUILayout.Space(4.0f);
-            EditorGUILayout.HelpBox(BuildSummary(), MessageType.Info);
-
-            EditorGUILayout.Space(4.0f);
-            EditorGUILayout.LabelField(
-                "Whitelist (preserved)",
-                EditorStyles.boldLabel);
-
-            if (whitelist.Count == 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "No active blendshape or bone transform groups were " +
-                    "whitelisted.",
-                    MessageType.None);
-            }
-            else
-            {
-                scrollPosition = EditorGUILayout.BeginScrollView(
-                    scrollPosition,
-                    GUILayout.MinHeight(120.0f));
-
-                for (int i = 0; i < whitelist.Count; i++)
-                {
-                    CleanAnimationKeys.WhitelistItem item = whitelist[i];
-
-                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                    EditorGUILayout.LabelField(item.Label, EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField(
-                        item.Reason,
-                        EditorStyles.wordWrappedMiniLabel);
-                    EditorGUILayout.EndVertical();
-                }
-
-                EditorGUILayout.EndScrollView();
-
-                EditorGUILayout.Space(4.0f);
-                removeKeysAnyway = EditorGUILayout.ToggleLeft(
-                    "Remove keys anyway",
-                    removeKeysAnyway);
-
-                if (removeKeysAnyway)
-                {
-                    EditorGUILayout.HelpBox(
-                        "This removes every curve group shown in the whitelist. " +
-                        "The operation remains available through Unity Undo.",
-                        MessageType.Warning);
-                }
-            }
+            EditorGUILayout.Space(6.0f);
+            EditorGUI.BeginChangeCheck();
+            options.KeepNonZeroShapekeys = EditorGUILayout.ToggleLeft(new GUIContent("Keep non-zero shapekeys",
+                "Keep a shapekey curve that has any non-zero key."), options.KeepNonZeroShapekeys);
+            options.KeepShapekeyTangentMotion = EditorGUILayout.ToggleLeft(new GUIContent("Keep shapekey tangent motion",
+                "Keep a shapekey whose keys are 0 but whose tangents move the value between keys."), options.KeepShapekeyTangentMotion);
+            options.KeepMovingBones = EditorGUILayout.ToggleLeft(new GUIContent("Keep moving bones",
+                "Keep a bone's translation, rotation or scale when its start and finish differ (3 decimal places)."), options.KeepMovingBones);
+            options.KeepBoneMidKeys = EditorGUILayout.ToggleLeft(new GUIContent("Keep bone mid-keys/tangents",
+                "Keep a bone's translation, rotation or scale with more than a start and finish key, or whose tangents " +
+                "move between matching endpoints."), options.KeepBoneMidKeys);
+            if (EditorGUI.EndChangeCheck()) summary = null;
 
             GUILayout.FlexibleSpace();
-            EditorGUILayout.BeginHorizontal();
-
-            using (new EditorGUI.DisabledScope(
-                       whitelist.Count == 0 || !removeKeysAnyway))
+            if (summary != null) EditorGUILayout.HelpBox(summary, MessageType.Info);
+            using (new EditorGUI.DisabledScope(animations.Count == 0))
             {
-                if (GUILayout.Button("Remove whitelisted keys", GUILayout.Height(26.0f)))
+                if (GUILayout.Button("Clean", GUILayout.Height(28.0f))) Clean();
+            }
+            EditorGUILayout.Space(6.0f);
+        }
+
+        // One row per animation plus one empty row to add the next, up to 64; the list scrolls.
+        private void DrawAnimations()
+        {
+            animationScroll = EditorGUILayout.BeginScrollView(animationScroll, EditorStyles.helpBox,
+                GUILayout.Height(AnimationListHeight));
+            int rows = Math.Min(animations.Count + 1, MaxAnimations);
+            for (int i = 0; i < rows; i++)
+            {
+                AnimationClip current = i < animations.Count ? animations[i] : null;
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    RemoveWhitelistedKeys();
+                    var chosen = (AnimationClip)EditorGUILayout.ObjectField(current, typeof(AnimationClip), false);
+                    if (chosen != current)
+                    {
+                        if (chosen == null) animations.RemoveAt(i);
+                        else if (!animations.Contains(chosen))
+                        {
+                            if (current == null) animations.Add(chosen);
+                            else animations[i] = chosen;
+                        }
+                        keyedNames = null;
+                        summary = null;
+                        GUIUtility.ExitGUI();
+                    }
+                    using (new EditorGUI.DisabledScope(current == null))
+                    {
+                        if (GUILayout.Button("Whitelist", GUILayout.Width(80.0f)) && current != null)
+                            CleanAnimationKeysWhitelistWindow.Open(this, current);
+                    }
+                }
+            }
+            EditorGUILayout.EndScrollView();
+        }
+
+        // A search field with fuzzy suggestions from the listed animations, then the entries.
+        private void DrawWhitelist()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                search = EditorGUILayout.TextField(search);
+                using (new EditorGUI.DisabledScope(search.Trim().Length == 0))
+                {
+                    if (GUILayout.Button("Add", GUILayout.Width(80.0f)))
+                    {
+                        AddToWhitelist(new[] { search.Trim() });
+                        search = "";
+                        GUI.FocusControl(null);
+                    }
                 }
             }
 
-            if (GUILayout.Button("Close", GUILayout.Width(100.0f), GUILayout.Height(26.0f)))
+            if (search.Trim().Length > 0)
+            {
+                if (keyedNames == null) keyedNames = KeyedNames();
+                foreach (string suggestion in Suggestions(search.Trim()))
+                {
+                    if (GUILayout.Button(suggestion, EditorStyles.miniButton))
+                    {
+                        AddToWhitelist(new[] { suggestion });
+                        search = "";
+                        GUI.FocusControl(null);
+                    }
+                }
+            }
+
+            whitelistScroll = EditorGUILayout.BeginScrollView(whitelistScroll, GUILayout.MaxHeight(110.0f));
+            for (int i = 0; i < whitelist.Count; i++)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField(whitelist[i]);
+                    if (GUILayout.Button("x", GUILayout.Width(22.0f)))
+                    {
+                        whitelist.RemoveAt(i);
+                        summary = null;
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
+            EditorGUILayout.EndScrollView();
+        }
+
+        private List<string> KeyedNames()
+        {
+            var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (AnimationClip clip in animations)
+            {
+                if (clip == null) continue;
+                foreach (CleanAnimationKeys.Group group in CleanAnimationKeys.Groups(clip)) names.Add(group.Name);
+            }
+            return new List<string>(names);
+        }
+
+        // Names containing the typed letters in order, best first: whole-word start, then substring, then scattered.
+        private IEnumerable<string> Suggestions(string typed)
+        {
+            var scored = new List<KeyValuePair<int, string>>();
+            foreach (string name in keyedNames)
+            {
+                if (whitelist.Contains(name)) continue;
+                int score = FuzzyScore(name, typed);
+                if (score > 0) scored.Add(new KeyValuePair<int, string>(score, name));
+            }
+            scored.Sort((left, right) => left.Key != right.Key
+                ? right.Key.CompareTo(left.Key)
+                : string.Compare(left.Value, right.Value, StringComparison.OrdinalIgnoreCase));
+            for (int i = 0; i < scored.Count && i < MaxSuggestions; i++) yield return scored[i].Value;
+        }
+
+        internal static int FuzzyScore(string name, string typed)
+        {
+            int index = name.IndexOf(typed, StringComparison.OrdinalIgnoreCase);
+            if (index == 0) return 3;
+            if (index > 0) return 2;
+            int position = 0;
+            foreach (char letter in typed)
+            {
+                position = name.IndexOf(letter.ToString(), position, StringComparison.OrdinalIgnoreCase);
+                if (position < 0) return 0;
+                position++;
+            }
+            return 1;
+        }
+
+        private void Clean()
+        {
+            try
+            {
+                summary = CleanAnimationKeys.Clean(animations, options, whitelist);
+            }
+            catch (InvalidOperationException exception)
+            {
+                summary = null;
+                EditorUtility.DisplayDialog(CleanAnimationKeys.DisplayName, exception.Message, "OK");
+            }
+        }
+    }
+
+    /// <summary>
+    /// One animation's keys that Clean would remove, each with a checkbox; APPLY
+    /// adds the checked names to the whitelist.
+    /// </summary>
+    internal sealed class CleanAnimationKeysWhitelistWindow : EditorWindow
+    {
+        private CleanAnimationKeysWindow owner;
+        private readonly List<CleanAnimationKeys.Group> groups = new List<CleanAnimationKeys.Group>();
+        private readonly HashSet<string> chosen = new HashSet<string>();
+        private Vector2 scroll;
+
+        internal static void Open(CleanAnimationKeysWindow owner, AnimationClip clip)
+        {
+            CleanAnimationKeysWhitelistWindow window = GetWindow<CleanAnimationKeysWhitelistWindow>(true, "Whitelist: " + clip.name);
+            window.minSize = new Vector2(360.0f, 360.0f);
+            window.owner = owner;
+            window.groups.Clear();
+            window.chosen.Clear();
+            var seen = new HashSet<string>();
+            foreach (CleanAnimationKeys.Group group in CleanAnimationKeys.Removable(clip, owner.Options, owner.Whitelist))
+            {
+                if (seen.Add(group.Label)) window.groups.Add(group);
+            }
+            window.groups.Sort((left, right) => string.Compare(left.Label, right.Label, StringComparison.OrdinalIgnoreCase));
+            window.Show();
+        }
+
+        private void OnGUI()
+        {
+            if (owner == null)
             {
                 Close();
-            }
-
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space(8.0f);
-        }
-
-        private string BuildSummary()
-        {
-            string summary =
-                "Parsed " + floatCurveCount + " float curves (" +
-                floatKeyCount + " keys), " + objectCurveCount +
-                " object-reference curves (" + objectKeyCount +
-                " keys), and " + animationEventCount + " animation events.\n" +
-                "Removed " + removedGroupCount + " inactive groups (" +
-                removedBindingCount + " curves). Preserved " +
-                whitelist.Count + " whitelisted groups.";
-
-            if (otherFloatCurveCount > 0)
-            {
-                summary += " " + otherFloatCurveCount +
-                    " other float curves were parsed and left untouched.";
-            }
-
-            if (overrideRemovalCompleted)
-            {
-                summary += " Whitelisted curves were also removed.";
-            }
-
-            return summary;
-        }
-
-        private void RemoveWhitelistedKeys()
-        {
-            if (clip == null || whitelist == null || whitelist.Count == 0)
-            {
                 return;
             }
-
-            List<EditorCurveBinding> bindings =
-                new List<EditorCurveBinding>();
-
-            for (int itemIndex = 0;
-                 itemIndex < whitelist.Count;
-                 itemIndex++)
+            EditorGUILayout.HelpBox("Only keys that will be removed shown", MessageType.Info);
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            foreach (CleanAnimationKeys.Group group in groups)
             {
-                EditorCurveBinding[] itemBindings =
-                    whitelist[itemIndex].Bindings;
-
-                for (int bindingIndex = 0;
-                     bindingIndex < itemBindings.Length;
-                     bindingIndex++)
+                bool on = chosen.Contains(group.Name);
+                if (EditorGUILayout.ToggleLeft(group.Label, on) != on)
                 {
-                    bindings.Add(itemBindings[bindingIndex]);
+                    if (on) chosen.Remove(group.Name);
+                    else chosen.Add(group.Name);
                 }
             }
-
-            string error;
-            if (!CleanAnimationKeys.TryRemoveBindings(
-                    clip,
-                    bindings,
-                    "Remove Whitelisted Animation Keys",
-                    out error))
+            EditorGUILayout.EndScrollView();
+            if (GUILayout.Button("APPLY", GUILayout.Height(28.0f)))
             {
-                EditorUtility.DisplayDialog(
-                    CleanAnimationKeys.DisplayName,
-                    error,
-                    "OK");
-                return;
-            }
-
-            removedBindingCount += bindings.Count;
-            removedGroupCount += whitelist.Count;
-            whitelist.Clear();
-            bindings.Clear();
-            removeKeysAnyway = false;
-            overrideRemovalCompleted = true;
-
-            CleanAnimationKeys.RepaintAnimationWindows();
-            EditorApplication.RepaintProjectWindow();
-            Repaint();
-        }
-
-        private void OnDisable()
-        {
-            clip = null;
-            sourceLabel = null;
-
-            if (whitelist != null)
-            {
-                whitelist.Clear();
-                whitelist = null;
+                owner.AddToWhitelist(chosen);
+                Close();
             }
         }
     }
@@ -308,15 +355,14 @@ namespace Riry.RiryTools.Editor
 
             Button button = new Button(delegate
             {
-                CleanAnimationKeys.RunFromAnimationWindow(animationWindow);
+                CleanAnimationKeysWindow.Open(new[] { animationWindow.animationClip });
             });
 
             button.name = ButtonElementName;
             button.userData = ButtonOwner;
             button.text = "Clean Keys";
             button.tooltip =
-                "Remove inactive blendshape and static bone transform curves " +
-                "from this Animation window's active AnimationClip.";
+                "Open Clean Animation Keys with this Animation window's active AnimationClip.";
 
             // The AnimationWindow toolbar is IMGUI in Unity 2022.3, so the
             // public rootVisualElement is the accessible attachment point.
@@ -343,31 +389,37 @@ namespace Riry.RiryTools.Editor
 // Menu entries (Tools dropdown and Project right-click) are in RiryMenus.cs.
 // ============================================================================
 //
-// CleanAnimationKeysWindow (this file): the modal result/review window
-//   clip                     AnimationClip   The clip that was cleaned.
-//   sourceLabel              string          Where the clip came from (Animation window or Project selection).
-//   whitelist                List<WhitelistItem>  Groups kept for review (label, reason, bindings).
-//   removeKeysAnyway        bool            "Remove keys anyway" toggle for the kept groups.
-//   overrideRemovalCompleted bool            The kept groups were removed after confirmation.
-//   floatCurveCount / floatKeyCount / objectCurveCount / objectKeyCount /
-//   animationEventCount / otherFloatCurveCount / removedGroupCount /
-//   removedBindingCount      int             Numbers shown in the summary.
-//   scrollPosition           Vector2         Scroll position of the review list.
-//   ShowResult(clip, sourceLabel, result, removedBindingCount)  Opens the window.
-//   OnGUI()                  Summary, review list and buttons.
+// CleanAnimationKeysWindow (this file)
+//   animations               List<AnimationClip>  Animations to clean (up to MaxAnimations, 64).
+//   whitelist                List<string>    Shapekey and bone names never removed; kept only while the window is open.
+//   options                  CleanAnimationKeys.Options  The four keep-rule checkboxes.
+//   search                   string          Whitelist search text.
+//   summary                  string          Result of the last Clean.
+//   keyedNames               List<string>    Names keyed in the listed animations, for suggestions.
+//   AnimationListHeight      const float     Height of the scrolling Animations list (150).
+//   MaxSuggestions           const int       Suggestions shown (8).
+//   Open(clips)              Opens the window and adds clips (Project selection or Animation window clip).
+//   DrawAnimations()         One row per animation with Whitelist, plus an empty row while under 64.
+//   DrawWhitelist()          Search field with Add, fuzzy suggestions, entries with x.
+//   Suggestions(typed) / FuzzyScore(name, typed)  Ranks names: starts with, contains, then letters in order.
+//   AddToWhitelist(names)    Adds names (from Add, a suggestion, or APPLY).
+//   Clean()                  CleanAnimationKeys.Clean, then shows the summary.
+//
+// CleanAnimationKeysWhitelistWindow (this file): the Whitelist popup
+//   Open(owner, clip)        Lists the groups Clean would remove from the clip.
+//   OnGUI()                  "Only keys that will be removed shown", a checkbox per key, APPLY.
 //
 // CleanAnimationKeysButton (this file): the "Clean Keys" button
 //   ButtonElementName        const string    UI Toolkit name, used to find an installed button.
 //   ScanIntervalSeconds      const double    How often the focused window is checked (0.5 s).
 //   WatchForAnimationWindows()  Installs the button on a focused Animation window.
-//   InstallButton(window)    Adds the button to the window's rootVisualElement (top right).
+//   InstallButton(window)    Adds the button, which opens the window with that window's clip.
 //
 // CleanAnimationKeys (Editor/CleanAnimationKeys.cs): the logic
-//   DisplayName              "Clean Animation Keys", the dialog title.
-//   RunFromMenu() / ValidateMenu()  Both menu entries: the focused Animation window's clip, else the selected clip.
-//   RunFromAnimationWindow(window)  The "Clean Keys" button.
-//   Run(clip, sourceLabel)   Analyses, removes, then shows the result window.
-//   Analyze(clip)            AnalysisResult: removable bindings and the whitelist.
-//   TryRemoveBindings(...)   Removes curves with one Undo step; used by Run and by "Remove whitelisted keys".
+//   DisplayName              "Clean Animation Keys": window title and Undo name.
+//   Options                  The keep rules; curves that cannot be read or hold NaN/Infinity are always kept.
+//   Group                    One shapekey, or one bone's translation, rotation or scale; Name is what the whitelist matches.
+//   Groups(clip) / Removable(clip, options, whitelist)  Every group; the ones Clean would remove.
+//   Clean(clips, options, whitelist)  Removes them from every editable clip as one Undo step; returns the summary.
+//   TryRemoveBindings(...)   Removes curves, rolling back on failure.
 //   RepaintAnimationWindows()  Refreshes open Animation windows after a change.
-//   WhitelistItem / AnalysisResult  Results passed to the window.

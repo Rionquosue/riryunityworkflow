@@ -46,23 +46,12 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 
 ## Clean Animation Keys
 
-Run the cleaner in any of these ways:
-
-- Main menu: **Tools > RiryTools > Clean Animation Keys**
-- Project window: right-click a native `.anim` asset, then choose **RiryTools > Clean Animation Keys**
-- Animation window: click **Clean Keys**
-
-The main-menu command uses the active clip from the focused Animation window. If
-another window is focused, it uses the selected AnimationClip in the Project
-window.
-
-The cleaner removes inactive blendshape curves (every key at zero, with no
-tangent leaving zero) and static two-endpoint bone transform curves. It rounds bone translation, rotation, and scale values to
-three decimal places for endpoint comparison. Active or ambiguous curves are
-preserved in a review window unless **Remove keys anyway** is explicitly
-enabled.
-
-Imported and read-only clips are never edited. Changes support Unity Undo.
+Open **Tools > RiryTools > Clean Animation Keys**, right-click animations in the
+Project window and choose **RiryTools > Clean Animation Keys**, or click **Clean
+Keys** in the Animation window. List up to 64 animations, add shapekey and bone
+names to the whitelist (with fuzzy suggestions, or per animation with
+**Whitelist**), choose which built-in keep rules apply, and click **Clean**. Only
+editable `.anim` files are changed, as one Undo step.
 See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/clean-animation-keys.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/clean-animation-keys.md).
 
 ## Import Presets

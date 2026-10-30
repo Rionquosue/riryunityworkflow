@@ -167,6 +167,9 @@ Other tools:
 | `BlendshapeSyncWindow.Interval` | `0.5` s | Automatic sync period |
 | `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights` | Undo names; also mark the tool's own Undo steps |
 | `CleanAnimationKeys.DisplayName` | `Clean Animation Keys` | Dialog, window and Undo name |
+| `CleanAnimationKeysWindow.MaxAnimations` | `64` | Animations in the list |
+| `CleanAnimationKeysWindow.AnimationListHeight` | `150` | Height of the scrolling Animations list |
+| `CleanAnimationKeysWindow.MaxSuggestions` | `8` | Whitelist suggestions shown |
 | `CleanAnimationKeys.BoneValueDecimalPlaces` | `3` | Rounding for bone endpoint comparison |
 | `CleanAnimationKeysButton.ScanIntervalSeconds` | `0.5` | How often the focused Animation window is checked |
 | `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys` | UI Toolkit name of the **Clean Keys** button |

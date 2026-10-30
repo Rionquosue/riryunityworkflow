@@ -80,10 +80,7 @@ namespace Riry.RiryTools.Editor
         private static void BlendshapeSyncItem() { BlendshapeSyncWindow.Open(); }
 
         [MenuItem(CleanAnimationKeysMenu, false, 2020)]
-        private static void CleanAnimationKeysItem() { CleanAnimationKeys.RunFromMenu(); }
-
-        [MenuItem(CleanAnimationKeysMenu, true)]
-        private static bool CleanAnimationKeysValid() { return CleanAnimationKeys.ValidateMenu(); }
+        private static void CleanAnimationKeysItem() { CleanAnimationKeysWindow.Open(new UnityEngine.AnimationClip[0]); }
 
         // Constraint Train is 2030 (RiryVRChatMenus.cs).
 
@@ -177,10 +174,13 @@ namespace Riry.RiryTools.Editor
         private static bool RepairGuidReferencesValid() { return RegenerateGuid.HasValidSelection(); }
 
         [MenuItem(CleanAnimationKeysAssets, false, 2005)]
-        private static void CleanAnimationKeysAssetsItem() { CleanAnimationKeys.RunFromProjectWindow(); }
+        private static void CleanAnimationKeysAssetsItem()
+        {
+            CleanAnimationKeysWindow.Open(Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets));
+        }
 
         [MenuItem(CleanAnimationKeysAssets, true)]
-        private static bool CleanAnimationKeysAssetsValid() { return CleanAnimationKeys.ValidateProjectWindowCommand(); }
+        private static bool CleanAnimationKeysAssetsValid() { return Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0; }
 
         // =====================================================================
         // Git menu
@@ -241,7 +241,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> GitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
 //   Tools/RiryTools/AutoSync/Configuration... (2001) -> GitActions.OpenConfiguration -> GitConfigureWindow (Editor/UI/GitWindows.cs)
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncWindow.Open (Editor/UI/BlendshapeSyncWindow.UI.cs)
-//   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeys.RunFromMenu (Editor/CleanAnimationKeys.cs)
+//   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
 //   Tools/RiryTools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools/GUID Tools (2040)    -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
@@ -262,7 +262,7 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Save Import Settings to Preset Library... (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
 //   Assets/RiryTools/Extract Animations (Generic) (2003) -> ImportPresetAnimations.ExtractSelected (Editor/ImportPresets/ImportPresetAnimations.cs)
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
-//   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeys.RunFromProjectWindow (the selected clip)
+//   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //
 // HIERARCHY RIGHT-CLICK
 //   GameObject/RiryTools/Constraint Train... (20)   -> ConstraintTrainWindow.OpenFromHierarchy (entry in Editor/VRChat/RiryVRChatMenus.cs);
@@ -274,8 +274,7 @@ namespace Riry.RiryTools.Editor
 //   Git/Check for Broken References... (20)         -> BrokenReferenceWindow.OpenForOpenScenes (Editor/GuidTools/BrokenReferenceWindow.cs)
 //
 // OTHER UI OUTSIDE MENUS
-//   "Clean Keys" button in the Animation window    -> CleanAnimationKeysButton (Editor/UI/CleanAnimationKeysWindow.cs)
-//   Clean Animation Keys result window              -> CleanAnimationKeysWindow (Editor/UI/CleanAnimationKeysWindow.cs)
+//   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/CleanAnimationKeysWindow.cs)
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/ScriptLoadFailureWindow.cs
 //   Constraint Train window                         -> Editor/VRChat/ConstraintTrainWindow.UI.cs
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.

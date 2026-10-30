@@ -1,30 +1,49 @@
 # Clean Animation Keys
 
-## Invocation context
+Removes blank shapekey curves and static bone curves from animations that key
+every bone and shapekey.
 
-The command intentionally chooses its source by invocation context:
+## Opening the window
 
-- The Animation-window button always uses that window's active clip.
-- The Project-window context menu always uses `Selection.activeObject`.
-- The main-menu command uses the focused Animation window when possible;
-  otherwise it uses the selected Project-window AnimationClip.
+- **Tools > RiryTools > Clean Animation Keys** opens it with an empty list.
+- **Assets > RiryTools > Clean Animation Keys** (Project window right-click)
+  adds every selected AnimationClip.
+- **Clean Keys** in the Animation window adds that window's active clip.
 
-## Cleanup rules
+When the window is already open, new clips are added to its list.
 
-- A blendshape group is removable when every key value is exactly zero and no
-  tangent moves the curve away from zero between keys. Negative values are
-  active. Stepped (infinite) tangents hold the key value.
-- A bone translation, rotation, or scale group is removable when it contains no
-  more than two keyed times, its rounded start and finish values match, and no
-  tangent bends the curve between keys. A static hold is removed even when it
-  holds a non-default pose; review the result window if a clip relies on that.
-- Bone values are rounded to three decimal places before comparison.
-- NaN and Infinity values are preserved for safety.
-- Other float curves, object-reference curves, and animation events are parsed
-  for the result summary and left untouched.
-- Whitelisted groups remain intact unless the user enables
-  **Remove keys anyway** and confirms removal.
+## Window
 
-Only editable native `.anim` files are changed. Every removal is registered with
-Unity Undo, and a failed batch write attempts to restore its original curves.
+- **Animations**: one row per clip, plus an empty row for the next, up to 64.
+  The list scrolls instead of growing the window. Clearing a row removes it.
+  **Whitelist** on a row opens the whitelist popup for that clip.
+- **Whitelist**: shapekey and bone names that are never removed. A name matches
+  in every listed animation, on any mesh or path; a bone name keeps its
+  translation, rotation and scale. Typing shows up to 8 fuzzy suggestions from
+  the names keyed in the listed animations (names starting with the text, then
+  containing it, then containing its letters in order). **Add** adds the typed
+  text; **x** removes an entry. The whitelist lasts only while the window is open.
+- **Keep** checkboxes, all on by default:
+  - **Keep non-zero shapekeys**: a shapekey with any non-zero key (negative
+    values deform too).
+  - **Keep shapekey tangent motion**: a shapekey whose keys are 0 but whose
+    tangents move the value between keys.
+  - **Keep moving bones**: a bone translation, rotation or scale whose start
+    and finish differ after rounding to three decimal places.
+  - **Keep bone mid-keys/tangents**: a bone translation, rotation or scale with
+    more than two keyed times, or whose tangents move between matching endpoints.
+- **Clean**: removes every group that is not kept from every listed animation,
+  as one Undo step, and shows how many curves were removed.
 
+Curves that cannot be read or hold NaN or Infinity are always kept. Other float
+curves, object-reference curves and animation events are never touched. Stepped
+(infinite) tangents hold the key value.
+
+## Whitelist popup
+
+Lists the shapekeys and bones Clean would remove from that clip with the current
+checkboxes and whitelist, under "Only keys that will be removed shown", each with
+a checkbox. **APPLY** adds the checked names to the whitelist.
+
+Only editable native `.anim` files are changed; imported and read-only clips are
+skipped and counted in the summary. A failed write restores the original curves.

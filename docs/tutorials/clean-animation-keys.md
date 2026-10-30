@@ -1,37 +1,30 @@
 # Tutorial: Clean Animation Keys
 
-Remove blendshape curves that never move off zero and bone curves that never
-move, so clips stay small and do not lock poses by accident.
+Remove the blank shapekey and static bone keys that some exporters write for
+every bone and shapekey.
 
-## 1. Pick the clip
+## 1. Open the window with your animations
 
-Use whichever is handiest:
+Select the `.anim` files in the Project window, right-click, and choose
+**RiryTools > Clean Animation Keys**. They appear under **Animations**. You can
+also open **Tools > RiryTools > Clean Animation Keys** and drag clips into the
+empty row, or click **Clean Keys** in the Animation window.
 
-- In the **Animation** window, with the clip open, click **Clean Keys** at the
-  top right.
-- Choose **Tools > RiryTools > Clean Animation Keys**. It cleans the clip in the
-  focused Animation window, or else the clip selected in the Project window.
-- Right-click a clip in the Project window and choose **RiryTools > Clean
-  Animation Keys**.
+## 2. Protect what must stay
 
-Only editable `.anim` files are changed; clips inside FBX files and read-only
-packages are refused.
+- Type a shapekey or bone name under **Whitelist** and pick a suggestion, or
+  click **Add**.
+- Or click **Whitelist** beside an animation, tick the keys to keep (only keys
+  that would be removed are listed), and click **APPLY**.
 
-## 2. Read the result
+## 3. Choose the keep rules
 
-The **Clean Animation Keys** window shows how many curves were removed and what was
-kept. Groups the tool was unsure about are listed with the reason they were
-kept, for example a bone that holds a non-default pose.
+Leave the four **Keep** checkboxes on to keep anything that moves. Turn one off
+to remove those curves too.
 
-## 3. Remove kept groups (optional)
+## 4. Clean
 
-If a kept group should go too:
-
-1. Turn on **Remove keys anyway**.
-2. Click **Remove whitelisted keys** and confirm.
-
-## 4. Undo
-
-Every removal is one Undo step; press **Ctrl+Z** to bring the curves back.
+Click **Clean**. The summary shows how many curves were removed. **Edit > Undo**
+restores every animation at once.
 
 Reference: [design/clean-animation-keys.md](../design/clean-animation-keys.md)
