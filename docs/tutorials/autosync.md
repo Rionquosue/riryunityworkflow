@@ -1,54 +1,41 @@
 # Tutorial: AutoSync
 
-Back up scenes and prefabs to Git a few seconds after every change, and recover
-when something breaks them.
+Commit every scene and prefab save to Git, and recover when something breaks them.
 
-## 1. Install Git
+## 1. Turn on Sync
 
-Install Git (Git for Windows includes Git LFS). **Git > Help** has a link.
+Choose **Tools > RiryTools > AutoSync > Sync** (or **Git > Sync**). If Git is not
+installed, the dialog links to the download; install it, restart Unity and choose
+**Sync** again. Without a repository, one is created in the project folder with the
+Unity `.gitignore` and `.gitattributes`, and Git LFS is enabled.
 
-## 2. Set up the repository
+## 2. Save as usual
 
-1. Choose **Git > Configure Sync...**.
-2. Pick a **.gitignore** and a **.gitattributes** template. Without your own
-   templates, Unity ones are downloaded for you.
-3. Optionally enter a **Remote URL (optional)** to push backups to a server. Sign-in
-   is handled by Git, not this tool. For a server behind Cloudflare, use an SSH
-   address; the window warns about HTTPS.
-4. Click **Apply**. The repository is created in the project folder, Git LFS is
-   enabled, and the **Git LFS check** reports large files that are not stored with
-   LFS. **Track** adds them.
+Every time you save a scene or prefab, it is committed to the branch you have
+checked out, titled with the time, for example `2026-10-30T14:05:12+01:00`.
+Only the saved files and their `.meta` files go into the commit.
 
+## 3. Push to a server (optional)
+
+1. Choose **Tools > RiryTools > AutoSync > Configuration...**.
+2. Enter the server address in **Push to remote** and click **Apply**.
+3. Every commit is now pushed. When the server asks you to sign in, Git's
+   credential manager opens its own window.
+
+The same window picks other **.gitignore** and **.gitattributes** templates.
 To reuse your own setup in other projects, type a **Template name** and click
 **Save .gitignore** or **Save .gitattributes**.
 
-## 3. Let it run
-
-**Git > AutoSync Scene∕Prefab** is checked once the project is a repository.
-Every scene and prefab save is committed to the `AutoSync` branch, and pushed if
-there is a remote. Your own branch and staged files are never touched.
-**Git > Sync Now** runs a backup immediately.
-
-**Git > AutoSync Settings...** changes the **AutoSync branch**, **Base branch**,
-**Push** and **Remote**, and shows the **Last run**. **Install Rebase Workflow**
-adds a GitHub job that keeps the backup branch rebased on your main branch.
-
 ## 4. Restore a file
 
-From a terminal in the project folder:
+From a terminal in the project folder, find the commit and check the file out:
 
 ```text
-git checkout AutoSync -- Assets/Scenes/Main.unity Assets/Scenes/Main.unity.meta
+git log -- Assets/Scenes/Main.unity
+git checkout <commit> -- Assets/Scenes/Main.unity Assets/Scenes/Main.unity.meta
 ```
 
-## 5. Fix broken references
-
-When a scene or prefab opens with missing references, AutoSync offers **Check
-for Broken References** (also in the Git menu). Choose a redirect for each
-missing GUID, filled in from the AutoSync history where possible, and click
-**Apply**. See the [GUID Tools tutorial](guid-tools.md).
-
-## 6. When a script breaks a scene
+## 5. When a script breaks a scene
 
 If a scene or prefab loads with far fewer objects than its file holds, the
 **SCRIPT CAUSING FAILED LOAD** window names the suspected script and blocks

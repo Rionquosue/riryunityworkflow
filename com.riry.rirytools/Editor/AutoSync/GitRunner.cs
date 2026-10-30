@@ -16,14 +16,15 @@ namespace Riry.RiryTools.Editor
 
         internal GitNotInstalledException(Exception inner)
             : base("Git is not installed or not on PATH. Install it from " + DownloadUrl +
-                " and restart Unity. See Git > Help.", inner)
+                " and restart Unity.", inner)
         {
         }
     }
 
     /// <summary>
-    /// Runs git without a console window or credential prompts. Safe to call
-    /// from a worker thread: it uses no Unity API.
+    /// Runs git without a console window. Sign-in goes through Git's credential
+    /// manager, which shows its own window; git never waits on a terminal prompt.
+    /// Safe to call from a worker thread: it uses no Unity API.
     /// </summary>
     internal static class GitRunner
     {
@@ -89,7 +90,6 @@ namespace Riry.RiryTools.Editor
                 StandardErrorEncoding = Utf8
             };
             info.EnvironmentVariables["GIT_TERMINAL_PROMPT"] = "0";
-            info.EnvironmentVariables["GCM_INTERACTIVE"] = "never";
             if (environment != null)
             {
                 foreach (KeyValuePair<string, string> variable in environment)

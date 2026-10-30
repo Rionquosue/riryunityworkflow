@@ -6,269 +6,121 @@ using System.Text;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// One AutoSync pass: commits the project's scenes, prefabs, .meta files and
-    /// GUID remap ledger to the AutoSync branch through a separate index, then
-    /// optionally pushes. The checked-out branch and staged changes are never
-    /// touched. Uses no Unity API, so it runs on a worker thread.
+    /// One Sync pass: commits each save to the checked-out branch, staging only the
+    /// saved scenes and prefabs and their .meta files, then pushes when there is a
+    /// remote. Other staged changes stay staged and out of the commit. Uses no
+    /// Unity API, so it runs on a worker thread.
     /// </summary>
     internal sealed class AutoSyncJob
     {
+        internal const string Remote = "origin";
         private const int TimeoutMs = 120000;
-        private const int PushAttempts = 3;
-        private static readonly string[] SnapshotRoots = { "Assets", "Packages" };
-        private static readonly string[] SnapshotExtensions = { "unity", "prefab", "meta" };
-        private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false);
+        // Long enough to sign in through the credential manager's window.
+        private const int PushTimeoutMs = 600000;
+
+        internal sealed class Save
+        {
+            internal readonly string Title;
+            internal readonly List<string> Paths = new List<string>();
+
+            internal Save(string title)
+            {
+                Title = title;
+            }
+        }
 
         internal string ProjectRoot;
-        internal string StateFolder;
-        internal string Branch;
-        internal string Remote;
-        internal string BaseBranch;
+        internal List<Save> Saves;
         internal bool Push;
 
-        private bool branchExists;
         private readonly Dictionary<string, string> environment = new Dictionary<string, string>();
 
-        private string BranchRef
-        {
-            get { return "refs/heads/" + Branch; }
-        }
-
-        private string RemoteRef
-        {
-            get { return "refs/remotes/" + Remote + "/" + Branch; }
-        }
-
-        private string IndexBasePath
-        {
-            get { return Path.Combine(StateFolder, "index-base"); }
-        }
-
-        private string PathListPath
-        {
-            get { return Path.Combine(StateFolder, "paths"); }
-        }
-
-        // The last tip this remote accepted; commits after it have not been pushed there.
-        private string PushedRef
-        {
-            get { return "refs/rirytools/autosync-pushed/" + Remote + "/" + Branch; }
-        }
-
-        /// <summary>Snapshots, then pushes when enabled. Returns a status line; throws on failure.</summary>
-        internal string Execute()
+        /// <summary>Commits every save, then pushes when enabled. Throws on failure.</summary>
+        internal void Execute()
         {
             Open();
-            string commit = Snapshot();
-            string status = commit == null ? "No changes since the last snapshot." : "Saved snapshot " + commit.Substring(0, 8) + ".";
-            if (Push && PushBranch()) status += " Pushed to " + Remote + "/" + Branch + ".";
-            return status;
+            bool committed = false;
+            foreach (Save save in Saves) committed |= Commit(save);
+            if (Push && committed) PushBranch();
         }
 
-        internal void Open()
+        private void Open()
         {
             string[] location = GitState.Location(ProjectRoot);
             if (location == null)
-                throw new InvalidOperationException("The project folder is not a Git repository. Use Git > Configure Sync... to create one.");
+                throw new InvalidOperationException("The project folder is not a Git repository. Turn Sync off and on to create one.");
             // The repository is always the whole project folder, never a folder above it.
             if (location[1].Length > 0)
                 throw new InvalidOperationException("The Git repository must be the project folder itself (" + ProjectRoot +
-                    "), but the project is inside the repository at " + location[0] +
-                    ". Use Git > Configure Sync... to create one in the project folder.");
-            Directory.CreateDirectory(StateFolder);
-
-            environment["GIT_INDEX_FILE"] = Path.Combine(StateFolder, "index");
-            // commit-tree needs an identity; a repository without one still gets backups.
+                    "), but the project is inside the repository at " + location[0] + ".");
+            // Paths are added literally, so names with * or [ are not patterns.
+            environment["GIT_LITERAL_PATHSPECS"] = "1";
+            // A repository without an identity still gets commits.
             if (Run("config", "user.name").Output.Trim().Length == 0)
                 environment["GIT_AUTHOR_NAME"] = environment["GIT_COMMITTER_NAME"] = "RiryTools AutoSync";
             if (Run("config", "user.email").Output.Trim().Length == 0)
                 environment["GIT_AUTHOR_EMAIL"] = environment["GIT_COMMITTER_EMAIL"] = "autosync@localhost";
-
-            if (Run("symbolic-ref", "-q", "HEAD").Output.Trim() == BranchRef)
-                throw new InvalidOperationException("The AutoSync branch " + Branch +
-                    " is checked out. Switch to another branch; AutoSync never moves the checked-out branch.");
         }
 
-        /// <summary>Commits the current files when they differ from the branch tip. Returns the commit, or null.</summary>
-        internal string Snapshot()
+        /// <summary>Commits one save. Returns false when the saved files did not change.</summary>
+        private bool Commit(Save save)
         {
-            string parent = ResolveParent();
-            // The index keeps file stat data between runs, so only changed files are hashed again.
-            if (!File.Exists(environment["GIT_INDEX_FILE"]) || !File.Exists(IndexBasePath) ||
-                File.ReadAllText(IndexBasePath) != (parent ?? ""))
+            var paths = new List<string>();
+            foreach (string path in save.Paths)
             {
-                Check(parent == null ? Run("read-tree", "--empty") : Run("read-tree", parent), "Preparing the AutoSync index");
-                File.WriteAllText(IndexBasePath, parent ?? "", Utf8);
+                paths.Add(path);
+                paths.Add(path + ".meta");
             }
-
+            // Tracked files and untracked files that are not ignored; deleted files drop out.
             var list = new List<string> { "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--" };
-            foreach (string root in SnapshotRoots)
+            list.AddRange(paths);
+            var files = new List<string>();
+            foreach (string file in Check(Run(list.ToArray()), "Listing the saved files").Split('\0'))
             {
-                foreach (string extension in SnapshotExtensions)
-                    list.Add(":(glob)" + root + "/**/*." + extension);
+                if (file.Length > 0 && !files.Contains(file) && File.Exists(Path.Combine(ProjectRoot, file))) files.Add(file);
             }
-            // The ignore, attribute and LFS settings travel with the backup, so a
-            // checkout of the AutoSync branch restores LFS files correctly.
-            foreach (string file in new[] { GuidRemapLedger.RelativePath, ".gitignore", ".gitattributes", ".lfsconfig" })
-                list.Add(":(literal)" + file);
-            string paths = Check(Run(list.ToArray()), "Listing scenes, prefabs and .meta files");
-            if (paths.Length > 0)
-            {
-                // Listed paths are added literally, so names with * or [ are not patterns.
-                File.WriteAllText(PathListPath, paths, Utf8);
-                environment["GIT_LITERAL_PATHSPECS"] = "1";
-                try
-                {
-                    Check(Run("add", "-A", "--pathspec-from-file=" + PathListPath, "--pathspec-file-nul"), "Staging the snapshot");
-                }
-                finally
-                {
-                    environment.Remove("GIT_LITERAL_PATHSPECS");
-                }
-            }
+            if (files.Count == 0) return false;
 
-            string tree = Check(Run("write-tree"), "Writing the snapshot").Trim();
-            if (parent != null && tree == Check(Run("rev-parse", parent + "^{tree}"), "Reading the branch tip").Trim())
-                return null;
+            var add = new List<string> { "add", "--" };
+            add.AddRange(files);
+            Check(Run(add.ToArray()), "Staging the saved files");
+            var diff = new List<string> { "diff", "--cached", "--quiet", "--" };
+            diff.AddRange(files);
+            if (Run(diff.ToArray()).Succeeded) return false;
 
-            string commit = Check(parent == null
-                ? Run("commit-tree", tree, "-m", Message(null))
-                : Run("commit-tree", tree, "-p", parent, "-m", Message(parent)), "Committing the snapshot").Trim();
-            // The expected old value makes this fail instead of overwriting a concurrent update.
-            Check(Run("update-ref", "-m", "RiryTools AutoSync", BranchRef, commit, branchExists ? parent : ""),
-                "Moving " + Branch);
-            File.WriteAllText(IndexBasePath, commit, Utf8);
-            return commit;
-        }
-
-        private string ResolveParent()
-        {
-            string tip = Resolve(BranchRef);
-            branchExists = tip != null;
-            if (branchExists) return tip;
-            // A new branch continues the remote one (another machine), else starts from the base branch.
-            foreach (string candidate in new[] { RemoteRef, "refs/remotes/" + Remote + "/" + BaseBranch, "refs/heads/" + BaseBranch, "HEAD" })
-            {
-                tip = Resolve(candidate);
-                if (tip != null) return tip;
-            }
-            return null;
-        }
-
-        private string Message(string parent)
-        {
-            if (parent == null) return "AutoSync: initial snapshot";
-            string[] changed = Check(Run("diff-index", "--cached", "--name-only", parent), "Listing changed files")
-                .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var message = new StringBuilder("AutoSync: " + changed.Length + (changed.Length == 1 ? " file\n\n" : " files\n\n"));
-            for (int i = 0; i < changed.Length && i < 20; i++) message.Append(changed[i]).Append('\n');
-            if (changed.Length > 20) message.Append("...and ").Append(changed.Length - 20).Append(" more\n");
-            return message.ToString();
-        }
-
-        /// <summary>Pushes unpushed snapshots. Returns false when there was nothing to push.</summary>
-        internal bool PushBranch()
-        {
-            for (int attempt = 1; ; attempt++)
-            {
-                string local = Resolve(BranchRef);
-                if (local == null || local == Resolve(PushedRef)) return false;
-                GitRunner.Result pushed = Run("push", "--porcelain", Remote, BranchRef + ":" + BranchRef);
-                if (pushed.Succeeded)
-                {
-                    Run("update-ref", PushedRef, local);
-                    return true;
-                }
-                if (attempt >= PushAttempts || pushed.Output.IndexOf("[rejected]", StringComparison.Ordinal) < 0)
-                    throw new InvalidOperationException(pushed.Describe("Pushing " + Branch + " to " + Remote));
-
-                // The rebase workflow rewrote the remote branch: put the commits it
-                // has not seen on top of its new tip, then push again.
-                Check(Run("fetch", "--quiet", Remote, "+" + BranchRef + ":" + RemoteRef), "Fetching " + Branch);
-                string pushedTip = Resolve(PushedRef);
-                string from = pushedTip != null && Run("merge-base", "--is-ancestor", pushedTip, local).Succeeded
-                    ? pushedTip
-                    : Run("merge-base", local, RemoteRef).Output.Trim();
-                if (from.Length == 0)
-                    throw new InvalidOperationException(Remote + "/" + Branch + " shares no history with the local AutoSync branch.");
-                Check(Run("update-ref", "-m", "RiryTools AutoSync replay", BranchRef, Replay(from, local, Resolve(RemoteRef)), local),
-                    "Moving " + Branch);
-            }
+            // With paths, git commit takes only those paths, whatever else is staged.
+            var commit = new List<string> { "commit", "--quiet", "-m", save.Title, "--" };
+            commit.AddRange(files);
+            Check(Run(commit.ToArray()), "Committing " + save.Title);
+            return true;
         }
 
         /// <summary>
-        /// Replays the first-parent commits in from..to onto <paramref name="onto"/>.
-        /// A path a commit changed takes that commit's version, so the snapshot wins
-        /// over the new base. Matches the rebase workflow's script.
+        /// Pushes the checked-out branch to its upstream, else to origin (setting the
+        /// upstream). Without either remote, or on a detached HEAD, nothing is pushed.
+        /// Git asks its credential manager for any sign-in.
         /// </summary>
-        internal string Replay(string from, string to, string onto)
+        private void PushBranch()
         {
-            var replay = new Dictionary<string, string>(environment);
-            replay["GIT_INDEX_FILE"] = Path.Combine(StateFolder, "replay-index");
-            string current = onto;
-            foreach (string commit in Check(RunAt(ProjectRoot, replay, "rev-list", "--reverse", "--first-parent", from + ".." + to),
-                         "Listing unpushed snapshots").Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                Check(RunAt(ProjectRoot, replay, "read-tree", current), "Reading " + current);
-                byte[] changes = IndexInfo(Check(RunAt(ProjectRoot, replay, "diff-tree", "-r", "-z", "--no-renames",
-                    "--no-commit-id", commit + "^", commit), "Reading snapshot " + commit));
-                if (changes.Length > 0)
-                    Check(GitRunner.RunWithInput(ProjectRoot, replay, changes, TimeoutMs, "update-index", "-z", "--index-info"),
-                        "Replaying snapshot " + commit);
-                string tree = Check(RunAt(ProjectRoot, replay, "write-tree"), "Writing the replayed snapshot").Trim();
-                if (tree == Check(RunAt(ProjectRoot, replay, "rev-parse", current + "^{tree}"), "Reading " + current).Trim())
-                    continue;
-
-                string[] author = Check(RunAt(ProjectRoot, replay, "log", "-1", "--format=%an%x00%ae%x00%aI", commit),
-                    "Reading snapshot " + commit).TrimEnd('\n').Split('\0');
-                var authored = new Dictionary<string, string>(replay);
-                authored["GIT_AUTHOR_NAME"] = author[0];
-                authored["GIT_AUTHOR_EMAIL"] = author[1];
-                authored["GIT_AUTHOR_DATE"] = author[2];
-                current = Check(RunAt(ProjectRoot, authored, "commit-tree", tree, "-p", current, "-m",
-                    Check(RunAt(ProjectRoot, replay, "log", "-1", "--format=%B", commit), "Reading snapshot " + commit)),
-                    "Committing the replayed snapshot").Trim();
-            }
-            return current;
-        }
-
-        /// <summary>Converts diff-tree -r -z output to update-index -z --index-info input.</summary>
-        internal static byte[] IndexInfo(string diffTree)
-        {
-            string[] fields = diffTree.Split('\0');
-            var info = new StringBuilder();
-            for (int i = 0; i + 1 < fields.Length; i += 2)
-            {
-                // ":<old mode> <new mode> <old id> <new id> <status>", then the path.
-                string[] meta = fields[i].Split(' ');
-                if (meta.Length < 5) continue;
-                if (meta[4].StartsWith("D", StringComparison.Ordinal))
-                    info.Append("0 ").Append('0', meta[2].Length);
-                else
-                    info.Append(meta[1]).Append(' ').Append(meta[3]);
-                info.Append('\t').Append(fields[i + 1]).Append('\0');
-            }
-            return Utf8.GetBytes(info.ToString());
-        }
-
-        private string Resolve(string reference)
-        {
-            GitRunner.Result result = Run("rev-parse", "-q", "--verify", reference + "^{commit}");
-            return result.Succeeded ? result.Output.Trim() : null;
+            string branch = Run("symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
+            if (branch.Length == 0) return;
+            GitRunner.Result pushed;
+            if (Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded)
+                pushed = GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, "push", "--quiet");
+            else if (Array.IndexOf(Run("remote").Output.Replace("\r", "").Split('\n'), Remote) >= 0)
+                pushed = GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, "push", "--quiet", "--set-upstream", Remote, branch);
+            else
+                return;
+            Check(pushed, "Pushing " + branch);
         }
 
         private GitRunner.Result Run(params string[] arguments)
         {
-            return RunAt(ProjectRoot, environment, arguments);
-        }
-
-        private static GitRunner.Result RunAt(string directory, Dictionary<string, string> variables, params string[] arguments)
-        {
             // Objects and refs reach the disk before git reports success, so a
-            // power loss right after a snapshot keeps it (Git 2.36+; older Git ignores this).
+            // power loss right after a commit keeps it (Git 2.36+; older Git ignores this).
             var all = new List<string> { "-c", "core.fsync=committed" };
             all.AddRange(arguments);
-            return GitRunner.Run(directory, variables, TimeoutMs, all.ToArray());
+            return GitRunner.Run(ProjectRoot, environment, TimeoutMs, all.ToArray());
         }
 
         private static string Check(GitRunner.Result result, string action)

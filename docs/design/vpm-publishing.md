@@ -122,7 +122,7 @@ Nothing is read from the source.
     create a missing `.meta` with a random GUID on every install or update.
   - A `.meta` holds the asset's GUID, which every reference to the asset uses.
     Keeping the same GUID across versions keeps those references working
-    after an update; `AutoSync.cs` finds its workflow template by GUID.
+    after an update.
 - **Deterministic:** fixed file order, timestamps and mode, so the same input
   gives the same SHA-256.
 - **Refused:** symbolic links and Git LFS pointers fail the build.

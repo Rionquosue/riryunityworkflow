@@ -2,12 +2,11 @@
 
 ## Entry points
 
-- Open the window with **Tools > RiryTools > GUID Tools**.
-- On Windows, the menu-navigation sequence is **Alt**, **T**, **R**, **G**.
+- Open the window with **Tools > RiryTools > GUID Tools > GUID Tools**.
 - In the Project window, right-click selected assets or folders and choose
   **RiryTools > Regenerate GUID**.
 - Delete the derived index with the window button or
-  **Tools > RiryTools > Delete GUID Reference Cache**.
+  **Tools > RiryTools > GUID Tools > Delete GUID Reference Cache**.
 
 The context command uses the current Project selection. Multiple assets are
 processed as one batch. Folders are expanded recursively, but folder `.meta`
@@ -74,7 +73,7 @@ Every completed run appends `old GUID, new GUID, asset path, UTC time` to
 **RiryTools > Repair Missing GUID References** (or the GUID Tools window) opens
 the Broken References window for the selected text assets and folders. Each
 missing GUID gets a redirect from the ledger, the GUID Tools logs, or the Git
-history of `.meta` files (AutoSync branches and the reflog included), or one you
+history of `.meta` files (every branch and the reflog), or one you
 choose; see [AutoSync](autosync.md#broken-references). Writes use the same
 byte-exact patching and rollback as regeneration.
 

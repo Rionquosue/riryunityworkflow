@@ -1,7 +1,6 @@
 using System;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -10,127 +9,92 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Snapshots scenes, prefabs and .meta files to the AutoSync branch a few
-    /// seconds after they change, and pushes it. Settings are per user and per
-    /// project (UserSettings); AutoSync is on by default once the project is a
-    /// Git repository.
+    /// Sync: while on, every scene or prefab save is committed to the checked-out
+    /// branch, titled with the time of the save, and pushed when there is a remote.
+    /// Off until the user turns it on; the setting is per user and per project (UserSettings).
     /// </summary>
     [InitializeOnLoad]
     internal static class AutoSync
     {
-        internal const string WorkflowFileName = "rirytools-autosync-rebase.yaml";
-        private const string WorkflowTemplateGuid = "5a0f1f0c6b7e4f2d9c3a8e1b7d4c6f20";
-        private const string Prefix = "RiryTools.AutoSync.";
-        private const string PendingKey = Prefix + "Pending";
-        private const double DelaySeconds = 3.0;
+        private const string EnabledKey = "RiryTools.AutoSync.Enabled";
+        private const string PendingKey = "RiryTools.AutoSync.Pending";
+        private const string TimeFormat = "yyyy-MM-dd'T'HH:mm:sszzz";
 
-        private static double due = -1;
-        private static Task<string> worker;
+        // One save: the commit title and the saved files. Saves made in the same editor update are one save.
+        private static readonly List<AutoSyncJob.Save> queue = new List<AutoSyncJob.Save>();
+        private static AutoSyncJob.Save collecting;
+        private static Task worker;
+        private static List<AutoSyncJob.Save> running;
         private static string reported;
-
-        /// <summary>The outcome of the last pass, for the settings window.</summary>
-        internal static string Status { get; private set; }
 
         static AutoSync()
         {
-            EditorSceneManager.sceneSaved += scene => Schedule();
-            PrefabStage.prefabSaved += root => Schedule();
+            EditorSceneManager.sceneSaved += scene => Saved(scene.path);
+            PrefabStage.prefabSaved += root =>
+            {
+                PrefabStage stage = PrefabStageUtility.GetPrefabStage(root);
+                if (stage != null) Saved(stage.assetPath);
+            };
             EditorApplication.update += Tick;
             EditorApplication.quitting += FlushOnQuit;
-            // A pass interrupted by a script reload runs again afterwards.
+            // Saves not committed before a script reload are committed afterwards.
             AssemblyReloadEvents.beforeAssemblyReload += () =>
             {
-                if (due >= 0 || (worker != null && !worker.IsCompleted)) SessionState.SetBool(PendingKey, true);
+                Wait();
+                SessionState.SetString(PendingKey, Encode(Unfinished()));
             };
-            if (SessionState.GetBool(PendingKey, false)) Schedule();
+            queue.AddRange(Decode(SessionState.GetString(PendingKey, "")));
+            SessionState.EraseString(PendingKey);
         }
 
-        /// <summary>On by default once the project is in a Git repository.</summary>
         internal static bool Enabled
         {
-            get { return Get("Enabled", GitState.RepositoryExists ? "1" : "0") == "1"; }
-            set { Set("Enabled", value ? "1" : "0"); }
+            get { return EditorUserSettings.GetConfigValue(EnabledKey) == "1"; }
+            set { EditorUserSettings.SetConfigValue(EnabledKey, value ? "1" : "0"); }
         }
 
-        /// <summary>"AutoSync" unless the user chose another branch, so backups always have a target.</summary>
-        internal static string Branch
+        /// <summary>Queues a saved scene or prefab for the next commit.</summary>
+        internal static void Saved(string assetPath)
         {
-            get { return Get("Branch", "AutoSync"); }
-            set { Set("Branch", value); }
-        }
-
-        internal static string Remote
-        {
-            get { return Get("Remote", "origin"); }
-            set { Set("Remote", value); }
-        }
-
-        internal static string BaseBranch
-        {
-            get { return Get("BaseBranch", "main"); }
-            set { Set("BaseBranch", value); }
-        }
-
-        internal static bool PushEnabled
-        {
-            get { return Get("Push", "1") == "1"; }
-            set { Set("Push", value ? "1" : "0"); }
-        }
-
-        private static string Get(string name, string fallback)
-        {
-            string value = EditorUserSettings.GetConfigValue(Prefix + name);
-            return string.IsNullOrEmpty(value) ? fallback : value;
-        }
-
-        private static void Set(string name, string value)
-        {
-            EditorUserSettings.SetConfigValue(Prefix + name, value);
-        }
-
-        /// <summary>Starts a pass after a short delay; repeated calls within the delay make one pass.</summary>
-        internal static void Schedule()
-        {
-            if (!Enabled) return;
-            due = EditorApplication.timeSinceStartup + DelaySeconds;
-        }
-
-        internal static void ScheduleNow()
-        {
-            due = EditorApplication.timeSinceStartup;
+            if (!Enabled || string.IsNullOrEmpty(assetPath)) return;
+            if (!assetPath.EndsWith(".unity", StringComparison.OrdinalIgnoreCase) &&
+                !assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                return;
+            if (collecting == null)
+                collecting = new AutoSyncJob.Save(DateTimeOffset.Now.ToString(TimeFormat, CultureInfo.InvariantCulture));
+            if (!collecting.Paths.Contains(assetPath)) collecting.Paths.Add(assetPath);
         }
 
         private static void Tick()
         {
-            if (worker != null && worker.IsCompleted)
+            if (collecting != null)
             {
+                queue.Add(collecting);
+                collecting = null;
+            }
+            if (worker != null)
+            {
+                if (!worker.IsCompleted) return;
                 Report(worker);
                 worker = null;
+                running = null;
             }
-            if (due < 0 || EditorApplication.timeSinceStartup < due || worker != null ||
-                EditorApplication.isCompiling || EditorApplication.isUpdating)
-                return;
-            due = -1;
-            SessionState.SetBool(PendingKey, false);
-            if (SettingsError() != null)
-            {
-                Fail(SettingsError());
-                return;
-            }
-            // Settings are read here: EditorUserSettings is main-thread only.
-            AutoSyncJob job = CreateJob(PushEnabled);
+            if (queue.Count == 0) return;
+            running = new List<AutoSyncJob.Save>(queue);
+            queue.Clear();
+            AutoSyncJob job = CreateJob(running, true);
             worker = Task.Run(() => job.Execute());
         }
 
         private static void FlushOnQuit()
         {
-            if (due < 0 || SettingsError() != null) return;
-            // Commit locally only; a push could hold the editor open on a slow network.
+            Wait();
+            List<AutoSyncJob.Save> saves = Unfinished();
+            if (saves.Count == 0) return;
+            // Commit locally only; a push could hold the editor open. The next push sends these commits too.
             try
             {
-                // A running pass holds the AutoSync index; let it finish (WaitAny ignores its failure).
-                if (worker != null) Task.WaitAny(new Task[] { worker }, TimeSpan.FromSeconds(10));
-                CreateJob(false).Execute();
+                CreateJob(saves, false).Execute();
             }
             catch (Exception exception)
             {
@@ -138,111 +102,69 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private static AutoSyncJob CreateJob(bool push)
+        // A running pass has the index; give it a moment to finish.
+        private static void Wait()
         {
-            return new AutoSyncJob
-            {
-                ProjectRoot = RiryToolsPaths.ProjectRoot,
-                StateFolder = RiryToolsPaths.Library("AutoSync"),
-                Branch = Branch,
-                Remote = Remote,
-                BaseBranch = BaseBranch,
-                Push = push
-            };
+            if (worker != null) Task.WaitAny(new[] { worker }, TimeSpan.FromSeconds(10));
         }
 
-        private static void Report(Task<string> finished)
+        // Saves not yet committed: the queue, the save being collected, and a pass that did not finish.
+        private static List<AutoSyncJob.Save> Unfinished()
         {
-            if (finished.IsFaulted)
+            var saves = new List<AutoSyncJob.Save>();
+            if (worker != null && !worker.IsCompleted && running != null) saves.AddRange(running);
+            saves.AddRange(queue);
+            if (collecting != null) saves.Add(collecting);
+            return saves;
+        }
+
+        private static AutoSyncJob CreateJob(List<AutoSyncJob.Save> saves, bool push)
+        {
+            return new AutoSyncJob { ProjectRoot = RiryToolsPaths.ProjectRoot, Saves = saves, Push = push };
+        }
+
+        private static void Report(Task finished)
+        {
+            if (!finished.IsFaulted)
             {
-                Fail(finished.Exception.GetBaseException().Message);
+                reported = null;
                 return;
             }
-            Status = DateTime.Now.ToString("HH:mm:ss") + " " + finished.Result;
-            reported = null;
-        }
-
-        private static void Fail(string message)
-        {
-            Status = DateTime.Now.ToString("HH:mm:ss") + " failed: " + message;
+            string message = finished.Exception.GetBaseException().Message;
             // The same failure repeats on every save; the Console gets it once.
             if (message != reported) Debug.LogWarning("AutoSync: " + message);
             reported = message;
         }
 
-        internal static string SettingsError()
+        // Session state holds one save per line: the title, then each path, separated by tabs.
+        private static string Encode(List<AutoSyncJob.Save> saves)
         {
-            return BranchNameError(Branch, "AutoSync branch") ?? BranchNameError(BaseBranch, "Base branch") ??
-                (Branch == BaseBranch ? "The AutoSync branch must differ from the base branch." : null) ??
-                (Regex.IsMatch(Remote, @"^[A-Za-z0-9._/-]+$") && !Remote.StartsWith("-", StringComparison.Ordinal)
-                    ? null
-                    : "The remote name is not valid.");
+            var lines = new List<string>();
+            foreach (AutoSyncJob.Save save in saves) lines.Add(save.Title + "\t" + string.Join("\t", save.Paths));
+            return string.Join("\n", lines);
         }
 
-        /// <summary>The git check-ref-format rules for a branch name; null when valid.</summary>
-        internal static string BranchNameError(string name, string label)
+        private static List<AutoSyncJob.Save> Decode(string text)
         {
-            if (string.IsNullOrEmpty(name)) return label + " is empty.";
-            if (name == "@" || name.StartsWith("-", StringComparison.Ordinal) || name.StartsWith("/", StringComparison.Ordinal) ||
-                name.EndsWith("/", StringComparison.Ordinal) || name.EndsWith(".", StringComparison.Ordinal) ||
-                name.Contains("..") || name.Contains("//") || name.Contains("@{") || name.Contains("/.") ||
-                name.StartsWith(".", StringComparison.Ordinal) || name.EndsWith(".lock", StringComparison.Ordinal) ||
-                name.Contains(".lock/") || Regex.IsMatch(name, @"[\x00-\x20\x7f~^:?*\[\\]"))
-                return label + " \"" + name + "\" is not a valid Git branch name.";
-            return null;
-        }
-
-        /// <summary>
-        /// The branch filter for the rebase workflow: every branch in the AutoSync
-        /// branch's folder ("backup/riry" gives "backup/**"), else the name itself ("AutoSync").
-        /// </summary>
-        internal static string WorkflowPattern(string branch)
-        {
-            int slash = branch.LastIndexOf('/');
-            return slash > 0 ? branch.Substring(0, slash + 1) + "**" : branch;
-        }
-
-        /// <summary>The workflow template with this project's base branch and AutoSync branches.</summary>
-        internal static string WorkflowText(string template, string baseBranch, string branch)
-        {
-            string quotedBase = "'" + baseBranch.Replace("'", "''") + "'";
-            string quotedPattern = "'" + WorkflowPattern(branch).Replace("'", "''") + "'";
-            return template
-                .Replace("      - main\n", "      - " + quotedBase + "\n")
-                .Replace("      - 'AutoSync'\n", "      - " + quotedPattern + "\n")
-                .Replace("  BASE_BRANCH: main\n", "  BASE_BRANCH: " + quotedBase + "\n")
-                .Replace("  AUTOSYNC_BRANCHES: 'AutoSync'\n", "  AUTOSYNC_BRANCHES: " + quotedPattern + "\n");
-        }
-
-        /// <summary>
-        /// Writes the rebase workflow to the repository's .github/workflows. A
-        /// different existing file is replaced only when <paramref name="mayReplace"/>
-        /// agrees. Returns the path, or null when kept.
-        /// </summary>
-        internal static string InstallWorkflow(Func<string, bool> mayReplace)
-        {
-            var template = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(WorkflowTemplateGuid));
-            if (template == null) throw new FileNotFoundException("The rebase workflow template is missing from the package.");
-            GitState.Refresh(true);
-            if (!GitState.RepositoryExists)
-                throw new InvalidOperationException("The project folder is not a Git repository. Use Git > Configure Sync... first.");
-
-            string path = Path.Combine(RiryToolsPaths.ProjectRoot, ".github", "workflows", WorkflowFileName);
-            string text = WorkflowText(template.text.Replace("\r\n", "\n"), BaseBranch, Branch);
-            if (File.Exists(path) && File.ReadAllText(path) != text && !mayReplace(path)) return null;
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(path, text, new UTF8Encoding(false));
-            return path;
+            var saves = new List<AutoSyncJob.Save>();
+            foreach (string line in text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] fields = line.Split('\t');
+                var save = new AutoSyncJob.Save(fields[0]);
+                for (int i = 1; i < fields.Length; i++) save.Paths.Add(fields[i]);
+                saves.Add(save);
+            }
+            return saves;
         }
     }
 
-    internal sealed class AutoSyncPostprocessor : AssetPostprocessor
+    internal sealed class AutoSyncSaveProcessor : AssetModificationProcessor
     {
-        // Covers prefab and scene saves made by tools, imports that rewrite .meta
-        // files, moves and deletions. A pass with no changes commits nothing.
-        private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
+        // Saves made through Unity's save pipeline, in addition to the scene and Prefab Mode events.
+        private static string[] OnWillSaveAssets(string[] paths)
         {
-            AutoSync.Schedule();
+            foreach (string path in paths) AutoSync.Saved(path);
+            return paths;
         }
     }
 }

@@ -16,6 +16,12 @@ load, and tools save generated assets there when they have no better place
 there are never overwritten, so edits survive updates; delete a file to get the
 package's copy back. Shader applets will live there too.
 
+## Menus
+
+Every tool is under **Tools > RiryTools**, as one entry or a submenu named after
+the tool. On Windows, the menus can be walked from the keyboard by typing each
+entry's first letter.
+
 ## Documentation
 
 Tutorials and design notes are in the source repository's
@@ -43,7 +49,6 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 Run the cleaner in any of these ways:
 
 - Main menu: **Tools > RiryTools > Clean Animation Keys**
-- Windows menu navigation: **Alt**, **T**, **R**, **C**
 - Project window: right-click a native `.anim` asset, then choose **RiryTools > Clean Animation Keys**
 - Animation window: click **Clean Keys**
 
@@ -74,7 +79,7 @@ exported with the Better FBX Blender add-on. Save presets from any asset with
 ## Play Mode Windows
 
 Entering Play Mode normally brings the Game view to the front and focuses it.
-With **Tools > RiryTools > Play Mode > Keep Tabs in Front** (on by default), the
+With **Tools > RiryTools > Play Mode Windows > Keep Tabs in Front** (on by default), the
 tabs that were in front, and the window that had focus, come back after Play Mode
 starts, and a Game view that Play Mode opened is closed when it ends. **Close Game
 View Opened by Play Mode** closes such a Game view as soon as Play Mode starts.
@@ -95,8 +100,7 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 
 Open the GUID Tools window from:
 
-- Main menu: **Tools > RiryTools > GUID Tools**
-- Windows menu navigation: **Alt**, **T**, **R**, **G**
+- Main menu: **Tools > RiryTools > GUID Tools > GUID Tools**
 
 To run directly from the Project window, select one or more assets or folders,
 then right-click and choose **RiryTools > Regenerate GUID**. Selected folders are
@@ -110,7 +114,7 @@ Unity Undo, so commit or back up the project first.
 
 Reverse-reference indexes are cached under
 `Library/RiryTools/GuidReferenceCache`. Delete them from the GUID Tools window or with
-**Tools > RiryTools > Delete GUID Reference Cache**. Diagnostic logs are written
+**Tools > RiryTools > GUID Tools > Delete GUID Reference Cache**. Diagnostic logs are written
 to `Logs/RiryTools/GuidTools/` in the project; the active log rotates at 10 MiB, also
 during a run, and archived logs are trimmed oldest-first above 100 MiB.
 
@@ -121,13 +125,14 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 
 ## AutoSync
 
-The **Git** menu backs up scenes, prefabs and `.meta` files to an `AutoSync`
-branch seconds after they change, through a separate Git index, and pushes it.
-**Configure Sync...** creates the repository from named `.gitignore` and
-`.gitattributes` templates in `Documents/RiryTools/GitTemplates`, enables Git
-LFS and checks that large files use it and can be pushed. AutoSync offers to fix
-broken references from its history, and blocks saving a scene or prefab that a
-script stopped from loading. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/autosync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/autosync.md).
+**Tools > RiryTools > AutoSync > Sync** (also **Git > Sync**) commits every scene
+and prefab save to the checked-out branch, titled with the time of the save, and
+pushes it when there is a remote. Turning it on offers to download Git when it is
+missing, creates the repository from the Unity `.gitignore` and `.gitattributes`
+templates in `Documents/RiryTools/GitTemplates`, and enables Git LFS.
+**Configuration...** picks other templates and sets **Push to remote**; sign-in
+goes through Git's credential manager. AutoSync also blocks saving a scene or
+prefab that a script stopped from loading. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/autosync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/autosync.md).
 
 ## Editing the UI
 

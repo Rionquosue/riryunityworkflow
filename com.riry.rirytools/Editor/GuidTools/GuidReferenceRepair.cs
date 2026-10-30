@@ -27,7 +27,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Finds GUID references that no longer resolve in damaged or recovered scenes,
     /// prefabs and other text assets, suggests redirects from the remap ledger,
-    /// GUID Tools logs and the Git history of .meta files (AutoSync included), and
+    /// GUID Tools logs and the Git history of .meta files, and
     /// rewrites the chosen ones byte-exactly with rollback.
     /// </summary>
     internal static class GuidReferenceRepair
@@ -37,7 +37,7 @@ namespace Riry.RiryTools.Editor
         private static readonly Regex LogMapping = new Regex(
             @"GUID mapping prepared: .* \| ([0-9a-fA-F]{32}) -> ([0-9a-fA-F]{32})", RegexOptions.CultureInvariant);
 
-        // Every branch, remote and reflog entry (AutoSync snapshots included), newest
+        // Every branch, remote and reflog entry (Sync commits included), newest
         // first, for .meta files in the project folder.
         internal static readonly string[] HistoryArguments =
         {

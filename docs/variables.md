@@ -36,19 +36,13 @@ EditorUserSettings: per user and per project, in `UserSettings/`.
 
 | Key | Values | Default | Owner |
 |---|---|---|---|
-| `RiryTools.AutoSync.Enabled` | `1` / `0` | `1` in a Git repository, else `0` | `AutoSync.Enabled` |
-| `RiryTools.AutoSync.Branch` | branch name | `AutoSync` | `AutoSync.Branch` |
-| `RiryTools.AutoSync.BaseBranch` | branch name | `main` | `AutoSync.BaseBranch` |
-| `RiryTools.AutoSync.Remote` | remote name | `origin` | `AutoSync.Remote` |
-| `RiryTools.AutoSync.Push` | `1` / `0` | `1` | `AutoSync.PushEnabled` |
-| `RiryTools.AutoSync.DontAskToConfigure` | `1` | unset | `GitActions`: **Don't Ask Again** was chosen |
+| `RiryTools.AutoSync.Enabled` | `1` / `0` | `0` | `AutoSync.Enabled` (**Sync**) |
 
 SessionState: until the editor quits; survives script reloads.
 
 | Key | Type | Owner |
 |---|---|---|
-| `RiryTools.AutoSync.Pending` | bool | `AutoSync`: a pass was due when scripts reloaded |
-| `RiryTools.AutoSync.AskedToConfigure` | bool | `GitActions`: setup was offered this session |
+| `RiryTools.AutoSync.Pending` | one save per line: title, then paths, tab-separated | `AutoSync`: saves not yet committed when scripts reloaded |
 | `RiryTools.PlayMode.FrontTabs` | comma-separated instance IDs | `PlayModeWindowKeeper` |
 | `RiryTools.PlayMode.Focused` | instance ID | `PlayModeWindowKeeper` |
 | `RiryTools.PlayMode.HadGameView` | bool | `PlayModeWindowKeeper` |
@@ -64,13 +58,11 @@ In the project:
 | Path | Contents | Owner |
 |---|---|---|
 | `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
-| `Library/RiryTools/AutoSync/` | `index`, `index-base`, `paths`, `replay-index` | `AutoSync.CreateJob` |
 | `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateGuid.CacheDirectoryPath` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt`, `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `BetterFbxExporter` |
 | `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateGuid.LogDirectoryPath`, `GuidToolLog` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidRemapLedger.RelativePath` |
-| `.github/workflows/rirytools-autosync-rebase.yaml` | Rebase workflow, written by **Install Rebase Workflow** | `AutoSync.WorkflowFileName` |
-| `.gitignore`, `.gitattributes` | Copied from a template by **Configure Sync** | `GitTemplates` |
+| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration** | `GitActions.CopyTemplate` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder | `ImportPresetMarker.FileName` |
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips | `ImportPresetAnimations.FolderName` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
@@ -89,37 +81,25 @@ a OneDrive redirect; `~/Documents` elsewhere):
 
 | Name | Value | Owner |
 |---|---|---|
-| AutoSync branch | `refs/heads/<Branch>` (default `AutoSync`) | `AutoSyncJob.BranchRef` |
-| Last pushed tip | `refs/rirytools/autosync-pushed/<Remote>/<Branch>` | `AutoSyncJob.PushedRef` |
-| Remote-tracking ref | `refs/remotes/<Remote>/<Branch>` | `AutoSyncJob.RemoteRef` |
+| Branch | The checked-out branch | `AutoSyncJob.Commit` |
+| Remote | `origin`, or the branch's upstream | `AutoSyncJob.Remote`, `AutoSyncJob.PushBranch` |
+| Commit title | Time of the save, `yyyy-MM-dd'T'HH:mm:sszzz` (`2026-10-30T14:05:12+01:00`) | `AutoSync.TimeFormat` |
+| Commit contents | The saved `.unity` and `.prefab` files and their `.meta` files | `AutoSyncJob.Commit` |
 | Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset | `AutoSyncJob.Open` |
-| Reflog messages | `RiryTools AutoSync`, `RiryTools AutoSync replay` | `AutoSyncJob` |
-| Commit message | `AutoSync: <n> files`, then up to 20 paths; first commit `AutoSync: initial snapshot` | `AutoSyncJob.Message` |
-| Snapshot contents | `Assets/**` and `Packages/**` `*.unity`, `*.prefab`, `*.meta`, plus the ledger, `.gitignore`, `.gitattributes`, `.lfsconfig` | `AutoSyncJob.SnapshotRoots`, `SnapshotExtensions` |
-| LFS probe | content `RiryTools AutoSync Git LFS upload check`, name `rirytools-autosync-probe.bin` | `GitLfs.ProbeContent` |
+| Default templates | `Unity.gitignore`, `Unity.gitattributes` | `GitTemplates.DefaultName` |
 
-Environment variables set for every Git command (`GitRunner`):
+Environment variables set for Git commands:
 
-- `GIT_TERMINAL_PROMPT=0` and `GCM_INTERACTIVE=never`: never prompt.
-- `GIT_INDEX_FILE`: the AutoSync index, so the working index is never touched.
-- `GIT_LITERAL_PATHSPECS=1`: while staging the snapshot only.
-- `GIT_AUTHOR_*`, `GIT_COMMITTER_*`: the fallback identity, and the original
-  author during a replay.
-- Arguments: `-c core.quotepath=off` always; `-c core.fsync=committed` for AutoSync passes.
-
-Rebase workflow (`AutoSync/rirytools-autosync-rebase.yaml`, rewritten by `AutoSync.WorkflowText`):
-
-- `on.push.branches`: the base branch and the AutoSync branch pattern.
-- `env.BASE_BRANCH`: the base branch (default `main`).
-- `env.AUTOSYNC_BRANCHES`: `AutoSync`, or `<folder>/**` for a branch in a folder.
-- `concurrency.group`: `rirytools-autosync-rebase`.
-- Schedule: `17 */6 * * *`.
+- `GIT_TERMINAL_PROMPT=0` (`GitRunner`, every command): Git never waits on a
+  terminal prompt; sign-in goes through Git's credential manager.
+- `GIT_LITERAL_PATHSPECS=1` (`AutoSyncJob`): saved paths are not patterns.
+- `GIT_AUTHOR_*`, `GIT_COMMITTER_*` (`AutoSyncJob`): the fallback identity.
+- Arguments: `-c core.quotepath=off` always; `-c core.fsync=committed` for AutoSync commits.
 
 ## GUIDs and build symbols
 
 | Name | Value | Use |
 |---|---|---|
-| `AutoSync.WorkflowTemplateGuid` | `5a0f1f0c6b7e4f2d9c3a8e1b7d4c6f20` | GUID in `rirytools-autosync-rebase.yaml.meta`; the template is found by it. Never change it. |
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
@@ -134,14 +114,11 @@ AutoSync and Git:
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `AutoSync.DelaySeconds` | `3.0` | Delay after a change before a pass |
 | `GitState.CacheSeconds` | `5.0` | How long Git and repository state is cached |
-| `AutoSyncJob.TimeoutMs` | `120000` | Timeout per Git command in a pass |
-| `AutoSyncJob.PushAttempts` | `3` | Push attempts after a rejected push |
+| `AutoSyncJob.TimeoutMs` | `120000` | Timeout per Git command |
+| `AutoSyncJob.PushTimeoutMs` | `600000` | Push timeout, long enough to sign in |
 | `GitRunner.TimedOut` | `-1` | Exit code reported for a timed-out or cancelled command |
 | `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/` | **Download Git** link |
-| `GitLfs.LargeFileBytes` | 1 MiB | Binary files from this size should use LFS |
-| `GitLfs.ProxyLimitBytes` | 100 MiB | Cloudflare's proxied upload limit |
 | `GitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore` | Default `.gitignore` template, saved as `Unity` |
 | `GitTemplates.UnityAttributesUrl` | gitattributes project's `Unity.gitattributes` | Default `.gitattributes` template, saved as `Unity` |
 | `GitTemplates.DefaultAttributes` | built-in text | Built-in LFS template, saved as `UnityLFS` |
@@ -198,15 +175,23 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
 `VRChat/RiryVRChatMenus.cs` and use `RiryMenus.ConstraintTrain` and
 `RiryMenus.ConstraintTrainHierarchy`. The number is the priority.
 
-- **Tools:**
-  - `Tools/RiryTools/Clean Animation Keys` (2000)
-  - `Tools/RiryTools/GUID Tools` (2010)
-  - `Tools/RiryTools/Delete GUID Reference Cache` (2011)
-  - `Tools/RiryTools/Blendshape Sync` (2020)
+- **Tools** (one entry or submenu per tool):
+  - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
+  - `Tools/RiryTools/AutoSync/Configuration...` (2001)
+  - `Tools/RiryTools/Blendshape Sync` (2010)
+  - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030)
-  - `Tools/RiryTools/Open Import Preset Library` (2040)
-  - `Tools/RiryTools/Play Mode/Keep Tabs in Front` (2060)
-  - `Tools/RiryTools/Play Mode/Close Game View Opened by Play Mode` (2061)
+  - `Tools/RiryTools/GUID Tools/GUID Tools` (2040)
+  - `Tools/RiryTools/GUID Tools/Regenerate GUID` (2041)
+  - `Tools/RiryTools/GUID Tools/Repair Missing GUID References` (2042)
+  - `Tools/RiryTools/GUID Tools/Check for Broken References...` (2043)
+  - `Tools/RiryTools/GUID Tools/Delete GUID Reference Cache` (2044)
+  - `Tools/RiryTools/Import Presets/Import Preset...` (2050)
+  - `Tools/RiryTools/Import Presets/Save Import Settings to Preset Library...` (2051)
+  - `Tools/RiryTools/Import Presets/Extract Animations (Generic)` (2052)
+  - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
+  - `Tools/RiryTools/Play Mode Windows/Keep Tabs in Front` (2060)
+  - `Tools/RiryTools/Play Mode Windows/Close Game View Opened by Play Mode` (2061)
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
   - `Assets/RiryTools/Import Preset...` (2001)
@@ -216,12 +201,9 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Assets/RiryTools/Clean Animation Keys` (2005)
 - **Hierarchy right-click:** `GameObject/RiryTools/Constraint Train...` (20)
 - **Git menu:**
-  - `Git/AutoSync Scene∕Prefab` (1); U+2215 keeps `Scene∕Prefab` as one entry
-  - `Git/Sync Now` (2)
+  - `Git/Sync` (1), check mark
+  - `Git/Configuration...` (2)
   - `Git/Check for Broken References...` (20)
-  - `Git/Configure Sync...` (40)
-  - `Git/AutoSync Settings...` (41)
-  - `Git/Help` (100)
 
 ## Publishing
 

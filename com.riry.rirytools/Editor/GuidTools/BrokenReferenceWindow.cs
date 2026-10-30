@@ -11,7 +11,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Lists every missing GUID in a set of files with a redirect field, filled in
-    /// from the ledger, logs and AutoSync history where possible. A missing GUID
+    /// from the ledger, logs and Git history where possible. A missing GUID
     /// without a redirect is shown in red until one is chosen. State and actions;
     /// the drawing is in Editor/UI/BrokenReferenceWindow.UI.cs.
     /// </summary>

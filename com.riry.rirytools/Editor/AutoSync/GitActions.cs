@@ -7,65 +7,55 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// What the Git menu entries do. The entries themselves are in
-    /// Editor/UI/RiryMenus.cs; the windows are in Editor/UI/GitWindows.cs.
+    /// What the Sync and Configuration menu entries do. The entries themselves are
+    /// in Editor/UI/RiryMenus.cs; the Configuration window is drawn in Editor/UI/GitWindows.cs.
     /// </summary>
-    [InitializeOnLoad]
     internal static class GitActions
     {
-        // Session state: setup was offered in this session. User setting: Don't Ask Again was chosen.
-        private const string AskedKey = "RiryTools.AutoSync.AskedToConfigure";
-        private const string DontAskKey = "RiryTools.AutoSync.DontAskToConfigure";
-
-        static GitActions()
-        {
-            // Offer setup once per session when the project has no repository.
-            if (SessionState.GetBool(AskedKey, false) || EditorUserSettings.GetConfigValue(DontAskKey) == "1") return;
-            SessionState.SetBool(AskedKey, true);
-            EditorApplication.delayCall += () =>
-            {
-                if (!GitState.GitInstalled || GitState.RepositoryExists) return;
-                int choice = EditorUtility.DisplayDialogComplex("AutoSync",
-                    "This project is not in a Git repository, so scenes and prefabs are not backed up.\n\n" +
-                    "Set up a repository with a .gitignore and Git LFS now?", "Configure Sync...", "Not Now", "Don't Ask Again");
-                if (choice == 0) GitConfigureWindow.Open();
-                if (choice == 2) EditorUserSettings.SetConfigValue(DontAskKey, "1");
-            };
-        }
-
-        internal static void ToggleAutoSync()
+        /// <summary>
+        /// Turns Sync off, or on: asks for Git when it is missing, creates the
+        /// repository from the Unity templates when there is none, and enables Git LFS.
+        /// </summary>
+        internal static void ToggleSync()
         {
             Guard(() =>
             {
-                bool enable = !AutoSync.Enabled;
-                if (enable)
+                if (AutoSync.Enabled)
                 {
-                    GitState.RequireGit();
-                    if (!GitState.RepositoryExists)
-                    {
-                        if (EditorUtility.DisplayDialog("AutoSync", "AutoSync needs a Git repository. Configure one now?",
-                                "Configure Sync...", "Cancel"))
-                            GitConfigureWindow.Open();
-                        return;
-                    }
+                    AutoSync.Enabled = false;
+                    return;
                 }
-                AutoSync.Enabled = enable;
-                if (enable) AutoSync.ScheduleNow();
-            });
-        }
-
-        internal static void SyncNow()
-        {
-            Guard(() =>
-            {
                 GitState.RequireGit();
-                if (!GitState.RepositoryExists) throw new InvalidOperationException(
-                    "The project is not in a Git repository. Use Git > Configure Sync... first.");
-                AutoSync.ScheduleNow();
+                string project = RiryToolsPaths.ProjectRoot;
+                if (!GitState.RepositoryExists)
+                {
+                    if (GitState.EnclosingRepository != null && !EditorUtility.DisplayDialog("Sync",
+                            "The project is inside the repository at " + GitState.EnclosingRepository + ". Sync needs the " +
+                            "project folder itself to be the repository, so a separate one is created here; the outer " +
+                            "repository will see this folder as an embedded repository.", "Create", "Cancel"))
+                        return;
+                    EnsureTemplates();
+                    Check(GitRunner.Run(project, null, 30000, "init"), "Creating the repository");
+                    // Existing files are kept.
+                    CopyTemplate(GitTemplates.DefaultName, GitTemplates.IgnoreExtension, false);
+                    CopyTemplate(GitTemplates.DefaultName, GitTemplates.AttributesExtension, false);
+                    GitState.Refresh(true);
+                }
+                try
+                {
+                    GitLfs.Enable(project);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    // Commits work without LFS; it only matters for large files on a remote.
+                    Debug.LogWarning("AutoSync: " + exception.Message);
+                    EditorUtility.DisplayDialog("Sync", exception.Message + "\n\nSync is on without Git LFS.", "OK");
+                }
+                AutoSync.Enabled = true;
             });
         }
 
-        internal static void ConfigureSync()
+        internal static void OpenConfiguration()
         {
             Guard(() =>
             {
@@ -74,11 +64,35 @@ namespace Riry.RiryTools.Editor
             });
         }
 
-        // Offered while there is no repository or no remote. Without git it stays
-        // enabled, so choosing it explains what is missing.
-        internal static bool ConfigureSyncAvailable()
+        /// <summary>Creates the template folder with the Unity defaults when it has none, and says so.</summary>
+        internal static void EnsureTemplates()
         {
-            return !GitState.GitInstalled || !GitState.RepositoryExists || !GitState.HasRemote;
+            if (GitTemplates.EnsureDefaults())
+                EditorUtility.DisplayDialog("AutoSync", "Created the Git templates folder with the Unity defaults:\n" +
+                    GitTemplates.RootPath, "OK");
+        }
+
+        internal static string ProjectFile(string name)
+        {
+            return Path.Combine(RiryToolsPaths.ProjectRoot, name);
+        }
+
+        /// <summary>Copies a template into the project; an existing different file is replaced only when allowed and confirmed.</summary>
+        internal static void CopyTemplate(string name, string extension, bool mayReplace)
+        {
+            string template = GitTemplates.PathFor(name, extension);
+            if (!File.Exists(template)) return;
+            string text = File.ReadAllText(template);
+            if (File.Exists(ProjectFile(extension)) && (File.ReadAllText(ProjectFile(extension)) == text || !mayReplace ||
+                    !EditorUtility.DisplayDialog("Configuration", "Replace the project's " + extension + " with " +
+                        name + extension + "?", "Replace", "Keep Current")))
+                return;
+            File.WriteAllText(ProjectFile(extension), text);
+        }
+
+        internal static void Check(GitRunner.Result result, string action)
+        {
+            if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
         }
 
         /// <summary>Runs a menu action; a missing git or a failed step is shown, and logged as an exception.</summary>
@@ -105,7 +119,7 @@ namespace Riry.RiryTools.Editor
         }
     }
 
-    /// <summary>Configure Sync: state and actions. The drawing is in Editor/UI/GitWindows.cs.</summary>
+    /// <summary>Configuration: state and actions. The drawing is in Editor/UI/GitWindows.cs.</summary>
     internal sealed partial class GitConfigureWindow : EditorWindow
     {
         private const string KeepCurrent = "(keep current file)";
@@ -117,81 +131,47 @@ namespace Riry.RiryTools.Editor
         private string remoteUrl = "";
         private string currentRemoteUrl = "";
         private string templateName = "";
-        private GitLfs.Report report;
         private Vector2 scroll;
-
-        private static bool IsHttps(string url)
-        {
-            return url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-                url.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string ProjectFile(string name)
-        {
-            return Path.Combine(RiryToolsPaths.ProjectRoot, name);
-        }
 
         private void Reload()
         {
-            GitActions.Guard(GitTemplates.EnsureDefaults);
+            GitActions.Guard(GitActions.EnsureTemplates);
             ignoreOptions = Options(GitTemplates.IgnoreExtension);
             attributeOptions = Options(GitTemplates.AttributesExtension);
             ignoreChoice = Math.Max(0, Math.Min(ignoreChoice, ignoreOptions.Length - 1));
             attributeChoice = Math.Max(0, Math.Min(attributeChoice, attributeOptions.Length - 1));
             GitState.Refresh(true);
             currentRemoteUrl = "";
-            if (GitState.HasRemote)
+            if (GitState.RepositoryExists)
                 GitActions.Guard(() => currentRemoteUrl = GitRunner.Run(RiryToolsPaths.ProjectRoot, null, 10000,
-                    "remote", "get-url", AutoSync.Remote).Output.Trim());
+                    "remote", "get-url", AutoSyncJob.Remote).Output.Trim());
+            remoteUrl = currentRemoteUrl;
         }
 
         private static string[] Options(string extension)
         {
             var options = new List<string>();
-            if (File.Exists(ProjectFile(extension))) options.Add(KeepCurrent);
+            if (File.Exists(GitActions.ProjectFile(extension))) options.Add(KeepCurrent);
             options.AddRange(GitTemplates.Names(extension));
             return options.ToArray();
         }
 
+        /// <summary>Copies the chosen templates into the project and adds or changes the push remote.</summary>
         private void Apply()
         {
             GitState.RequireGit();
+            if (ignoreOptions.Length > 0 && ignoreOptions[ignoreChoice] != KeepCurrent)
+                GitActions.CopyTemplate(ignoreOptions[ignoreChoice], GitTemplates.IgnoreExtension, true);
+            if (attributeOptions.Length > 0 && attributeOptions[attributeChoice] != KeepCurrent)
+                GitActions.CopyTemplate(attributeOptions[attributeChoice], GitTemplates.AttributesExtension, true);
+
             string project = RiryToolsPaths.ProjectRoot;
-            if (!GitState.RepositoryExists)
-            {
-                Check(GitRunner.Run(project, null, 30000, "init"), "Creating the repository");
-                Check(GitRunner.Run(project, null, 30000, "symbolic-ref", "HEAD", "refs/heads/" + AutoSync.BaseBranch),
-                    "Naming the first branch");
-            }
-
-            // The project folder is the repository's top folder, so these are its top-level files.
-            if (ignoreOptions.Length > 0) CopyTemplate(ignoreOptions[ignoreChoice], GitTemplates.IgnoreExtension);
-            if (attributeOptions.Length > 0) CopyTemplate(attributeOptions[attributeChoice], GitTemplates.AttributesExtension);
-
-            GitLfs.Enable(project);
-            if (remoteUrl.Length > 0 && !GitState.HasRemote)
-                Check(GitRunner.Run(project, null, 30000, "remote", "add", AutoSync.Remote, remoteUrl), "Adding the remote");
-            GitState.Refresh(true);
-
-            report = GitLfs.Check(project, GitState.HasRemote ? AutoSync.Remote : null);
+            if (remoteUrl.Length > 0 && remoteUrl != currentRemoteUrl)
+                GitActions.Check(currentRemoteUrl.Length == 0
+                    ? GitRunner.Run(project, null, 30000, "remote", "add", AutoSyncJob.Remote, remoteUrl)
+                    : GitRunner.Run(project, null, 30000, "remote", "set-url", AutoSyncJob.Remote, remoteUrl),
+                    "Setting the remote");
             Reload();
-            AutoSync.ScheduleNow();
-        }
-
-        private static void CopyTemplate(string option, string extension)
-        {
-            if (option == KeepCurrent) return;
-            string text = File.ReadAllText(GitTemplates.PathFor(option, extension));
-            if (File.Exists(ProjectFile(extension)) && File.ReadAllText(ProjectFile(extension)) != text &&
-                !EditorUtility.DisplayDialog("Configure Sync", "Replace the project's " + extension + " with " + option + extension + "?",
-                    "Replace", "Keep Current"))
-                return;
-            File.WriteAllText(ProjectFile(extension), text);
-        }
-
-        private static void Check(GitRunner.Result result, string action)
-        {
-            if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
         }
     }
 }
