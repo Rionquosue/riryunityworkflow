@@ -76,14 +76,17 @@ namespace Riry.RiryTools.Editor
                 others.Clear();
                 expanded.Clear();
                 PreselectSingles();
+                UpdateExitPrompt();
             }
             catch (OperationCanceledException)
             {
                 plan = null;
+                UpdateExitPrompt();
             }
             catch (Exception exception)
             {
                 plan = null;
+                UpdateExitPrompt();
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog(GuidReferenceRepair.Title, exception.Message, "OK");
             }
@@ -91,6 +94,20 @@ namespace Riry.RiryTools.Editor
             {
                 log.Dispose();
             }
+        }
+
+        private const string ExitMessage = "Exit without repairing all broken GUID references?";
+
+        // Closing the window while references are still broken asks first (Unity's close prompt).
+        private void UpdateExitPrompt()
+        {
+            saveChangesMessage = ExitMessage;
+            hasUnsavedChanges = plan != null && plan.Missing.Count > 0;
+        }
+
+        // Save in Unity's close prompt keeps the window open, like Cancel; Discard closes it.
+        public override void SaveChanges()
+        {
         }
 
         // A missing GUID with exactly one candidate starts with it chosen.
@@ -296,6 +313,123 @@ namespace Riry.RiryTools.Editor
                         "Check for Broken References", "Not Now"))
                     BrokenReferenceWindow.OpenForOpenScenes(message);
             };
+        }
+    }
+
+    /// <summary>
+    /// Interrupts saving a scene, or the prefab open in Prefab Mode, that holds broken
+    /// asset references in memory: the save goes ahead only after CONTINUE ANYWAY is
+    /// clicked three times (BrokenSaveWindow). Missing scripts are not counted.
+    /// </summary>
+    internal sealed class BrokenReferenceSaveGuard : AssetModificationProcessor
+    {
+        private static string[] OnWillSaveAssets(string[] paths)
+        {
+            var allowed = new List<string>();
+            foreach (string path in paths)
+            {
+                int broken = CountBroken(path);
+                if (broken > 0 && !BrokenSaveWindow.Confirm(path, broken))
+                {
+                    Debug.LogWarning(GuidReferenceRepair.Title + ": saving " + path + " was aborted; it has " + broken +
+                        " broken asset reference(s). Repair them with Tools > RiryTools > GUID Tools.");
+                    continue;
+                }
+                allowed.Add(path);
+            }
+            return allowed.ToArray();
+        }
+
+        /// <summary>Broken asset references in the loaded scene or Prefab Mode prefab at the path; 0 when it is not open.</summary>
+        internal static int CountBroken(string path)
+        {
+            var roots = new List<GameObject>();
+            if (path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+            {
+                Scene scene = SceneManager.GetSceneByPath(path);
+                if (scene.IsValid() && scene.isLoaded) roots.AddRange(scene.GetRootGameObjects());
+            }
+            else if (path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+            {
+                PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+                if (stage != null && stage.assetPath == path) roots.Add(stage.prefabContentsRoot);
+            }
+            int broken = 0;
+            foreach (GameObject root in roots)
+            {
+                foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (PrefabUtility.IsPrefabAssetMissing(transform.gameObject)) broken++;
+                    foreach (Component component in transform.GetComponents<Component>())
+                    {
+                        // A missing script shows as a null component; scripts are not in scope yet.
+                        if (component == null) continue;
+                        SerializedProperty property = new SerializedObject(component).GetIterator();
+                        while (property.Next(true))
+                        {
+                            // A reference to an asset that is gone keeps its instance ID but has no object.
+                            if (property.propertyType == SerializedPropertyType.ObjectReference && property.name != "m_Script" &&
+                                property.objectReferenceValue == null && property.objectReferenceInstanceIDValue != 0)
+                                broken++;
+                        }
+                    }
+                }
+            }
+            return broken;
+        }
+    }
+
+    /// <summary>
+    /// The modal warning before saving with broken references. CONTINUE ANYWAY counts
+    /// down [2], [1] and saves on the third click; ABORT or closing skips the save.
+    /// </summary>
+    internal sealed class BrokenSaveWindow : EditorWindow
+    {
+        private const string Warning =
+            "SAVING WITH BROKEN GUID'S CAN CORRUPT A SCENE. Click continue anyways three times to save regardless.";
+        private const int ClicksNeeded = 3;
+        private string path;
+        private int broken;
+        private int clicksLeft = ClicksNeeded;
+        private bool confirmed;
+        private GUIStyle warningStyle;
+
+        internal static bool Confirm(string path, int broken)
+        {
+            BrokenSaveWindow window = CreateInstance<BrokenSaveWindow>();
+            window.titleContent = new GUIContent(GuidReferenceRepair.Title);
+            window.path = path;
+            window.broken = broken;
+            Rect main = EditorGUIUtility.GetMainWindowPosition();
+            window.position = new Rect(main.center.x - 240f, main.center.y - 110f, 480f, 220f);
+            window.minSize = window.maxSize = new Vector2(480f, 220f);
+            window.ShowModalUtility();
+            return window.confirmed;
+        }
+
+        private void OnGUI()
+        {
+            if (warningStyle == null)
+            {
+                warningStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 18, wordWrap = true };
+                warningStyle.normal.textColor = new Color(1f, 0.2f, 0.2f);
+            }
+            GUILayout.Space(8f);
+            GUILayout.Label(Warning, warningStyle);
+            GUILayout.Space(6f);
+            EditorGUILayout.LabelField(path + ": " + broken + " broken asset reference(s).", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.FlexibleSpace();
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("ABORT", GUILayout.Height(30f))) Close();
+                string label = "CONTINUE ANYWAY" + (clicksLeft < ClicksNeeded ? " [" + clicksLeft + "]" : "");
+                if (GUILayout.Button(label, GUILayout.Height(30f)) && --clicksLeft == 0)
+                {
+                    confirmed = true;
+                    Close();
+                }
+            }
+            GUILayout.Space(8f);
         }
     }
 }

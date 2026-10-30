@@ -205,5 +205,9 @@ namespace Riry.RiryTools.Editor
 // RepairCache: Candidates and LastKnownPaths searched so far.
 // GuidReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, owner, restore, log),
 //   Apply(plan, redirects, restores, log), SelectedFiles(), IsMissing(guid), FindGuidReferences(bytes), RepairSelected().
+// UpdateExitPrompt() / SaveChanges() (BrokenReferenceWindow.cs): closing with broken references
+//   listed asks ExitMessage; Save keeps the window open like Cancel.
+// BrokenReferenceSaveGuard / BrokenSaveWindow (BrokenReferenceWindow.cs): interrupt saving a scene or
+//   Prefab Mode prefab with broken asset references; CONTINUE ANYWAY needs three clicks ([2], [1]).
 // BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window when a file opens with
 //   missing GUIDs or Unity logs several missing-script or missing-prefab messages.

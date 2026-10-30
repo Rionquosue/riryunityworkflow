@@ -128,6 +128,19 @@ files plus the restored ones and lists what is still broken, reusing the cache.
 This repeats until no broken references are found. **Rescan** starts over with
 an empty cache.
 
+Closing the window while broken GUID references are still listed asks "Exit
+without repairing all broken GUID references?" through Unity's close prompt:
+**Discard** closes it; **Save** and **Cancel** keep it open.
+
+Saving a scene, or the prefab open in Prefab Mode, that holds broken asset
+references in memory is interrupted by a popup that says, in big red text,
+"SAVING WITH BROKEN GUID'S CAN CORRUPT A SCENE. Click continue anyways three
+times to save regardless." **ABORT** skips that file's save. **CONTINUE ANYWAY**
+counts down: the first click shows [2], the second [1], and the third saves. A
+reference counts as broken when it points to an asset that is gone (it keeps an
+instance ID but has no object), or a prefab instance's prefab is missing;
+missing scripts do not count.
+
 Only asset references are repaired: images, prefabs, meshes, materials, text and
 other assets. Script references (an `m_Script` field or MonoScript's
 `fileID: 11500000`) are skipped, and missing-script messages do not open the
