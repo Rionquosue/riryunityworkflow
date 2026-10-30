@@ -199,8 +199,8 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Import Presets/Save Import Settings to Preset Library...` (2051)
   - `Tools/RiryTools/Import Presets/Extract Animations (Generic)` (2052)
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
-  - `Tools/RiryTools/Menu Mockup` (2055): placeholder, does nothing yet
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
+  - `Tools/RiryTools/Menu Mockup` (2065): placeholder, does nothing yet
   - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)

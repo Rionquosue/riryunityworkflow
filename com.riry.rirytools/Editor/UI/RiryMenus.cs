@@ -106,9 +106,6 @@ namespace Riry.RiryTools.Editor
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
 
-        [MenuItem(MenuMockupMenu, false, 2055)]
-        private static void MenuMockupItem() { MenuMockup.Open(); }
-
         [MenuItem(StopAutoGameMenu, false, 2060)]
         private static void StopAutoGameItem() { StopAutoGame.Enabled = !StopAutoGame.Enabled; }
 
@@ -118,6 +115,9 @@ namespace Riry.RiryTools.Editor
             Menu.SetChecked(StopAutoGameMenu, StopAutoGame.Enabled);
             return true;
         }
+
+        [MenuItem(MenuMockupMenu, false, 2065)]
+        private static void MenuMockupItem() { MenuMockup.Open(); }
 
         [MenuItem(Documentation, false, 2070)]
         private static void DocumentationItem() { UnityEngine.Application.OpenURL(DocumentationLink); }
@@ -229,8 +229,8 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Save Import Settings to Preset Library... (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animations (Generic) (2052) -> ImportPresetAnimations.ExtractSelected
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
-//   Tools/RiryTools/Menu Mockup (2055)              -> MenuMockup.Open (Editor/MenuMockup.cs), a placeholder that does nothing yet
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
+//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs), a placeholder that does nothing yet
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
 //
 // PROJECT WINDOW RIGHT-CLICK
