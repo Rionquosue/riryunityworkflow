@@ -43,6 +43,17 @@ namespace Riry.RiryTools.Editor
         }
     }
 
+    /// <summary>
+    /// Candidates found so far for every missing GUID, kept between passes of one
+    /// Broken References window, so a GUID's sources are searched only once.
+    /// </summary>
+    internal sealed class RepairCache
+    {
+        public readonly Dictionary<string, List<RepairCandidate>> Candidates =
+            new Dictionary<string, List<RepairCandidate>>(StringComparer.Ordinal);
+        public readonly Dictionary<string, string> LastKnownPaths = new Dictionary<string, string>(StringComparer.Ordinal);
+    }
+
     internal enum BreakDecision
     {
         Undecided,
@@ -99,8 +110,8 @@ namespace Riry.RiryTools.Editor
     }
 
     /// <summary>
-    /// Finds GUID references that no longer resolve in damaged or recovered scenes,
-    /// prefabs and other text assets, suggests redirects from the remap ledger,
+    /// Finds asset GUID references (not scripts) that no longer resolve in damaged or
+    /// recovered scenes, prefabs and other text assets, suggests redirects from the remap ledger,
     /// GUID Tools logs and the Git history of .meta files, and
     /// rewrites the chosen ones byte-exactly with rollback.
     /// </summary>
@@ -163,16 +174,73 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>
-        /// Collects every replacement for each of <paramref name="guids"/> (all missing
-        /// GUIDs when null) from every source: the ledger and its Git history, the
-        /// GUID Tools logs, the Git history of .meta files (the asset now at the old
-        /// path, and the old asset itself as a restore), and assets whose name matches
-        /// the old asset's. Nothing is chosen here.
+        /// Gives the plan every replacement for each of <paramref name="guids"/> (all
+        /// missing GUIDs when null), then follows every Git restore's missing references,
+        /// and theirs, to the end, so everything a repair could break is found and
+        /// cached now; those deeper GUIDs get candidates and a depth but are listed only
+        /// once a Fix or a later pass adds them. Sources are searched once per GUID per
+        /// window (<paramref name="cache"/>). Nothing is chosen here.
         /// </summary>
-        internal static void Suggest(RepairPlan plan, ICollection<string> guids, GuidToolLog log)
+        internal static void Suggest(RepairPlan plan, ICollection<string> guids, RepairCache cache, GuidToolLog log)
         {
-            var wanted = new HashSet<string>(guids ?? plan.Missing.Keys, StringComparer.Ordinal);
-            if (wanted.Count == 0) return;
+            var level = new HashSet<string>(guids ?? plan.Missing.Keys, StringComparer.Ordinal);
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            while (level.Count > 0)
+            {
+                var fresh = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string guid in level)
+                {
+                    if (!cache.Candidates.ContainsKey(guid)) fresh.Add(guid);
+                }
+                if (fresh.Count > 0) Collect(fresh, cache, log);
+                var next = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string guid in level)
+                {
+                    seen.Add(guid);
+                    if (!plan.Candidates.ContainsKey(guid))
+                    {
+                        // A candidate from an earlier pass is checked again: the project has changed since.
+                        Refresh(cache.Candidates[guid]);
+                        plan.Candidates[guid] = cache.Candidates[guid];
+                        string path;
+                        if (cache.LastKnownPaths.TryGetValue(guid, out path)) plan.LastKnownPaths[guid] = path;
+                    }
+                    foreach (RepairCandidate candidate in plan.Candidates[guid])
+                    {
+                        foreach (string dependency in candidate.MissingReferences)
+                        {
+                            int depth = plan.DepthOf(guid) + 1;
+                            if (!plan.Depth.ContainsKey(dependency) && !plan.Missing.ContainsKey(dependency)) plan.Depth[dependency] = depth;
+                            if (!seen.Contains(dependency) && !level.Contains(dependency)) next.Add(dependency);
+                        }
+                    }
+                }
+                level = next;
+            }
+        }
+
+        // Drops redirects to assets that are gone, and checks restores again with their choices cleared.
+        private static void Refresh(List<RepairCandidate> candidates)
+        {
+            candidates.RemoveAll(candidate => !candidate.IsRestore && IsMissing(candidate.TargetGuid));
+            foreach (RepairCandidate candidate in candidates)
+            {
+                if (!candidate.IsRestore) continue;
+                candidate.MissingReferences.RemoveAll(guid => !IsMissing(guid));
+                string fullPath = System.IO.Path.Combine(RiryToolsPaths.ProjectRoot, candidate.Path);
+                candidate.PathTaken = File.Exists(fullPath) || Directory.Exists(fullPath) || File.Exists(fullPath + ".meta");
+                candidate.MissingDecision = candidate.PathDecision = candidate.GuidDecision = BreakDecision.Undecided;
+            }
+        }
+
+        /// <summary>
+        /// Searches every source for each of <paramref name="wanted"/> into the cache:
+        /// the ledger and its Git history, the GUID Tools logs, the Git history of .meta
+        /// files (the asset now at the old path, and the old asset itself as a restore),
+        /// and assets whose name matches the old asset's.
+        /// </summary>
+        private static void Collect(HashSet<string> wanted, RepairCache cache, GuidToolLog log)
+        {
             var names = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
             var ledgerPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var logPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -187,7 +255,7 @@ namespace Riry.RiryTools.Editor
                 AddRedirect(found, GuidRemapLedger.Resolve(guid, ledger, exists), "GUID match: remap ledger");
                 AddRedirect(found, GuidRemapLedger.Resolve(guid, ledgerHistory, exists), "GUID match: remap ledger in Git history");
                 AddRedirect(found, GuidRemapLedger.Resolve(guid, logged, exists), "GUID match: GUID Tools logs");
-                plan.Candidates[guid] = found;
+                cache.Candidates[guid] = found;
                 names[guid] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 string path;
                 if (ledgerPaths.TryGetValue(guid, out path)) names[guid].Add(path);
@@ -212,19 +280,19 @@ namespace Riry.RiryTools.Editor
             foreach (KeyValuePair<string, MetaHistoryParser.Hit> entry in history)
             {
                 string guid = entry.Key;
-                plan.LastKnownPaths[guid] = entry.Value.Path;
+                cache.LastKnownPaths[guid] = entry.Value.Path;
                 names[guid].Add(entry.Value.Path);
                 string current = AssetDatabase.AssetPathToGUID(entry.Value.Path, AssetPathToGUIDOptions.OnlyExistingAssets);
                 if (!string.IsNullOrEmpty(current) && current != guid)
-                    AddRedirect(plan.Candidates[guid], current, "Git history: the asset now at " + entry.Value.Path);
+                    AddRedirect(cache.Candidates[guid], current, "Git history: the asset now at " + entry.Value.Path);
                 RepairCandidate restore = RestoreCandidate(guid, entry.Value, prefix, log);
-                if (restore != null) plan.Candidates[guid].Add(restore);
+                if (restore != null) cache.Candidates[guid].Add(restore);
             }
 
             string[] assets = AssetDatabase.GetAllAssetPaths();
             foreach (string guid in wanted)
             {
-                foreach (string oldPath in names[guid]) AddNameMatches(plan.Candidates[guid], oldPath, assets, guid);
+                foreach (string oldPath in names[guid]) AddNameMatches(cache.Candidates[guid], oldPath, assets, guid);
             }
         }
 
@@ -252,7 +320,9 @@ namespace Riry.RiryTools.Editor
             var scored = new List<KeyValuePair<int, string>>();
             foreach (string asset in assets)
             {
-                if (!asset.StartsWith("Assets/", StringComparison.Ordinal) || AssetDatabase.IsValidFolder(asset)) continue;
+                if (!asset.StartsWith("Assets/", StringComparison.Ordinal) || AssetDatabase.IsValidFolder(asset) ||
+                    asset.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) || asset.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                    continue;
                 string name = Path.GetFileNameWithoutExtension(asset);
                 int score = string.Equals(name, oldName, StringComparison.OrdinalIgnoreCase) ? 4
                     : Math.Max(FuzzyMatch.Score(name, oldName), FuzzyMatch.Score(oldName, name));
@@ -317,7 +387,8 @@ namespace Riry.RiryTools.Editor
         /// than <paramref name="owner"/>, the missing GUID the restore is for, so each
         /// gets its own candidates (the Fix for that break). Returns the GUIDs added.
         /// </summary>
-        internal static List<string> AddDependencies(RepairPlan plan, string owner, RepairCandidate restore, GuidToolLog log)
+        internal static List<string> AddDependencies(RepairPlan plan, string owner, RepairCandidate restore, RepairCache cache,
+            GuidToolLog log)
         {
             var added = new List<string>();
             foreach (string guid in restore.MissingReferences)
@@ -331,7 +402,7 @@ namespace Riry.RiryTools.Editor
                 }
                 users.Add(restore.Path + " (restored)");
             }
-            Suggest(plan, added, log);
+            Suggest(plan, added, cache, log);
             return added;
         }
 
@@ -368,10 +439,11 @@ namespace Riry.RiryTools.Editor
         /// Restores the chosen assets from Git, then rewrites each missing GUID that
         /// has a redirect (in the scanned files and the restored ones), then reloads the
         /// open scenes from disk (discarding unsaved changes). Rolls everything back on
-        /// failure. Returns the number of files changed.
+        /// failure. Returns the number of files changed; <paramref name="restoredFiles"/>
+        /// receives the asset paths restored.
         /// </summary>
         internal static int Apply(RepairPlan plan, Dictionary<string, string> redirects, List<RepairCandidate> restores,
-            GuidToolLog log)
+            List<string> restoredFiles, GuidToolLog log)
         {
             var written = new List<RegenerateGuid.WrittenOperation>();
             var restored = new List<RestoredFile>();
@@ -385,6 +457,7 @@ namespace Riry.RiryTools.Editor
                 {
                     string destination = restore.Destination;
                     Restore(restore, destination, restored, log);
+                    restoredFiles.Add(destination);
                     if (RegenerateGuid.UnitySerializedExtensions.Contains(Path.GetExtension(destination))) files.Add(destination);
                 }
                 if (restores.Count > 0) AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
@@ -551,11 +624,37 @@ namespace Riry.RiryTools.Editor
                     !IsHex(bytes[start + RegenerateGuid.GuidLength]);
                 for (int j = start; valid && j < start + RegenerateGuid.GuidLength; j++) valid = IsHex(bytes[j]);
                 if (!valid) continue;
+                // Scripts are not repaired here yet: only asset references count.
+                if (IsScriptReference(bytes, i))
+                {
+                    i = start + RegenerateGuid.GuidLength - 1;
+                    continue;
+                }
                 found.Add(new KeyValuePair<long, string>(start,
                     Encoding.ASCII.GetString(bytes, start, RegenerateGuid.GuidLength)));
                 i = start + RegenerateGuid.GuidLength - 1;
             }
             return found;
+        }
+
+        private static readonly byte[] ScriptKey = Encoding.ASCII.GetBytes("m_Script:");
+        private static readonly byte[] ScriptFileId = Encoding.ASCII.GetBytes("fileID: 11500000");
+
+        /// <summary>
+        /// True when the GUID at <paramref name="guidKey"/> ("guid: ...") is a script:
+        /// its line is an m_Script field, or its reference uses MonoScript's fileID 11500000.
+        /// </summary>
+        private static bool IsScriptReference(byte[] bytes, int guidKey)
+        {
+            int lineStart = guidKey;
+            while (lineStart > 0 && bytes[lineStart - 1] != (byte)'\n') lineStart--;
+            for (int i = lineStart; i < guidKey; i++)
+            {
+                if ((i + ScriptKey.Length <= guidKey && StartsWith(bytes, i, ScriptKey)) ||
+                    (i + ScriptFileId.Length <= guidKey && StartsWith(bytes, i, ScriptFileId)))
+                    return true;
+            }
+            return false;
         }
 
         private static Dictionary<string, MetaHistoryParser.Hit> FindInHistory(HashSet<string> guids, GuidToolLog log,

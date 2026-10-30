@@ -185,20 +185,24 @@ namespace Riry.RiryTools.Editor
 //   Open(files, reason)   Opens the window and scans.
 //   OpenForOpenScenes(reason)  Scans the open scenes and the prefab in Prefab Mode.
 //   OpenPaths()           Paths of the open scenes and that prefab.
-//   Rescan()              Scans, collects candidates, pre-selects single ones.
+//   Rescan(nextPass)      Scans, collects candidates (reusing the cache on a next pass), pre-selects single ones.
+//   cache                 RepairCache   Candidates already searched, kept between passes.
 //   PreselectSingles()    Chooses the candidate of each missing GUID that has exactly one.
 //   Chosen(guid) / OtherChosen(guid)  The chosen candidate, or whether Other is chosen.
 //   Redirects()           Missing GUID to chosen asset GUID.
 //   Restores()            Chosen Git restores.
 //   FixMissingReferences(owner, restore)  Adds a restored file's missing references to the list, one level deeper.
 //   ApplyRedirects()      Warns when a restore's break has no Fix (ABORT / ACCEPT BROKEN REFERENCES),
-//                         confirms, restores, rewrites, reloads.
+//                         confirms, restores, rewrites, reloads, then starts the next pass with the
+//                         restored files added, until nothing is broken.
 //
 // RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidReferenceRepair.cs)
 //   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.
 //   RepairCandidate: TargetGuid or a restore (Commit, RepoPath), Path, Sources, and the restore's
 //     breaks: MissingReferences, PathTaken, GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept).
-// RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): fix levels; deeper breaks are recursive.
+// RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): levels shown per pass; a restore at the third
+//   level that breaks something is a recursive break, and its references come in the next pass.
+// RepairCache: Candidates and LastKnownPaths searched so far.
 // GuidReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, owner, restore, log),
 //   Apply(plan, redirects, restores, log), SelectedFiles(), IsMissing(guid), FindGuidReferences(bytes), RepairSelected().
 // BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window when a file opens with

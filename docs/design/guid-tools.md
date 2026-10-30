@@ -74,8 +74,8 @@ Every completed run appends `old GUID, new GUID, asset path, UTC time` to
 **RiryTools > Repair Missing GUID References** (or the GUID Tools window) opens
 the Broken References window for the selected text assets and folders; **Check
 for Broken References** opens it for the open scenes and the prefab in Prefab
-Mode. GUID Tools also offers it when an opened scene or prefab contains GUIDs
-with no asset, or when Unity logs several missing-script or missing-prefab
+Mode. GUID Tools also offers it when an opened scene or prefab contains asset
+GUIDs with no asset, or when Unity logs several missing-prefab or broken-reference
 messages within 30 seconds.
 
 ## Broken References window
@@ -115,11 +115,23 @@ cause further broken references. Please run tool again afterwards." with
 - **Another asset uses that GUID now.** Accept break only; Unity then gives one
   of them a new GUID.
 
-Breaks are repaired at most two levels deep in one go: a missing reference added
-by a Fix can itself be restored and fixed once more. A restore at the third level
-that still breaks something shows a red **RECURSIVE BREAK DETECTED** button with
-the same options and the note "* Broken references are inevitable. Please run
-tool again after applying."
+When the window scans, it follows every Git restore's missing references, and
+theirs, to the end, and caches every candidate it finds, so nothing is searched
+twice. One pass shows three levels: the broken references, plus two levels added
+by **Fix**. A restore at the third level that still breaks something shows a red
+**RECURSIVE BREAK DETECTED** button with the same options and the note "*
+Broken references are inevitable. Please run tool again after applying."; its
+Fix leaves those references for the next pass.
+
+After **Apply**, the window starts the next pass by itself: it scans the same
+files plus the restored ones and lists what is still broken, reusing the cache.
+This repeats until no broken references are found. **Rescan** starts over with
+an empty cache.
+
+Only asset references are repaired: images, prefabs, meshes, materials, text and
+other assets. Script references (an `m_Script` field or MonoScript's
+`fileID: 11500000`) are skipped, and missing-script messages do not open the
+prompt; scripts and DLLs are never offered as name matches.
 
 **Apply** restores the chosen assets (through Git's filters, so Git LFS files
 come back as their content), then rewrites the redirected GUIDs byte-exactly in

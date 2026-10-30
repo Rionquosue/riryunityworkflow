@@ -25,6 +25,8 @@ namespace Riry.RiryTools.Editor
         private readonly Dictionary<string, Object> others = new Dictionary<string, Object>(StringComparer.Ordinal);
         // Restores whose Break detected button is open.
         private readonly HashSet<RepairCandidate> expanded = new HashSet<RepairCandidate>();
+        // Candidates already searched, kept between the passes after each Apply.
+        private RepairCache cache = new RepairCache();
         private Vector2 scroll;
 
         internal static void Open(List<string> files, string reason)
@@ -61,13 +63,15 @@ namespace Riry.RiryTools.Editor
             return paths;
         }
 
-        private void Rescan()
+        /// <summary>Scans and collects candidates; the next pass after Apply keeps the cache, a new scan does not.</summary>
+        private void Rescan(bool nextPass = false)
         {
+            if (!nextPass) cache = new RepairCache();
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
                 plan = GuidReferenceRepair.Scan(files, log);
-                GuidReferenceRepair.Suggest(plan, null, log);
+                GuidReferenceRepair.Suggest(plan, null, cache, log);
                 choices.Clear();
                 others.Clear();
                 expanded.Clear();
@@ -150,7 +154,9 @@ namespace Riry.RiryTools.Editor
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
-                GuidReferenceRepair.AddDependencies(plan, owner, restore, log);
+                // Past the third level, the references wait for the next pass, which lists them by itself.
+                if (plan.DepthOf(owner) < RepairPlan.MaxFixDepth)
+                    GuidReferenceRepair.AddDependencies(plan, owner, restore, cache, log);
                 restore.MissingDecision = BreakDecision.Fix;
                 PreselectSingles();
             }
@@ -192,10 +198,13 @@ namespace Riry.RiryTools.Editor
                 return;
 
             GuidToolLog log = GuidToolLog.Open("Apply Broken Reference Repairs");
+            bool applied = false;
+            var restoredFiles = new List<string>();
             try
             {
-                int changed = GuidReferenceRepair.Apply(plan, Redirects(), restores, log);
+                int changed = GuidReferenceRepair.Apply(plan, Redirects(), restores, restoredFiles, log);
                 Debug.Log(GuidReferenceRepair.Title + ": repaired references in " + changed + " file(s).");
+                applied = true;
             }
             catch (Exception exception)
             {
@@ -207,21 +216,35 @@ namespace Riry.RiryTools.Editor
             {
                 log.Dispose();
             }
-            Rescan();
+            if (!applied)
+            {
+                Rescan();
+                return;
+            }
+            // The next pass: the same files plus the restored ones, with what was already found.
+            foreach (string restored in restoredFiles)
+            {
+                if (RegenerateGuid.UnitySerializedExtensions.Contains(System.IO.Path.GetExtension(restored)) && !files.Contains(restored))
+                    files.Add(restored);
+            }
+            reason = "Next pass: what is still broken after the last Apply.";
+            Rescan(true);
         }
     }
 
     /// <summary>
-    /// Offers Check for Broken References when an opened scene or prefab has GUIDs
-    /// with no asset, or when Unity starts reporting missing scripts or prefabs.
+    /// Offers Check for Broken References when an opened scene or prefab has asset
+    /// GUIDs with no asset, or when Unity starts reporting missing prefabs or broken
+    /// references. Missing scripts are not included yet.
     /// </summary>
     [InitializeOnLoad]
     internal static class BrokenReferenceMonitor
     {
         private const int Threshold = 3;
         private const double WindowSeconds = 30.0;
+        // Missing scripts are left out: GUID Tools only repairs asset references for now.
         private static readonly Regex Pattern = new Regex(
-            @"referenced script .*is missing|Missing Prefab|Broken text PPtr|Could not extract GUID|missing Prefab Asset|Prefab instance problem",
+            @"Missing Prefab|Broken text PPtr|Could not extract GUID|missing Prefab Asset|Prefab instance problem",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private static readonly Queue<double> recent = new Queue<double>();
         private static readonly HashSet<string> prompted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
