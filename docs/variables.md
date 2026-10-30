@@ -67,7 +67,8 @@ In the project:
 | `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration** | `GitActions.CopyTemplate` |
 | `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits | `GitLargeFiles.Ignore` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder | `ImportPresetMarker.FileName` |
-| `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips | `ImportPresetAnimations.FolderName` |
+| `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips (or the model's Destination) | `ImportPresetAnimations.FolderName` |
+| `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git | `AnimationExtractSettings.PathFor` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
 | `<model>_ROOT.prefab` | Constraint Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
 
@@ -197,7 +198,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/GUID Tools` (2040): the window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache
   - `Tools/RiryTools/Import Presets/Set Folder Import Presets` (2050)
   - `Tools/RiryTools/Import Presets/Save Import Preset` (2051)
-  - `Tools/RiryTools/Import Presets/Extract Animation` (2052)
+  - `Tools/RiryTools/Import Presets/Extract Animation` (2052): the Extract Animation window
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
   - `Tools/RiryTools/Menu Mockup` (2065): placeholder, does nothing yet
@@ -206,7 +207,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Assets/RiryTools/Regenerate GUID` (2000)
   - `Assets/RiryTools/Set Folder Import Presets` (2001)
   - `Assets/RiryTools/Save Import Preset` (2002)
-  - `Assets/RiryTools/Extract Animation` (2003)
+  - `Assets/RiryTools/Extract Animation` (2003): the Extract Animation window with the selected model
   - `Assets/RiryTools/Repair Missing GUID References` (2004)
   - `Assets/RiryTools/Clean Animation Keys` (2005)
 - **Hierarchy right-click:** `GameObject/RiryTools/Constraint Train` (20)

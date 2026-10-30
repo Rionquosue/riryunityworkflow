@@ -21,6 +21,8 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private CleanAnimationKeys.Options options = new CleanAnimationKeys.Options();
         [SerializeField] private string search = "";
         [SerializeField] private string summary;
+        // Set when opened by Configure in Extract Animation: the options and whitelist are that window's settings.
+        [SerializeField] private ExtractAnimationWindow extract;
         private Vector2 animationScroll;
         private Vector2 whitelistScroll;
         // Every shapekey and bone name keyed in the listed animations, for suggestions.
@@ -29,10 +31,40 @@ namespace Riry.RiryTools.Editor
         /// <summary>Opens the window and adds the clips that are not listed yet.</summary>
         internal static void Open(IEnumerable<AnimationClip> clips)
         {
-            CleanAnimationKeysWindow window = GetWindow<CleanAnimationKeysWindow>(true, CleanAnimationKeys.DisplayName);
-            window.minSize = new Vector2(480.0f, 520.0f);
+            // A Configure window (Extract Animation) is never reused for this.
+            CleanAnimationKeysWindow window = null;
+            foreach (CleanAnimationKeysWindow open in Resources.FindObjectsOfTypeAll<CleanAnimationKeysWindow>())
+            {
+                if (open.extract == null) window = open;
+            }
+            if (window == null)
+            {
+                window = CreateInstance<CleanAnimationKeysWindow>();
+                window.titleContent = new GUIContent(CleanAnimationKeys.DisplayName);
+                window.minSize = new Vector2(480.0f, 520.0f);
+            }
             foreach (AnimationClip clip in clips) window.Add(clip);
-            window.Show();
+            window.ShowUtility();
+            window.Focus();
+        }
+
+        /// <summary>
+        /// Opens a separate window for Extract Animation's Configure. Its options and
+        /// whitelist are the Extract Animation settings, saved there on every change.
+        /// </summary>
+        internal static CleanAnimationKeysWindow OpenFor(ExtractAnimationWindow owner, string targetName)
+        {
+            var window = CreateInstance<CleanAnimationKeysWindow>();
+            window.titleContent = new GUIContent(CleanAnimationKeys.DisplayName + ": " + targetName);
+            window.minSize = new Vector2(480.0f, 520.0f);
+            window.extract = owner;
+            window.ShowUtility();
+            return window;
+        }
+
+        internal void Add(IEnumerable<AnimationClip> clips)
+        {
+            foreach (AnimationClip clip in clips) Add(clip);
         }
 
         private void Add(AnimationClip clip)
@@ -48,7 +80,7 @@ namespace Riry.RiryTools.Editor
             {
                 if (!whitelist.Contains(name)) whitelist.Add(name);
             }
-            summary = null;
+            Changed();
             Repaint();
         }
 
@@ -62,8 +94,20 @@ namespace Riry.RiryTools.Editor
             get { return whitelist; }
         }
 
+        // The whitelist or an option changed.
+        private void Changed()
+        {
+            summary = null;
+            if (extract != null) extract.SettingsChanged();
+        }
+
         private void OnGUI()
         {
+            if (extract != null)
+            {
+                options = extract.Settings.CleanOptions;
+                whitelist = extract.Settings.Whitelist;
+            }
             EditorGUILayout.Space(6.0f);
             EditorGUILayout.LabelField("Utility for removing blank animation shapekeys from imported animations that " +
                 "automatically key every bone and shapekey.", EditorStyles.wordWrappedLabel);
@@ -87,7 +131,7 @@ namespace Riry.RiryTools.Editor
             options.KeepBoneMidKeys = EditorGUILayout.ToggleLeft(new GUIContent("Keep bone mid-keys/tangents",
                 "Keep a bone's translation, rotation or scale with more than a start and finish key, or whose tangents " +
                 "move between matching endpoints."), options.KeepBoneMidKeys);
-            if (EditorGUI.EndChangeCheck()) summary = null;
+            if (EditorGUI.EndChangeCheck()) Changed();
 
             GUILayout.FlexibleSpace();
             if (summary != null) EditorGUILayout.HelpBox(summary, MessageType.Info);
@@ -172,7 +216,7 @@ namespace Riry.RiryTools.Editor
                     if (GUILayout.Button("x", GUILayout.Width(22.0f)))
                     {
                         whitelist.RemoveAt(i);
-                        summary = null;
+                        Changed();
                         GUIUtility.ExitGUI();
                     }
                 }
@@ -376,14 +420,18 @@ namespace Riry.RiryTools.Editor
 //
 // CleanAnimationKeysWindow (this file)
 //   animations               List<AnimationClip>  Animations to clean (up to MaxAnimations, 64).
-//   whitelist                List<string>    Shapekey and bone names never removed; kept only while the window is open.
+//   whitelist                List<string>    Shapekey and bone names never removed; kept only while the window is open,
+//                                            except in Configure, where it is saved with the Extract Animation settings.
 //   options                  CleanAnimationKeys.Options  The four keep-rule checkboxes.
 //   search                   string          Whitelist search text.
 //   summary                  string          Result of the last Clean.
 //   keyedNames               List<string>    Names keyed in the listed animations, for suggestions.
 //   AnimationListHeight      const float     Height of the scrolling Animations list (150).
 //   MaxSuggestions           const int       Suggestions shown (8).
+//   extract                  ExtractAnimationWindow  Set for Configure: options and whitelist are its settings.
 //   Open(clips)              Opens the window and adds clips (Project selection or Animation window clip).
+//   OpenFor(owner, name)     Opens a separate window for Extract Animation's Configure.
+//   Changed()                Clears the summary; in Configure, saves the Extract Animation settings.
 //   DrawAnimations()         One row per animation with Whitelist, plus an empty row while under 64.
 //   DrawWhitelist()          Search field with Add, fuzzy suggestions, entries with x.
 //   Suggestions(typed)       Ranks names with FuzzyMatch.Score (Editor/FuzzyMatch.cs): starts with, contains, letters in order.

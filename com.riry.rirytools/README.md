@@ -61,7 +61,8 @@ Presets** to set presets per file type (fbx, obj, png, tga, blend...) from
 `Documents/RiryTools/ImportPresets`. New files in that folder and its
 subfolders get them on their first import; reimports and hand-edited settings
 are never changed. Models can have their animations extracted to `Animations/`
-as Generic clips before a Humanoid preset applies, and `.blend` files can be
+as Generic clips before a Humanoid preset applies (per folder, or per model in
+**RiryTools > Extract Animation**, which can also clean the keys), and `.blend` files can be
 exported with the Better FBX Blender add-on. Save presets from any asset with
 **RiryTools > Save Import Preset**. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/import-presets.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/import-presets.md).
 

@@ -32,7 +32,7 @@ namespace Riry.RiryTools.Editor
             if (rules.BetterFbx.Contains(extension)) return;
             ImportPresetMarker.Target target = rules.For(extension);
 
-            if (assetImporter is ModelImporter && rules.ExtractAnimations.Contains(extension))
+            if (assetImporter is ModelImporter && ImportPresetAnimations.ShouldExtract(path, rules))
             {
                 // Import with default (Generic) settings first; the preset is
                 // applied after the clips are copied out.
@@ -147,10 +147,10 @@ namespace Riry.RiryTools.Editor
                 // its settings, so its clips are refreshed here when configured.
                 ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(fbx);
                 var importer = AssetImporter.GetAtPath(fbx) as ModelImporter;
-                if (!existed || importer == null || rules == null || !rules.ExtractAnimations.Contains("fbx")) return;
+                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx, rules)) return;
                 List<string> skipped;
                 int written = ImportPresetAnimations.ExtractPreservingSettings(importer,
-                    ImportPresetOwnedFiles.IsUnchanged, out skipped);
+                    AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, out skipped);
                 Debug.Log("Import Presets: refreshed " + written + " clip(s) from " + fbx +
                     (skipped.Count > 0 ? "; kept " + skipped.Count + " edited clip(s)." : "."));
             }

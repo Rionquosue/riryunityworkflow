@@ -32,8 +32,12 @@ left alone.
 On a model row, turn on **Extract animations to Animations/ first (models)**.
 New models are imported as Generic, every clip is copied to an `Animations`
 folder beside the model, and then the model's preset (for example Humanoid) is
-applied. For models already in the project, right-click them and choose
-**RiryTools > Extract Animation**.
+applied. For models already in the project, right-click one and choose
+**RiryTools > Extract Animation**, check **Destination**, and click **Extract**.
+Turn on **Automatically clean keys** to clean the clips (**Configure** sets what
+is kept), and **Automatically extract animations** to extract that model before
+its preset every time. These settings are saved in `.<model>_ani-extract.json~`
+beside the model.
 
 ## 4. Blender files
 

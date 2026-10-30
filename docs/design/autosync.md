@@ -31,7 +31,8 @@ confirmation.
 
 Each save of a scene or prefab, from Ctrl+S, Prefab Mode or any other save, is
 one commit on the checked-out branch. The commit holds only the saved `.unity`
-or `.prefab` files and their `.meta` files; anything else that is staged stays
+or `.prefab` files and their `.meta` files (or an Extract Animation settings
+file when it is written); anything else that is staged stays
 staged and out of the commit. Ignored files are skipped, and a save with no
 changes commits nothing. The title is the time of the save, for example
 `2026-10-30T14:05:12+01:00`. Commits are flushed to disk before Git reports

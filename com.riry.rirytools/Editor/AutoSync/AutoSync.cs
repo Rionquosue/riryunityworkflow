@@ -63,6 +63,18 @@ namespace Riry.RiryTools.Editor
             if (!assetPath.EndsWith(".unity", StringComparison.OrdinalIgnoreCase) &&
                 !assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
                 return;
+            Queue(assetPath);
+        }
+
+        /// <summary>Queues any file for the next commit, such as an Extract Animation settings file.</summary>
+        internal static void Track(string path)
+        {
+            if (!Enabled || string.IsNullOrEmpty(path)) return;
+            Queue(path);
+        }
+
+        private static void Queue(string assetPath)
+        {
             if (collecting == null)
                 collecting = new AutoSyncJob.Save(DateTimeOffset.Now.ToString(TimeFormat, CultureInfo.InvariantCulture));
             if (!collecting.Paths.Contains(assetPath)) collecting.Paths.Add(assetPath);

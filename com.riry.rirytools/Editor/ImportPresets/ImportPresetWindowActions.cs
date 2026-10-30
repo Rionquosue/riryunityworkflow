@@ -262,10 +262,11 @@ namespace Riry.RiryTools.Editor
             string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path));
             bool extracted = false;
             var model = importer as ModelImporter;
-            if (model != null && rules.ExtractAnimations.Contains(extension))
+            if (model != null && ImportPresetAnimations.ShouldExtract(path, rules))
             {
                 List<string> skipped;
-                ImportPresetAnimations.ExtractPreservingSettings(model, ImportPresetOwnedFiles.IsUnchanged, out skipped);
+                ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
+                    ImportPresetOwnedFiles.IsUnchanged, out skipped);
                 extracted = true;
             }
             ImportPresetMarker.Target target = rules.For(extension);

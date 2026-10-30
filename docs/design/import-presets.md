@@ -95,12 +95,26 @@ Then the FBX's preset (for example a Humanoid avatar preset) is applied and the
 FBX is reimported. There is one FBX, not a copy.
 
 - The copies are ordinary clips; edit or move them freely.
-- **RiryTools > Extract Animation** on any model does the same later:
-  it imports as Generic temporarily, copies the clips, and restores the model's
-  own settings.
+- **RiryTools > Extract Animation** opens a window for one model. **Extract**
+  does the same later: it imports as Generic temporarily, copies the clips, and
+  restores the model's own settings.
+  - **Target**: the model, filled from the Project window selection.
+  - **Destination**: the folder for the clips, `Animations/` beside the model by default.
+  - **Automatically clean keys**: cleans the copies with Clean Animation Keys.
+    **Configure** opens Clean Animation Keys for these settings, listing the
+    clips already in Destination.
+  - **Save animation extract settings** (only while cleaning): keeps the
+    cleaning settings, so automatic extraction cleans too.
+  - **Automatically extract animations**: the model is always extracted before
+    its preset is applied, as if its folder listed its type under `animations:`.
+- The window's settings are saved to `.<model>_ani-extract.json~` beside the
+  model, only while Automatically extract animations or Save animation extract
+  settings is on, and the file is removed otherwise. Unity skips names that start
+  with `.` or end with `~`, so it gets no `.meta`; it is hidden on Windows. In a
+  Git repository it is staged with `git add --force`, and Sync commits it when on.
 - A clip the tool wrote is refreshed automatically only while unchanged. One you
-  edited, or one it did not write, is kept and listed in the Console; the menu
-  command asks before replacing those.
+  edited, or one it did not write, is kept and listed in the Console; **Extract**
+  asks before replacing those.
 - Pending extractions are stored in `Library/RiryTools/ImportPresets`, so they resume
   after a script reload.
 
