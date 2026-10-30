@@ -191,7 +191,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/AutoSync/Configuration...` (2001)
   - `Tools/RiryTools/Blendshape Sync` (2010)
   - `Tools/RiryTools/Clean Animation Keys` (2020)
-  - `Tools/RiryTools/Constraint Train` (2030)
+  - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
   - `Tools/RiryTools/GUID Tools/GUID Tools` (2040)
   - `Tools/RiryTools/GUID Tools/Regenerate GUID` (2041)
   - `Tools/RiryTools/GUID Tools/Repair Missing GUID References` (2042)

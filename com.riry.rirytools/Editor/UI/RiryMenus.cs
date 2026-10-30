@@ -56,7 +56,9 @@ namespace Riry.RiryTools.Editor
         private const string CheckBrokenReferences = "Git/Check for Broken References...";
 
         // ---- VRChat tools (also used by RiryVRChatMenus.cs) -----------------
-        internal const string ConstraintTrain = "Tools/RiryTools/Constraint Train";
+        // "&T" makes T its menu key (Clean Animation Keys has C). The space before it is
+        // U+00A0, because Unity reads "<space>&..." at the end of a path as an Alt shortcut.
+        internal const string ConstraintTrain = "Tools/RiryTools/Constraint\u00A0&Train";
         internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Train...";
 
         // =====================================================================
@@ -242,7 +244,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/AutoSync/Configuration... (2001) -> GitActions.OpenConfiguration -> GitConfigureWindow (Editor/UI/GitWindows.cs)
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncWindow.Open (Editor/UI/BlendshapeSyncWindow.UI.cs)
 //   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
-//   Tools/RiryTools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
+//   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools/GUID Tools (2040)    -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
 //   Tools/RiryTools/GUID Tools/Regenerate GUID (2041) -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
