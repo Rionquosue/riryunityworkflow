@@ -50,24 +50,28 @@ they are committed without pushing; the next push sends them.
 
 ## Configuration
 
-- **Templates**: pick a `.gitignore` and a `.gitattributes` from
-  `Documents/RiryTools/GitTemplates`; **Apply** copies them into the project,
-  asking before replacing a different file. Templates are `<name>.gitignore` and
-  `<name>.gitattributes`, for example `vrcproject.gitignore`. **Save** stores the
-  project's current files under a name, and **Open Template Folder** shows the
-  folder. Without any templates, GitHub's
+- **Templates** (one box): pick a `.gitignore` and a `.gitattributes` from
+  `Documents/RiryTools/GitTemplates`. Templates are `<name>.gitignore` and
+  `<name>.gitattributes`, for example `vrcproject.gitignore`. **Template name**
+  with **Save .gitignore** or **Save .gitattributes** stores the project's
+  current file under that name, and **Open Template Folder** shows the folder.
+  Without any templates, GitHub's
   [Unity.gitignore](https://github.com/github/gitignore/blob/main/Unity.gitignore)
   and the gitattributes project's
   [Unity.gitattributes](https://github.com/gitattributes/gitattributes/blob/master/Unity.gitattributes)
   are downloaded as `Unity`, and a built-in LFS template is added as `UnityLFS`.
-- **Push to remote**: the URL of `origin`. **Apply** adds it, or changes it when
-  it differs. Needs a repository, so turn Sync on first.
+- **Push to remote**: the URL of `origin`. **Add Remote** adds it when there is
+  no `origin`; **Change Remote** saves a different URL once it exists. Needs a
+  repository, so turn Sync on first.
+- **Apply**: copies the chosen templates into the project, asking before
+  replacing a different file, then saves **Push to remote** when it changed.
 
 ### Cloudflare
 
 Servers behind Cloudflare proxies, including Zero Trust tunnels to Gitea or
 Forgejo, reject any single HTTPS upload over 100 MB, and Git LFS cannot split
-uploads. Configuration warns under **Push to remote** when the URL uses HTTPS.
+uploads. Configuration warns under **Push to remote** when the URL uses HTTP or
+HTTPS; SSH URLs show no warning.
 Use an SSH remote (`git@host:owner/repo.git`) and enable LFS over SSH on the
 server (`LFS_ALLOW_PURE_SSH = true` under `[server]` in Gitea's or Forgejo's
 `app.ini`).

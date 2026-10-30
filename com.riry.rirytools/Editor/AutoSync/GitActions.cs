@@ -162,7 +162,7 @@ namespace Riry.RiryTools.Editor
             return options.ToArray();
         }
 
-        /// <summary>Copies the chosen templates into the project and adds or changes the push remote.</summary>
+        /// <summary>Copies the chosen templates into the project, then saves the push remote when it changed.</summary>
         private void Apply()
         {
             GitState.RequireGit();
@@ -171,12 +171,19 @@ namespace Riry.RiryTools.Editor
             if (attributeOptions.Length > 0 && attributeOptions[attributeChoice] != KeepCurrent)
                 GitActions.CopyTemplate(attributeOptions[attributeChoice], GitTemplates.AttributesExtension, true);
 
+            if (remoteUrl.Length > 0 && remoteUrl != currentRemoteUrl) SaveRemote();
+            Reload();
+        }
+
+        /// <summary>Adds origin with the entered URL, or changes its URL when it exists.</summary>
+        private void SaveRemote()
+        {
+            GitState.RequireGit();
             string project = RiryToolsPaths.ProjectRoot;
-            if (remoteUrl.Length > 0 && remoteUrl != currentRemoteUrl)
-                GitActions.Check(currentRemoteUrl.Length == 0
-                    ? GitRunner.Run(project, null, 30000, "remote", "add", AutoSyncJob.Remote, remoteUrl)
-                    : GitRunner.Run(project, null, 30000, "remote", "set-url", AutoSyncJob.Remote, remoteUrl),
-                    "Setting the remote");
+            GitActions.Check(currentRemoteUrl.Length == 0
+                ? GitRunner.Run(project, null, 30000, "remote", "add", AutoSyncJob.Remote, remoteUrl)
+                : GitRunner.Run(project, null, 30000, "remote", "set-url", AutoSyncJob.Remote, remoteUrl),
+                "Setting the remote");
             Reload();
         }
     }

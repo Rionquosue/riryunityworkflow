@@ -29,31 +29,46 @@ namespace Riry.RiryTools.Editor
                 : "None. Turning on Sync creates one.", EditorStyles.wordWrappedLabel);
 
             GUILayout.Space(6f);
-            EditorGUILayout.LabelField("Templates (" + GitTemplates.RootPath + ")", EditorStyles.boldLabel);
-            ignoreChoice = EditorGUILayout.Popup(".gitignore", ignoreChoice, ignoreOptions);
-            attributeChoice = EditorGUILayout.Popup(".gitattributes", attributeChoice, attributeOptions);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Templates (" + GitTemplates.RootPath + ")", EditorStyles.boldLabel);
+                ignoreChoice = EditorGUILayout.Popup(".gitignore", ignoreChoice, ignoreOptions);
+                attributeChoice = EditorGUILayout.Popup(".gitattributes", attributeChoice, attributeOptions);
+                GUILayout.Space(4f);
+                EditorGUILayout.LabelField("Save the project's current files as named templates", EditorStyles.miniBoldLabel);
+                templateName = EditorGUILayout.TextField("Template name", templateName).Trim();
+                using (new EditorGUI.DisabledScope(ImportPresetLibrary.ValidateName(templateName) != null))
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        SaveButton(GitTemplates.IgnoreExtension);
+                        SaveButton(GitTemplates.AttributesExtension);
+                    }
+                }
+                if (GUILayout.Button("Open Template Folder")) EditorUtility.RevealInFinder(GitTemplates.EnsureRoot());
+            }
 
             GUILayout.Space(6f);
             using (new EditorGUI.DisabledScope(!GitState.RepositoryExists))
-                remoteUrl = EditorGUILayout.TextField(new GUIContent("Push to remote",
-                    "Each Sync commit is pushed here as " + AutoSyncJob.Remote + ". Sign-in is handled by Git's credential manager."),
-                    remoteUrl).Trim();
-            if (IsHttps(remoteUrl)) EditorGUILayout.HelpBox(CloudflareWarning, MessageType.Warning);
-
-            if (GUILayout.Button("Apply", GUILayout.Height(28f))) GitActions.Guard(Apply);
-
-            GUILayout.Space(8f);
-            EditorGUILayout.LabelField("Save the project's current files as named templates", EditorStyles.boldLabel);
-            templateName = EditorGUILayout.TextField("Template name", templateName).Trim();
-            using (new EditorGUI.DisabledScope(ImportPresetLibrary.ValidateName(templateName) != null))
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    SaveButton(GitTemplates.IgnoreExtension);
-                    SaveButton(GitTemplates.AttributesExtension);
+                    remoteUrl = EditorGUILayout.TextField(new GUIContent("Push to remote",
+                        "Each Sync commit is pushed here as " + AutoSyncJob.Remote + ". Sign-in is handled by Git's credential manager."),
+                        remoteUrl).Trim();
+                    // Add Remote without origin; Change Remote once it exists.
+                    using (new EditorGUI.DisabledScope(remoteUrl.Length == 0 || remoteUrl == currentRemoteUrl))
+                    {
+                        if (GUILayout.Button(currentRemoteUrl.Length == 0 ? "Add Remote" : "Change Remote", GUILayout.Width(110f)))
+                            GitActions.Guard(SaveRemote);
+                    }
                 }
             }
-            if (GUILayout.Button("Open Template Folder")) EditorUtility.RevealInFinder(GitTemplates.EnsureRoot());
+            // SSH remotes (git@host:... or ssh://) are not affected.
+            if (IsHttps(remoteUrl)) EditorGUILayout.HelpBox(CloudflareWarning, MessageType.Warning);
+
+            GUILayout.Space(6f);
+            if (GUILayout.Button("Apply", GUILayout.Height(28f))) GitActions.Guard(Apply);
             EditorGUILayout.EndScrollView();
         }
 
@@ -84,8 +99,8 @@ namespace Riry.RiryTools.Editor
 //   UI (this file)
 //     Open()                Opens the window and loads templates and the remote.
 //     CloudflareWarning     const string  Warning shown under Push to remote for an HTTPS remote.
-//     OnGUI()               Repository, template popups, Push to remote (with the Cloudflare warning), Apply,
-//                           Save template, Open Template Folder.
+//     OnGUI()               Repository; Templates box (popups, Template name, Save buttons, Open Template Folder);
+//                           Push to remote with Add Remote / Change Remote and the Cloudflare warning; Apply.
 //     SaveButton(extension) Saves the project's .gitignore or .gitattributes as a named template.
 //   FIELDS AND ACTIONS (Editor/AutoSync/GitActions.cs)
 //     ignoreOptions / attributeOptions  string[]  Template popup entries.
@@ -97,7 +112,8 @@ namespace Riry.RiryTools.Editor
 //     KeepCurrent           const string  "(keep current file)" popup entry.
 //     Reload()              Creates default templates if needed, refreshes options and the remote.
 //     Options(extension)    Popup entries for one template type.
-//     Apply()               Copies the chosen templates (asks before replacing), adds or changes origin.
+//     Apply()               Copies the chosen templates (asks before replacing), then SaveRemote() when the URL changed.
+//     SaveRemote()          Adds origin (Add Remote) or changes its URL (Change Remote).
 //     IsHttps(url)          True for an http:// or https:// remote.
 //
 // GitActions (Editor/AutoSync/GitActions.cs)
