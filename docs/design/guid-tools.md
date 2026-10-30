@@ -73,9 +73,10 @@ Every completed run appends `old GUID, new GUID, asset path, UTC time` to
 
 **RiryTools > Repair Missing GUID References** (or the GUID Tools window) opens
 the Broken References window for the selected text assets and folders. Each
-missing GUID gets a redirect from the ledger, the GUID Tools logs, or the Git
-history of `.meta` files (every branch and the reflog), or one you
-choose; see [AutoSync](autosync.md#broken-references). Writes use the same
+missing GUID gets a redirect from, in order: the ledger; every record any
+version of the ledger held in Git (so records lost when the file was deleted,
+reverted or overwritten still count); the GUID Tools logs; or the Git history of
+`.meta` files (every branch, remote and the reflog). Otherwise you choose one; see [AutoSync](autosync.md#broken-references). Writes use the same
 byte-exact patching and rollback as regeneration.
 
 ## Safety limits

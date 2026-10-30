@@ -88,16 +88,27 @@ namespace Riry.RiryTools.Editor
             return plan;
         }
 
-        /// <summary>Suggests a redirect for each missing GUID: ledger, then GUID Tools logs, then Git history.</summary>
+        /// <summary>
+        /// Suggests a redirect for each missing GUID: the ledger, then the ledger's
+        /// Git history, then GUID Tools logs, then the Git history of .meta files.
+        /// </summary>
         internal static void Suggest(RepairPlan plan, GuidToolLog log)
         {
             Dictionary<string, string> ledger = GuidRemapLedger.Load();
+            Dictionary<string, string> ledgerHistory = null;
             Dictionary<string, string> logged = LoggedMappings();
             var remaining = new HashSet<string>(StringComparer.Ordinal);
             foreach (string guid in plan.Missing.Keys)
             {
                 string found = GuidRemapLedger.Resolve(guid, ledger, candidate => !IsMissing(candidate));
                 string source = "the GUID remap ledger";
+                if (found == null)
+                {
+                    // Read from Git only when the current ledger is not enough.
+                    if (ledgerHistory == null) ledgerHistory = GuidRemapLedger.LoadWithHistory(log);
+                    found = GuidRemapLedger.Resolve(guid, ledgerHistory, candidate => !IsMissing(candidate));
+                    source = "the GUID remap ledger's Git history";
+                }
                 if (found == null)
                 {
                     found = GuidRemapLedger.Resolve(guid, logged, candidate => !IsMissing(candidate));

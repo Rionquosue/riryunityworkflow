@@ -9,7 +9,8 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Permanent record of every GUID the Regenerate GUID command replaced, kept
     /// in ProjectSettings so it is versioned with the project. Repair Missing GUID
-    /// References follows it to relink files restored from before a regeneration.
+    /// References follows it, and every version of it in Git history, to relink
+    /// files restored from before a regeneration.
     /// </summary>
     internal static class GuidRemapLedger
     {
@@ -42,14 +43,57 @@ namespace Riry.RiryTools.Editor
         {
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (!File.Exists(FullPath)) return map;
-            foreach (string line in File.ReadAllLines(FullPath))
+            foreach (string line in File.ReadAllLines(FullPath)) AddRecord(line, map, true);
+            return map;
+        }
+
+        /// <summary>
+        /// The current ledger plus every record any version of it ever held in Git
+        /// (all branches, remotes and the reflog), so records lost when the file was
+        /// deleted, reverted or overwritten still count. A current record wins over
+        /// a past one, and a newer past record over an older one. Without Git, or
+        /// outside a repository, this is the current ledger.
+        /// </summary>
+        internal static Dictionary<string, string> LoadWithHistory(GuidToolLog log)
+        {
+            Dictionary<string, string> map = Load();
+            GitRunner.Result history;
+            try
             {
-                string[] fields = line.Split('\t');
-                if (fields.Length >= 2 && !line.StartsWith("#", StringComparison.Ordinal) &&
-                    fields[0].Length == RegenerateGuid.GuidLength && fields[1].Length == RegenerateGuid.GuidLength)
-                    map[fields[0]] = fields[1];
+                history = GitRunner.Run(RiryToolsPaths.ProjectRoot, null, 120000, "log", "--all", "--reflog", "-p",
+                    "--format=", "--unified=0", "--no-color", "--no-ext-diff", "--", RelativePath);
+            }
+            catch (GitNotInstalledException exception)
+            {
+                log.Write("Ledger history not searched: " + exception.Message);
+                return map;
+            }
+            if (!history.Succeeded)
+            {
+                log.Write("Ledger history not searched: " + history.Describe("Reading the ledger's Git history"));
+                return map;
+            }
+            // Newest first. Added lines are records as written; removed lines were
+            // records once, so they only fill what no added line holds.
+            string[] lines = history.Output.Replace("\r", "").Split('\n');
+            foreach (string marker in new[] { "+", "-" })
+            {
+                foreach (string line in lines)
+                {
+                    if (line.StartsWith(marker, StringComparison.Ordinal) && !line.StartsWith(marker + marker + marker, StringComparison.Ordinal))
+                        AddRecord(line.Substring(1), map, false);
+                }
             }
             return map;
+        }
+
+        private static void AddRecord(string line, Dictionary<string, string> map, bool replace)
+        {
+            string[] fields = line.Split('\t');
+            if (fields.Length < 2 || line.StartsWith("#", StringComparison.Ordinal) ||
+                fields[0].Length != RegenerateGuid.GuidLength || fields[1].Length != RegenerateGuid.GuidLength)
+                return;
+            if (replace || !map.ContainsKey(fields[0])) map[fields[0]] = fields[1];
         }
 
         /// <summary>
