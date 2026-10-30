@@ -198,28 +198,13 @@ namespace Riry.RiryTools.Editor
             foreach (string name in keyedNames)
             {
                 if (whitelist.Contains(name)) continue;
-                int score = FuzzyScore(name, typed);
+                int score = FuzzyMatch.Score(name, typed);
                 if (score > 0) scored.Add(new KeyValuePair<int, string>(score, name));
             }
             scored.Sort((left, right) => left.Key != right.Key
                 ? right.Key.CompareTo(left.Key)
                 : string.Compare(left.Value, right.Value, StringComparison.OrdinalIgnoreCase));
             for (int i = 0; i < scored.Count && i < MaxSuggestions; i++) yield return scored[i].Value;
-        }
-
-        internal static int FuzzyScore(string name, string typed)
-        {
-            int index = name.IndexOf(typed, StringComparison.OrdinalIgnoreCase);
-            if (index == 0) return 3;
-            if (index > 0) return 2;
-            int position = 0;
-            foreach (char letter in typed)
-            {
-                position = name.IndexOf(letter.ToString(), position, StringComparison.OrdinalIgnoreCase);
-                if (position < 0) return 0;
-                position++;
-            }
-            return 1;
         }
 
         private void Clean()
@@ -401,7 +386,7 @@ namespace Riry.RiryTools.Editor
 //   Open(clips)              Opens the window and adds clips (Project selection or Animation window clip).
 //   DrawAnimations()         One row per animation with Whitelist, plus an empty row while under 64.
 //   DrawWhitelist()          Search field with Add, fuzzy suggestions, entries with x.
-//   Suggestions(typed) / FuzzyScore(name, typed)  Ranks names: starts with, contains, then letters in order.
+//   Suggestions(typed)       Ranks names with FuzzyMatch.Score (Editor/FuzzyMatch.cs): starts with, contains, letters in order.
 //   AddToWhitelist(names)    Adds names (from Add, a suggestion, or APPLY).
 //   Clean()                  CleanAnimationKeys.Clean, then shows the summary.
 //

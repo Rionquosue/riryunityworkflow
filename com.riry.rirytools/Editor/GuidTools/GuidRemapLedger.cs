@@ -38,12 +38,15 @@ namespace Riry.RiryTools.Editor
             File.AppendAllText(FullPath, text.ToString(), new UTF8Encoding(false));
         }
 
-        /// <summary>Old GUID to the GUID that replaced it; a later record wins.</summary>
-        internal static Dictionary<string, string> Load()
+        /// <summary>
+        /// Old GUID to the GUID that replaced it; a later record wins. <paramref name="paths"/>,
+        /// when given, collects each old GUID's asset path.
+        /// </summary>
+        internal static Dictionary<string, string> Load(Dictionary<string, string> paths = null)
         {
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (!File.Exists(FullPath)) return map;
-            foreach (string line in File.ReadAllLines(FullPath)) AddRecord(line, map, true);
+            foreach (string line in File.ReadAllLines(FullPath)) AddRecord(line, map, true, paths);
             return map;
         }
 
@@ -54,9 +57,9 @@ namespace Riry.RiryTools.Editor
         /// a past one, and a newer past record over an older one. Without Git, or
         /// outside a repository, this is the current ledger.
         /// </summary>
-        internal static Dictionary<string, string> LoadWithHistory(GuidToolLog log)
+        internal static Dictionary<string, string> LoadWithHistory(GuidToolLog log, Dictionary<string, string> paths = null)
         {
-            Dictionary<string, string> map = Load();
+            Dictionary<string, string> map = Load(paths);
             GitRunner.Result history;
             try
             {
@@ -81,19 +84,21 @@ namespace Riry.RiryTools.Editor
                 foreach (string line in lines)
                 {
                     if (line.StartsWith(marker, StringComparison.Ordinal) && !line.StartsWith(marker + marker + marker, StringComparison.Ordinal))
-                        AddRecord(line.Substring(1), map, false);
+                        AddRecord(line.Substring(1), map, false, paths);
                 }
             }
             return map;
         }
 
-        private static void AddRecord(string line, Dictionary<string, string> map, bool replace)
+        private static void AddRecord(string line, Dictionary<string, string> map, bool replace, Dictionary<string, string> paths)
         {
             string[] fields = line.Split('\t');
             if (fields.Length < 2 || line.StartsWith("#", StringComparison.Ordinal) ||
                 fields[0].Length != RegenerateGuid.GuidLength || fields[1].Length != RegenerateGuid.GuidLength)
                 return;
             if (replace || !map.ContainsKey(fields[0])) map[fields[0]] = fields[1];
+            if (paths != null && fields.Length > 2 && fields[2].Length > 0 && (replace || !paths.ContainsKey(fields[0])))
+                paths[fields[0]] = fields[2];
         }
 
         /// <summary>

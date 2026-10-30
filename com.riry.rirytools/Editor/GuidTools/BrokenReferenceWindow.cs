@@ -10,17 +10,19 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Lists every missing GUID in a set of files with a redirect field, filled in
-    /// from the ledger, logs and Git history where possible. A missing GUID
-    /// without a redirect is shown in red until one is chosen. State and actions;
-    /// the drawing is in Editor/UI/BrokenReferenceWindow.UI.cs.
+    /// Lists every missing GUID in a set of files with every replacement found for
+    /// it and how each was found; the user picks one (a single one is pre-selected)
+    /// or any other asset. A missing GUID with nothing chosen is shown in red. State
+    /// and actions; the drawing is in Editor/UI/BrokenReferenceWindow.UI.cs.
     /// </summary>
     internal sealed partial class BrokenReferenceWindow : EditorWindow
     {
         private List<string> files = new List<string>();
         private string reason = "";
         private RepairPlan plan;
-        private readonly Dictionary<string, Object> choices = new Dictionary<string, Object>(StringComparer.Ordinal);
+        // Missing GUID to the chosen candidate index; Other (the list's length) uses others.
+        private readonly Dictionary<string, int> choices = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly Dictionary<string, Object> others = new Dictionary<string, Object>(StringComparer.Ordinal);
         private Vector2 scroll;
 
         internal static void Open(List<string> files, string reason)
@@ -63,10 +65,10 @@ namespace Riry.RiryTools.Editor
             try
             {
                 plan = GuidReferenceRepair.Scan(files, log);
-                GuidReferenceRepair.Suggest(plan, log);
+                GuidReferenceRepair.Suggest(plan, null, log);
                 choices.Clear();
-                foreach (KeyValuePair<string, string> entry in plan.Suggested)
-                    choices[entry.Key] = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(entry.Value));
+                others.Clear();
+                PreselectSingles();
             }
             catch (OperationCanceledException)
             {
@@ -84,18 +86,76 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // A missing GUID with exactly one candidate starts with it chosen.
+        private void PreselectSingles()
+        {
+            foreach (KeyValuePair<string, List<RepairCandidate>> entry in plan.Candidates)
+            {
+                if (entry.Value.Count == 1 && !choices.ContainsKey(entry.Key)) choices[entry.Key] = 0;
+            }
+        }
+
+        private RepairCandidate Chosen(string guid)
+        {
+            int index;
+            List<RepairCandidate> candidates;
+            if (!choices.TryGetValue(guid, out index) || !plan.Candidates.TryGetValue(guid, out candidates) ||
+                index < 0 || index >= candidates.Count)
+                return null;
+            return candidates[index];
+        }
+
+        private bool OtherChosen(string guid)
+        {
+            int index;
+            List<RepairCandidate> candidates;
+            return choices.TryGetValue(guid, out index) && plan.Candidates.TryGetValue(guid, out candidates) &&
+                index == candidates.Count;
+        }
+
+        /// <summary>Missing GUID to the asset GUID it is redirected to.</summary>
         private Dictionary<string, string> Redirects()
         {
             var redirects = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (KeyValuePair<string, Object> entry in choices)
+            foreach (string missing in plan.Missing.Keys)
             {
-                string guid;
+                RepairCandidate chosen = Chosen(missing);
+                string guid = chosen != null && !chosen.IsRestore ? chosen.TargetGuid : null;
+                Object other;
                 long localId;
-                if (entry.Value != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(entry.Value, out guid, out localId) &&
-                    guid != entry.Key && plan.Missing.ContainsKey(entry.Key))
-                    redirects[entry.Key] = guid;
+                if (OtherChosen(missing) && others.TryGetValue(missing, out other) && other != null)
+                    AssetDatabase.TryGetGUIDAndLocalFileIdentifier(other, out guid, out localId);
+                if (!string.IsNullOrEmpty(guid) && guid != missing) redirects[missing] = guid;
             }
             return redirects;
+        }
+
+        private List<RepairCandidate> Restores()
+        {
+            var restores = new List<RepairCandidate>();
+            foreach (string missing in plan.Missing.Keys)
+            {
+                RepairCandidate chosen = Chosen(missing);
+                if (chosen != null && chosen.IsRestore) restores.Add(chosen);
+            }
+            return restores;
+        }
+
+        /// <summary>Fix for a restored file's missing references: adds them to the list, with their own candidates.</summary>
+        private void FixMissingReferences(RepairCandidate restore)
+        {
+            GuidToolLog log = GuidToolLog.Open("Check for Broken References");
+            try
+            {
+                GuidReferenceRepair.AddDependencies(plan, restore, log);
+                restore.MissingDecision = BreakDecision.Fix;
+                PreselectSingles();
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                log.Dispose();
+            }
         }
 
         private void ApplyRedirects()
@@ -112,19 +172,28 @@ namespace Riry.RiryTools.Editor
                     "Close Prefab Mode without saving first, then apply the redirects.", "OK");
                 return;
             }
+            List<RepairCandidate> restores = Restores();
+            RepairCandidate undecided = restores.Find(restore => !restore.Ready);
+            if (undecided != null)
+            {
+                EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
+                    "Choose Fix or Accept break for each problem listed under the restore of " + undecided.Path + ".", "OK");
+                return;
+            }
             // Saving a scene with broken references could overwrite the good file, so
             // open scenes are reloaded from disk instead of saved.
             if (!EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
-                    "Rewrite " + Redirects().Count + " missing GUID(s) on disk, then reload the open scenes from disk?" +
+                    (restores.Count > 0 ? "Restore " + restores.Count + " asset(s) from Git, then r" : "R") +
+                    "ewrite " + Redirects().Count + " missing GUID(s) on disk, then reload the open scenes from disk?" +
                     (RegenerateGuid.ScenesAreSaved() ? "" : "\n\nUnsaved scene changes are discarded.") +
                     "\n\nThis bypasses Unity Undo.", "Apply", "Cancel"))
                 return;
 
-            GuidToolLog log = GuidToolLog.Open("Apply Broken Reference Redirects");
+            GuidToolLog log = GuidToolLog.Open("Apply Broken Reference Repairs");
             try
             {
-                int changed = GuidReferenceRepair.Apply(plan, Redirects(), log);
-                Debug.Log(GuidReferenceRepair.Title + ": redirected references in " + changed + " file(s).");
+                int changed = GuidReferenceRepair.Apply(plan, Redirects(), restores, log);
+                Debug.Log(GuidReferenceRepair.Title + ": repaired references in " + changed + " file(s).");
             }
             catch (Exception exception)
             {

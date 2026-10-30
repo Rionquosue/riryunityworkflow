@@ -30,12 +30,15 @@ example after restoring an old copy of a file.
 1. Select the broken scenes, prefabs or their folders.
 2. Right-click and choose **RiryTools > Repair Missing GUID References** (or
    **Repair Missing GUID References** in the GUID Tools window).
-3. The **Broken References** window lists each missing GUID and the files that
-   use it. Where it can, it fills in **Redirect to** from the remap ledger, the
-   GUID Tools logs or the Git history.
-4. Rows still in a red box have no suggestion: drag the asset the reference
-   should use into **Redirect to**.
-5. Click **Apply**. The files are rewritten and the open scenes reloaded.
+3. The **Broken References** window lists each missing GUID, the files that use
+   it, and every replacement found, with how each was found (remap ledger, logs,
+   Git history, name match, or a backup restored from Git).
+4. Choose one for each row, or pick any asset under **Other**. Rows still in a
+   red box have nothing chosen and are left as they are.
+5. If you chose a Git backup and it lists problems, click **Fix** or **Accept
+   break** for each.
+6. Click **Apply**. Backups are restored, the files are rewritten and the open
+   scenes reloaded.
 
 ## Housekeeping
 

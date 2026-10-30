@@ -63,6 +63,13 @@ namespace Riry.RiryTools.Editor
             return Execute(workingDirectory, environment, arguments, input, null, null, timeoutMs);
         }
 
+        /// <summary>Runs git and writes its standard output, byte for byte, to <paramref name="outputFile"/>.</summary>
+        internal static Result RunToFile(string workingDirectory, string outputFile, int timeoutMs, params string[] arguments)
+        {
+            using (var file = new FileStream(outputFile, FileMode.Create, FileAccess.Write))
+                return Execute(workingDirectory, null, arguments, null, null, null, timeoutMs, file);
+        }
+
         /// <summary>
         /// Runs git and hands each output line to <paramref name="onLine"/> on the
         /// calling thread. Returning true from <paramref name="cancelled"/> stops git.
@@ -74,7 +81,8 @@ namespace Riry.RiryTools.Editor
         }
 
         private static Result Execute(string workingDirectory, IDictionary<string, string> environment,
-            string[] arguments, byte[] input, Action<string> onLine, Func<bool> cancelled, int timeoutMs)
+            string[] arguments, byte[] input, Action<string> onLine, Func<bool> cancelled, int timeoutMs,
+            Stream output = null)
         {
             var all = new List<string> { "-c", "core.quotepath=off" };
             all.AddRange(arguments);
@@ -116,7 +124,9 @@ namespace Riry.RiryTools.Editor
                 process.BeginErrorReadLine();
                 // Raw output keeps NUL-separated (-z) listings intact.
                 Task<string> raw = null;
+                Task copied = null;
                 if (onLine != null) process.BeginOutputReadLine();
+                else if (output != null) copied = process.StandardOutput.BaseStream.CopyToAsync(output);
                 else raw = process.StandardOutput.ReadToEndAsync();
                 if (input != null)
                 {
@@ -146,6 +156,7 @@ namespace Riry.RiryTools.Editor
                 process.WaitForExit();
                 Drain(lines, onLine);
                 result.ExitCode = process.ExitCode;
+                if (copied != null) copied.Wait();
                 if (raw != null) result.Output = raw.Result;
                 lock (error) result.Error = error.ToString();
             }

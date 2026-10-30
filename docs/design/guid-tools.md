@@ -72,12 +72,49 @@ Every completed run appends `old GUID, new GUID, asset path, UTC time` to
 `ProjectSettings/RiryToolsGuidRemap.tsv`. Commit this file.
 
 **RiryTools > Repair Missing GUID References** (or the GUID Tools window) opens
-the Broken References window for the selected text assets and folders. Each
-missing GUID gets a redirect from, in order: the ledger; every record any
-version of the ledger held in Git (so records lost when the file was deleted,
-reverted or overwritten still count); the GUID Tools logs; or the Git history of
-`.meta` files (every branch, remote and the reflog). Otherwise you choose one; see [AutoSync](autosync.md#broken-references). Writes use the same
-byte-exact patching and rollback as regeneration.
+the Broken References window for the selected text assets and folders; **Check
+for Broken References** opens it for the open scenes and the prefab in Prefab
+Mode. GUID Tools also offers it when an opened scene or prefab contains GUIDs
+with no asset, or when Unity logs several missing-script or missing-prefab
+messages within 30 seconds.
+
+## Broken References window
+
+Each missing GUID lists every replacement found, each with how it was found
+(one candidate can be found several ways):
+
+- **GUID match: remap ledger**, **remap ledger in Git history** (every record any
+  version of the ledger held, so records lost when the file was deleted,
+  reverted or overwritten still count) and **GUID Tools logs**: the old to new
+  GUID chain ends at an asset that exists.
+- **Git history: the asset now at `<path>`**: the old GUID last lived at that
+  path in the Git history of `.meta` files (every branch, remote and the
+  reflog), and another asset is there now.
+- **Name match: "`<name>`"**: an asset whose name equals, starts with, contains
+  or is contained in the old asset's last known name (from Git history, the
+  ledger or the logs), the same file type first, up to 5 per name.
+- **Git history backup: `<path>` at `<commit>`**: the missing asset itself, with
+  its `.meta`, as it was in Git. Restoring it brings the GUID back, so the
+  references work again without being rewritten.
+- **Other**: any asset you pick.
+
+Nothing is chosen for you, except when a missing GUID has exactly one
+candidate. A missing GUID with nothing chosen stays in a red box.
+
+When a Git restore is chosen, it is checked for what restoring only that file
+would break, and each problem needs **Fix** or **Accept break** before Apply:
+
+- **It references assets that are missing now.** Fix adds those GUIDs to the
+  list, each with its own candidates.
+- **Another file is at that path now.** Fix restores beside it under a free
+  name; Accept break overwrites it.
+- **Another asset uses that GUID now.** Accept break only; Unity then gives one
+  of them a new GUID.
+
+**Apply** restores the chosen assets (through Git's filters, so Git LFS files
+come back as their content), then rewrites the redirected GUIDs byte-exactly in
+the scanned and restored files, then reloads the open scenes from disk instead
+of saving them. Any failure rolls back every write, restores included.
 
 ## Safety limits
 

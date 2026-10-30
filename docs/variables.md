@@ -61,6 +61,7 @@ In the project:
 | `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
 | `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateGuid.CacheDirectoryPath` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt`, `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `BetterFbxExporter` |
+| `Library/RiryTools/GuidTools/` | `restore`, `restore-meta` while a Git backup is written | `GuidReferenceRepair.Restore` |
 | `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateGuid.LogDirectoryPath`, `GuidToolLog` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidRemapLedger.RelativePath` |
 | `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration** | `GitActions.CopyTemplate` |
@@ -147,6 +148,7 @@ GUID Tools:
 | `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB | Log rotation and archive trim |
 | `GuidRemapLedger.MaxChain` | `64` | Longest old-to-new GUID chain followed |
 | `GuidReferenceRepair.Title` | `Broken References` | Window and dialog title |
+| `GuidReferenceRepair.MaxNameMatches` | `5` | Name matches offered per old name |
 
 Import Presets and Better FBX:
 

@@ -105,14 +105,8 @@ server (`LFS_ALLOW_PURE_SSH = true` under `[server]` in Gitea's or Forgejo's
 
 ## Broken references
 
-GUID Tools offers **Check for Broken References** when an opened scene or prefab
-contains GUIDs with no asset, or when Unity logs several missing-script or
-missing-prefab messages within 30 seconds. The window lists each missing GUID
-with the files using it and a **Redirect to** field. Redirects are filled in
-from the GUID remap ledger, its past versions in Git, the GUID Tools logs and
-the Git history of `.meta` files; a GUID with none stays in a red box until an asset is
-chosen. **Apply** rewrites the GUIDs byte-exactly with rollback, then reloads the
-open scenes from disk instead of saving them.
+GUID Tools repairs broken references, and searches the Git history Sync builds
+up; see [GUID Tools](guid-tools.md#broken-references-window).
 
 ## Script causing failed load
 
