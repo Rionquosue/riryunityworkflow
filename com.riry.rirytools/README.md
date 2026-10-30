@@ -87,7 +87,7 @@ See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/doc
 
 Open the GUID Tools window from:
 
-- Main menu: **Tools > RiryTools > GUID Tools > GUID Tools**
+- Main menu: **Tools > RiryTools > GUID Tools**
 
 To run directly from the Project window, select one or more assets or folders,
 then right-click and choose **RiryTools > Regenerate GUID**. Selected folders are
@@ -100,8 +100,7 @@ closed Prefab Mode. Open scenes are reloaded from disk afterwards. It bypasses
 Unity Undo, so commit or back up the project first.
 
 Reverse-reference indexes are cached under
-`Library/RiryTools/GuidReferenceCache`. Delete them from the GUID Tools window or with
-**Tools > RiryTools > GUID Tools > Delete GUID Reference Cache**. Diagnostic logs are written
+`Library/RiryTools/GuidReferenceCache`. Delete them from the GUID Tools window. Diagnostic logs are written
 to `Logs/RiryTools/GuidTools/` in the project; the active log rotates at 10 MiB, also
 during a run, and archived logs are trimmed oldest-first above 100 MiB.
 

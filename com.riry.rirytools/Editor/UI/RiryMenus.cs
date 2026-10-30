@@ -27,11 +27,7 @@ namespace Riry.RiryTools.Editor
         private const string ConfigurationTools = "Tools/RiryTools/AutoSync/Configuration...";
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
-        private const string GuidTools = "Tools/RiryTools/GUID Tools/GUID Tools";
-        private const string RegenerateGuidTools = "Tools/RiryTools/GUID Tools/Regenerate GUID";
-        private const string RepairGuidReferencesTools = "Tools/RiryTools/GUID Tools/Repair Missing GUID References";
-        private const string CheckBrokenReferencesTools = "Tools/RiryTools/GUID Tools/Check for Broken References...";
-        private const string DeleteGuidCache = "Tools/RiryTools/GUID Tools/Delete GUID Reference Cache";
+        private const string GuidTools = "Tools/RiryTools/GUID Tools";
         private const string ImportPresetTools = "Tools/RiryTools/Import Presets/Import Preset...";
         private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Settings to Preset Library...";
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animations (Generic)";
@@ -88,24 +84,6 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(GuidTools, false, 2040)]
         private static void GuidToolsItem() { GuidToolsWindow.Open(); }
-
-        [MenuItem(RegenerateGuidTools, false, 2041)]
-        private static void RegenerateGuidToolsItem() { RegenerateGuid.RegenerateSelectedGuids(); }
-
-        [MenuItem(RegenerateGuidTools, true)]
-        private static bool RegenerateGuidToolsValid() { return RegenerateGuid.HasValidSelection(); }
-
-        [MenuItem(RepairGuidReferencesTools, false, 2042)]
-        private static void RepairGuidReferencesToolsItem() { GuidReferenceRepair.RepairSelected(); }
-
-        [MenuItem(RepairGuidReferencesTools, true)]
-        private static bool RepairGuidReferencesToolsValid() { return RegenerateGuid.HasValidSelection(); }
-
-        [MenuItem(CheckBrokenReferencesTools, false, 2043)]
-        private static void CheckBrokenReferencesToolsItem() { BrokenReferenceWindow.OpenForOpenScenes("Checked from the Tools menu."); }
-
-        [MenuItem(DeleteGuidCache, false, 2044)]
-        private static void DeleteGuidCacheItem() { GuidReferenceCache.DeleteWithConfirmation(); }
 
         [MenuItem(ImportPresetTools, false, 2050)]
         private static void ImportPresetToolsItem() { ImportPresetActions.ChooseFolderPreset(); }
@@ -246,11 +224,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
 //   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
-//   Tools/RiryTools/GUID Tools/GUID Tools (2040)    -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
-//   Tools/RiryTools/GUID Tools/Regenerate GUID (2041) -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
-//   Tools/RiryTools/GUID Tools/Repair Missing GUID References (2042) -> GuidReferenceRepair.RepairSelected
-//   Tools/RiryTools/GUID Tools/Check for Broken References... (2043) -> BrokenReferenceWindow.OpenForOpenScenes
-//   Tools/RiryTools/GUID Tools/Delete GUID Reference Cache (2044) -> GuidReferenceCache.DeleteWithConfirmation (Editor/GuidTools/GuidReferenceCache.cs)
+//   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
 //   Tools/RiryTools/Import Presets/Import Preset... (2050) -> ImportPresetActions.ChooseFolderPreset (Editor/ImportPresets/ImportPresetActions.cs)
 //   Tools/RiryTools/Import Presets/Save Import Settings to Preset Library... (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animations (Generic) (2052) -> ImportPresetAnimations.ExtractSelected

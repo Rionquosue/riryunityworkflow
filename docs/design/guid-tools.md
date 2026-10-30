@@ -2,11 +2,12 @@
 
 ## Entry points
 
-- Open the window with **Tools > RiryTools > GUID Tools > GUID Tools**.
+- **Tools > RiryTools > GUID Tools** opens the window. It has every GUID Tools
+  action: **Regenerate GUID**, **Repair Missing GUID References**, **Check for
+  Broken References** and **Delete GUID Reference Cache**.
 - In the Project window, right-click selected assets or folders and choose
-  **RiryTools > Regenerate GUID**.
-- Delete the derived index with the window button or
-  **Tools > RiryTools > GUID Tools > Delete GUID Reference Cache**.
+  **RiryTools > Regenerate GUID** or **Repair Missing GUID References**. These
+  run straight away, without the window.
 
 The context command uses the current Project selection. Multiple assets are
 processed as one batch. Folders are expanded recursively, but folder `.meta`

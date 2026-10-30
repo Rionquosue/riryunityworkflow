@@ -32,6 +32,8 @@ namespace Riry.RiryTools.Editor
             }
 
             GUILayout.Space(4f);
+            if (GUILayout.Button("Check for Broken References", GUILayout.Height(24f)))
+                BrokenReferenceWindow.OpenForOpenScenes("Checked from the GUID Tools window.");
             if (GUILayout.Button("Delete GUID Reference Cache", GUILayout.Height(24f)))
                 GuidReferenceCache.DeleteWithConfirmation();
 
@@ -49,13 +51,15 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: GUID Tools window
-// Menu entries (Tools > GUID Tools, Delete GUID Reference Cache, and the Project
-// right-click Regenerate GUID / Repair Missing GUID References) are in RiryMenus.cs.
+// Menu entries (Tools > RiryTools > GUID Tools, and the Project right-click
+// Regenerate GUID / Repair Missing GUID References, which run without the window)
+// are in RiryMenus.cs.
 // ============================================================================
 //
 // GuidToolsWindow (this file)
 //   Open()            Opens the window (called from RiryMenus).
-//   OnGUI()           Buttons and the cache and log locations.
+//   OnGUI()           Regenerate GUID, Repair Missing GUID References, Check for Broken References,
+//                     Delete GUID Reference Cache, and the cache and log locations.
 //   OnSelectionChange()  Repaints so buttons follow the Project selection.
 //
 // Called from the window

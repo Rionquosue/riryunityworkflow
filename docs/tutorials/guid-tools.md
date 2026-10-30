@@ -15,7 +15,7 @@ folder) or a copied asset must stop being treated as the original.
 1. Select the assets or folders in the Project window. Folders include
    everything inside them; folder GUIDs themselves never change.
 2. Right-click and choose **RiryTools > Regenerate GUID**, or open
-   **Tools > RiryTools > GUID Tools > GUID Tools** and click **Regenerate GUID**.
+   **Tools > RiryTools > GUID Tools** and click **Regenerate GUID**.
 3. Confirm. Every text reference in the project is updated, and the open scenes
    are reloaded from disk.
 
@@ -39,8 +39,7 @@ example after restoring an old copy of a file.
 
 ## Housekeeping
 
-**Delete GUID Reference Cache** in the GUID Tools window (or **Tools > RiryTools > GUID Tools >
-Delete GUID Reference Cache**) clears the speed-up cache in `Library`. Logs are
+**Delete GUID Reference Cache** in the GUID Tools window clears the speed-up cache in `Library`. Logs are
 in `Logs/RiryTools/GuidTools`.
 
 Reference: [design/guid-tools.md](../design/guid-tools.md)
