@@ -15,8 +15,13 @@ the computer can use it. **Open Library** shows it.
 
 ## 2. Set a folder's presets
 
-1. Right-click a folder (or empty space inside it) in the Project window and
-   choose **RiryTools > Set Folder Import Presets**.
+For one preset per folder, right-click the folders (or empty space inside one)
+in the Project window, choose **RiryTools > Set Folder Import Presets**, pick the
+preset (turn off **Apply to all** for one per folder), and click **Apply**. It also
+applies to the files already in the folders. For per-type rules:
+
+1. Select a folder (or a file in it) in the Project window and choose
+   **Tools > RiryTools > Import Presets > Set Folder Import Presets**.
 2. Under **Default for unlisted file types**, choose a configuration.
 3. Under **File types**, add rows with **+ Textures**, **+ Models**, **+ Blender**
    or **+ File type**, and choose what each row **Use**s.

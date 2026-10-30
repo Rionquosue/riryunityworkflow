@@ -130,7 +130,7 @@ namespace Riry.RiryTools.Editor
         private static bool RegenerateGuidValid() { return RegenerateGuid.HasValidSelection(); }
 
         [MenuItem(ImportPreset, false, 2001)]
-        private static void ImportPresetItem() { ImportPresetActions.ChooseFolderPreset(); }
+        private static void ImportPresetItem() { ImportPresetActions.QuickFolderPreset(); }
 
         [MenuItem(ImportPreset, true)]
         private static bool ImportPresetValid() { return ImportPresetActions.ValidateChooseFolderPreset(); }
@@ -145,7 +145,12 @@ namespace Riry.RiryTools.Editor
         private static void ExtractAnimationsItem() { ExtractAnimationWindow.Open(); }
 
         [MenuItem(ExtractAnimations, true)]
-        private static bool ExtractAnimationsValid() { return ImportPresetAnimations.SelectedModel() != null; }
+        private static bool ExtractAnimationsValid()
+        {
+            // Only a model with embedded animations.
+            string model = ImportPresetAnimations.SelectedModel();
+            return model != null && ImportPresetAnimations.HasClips(model);
+        }
 
         [MenuItem(RepairGuidReferences, false, 2004)]
         private static void RepairGuidReferencesItem() { GuidReferenceRepair.RepairSelected(); }
@@ -232,9 +237,10 @@ namespace Riry.RiryTools.Editor
 //
 // PROJECT WINDOW RIGHT-CLICK
 //   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
-//   Assets/RiryTools/Set Folder Import Presets (2001) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
+//   Assets/RiryTools/Set Folder Import Presets (2001) -> ImportPresetActions.QuickFolderPreset -> ImportPresetQuickWindow (Editor/UI/ImportPresetQuickWindow.cs)
 //   Assets/RiryTools/Save Import Preset (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
-//   Assets/RiryTools/Extract Animation (2003) -> ExtractAnimationWindow.Open with the selected model (Editor/UI/ExtractAnimationWindow.cs)
+//   Assets/RiryTools/Extract Animation (2003) -> ExtractAnimationWindow.Open with the selected model (Editor/UI/ExtractAnimationWindow.cs);
+//                                                      enabled only for a model with embedded animations
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
 //   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //

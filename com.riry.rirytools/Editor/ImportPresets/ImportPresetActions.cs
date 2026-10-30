@@ -16,6 +16,12 @@ namespace Riry.RiryTools.Editor
             ImportPresetFolderWindow.Open(SelectedFolders());
         }
 
+        /// <summary>Project right-click: the small popup with one import preset for each folder, or for all.</summary>
+        internal static void QuickFolderPreset()
+        {
+            ImportPresetQuickWindow.Open(SelectedFolders());
+        }
+
         internal static bool ValidateChooseFolderPreset()
         {
             return SelectedFolders().Count > 0;

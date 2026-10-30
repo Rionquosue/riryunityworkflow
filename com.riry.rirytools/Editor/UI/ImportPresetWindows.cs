@@ -319,7 +319,8 @@ namespace Riry.RiryTools.Editor
 //     Problem()             Why the rows cannot be written, or null.
 //     BuildRules()          Rules from the fields.
 //     Apply()               Writes ImportPreset.md and optionally applies to existing files.
-//     FilesGovernedBy / ApplyToExisting / ApplyRules  Existing-file application.
+//     WriteMarker(folder, text, out changed)  Writes or removes ImportPreset.md; false for a hand-edited one.
+//     FilesGovernedBy / ApplyToExisting / ApplyRules  Existing-file application (also used by ImportPresetQuickWindow).
 //     Lists(row, extension) / IndexOf(list, value)  Small helpers.
 //
 // ImportPresetSaveWindow: saves an asset's import settings to the library

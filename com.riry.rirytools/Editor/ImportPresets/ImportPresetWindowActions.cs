@@ -176,31 +176,9 @@ namespace Riry.RiryTools.Editor
             int written = 0;
             foreach (string folder in folders)
             {
-                string marker = ImportPresetMarker.PathIn(folder);
-                if (File.Exists(marker))
-                {
-                    string content = ReadOrNull(marker);
-                    // A hand-edited marker belongs to the user: never rewrite or delete it.
-                    if (content == null || !ImportPresetMarker.IsGenerated(content))
-                    {
-                        skipped.Add(folder);
-                        continue;
-                    }
-                    if (generated == null)
-                    {
-                        AssetDatabase.DeleteAsset(marker);
-                        written++;
-                        continue;
-                    }
-                    if (content.Replace("\r\n", "\n") == generated) continue;
-                }
-                else if (generated == null)
-                {
-                    continue;
-                }
-                File.WriteAllText(marker, generated, new UTF8Encoding(false));
-                AssetDatabase.ImportAsset(marker);
-                written++;
+                bool changed;
+                if (!WriteMarker(folder, generated, out changed)) skipped.Add(folder);
+                else if (changed) written++;
             }
 
             int applied = existing.Count > 0 ? ApplyToExisting(existing) : 0;
@@ -211,7 +189,37 @@ namespace Riry.RiryTools.Editor
             Repaint();
         }
 
-        private static List<string> FilesGovernedBy(string folder)
+        /// <summary>
+        /// Writes the folder's ImportPreset.md, or removes it when generated is null.
+        /// Returns false for a hand-edited one, which belongs to the user and is never changed.
+        /// </summary>
+        internal static bool WriteMarker(string folder, string generated, out bool changed)
+        {
+            changed = false;
+            string marker = ImportPresetMarker.PathIn(folder);
+            if (File.Exists(marker))
+            {
+                string content = ReadOrNull(marker);
+                if (content == null || !ImportPresetMarker.IsGenerated(content)) return false;
+                if (generated == null)
+                {
+                    AssetDatabase.DeleteAsset(marker);
+                    changed = true;
+                    return true;
+                }
+                if (content.Replace("\r\n", "\n") == generated) return true;
+            }
+            else if (generated == null)
+            {
+                return true;
+            }
+            File.WriteAllText(marker, generated, new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(marker);
+            changed = true;
+            return true;
+        }
+
+        internal static List<string> FilesGovernedBy(string folder)
         {
             var paths = new List<string>();
             foreach (string guid in AssetDatabase.FindAssets("", new[] { folder }))
@@ -227,7 +235,7 @@ namespace Riry.RiryTools.Editor
             return paths;
         }
 
-        private static int ApplyToExisting(List<string> paths)
+        internal static int ApplyToExisting(List<string> paths)
         {
             int processed = 0;
             try
@@ -278,7 +286,7 @@ namespace Riry.RiryTools.Editor
             return true;
         }
 
-        private static string ReadOrNull(string path)
+        internal static string ReadOrNull(string path)
         {
             try
             {

@@ -186,6 +186,12 @@ namespace Riry.RiryTools.Editor
             return clips;
         }
 
+        /// <summary>True when the model has embedded animations.</summary>
+        internal static bool HasClips(string modelPath)
+        {
+            return Clips(modelPath).Count > 0;
+        }
+
         /// <summary>Paths the model's clips extract to. Clip names do not depend on the rig type.</summary>
         private static List<string> PlannedPaths(string modelPath, string folder)
         {

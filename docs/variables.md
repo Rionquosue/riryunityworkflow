@@ -205,9 +205,9 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
-  - `Assets/RiryTools/Set Folder Import Presets` (2001)
+  - `Assets/RiryTools/Set Folder Import Presets` (2001): the small popup (one preset per folder, or for all)
   - `Assets/RiryTools/Save Import Preset` (2002)
-  - `Assets/RiryTools/Extract Animation` (2003): the Extract Animation window with the selected model
+  - `Assets/RiryTools/Extract Animation` (2003): the Extract Animation window with the selected model; enabled only for a model with embedded animations
   - `Assets/RiryTools/Repair Missing GUID References` (2004)
   - `Assets/RiryTools/Clean Animation Keys` (2005)
 - **Hierarchy right-click:** `GameObject/RiryTools/Constraint Train` (20)

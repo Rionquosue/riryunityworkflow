@@ -43,10 +43,20 @@ folder by hand.
 
 ## Choosing a folder's preset
 
-Right-click a folder, or empty space in a folder's contents, then choose
-**RiryTools > Set Folder Import Presets**. Right-clicking a file uses the file's folder.
+**Tools > RiryTools > Import Presets > Set Folder Import Presets** opens the
+full window for the selected folders. Selecting a file uses the file's folder.
 
-The dialog shows each folder's current state, lists the configurations, and
+Right-clicking one or more folders, or empty space in a folder's contents, and
+choosing **RiryTools > Set Folder Import Presets** opens a small popup instead.
+**Apply to all** (on by default) gives one dropdown for every folder; turned off,
+each folder gets its own. The dropdowns list every configuration, with **Any
+(configuration rules)** or one of its presets. **Apply** sets each folder's
+default in its `ImportPreset.md` (its other rules are kept; a hand-edited one is
+left alone) and applies it to the files already in the folder; **Abort** closes
+the popup. **RiryTools > Extract Animation** in the same menu is enabled only for
+a model with embedded animations.
+
+The full window shows each folder's current state, lists the configurations, and
 summarizes the chosen one's rules. **Apply** writes `ImportPreset.md` into the
 folder; **None** removes it. **Also apply to files already in the folder now**
 replaces the current settings of existing files (after confirmation, without
