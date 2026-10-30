@@ -76,14 +76,12 @@ as Generic clips before a Humanoid preset applies, and `.blend` files can be
 exported with the Better FBX Blender add-on. Save presets from any asset with
 **RiryTools > Save Import Settings to Preset Library...**. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/import-presets.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/import-presets.md).
 
-## Play Mode Windows
+## Stop Auto Game
 
-Entering Play Mode normally brings the Game view to the front and focuses it.
-With **Tools > RiryTools > Play Mode Windows > Keep Tabs in Front** (on by default), the
-tabs that were in front, and the window that had focus, come back after Play Mode
-starts, and a Game view that Play Mode opened is closed when it ends. **Close Game
-View Opened by Play Mode** closes such a Game view as soon as Play Mode starts.
-Both are per-user settings. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/play-mode-windows.md).
+Entering Play Mode normally focuses the Game view. With **Tools > RiryTools > Stop Auto Game** (on by default), the windows
+that had focus get it back, and a Game view that Play Mode opened because the layout had none is
+closed when Play Mode ends. Choose the entry again to turn it off. It is a
+per-user setting. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/stop-auto-game.md).
 
 ## Constraint Train
 

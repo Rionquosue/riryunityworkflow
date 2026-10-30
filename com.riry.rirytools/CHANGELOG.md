@@ -10,4 +10,4 @@ First release of RiryTools (`com.riry.rirytools`), editor-only tools for Unity 2
 - **Constraint Train** (VRChat Avatars SDK 3.7.0 or newer): drives a bone chain onto physics chains with VRC Parent Constraints and a Motion Time clip.
 - **GUID Tools**: regenerates asset GUIDs while keeping references, and repairs missing GUID references.
 - **Import Presets**: per-folder import presets, animation extraction and Better FBX export.
-- **Play Mode Windows**: keeps the tabs that were in front when Play Mode starts.
+- **Stop Auto Game**: keeps focus off the Game view when Play Mode starts.

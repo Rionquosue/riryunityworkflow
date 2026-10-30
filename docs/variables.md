@@ -18,7 +18,7 @@ name.
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
 - **Tool names:** AutoSync, Blendshape Sync, Clean Animation Keys, Constraint
-  Train, GUID Tools, Import Presets, Play Mode Windows. Class, file, folder and
+  Train, GUID Tools, Import Presets, Stop Auto Game. Class, file, folder and
   document names follow them.
 
 ## Stored settings
@@ -27,8 +27,7 @@ EditorPrefs: per user, shared by every project.
 
 | Key | Type | Default | Owner |
 |---|---|---|---|
-| `RiryTools.PlayMode.KeepTabs` | bool | `true` | `PlayModeWindowKeeper.KeepTabs` |
-| `RiryTools.PlayMode.CloseGameView` | bool | `false` | `PlayModeWindowKeeper.CloseGameView` |
+| `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
 
@@ -46,9 +45,8 @@ SessionState: until the editor quits; survives script reloads.
 |---|---|---|
 | `RiryTools.AutoSync.Pending` | one save per line: title, then paths, tab-separated | `AutoSync`: saves not yet committed when scripts reloaded |
 | `RiryTools.AutoSync.LargeFileNoticeShown` | remote URLs, one per line | `AutoSync.LargeFileNotice`: **Push Held** was shown this session |
-| `RiryTools.PlayMode.FrontTabs` | comma-separated instance IDs | `PlayModeWindowKeeper` |
-| `RiryTools.PlayMode.Focused` | instance ID | `PlayModeWindowKeeper` |
-| `RiryTools.PlayMode.HadGameView` | bool | `PlayModeWindowKeeper` |
+| `RiryTools.StopAutoGame.FocusedWindows` | comma-separated instance IDs | `StopAutoGame`: windows focused when Play Mode started |
+| `RiryTools.StopAutoGame.GameViewWasOpen` | bool | `StopAutoGame`: a Game view existed before Play Mode |
 | `RiryTools.ScriptLoadGuard.Guarded` | newline-separated asset paths | `ScriptLoadGuard` |
 
 Window fields marked `[SerializeField]` survive script reloads while the window
@@ -175,7 +173,7 @@ Other tools:
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
-| `PlayModeWindowKeeper.SettleUpdates` | `3` | Editor updates to wait before restoring tabs |
+| `StopAutoGame.HandleDelayMs` | `100` | Delay after Play Mode starts before focus is restored |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
 
 ## Menu paths
@@ -199,8 +197,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Import Presets/Save Import Settings to Preset Library...` (2051)
   - `Tools/RiryTools/Import Presets/Extract Animations (Generic)` (2052)
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
-  - `Tools/RiryTools/Play Mode Windows/Keep Tabs in Front` (2060)
-  - `Tools/RiryTools/Play Mode Windows/Close Game View Opened by Play Mode` (2061)
+  - `Tools/RiryTools/Stop Auto Game` (2060), check mark
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
   - `Assets/RiryTools/Import Preset...` (2001)

@@ -36,8 +36,7 @@ namespace Riry.RiryTools.Editor
         private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Settings to Preset Library...";
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animations (Generic)";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
-        private const string KeepTabsInFront = "Tools/RiryTools/Play Mode Windows/Keep Tabs in Front";
-        private const string CloseGameView = "Tools/RiryTools/Play Mode Windows/Close Game View Opened by Play Mode";
+        private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
 
         // ---- Project window right-click -------------------------------------
         private const string RegenerateGuidAssets = "Assets/RiryTools/Regenerate GUID";
@@ -126,23 +125,13 @@ namespace Riry.RiryTools.Editor
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
 
-        [MenuItem(KeepTabsInFront, false, 2060)]
-        private static void KeepTabsInFrontItem() { PlayModeWindowKeeper.KeepTabs = !PlayModeWindowKeeper.KeepTabs; }
+        [MenuItem(StopAutoGameMenu, false, 2060)]
+        private static void StopAutoGameItem() { StopAutoGame.Enabled = !StopAutoGame.Enabled; }
 
-        [MenuItem(KeepTabsInFront, true)]
-        private static bool KeepTabsInFrontValid()
+        [MenuItem(StopAutoGameMenu, true)]
+        private static bool StopAutoGameValid()
         {
-            Menu.SetChecked(KeepTabsInFront, PlayModeWindowKeeper.KeepTabs);
-            return true;
-        }
-
-        [MenuItem(CloseGameView, false, 2061)]
-        private static void CloseGameViewItem() { PlayModeWindowKeeper.CloseGameView = !PlayModeWindowKeeper.CloseGameView; }
-
-        [MenuItem(CloseGameView, true)]
-        private static bool CloseGameViewValid()
-        {
-            Menu.SetChecked(CloseGameView, PlayModeWindowKeeper.CloseGameView);
+            Menu.SetChecked(StopAutoGameMenu, StopAutoGame.Enabled);
             return true;
         }
 
@@ -257,8 +246,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Save Import Settings to Preset Library... (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animations (Generic) (2052) -> ImportPresetAnimations.ExtractSelected
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
-//   Tools/RiryTools/Play Mode Windows/Keep Tabs in Front (2060)  [check mark] -> PlayModeWindowKeeper.KeepTabs (Editor/PlayModeWindowKeeper.cs)
-//   Tools/RiryTools/Play Mode Windows/Close Game View Opened by Play Mode (2061) [check mark] -> PlayModeWindowKeeper.CloseGameView
+//   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //
 // PROJECT WINDOW RIGHT-CLICK
 //   Assets/RiryTools/Regenerate GUID (2000)         -> RegenerateGuid.RegenerateSelectedGuids (Editor/GuidTools/RegenerateGuid.cs)
