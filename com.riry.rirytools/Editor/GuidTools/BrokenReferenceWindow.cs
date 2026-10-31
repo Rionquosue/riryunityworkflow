@@ -318,8 +318,9 @@ namespace Riry.RiryTools.Editor
 
     /// <summary>
     /// Interrupts saving a scene, or the prefab open in Prefab Mode, that holds broken
-    /// asset references in memory: the save goes ahead only after CONTINUE ANYWAY is
-    /// clicked three times (BrokenSaveWindow). Missing scripts are not counted.
+    /// asset references in memory (references whose asset GUID no longer exists): the
+    /// save goes ahead only after CONTINUE ANYWAY is clicked three times
+    /// (BrokenSaveWindow). Missing scripts are not counted.
     /// </summary>
     internal sealed class BrokenReferenceSaveGuard : AssetModificationProcessor
     {
@@ -328,10 +329,10 @@ namespace Riry.RiryTools.Editor
             var allowed = new List<string>();
             foreach (string path in paths)
             {
-                int broken = CountBroken(path);
-                if (broken > 0 && !BrokenSaveWindow.Confirm(path, broken))
+                List<BrokenReference> broken = FindBroken(path);
+                if (broken.Count > 0 && !BrokenSaveWindow.Confirm(path, Describe(broken)))
                 {
-                    Debug.LogWarning(GuidReferenceRepair.Title + ": saving " + path + " was aborted; it has " + broken +
+                    Debug.LogWarning(GuidReferenceRepair.Title + ": saving " + path + " was aborted; it has " + broken.Count +
                         " broken asset reference(s). Repair them with Tools > RiryTools > GUID Tools.");
                     continue;
                 }
@@ -340,8 +341,15 @@ namespace Riry.RiryTools.Editor
             return allowed.ToArray();
         }
 
-        /// <summary>Broken asset references in the loaded scene or Prefab Mode prefab at the path; 0 when it is not open.</summary>
-        internal static int CountBroken(string path)
+        /// <summary>One broken reference: where it is used, and the missing asset's GUID (null when Unity does not know it).</summary>
+        internal sealed class BrokenReference
+        {
+            internal string Where;
+            internal string Guid;
+        }
+
+        /// <summary>Broken asset references in the loaded scene or Prefab Mode prefab at the path; none when it is not open.</summary>
+        internal static List<BrokenReference> FindBroken(string path)
         {
             var roots = new List<GameObject>();
             if (path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
@@ -354,12 +362,15 @@ namespace Riry.RiryTools.Editor
                 PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
                 if (stage != null && stage.assetPath == path) roots.Add(stage.prefabContentsRoot);
             }
-            int broken = 0;
+            var broken = new List<BrokenReference>();
+            bool? fileNamesMissing = null;
             foreach (GameObject root in roots)
             {
                 foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
                 {
-                    if (PrefabUtility.IsPrefabAssetMissing(transform.gameObject)) broken++;
+                    string objectPath = ObjectPath(transform);
+                    if (PrefabUtility.IsPrefabAssetMissing(transform.gameObject))
+                        broken.Add(new BrokenReference { Where = objectPath + " > Prefab", Guid = MissingPrefabGuid(transform.gameObject) });
                     foreach (Component component in transform.GetComponents<Component>())
                     {
                         // A missing script shows as a null component; scripts are not in scope yet.
@@ -368,14 +379,99 @@ namespace Riry.RiryTools.Editor
                         while (property.Next(true))
                         {
                             // A reference to an asset that is gone keeps its instance ID but has no object.
-                            if (property.propertyType == SerializedPropertyType.ObjectReference && property.name != "m_Script" &&
-                                property.objectReferenceValue == null && property.objectReferenceInstanceIDValue != 0)
-                                broken++;
+                            if (property.propertyType != SerializedPropertyType.ObjectReference || property.name == "m_Script" ||
+                                property.objectReferenceValue != null || property.objectReferenceInstanceIDValue == 0)
+                                continue;
+                            string guid;
+                            if (!PointsAtMissingAsset(property.objectReferenceInstanceIDValue, path, ref fileNamesMissing, out guid)) continue;
+                            broken.Add(new BrokenReference
+                            {
+                                Where = objectPath + " > " + ObjectNames.NicifyVariableName(component.GetType().Name) + " > " +
+                                    FieldName(property.propertyPath),
+                                Guid = guid
+                            });
                         }
                     }
                 }
             }
             return broken;
+        }
+
+        /// <summary>
+        /// Whether an empty reference is a broken GUID: its asset GUID no longer exists. An
+        /// empty reference whose GUID still exists, such as one left over from a scene opened
+        /// earlier, is not broken. One with no GUID to look up counts only when the file on
+        /// disk itself names a missing asset.
+        /// </summary>
+        private static bool PointsAtMissingAsset(int instanceId, string path, ref bool? fileNamesMissing, out string guid)
+        {
+            long localId;
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instanceId, out guid, out localId) && !string.IsNullOrEmpty(guid))
+                return GuidReferenceRepair.IsMissing(guid);
+            guid = null;
+            if (fileNamesMissing == null) fileNamesMissing = FileNamesMissingAsset(path);
+            return fileNamesMissing.Value;
+        }
+
+        // The prefab asset a prefab instance came from, read from its instance's source reference.
+        private static string MissingPrefabGuid(GameObject instance)
+        {
+            Object handle = PrefabUtility.GetPrefabInstanceHandle(instance);
+            if (handle == null) return null;
+            SerializedProperty source = new SerializedObject(handle).FindProperty("m_SourcePrefab");
+            string guid;
+            long localId;
+            return source != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(source.objectReferenceInstanceIDValue, out guid, out localId) &&
+                !string.IsNullOrEmpty(guid) ? guid : null;
+        }
+
+        // "Avatar/Body", the GameObject's place in the hierarchy.
+        private static string ObjectPath(Transform transform)
+        {
+            string path = transform.name;
+            for (Transform parent = transform.parent; parent != null; parent = parent.parent) path = parent.name + "/" + path;
+            return path;
+        }
+
+        // "m_Materials.Array.data[0]" as "Materials[0]".
+        private static string FieldName(string propertyPath)
+        {
+            var parts = new List<string>();
+            foreach (string part in propertyPath.Replace(".Array.data[", "[").Split('.')) parts.Add(ObjectNames.NicifyVariableName(part));
+            return string.Join(".", parts);
+        }
+
+        /// <summary>
+        /// "Skin.mat in Avatar/Body > Mesh Renderer > Materials[0] (GUID:...)" for each reference: the
+        /// missing asset's last known name from the GUID remap ledger or Git history, or "Unknown asset".
+        /// </summary>
+        private static List<string> Describe(List<BrokenReference> broken)
+        {
+            var guids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (BrokenReference reference in broken)
+            {
+                if (reference.Guid != null) guids.Add(reference.Guid);
+            }
+            Dictionary<string, string> names = GuidReferenceRepair.LastKnownNames(guids);
+            var lines = new List<string>();
+            foreach (BrokenReference reference in broken)
+            {
+                string name;
+                if (reference.Guid == null || !names.TryGetValue(reference.Guid, out name)) name = "Unknown asset";
+                lines.Add(name + " in " + reference.Where + " (GUID:" + (reference.Guid ?? "unknown") + ")");
+            }
+            return lines;
+        }
+
+        private static bool FileNamesMissingAsset(string path)
+        {
+            string fullPath = System.IO.Path.Combine(RiryToolsPaths.ProjectRoot, path);
+            if (!System.IO.File.Exists(fullPath) || !RegenerateGuid.LooksLikeText(fullPath, new byte[4096])) return false;
+            foreach (KeyValuePair<long, string> reference in GuidReferenceRepair.FindGuidReferences(System.IO.File.ReadAllBytes(fullPath)))
+            {
+                if (GuidReferenceRepair.IsMissing(reference.Value)) return true;
+            }
+            return false;
         }
     }
 
@@ -389,20 +485,21 @@ namespace Riry.RiryTools.Editor
             "SAVING WITH BROKEN GUID'S CAN CORRUPT A SCENE. Click continue anyways three times to save regardless.";
         private const int ClicksNeeded = 3;
         private string path;
-        private int broken;
+        private List<string> broken;
+        private Vector2 scroll;
         private int clicksLeft = ClicksNeeded;
         private bool confirmed;
         private GUIStyle warningStyle;
 
-        internal static bool Confirm(string path, int broken)
+        internal static bool Confirm(string path, List<string> broken)
         {
             BrokenSaveWindow window = CreateInstance<BrokenSaveWindow>();
             window.titleContent = new GUIContent(GuidReferenceRepair.Title);
             window.path = path;
             window.broken = broken;
             Rect main = EditorGUIUtility.GetMainWindowPosition();
-            window.position = new Rect(main.center.x - 240f, main.center.y - 110f, 480f, 220f);
-            window.minSize = window.maxSize = new Vector2(480f, 220f);
+            window.position = new Rect(main.center.x - 260f, main.center.y - 180f, 520f, 360f);
+            window.minSize = new Vector2(520f, 360f);
             window.ShowModalUtility();
             return window.confirmed;
         }
@@ -417,8 +514,12 @@ namespace Riry.RiryTools.Editor
             GUILayout.Space(8f);
             GUILayout.Label(Warning, warningStyle);
             GUILayout.Space(6f);
-            EditorGUILayout.LabelField(path + ": " + broken + " broken asset reference(s).", EditorStyles.wordWrappedMiniLabel);
-            GUILayout.FlexibleSpace();
+            EditorGUILayout.LabelField(path + ": " + broken.Count + " broken asset reference(s).", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.Space(4f);
+            EditorGUILayout.LabelField("Broken references:", EditorStyles.boldLabel);
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            foreach (string line in broken) EditorGUILayout.SelectableLabel(line, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+            EditorGUILayout.EndScrollView();
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("ABORT", GUILayout.Height(30f))) Close();

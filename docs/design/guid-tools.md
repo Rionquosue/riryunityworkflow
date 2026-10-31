@@ -135,11 +135,16 @@ without repairing all broken GUID references?" through Unity's close prompt:
 Saving a scene, or the prefab open in Prefab Mode, that holds broken asset
 references in memory is interrupted by a popup that says, in big red text,
 "SAVING WITH BROKEN GUID'S CAN CORRUPT A SCENE. Click continue anyways three
-times to save regardless." **ABORT** skips that file's save. **CONTINUE ANYWAY**
-counts down: the first click shows [2], the second [1], and the third saves. A
-reference counts as broken when it points to an asset that is gone (it keeps an
-instance ID but has no object), or a prefab instance's prefab is missing;
-missing scripts do not count.
+times to save regardless." Under it, **Broken references:** lists each one as
+`Skin.mat in Avatar/Body > Mesh Renderer > Materials[0] (GUID:...)`: the missing
+asset's last known name (from the GUID remap ledger or Git history, else
+"Unknown asset"), where it is used, and its GUID. **ABORT** skips that file's
+save. **CONTINUE ANYWAY** counts down: the first click shows [2], the second [1],
+and the third saves. A reference counts as broken when it is empty and its asset
+GUID no longer exists, or a prefab instance's prefab is missing. An empty
+reference whose GUID still exists (for example one left over from a scene opened
+earlier) does not count, and one with no GUID to look up counts only when the
+file on disk names a missing asset. Missing scripts do not count.
 
 Only asset references are repaired: images, prefabs, meshes, materials, text and
 other assets. Script references (an `m_Script` field or MonoScript's

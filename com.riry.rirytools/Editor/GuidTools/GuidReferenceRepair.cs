@@ -657,6 +657,47 @@ namespace Riry.RiryTools.Editor
             return false;
         }
 
+        /// <summary>
+        /// The file name each GUID last had: from the GUID remap ledger (with its Git
+        /// history), then the Git history of .meta files. GUIDs not found are left out.
+        /// </summary>
+        internal static Dictionary<string, string> LastKnownNames(HashSet<string> guids)
+        {
+            var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (guids.Count == 0) return names;
+            using (GuidToolLog log = GuidToolLog.Open("Broken reference names"))
+            {
+                var ledgerPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                GuidRemapLedger.LoadWithHistory(log, ledgerPaths);
+                var rest = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string guid in guids)
+                {
+                    string path;
+                    if (ledgerPaths.TryGetValue(guid, out path)) names[guid] = System.IO.Path.GetFileName(path);
+                    else rest.Add(guid);
+                }
+                if (rest.Count == 0) return names;
+                try
+                {
+                    string prefix;
+                    foreach (KeyValuePair<string, MetaHistoryParser.Hit> hit in FindInHistory(rest, log, out prefix))
+                        names[hit.Key] = System.IO.Path.GetFileName(hit.Value.Path);
+                }
+                catch (GitNotInstalledException exception)
+                {
+                    log.Write("Git history not searched: " + exception.Message);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+            }
+            return names;
+        }
+
         private static Dictionary<string, MetaHistoryParser.Hit> FindInHistory(HashSet<string> guids, GuidToolLog log,
             out string prefix)
         {
