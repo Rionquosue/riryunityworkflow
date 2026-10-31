@@ -258,6 +258,8 @@ namespace Riry.RiryTools.Editor
     internal static class BrokenReferenceMonitor
     {
         private const int Threshold = 3;
+        // Scenes and prefabs, one per line, whose popup was turned off with Do Not Show Again.
+        private const string OffKey = "RiryTools.GuidTools.BrokenPromptOff";
         private const double WindowSeconds = 30.0;
         // Missing scripts are left out: GUID Tools only repairs asset references for now.
         private static readonly Regex Pattern = new Regex(
@@ -297,10 +299,30 @@ namespace Riry.RiryTools.Editor
                          GuidReferenceRepair.FindGuidReferences(System.IO.File.ReadAllBytes(fullPath)))
                 {
                     if (!GuidReferenceRepair.IsMissing(reference.Value)) continue;
-                    Prompt(path, path + " references assets that no longer exist.");
+                    PromptOnOpen(path);
                     return;
                 }
             };
+        }
+
+        /// <summary>Every time the scene or prefab opens, until Do Not Show Again is chosen for it.</summary>
+        private static void PromptOnOpen(string path)
+        {
+            List<string> off = TurnedOff();
+            if (off.Contains(path)) return;
+            int choice = EditorUtility.DisplayDialogComplex(GuidReferenceRepair.Title,
+                path + " references assets that no longer exist.\n\nCheck them and choose redirects now?",
+                "Check for Broken References", "Not Now", "Do Not Show Again");
+            if (choice == 0) BrokenReferenceWindow.OpenForOpenScenes(path + " references assets that no longer exist.");
+            if (choice != 2) return;
+            off.Add(path);
+            EditorUserSettings.SetConfigValue(OffKey, string.Join("\n", off));
+        }
+
+        private static List<string> TurnedOff()
+        {
+            return new List<string>((EditorUserSettings.GetConfigValue(OffKey) ?? "").Split(new[] { '\n' },
+                StringSplitOptions.RemoveEmptyEntries));
         }
 
         private static void Prompt(string key, string message)

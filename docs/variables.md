@@ -38,6 +38,7 @@ EditorUserSettings: per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Enabled` | `1` / `0` | `0` | `AutoSync.Enabled` (**Sync**) |
 | `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `GitRemotes.Selected` (**Remote**) |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | remote URLs, one per line | unset | `AutoSync.LargeFileNotice`: **Do Not Show Again** |
+| `RiryTools.GuidTools.BrokenPromptOff` | scene and prefab paths, one per line | unset | `BrokenReferenceMonitor.PromptOnOpen`: **Do Not Show Again** |
 
 SessionState: until the editor quits; survives script reloads.
 

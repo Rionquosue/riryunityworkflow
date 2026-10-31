@@ -212,5 +212,6 @@ namespace Riry.RiryTools.Editor
 //   Prefab Mode prefab with broken asset references (FindBroken: empty references whose GUID is missing),
 //   listing each as "<last known name> in <object > component > field> (GUID:...)";
 //   CONTINUE ANYWAY needs three clicks ([2], [1]).
-// BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window when a file opens with
-//   missing GUIDs or Unity logs several missing-script or missing-prefab messages.
+// BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window every time a file opens with
+//   missing GUIDs (PromptOnOpen; Do Not Show Again turns it off for that file, OffKey), and once per session when
+//   Unity logs several missing-prefab or broken-reference messages.

@@ -74,9 +74,10 @@ Every completed run appends `old GUID, new GUID, asset path, UTC time` to
 **RiryTools > Repair Missing GUID References** (or the GUID Tools window) opens
 the Broken References window for the selected text assets and folders; **Check
 for Broken References** opens it for the open scenes and the prefab in Prefab
-Mode. GUID Tools also offers it when an opened scene or prefab contains asset
-GUIDs with no asset, or when Unity logs several missing-prefab or broken-reference
-messages within 30 seconds.
+Mode. GUID Tools also offers it every time a scene or prefab opens that contains
+asset GUIDs with no asset (**Check for Broken References**, **Not Now** or **Do Not
+Show Again**, which stops it for that scene or prefab), and once per session when
+Unity logs several missing-prefab or broken-reference messages within 30 seconds.
 
 ## Broken References window
 
