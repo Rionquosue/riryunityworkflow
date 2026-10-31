@@ -12,11 +12,13 @@ namespace Riry.RiryTools.Editor
     /// Folder rules by file type, shared by Set Folder Import Presets (Tools menu) and
     /// its right-click popup. A file type is everything one importer reads, so one
     /// preset fits all of it: "Image files" for every texture, "Model files" for every
-    /// model, and so on. A decorator, the "_word" ending of a file name in the folder
-    /// (such as _normal or _height; number-only endings are ignored), is a file type of
-    /// its own, "_normal files", for every file whose name contains it; a name holding
-    /// several uses the one that comes last. A decorated file with no preset of its own
-    /// gets its plain type's. Only files directly in a folder count, never its subfolders.
+    /// model, and so on. A decorator is a file type of its own for every file whose name
+    /// contains it: each "_word" ending of a file name in the folder ("_normal files";
+    /// number-only endings are ignored) and each tag in ImportPresetPreferences
+    /// ("normal files"; an ending whose word is a tag counts as the tag). A name holding
+    /// several uses the one that ends last, the longer when two end together. A
+    /// decorated file with no preset of its own gets its plain type's. Only files
+    /// directly in a folder count, never its subfolders.
     /// </summary>
     internal static class ImportPresetFolderRules
     {
@@ -72,23 +74,28 @@ namespace Riry.RiryTools.Editor
             return "_" + word.ToLowerInvariant();
         }
 
-        /// <summary>Of the decorators the file name contains, the one that comes last (the longer at the same place); else null.</summary>
+        /// <summary>
+        /// Of the decorators the file name contains (any case), the one that ends last, the
+        /// longer when two end together (metallicsmoothness over smoothness); else null.
+        /// </summary>
         internal static string DecoratorIn(string fileName, ICollection<string> decorators)
         {
             string name = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
             string best = null;
-            int bestIndex = -1;
+            int bestEnd = -1;
             foreach (string decorator in decorators)
             {
                 int index = name.LastIndexOf(decorator, StringComparison.Ordinal);
-                if (index < 0 || index < bestIndex || (index == bestIndex && decorator.Length <= best.Length)) continue;
+                if (index < 0) continue;
+                int end = index + decorator.Length;
+                if (end < bestEnd || (end == bestEnd && decorator.Length <= best.Length)) continue;
                 best = decorator;
-                bestIndex = index;
+                bestEnd = end;
             }
             return best;
         }
 
-        /// <summary>"_normal files".</summary>
+        /// <summary>"_normal files", or "normal files" for a tag.</summary>
         internal static string DecoratorLabel(string decorator)
         {
             return decorator + FilesSuffix;
@@ -111,14 +118,17 @@ namespace Riry.RiryTools.Editor
             return files;
         }
 
-        /// <summary>The decorators of the folder: every "_word" ending of its files' names.</summary>
+        /// <summary>
+        /// The decorators of the folder: every tag, and every "_word" ending of its files'
+        /// names whose word is not a tag.
+        /// </summary>
         internal static HashSet<string> Decorators(string folder)
         {
-            var decorators = new HashSet<string>(StringComparer.Ordinal);
+            var decorators = new HashSet<string>(ImportPresetPreferences.Tags(), StringComparer.Ordinal);
             foreach (string path in Files(folder))
             {
                 string ending = Ending(path);
-                if (ending != null) decorators.Add(ending);
+                if (ending != null && !decorators.Contains(ending.Substring(1))) decorators.Add(ending);
             }
             return decorators;
         }

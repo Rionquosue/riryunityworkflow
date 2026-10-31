@@ -77,6 +77,7 @@ namespace Riry.RiryTools.Editor
                     if (betterFbx) DrawBlenderSettings();
                 }
             }
+            DrawTags();
             EditorGUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(message)) EditorGUILayout.HelpBox(message, MessageType.Info);
@@ -91,6 +92,63 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
             EditorGUILayout.Space(4);
+        }
+
+        // The tags in preferences.yml: each one is a file type of its own for files whose name contains it.
+        private void DrawTags()
+        {
+            EditorGUILayout.Space(6);
+            tagsExpanded = EditorGUILayout.Foldout(tagsExpanded, new GUIContent("Tags",
+                "A file whose name contains a tag (any case) is listed under that tag's file type, such as normal files. " +
+                "Saved for every project in " + ImportPresetPreferences.FilePath + "."), true);
+            if (!tagsExpanded) return;
+            using (new EditorGUI.IndentLevelScope())
+            {
+                List<string> tags = ImportPresetPreferences.Tags();
+                foreach (string tag in tags)
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField(tag);
+                        if (!GUILayout.Button("x", GUILayout.Width(22))) continue;
+                        tags.Remove(tag);
+                        SaveTags(tags);
+                        GUIUtility.ExitGUI();
+                    }
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    newTag = EditorGUILayout.TextField(newTag);
+                    if (GUILayout.Button("Add", GUILayout.Width(60)))
+                    {
+                        string tag = newTag.Trim().ToLowerInvariant();
+                        tagProblem = ImportPresetPreferences.ValidateTag(tag);
+                        if (tagProblem == null)
+                        {
+                            if (!tags.Contains(tag)) tags.Add(tag);
+                            SaveTags(tags);
+                            newTag = "";
+                            GUI.FocusControl(null);
+                        }
+                    }
+                }
+                // A tag problem shows only after Add was clicked with it.
+                if (tagProblem != null) EditorGUILayout.HelpBox(tagProblem, MessageType.Warning);
+            }
+        }
+
+        private void SaveTags(List<string> tags)
+        {
+            try
+            {
+                ImportPresetPreferences.SaveTags(tags);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                message = "Could not save " + ImportPresetPreferences.FilePath + ": " + exception.Message;
+            }
+            Scan();
         }
 
         private static void DrawBlenderSettings()
@@ -196,7 +254,8 @@ namespace Riry.RiryTools.Editor
 //     message                   string        Result of Apply.
 //   UI METHODS (this file)
 //     Open()                Opens the window on the Project window's folder.
-//     OnGUI()               Folder with suggestions; one popup per file type; Better FBX (only with .blend files); Apply; Close.
+//     OnGUI()               Folder with suggestions; one popup per file type; Better FBX (only with .blend files); Tags; Apply; Close.
+//     DrawTags() / SaveTags(tags)  The Tags foldout: preferences.yml tags with x, and Add (a problem shows after Add).
 //     DrawBlenderSettings() Blender path and Better FBX options.
 //   ACTIONS (ImportPresetWindowActions.cs)
 //     OnEnable() / OnProjectChange()  Find the file types again (after a domain reload or an import); the picks stay.
@@ -206,10 +265,13 @@ namespace Riry.RiryTools.Editor
 //     Suggestions(typed)    Up to 8 folders, ranked by FuzzyMatch.Score on name or path.
 //     Apply()               ImportPresetFolderRules.Apply for the folder.
 //
+// ImportPresetPreferences (Editor/ImportPresets/ImportPresetPreferences.cs): Documents/RiryTools/ImportPresets/preferences.yml
+//   Tags() (created with DefaultTags, the Substance Painter PBR map names), SaveTags(tags), ValidateTag(tag).
+//
 // ImportPresetFolderRules (Editor/ImportPresets/ImportPresetFolderRules.cs): shared with the right-click popup
 //   Label(importer)          "Image files", "Model files", "Audio files", "Video files", "Font files", else "<Type> files".
-//   Ending / Decorators / DecoratorIn / DecoratorLabel  "_word" name endings (not number-only) as file types,
-//                            "_normal files"; a name containing several uses the last.
+//   Ending / Decorators / DecoratorIn / DecoratorLabel  Tags ("normal files") and "_word" name endings (not
+//                            number-only; "_normal files") as file types; a name containing several uses the one ending last.
 //   InFolder(folder)         Importers of the files directly in the folder, by file type (decorated files under both types).
 //   Effective(rules, importer, decorators)  A file's preset: its decorator's type's, else its plain type's.
 //   Types(folders)           The file types with the library presets that fit each (Preset.CanBeAppliedTo).

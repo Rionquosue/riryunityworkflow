@@ -19,9 +19,11 @@ the computer can use it. **Open Library** shows it.
    **Tools > RiryTools > Import Presets > Set Folder Import Presets**, or type
    part of another folder's name in **Folder** and pick it.
 2. Each file type in the folder (**Image files**, **Model files**, ...) has a
-   dropdown: choose a preset for it, or **None**. A name ending such as `_normal`
-   or `_height` is listed as its own type (**_normal files**) for every file whose
-   name contains it; left on **None**, those files get their plain type's preset.
+   dropdown: choose a preset for it, or **None**. A tag from the **Tags** list
+   (PBR map names such as `normal` or `metallicsmoothness`, editable there) or a
+   name ending such as `_custom` is listed as its own type (**normal files**,
+   **_custom files**) for every file whose name contains it; left on **None**,
+   those files get their plain type's preset.
 3. If the folder holds `.blend` files, turn on **Export .blend with Better FBX**
    if you want them exported.
 4. Click **Apply**. The folder gets an `ImportPreset.md`, and the files of each

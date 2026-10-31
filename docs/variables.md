@@ -80,6 +80,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 |---|---|---|
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset`, optional `config.json` | `ImportPresetLibrary.RootPath` |
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
+| `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 
 ## Git names (AutoSync)
