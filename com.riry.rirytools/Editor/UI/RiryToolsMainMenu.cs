@@ -35,8 +35,9 @@ namespace Riry.RiryTools.Editor
             public EditorWindow Window;
         }
 
-        // About three times a standard tab row.
+        // About three times a standard tab row; Import Presets' sub-tabs about twice.
         private static readonly float TabHeight = 3f * (EditorGUIUtility.singleLineHeight + 2f);
+        private static readonly float ImportTabHeight = 2f * (EditorGUIUtility.singleLineHeight + 2f);
         private GUIStyle tabStyle;
 
         [SerializeField] private int tab;
@@ -52,7 +53,8 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
-            // The tool tabs are three lines tall, and their names wrap when the window is narrow.
+            // The tool tabs are three lines tall, Import Presets' sub-tabs two, and their names wrap
+            // when the window is narrow.
             // A name the skin has no "left"/"mid"/"right" styles for, so Toolbar draws every tab
             // with this style instead of the skin's own, which do not wrap.
             if (tabStyle == null)
@@ -90,7 +92,7 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case 5:
-                    importTab = GUILayout.Toolbar(importTab, ImportTabs);
+                    importTab = GUILayout.Toolbar(importTab, ImportTabs, tabStyle, GUILayout.Height(ImportTabHeight));
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
                     {
@@ -229,7 +231,8 @@ namespace Riry.RiryTools.Editor
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
-//   TabHeight / tabStyle     Tool tabs about three rows tall (Import Presets' row is standard), names wrapping;
+//   TabHeight / ImportTabHeight / tabStyle
+//                            Tool tabs about three rows tall, Import Presets' sub-tabs two, names wrapping;
 //                            tabStyle is named RiryToolsTab so Toolbar does not swap in the skin's non-wrapping styles.
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
