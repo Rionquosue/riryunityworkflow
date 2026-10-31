@@ -11,3 +11,5 @@ Install it from the VRChat Creator Companion: **Settings > Packages > Add Reposi
 Every push to `main` is published there as a new version, and every push to `beta` as a
 beta, by [Rionquosue/rirytools_vpm](https://github.com/Rionquosue/rirytools_vpm). See
 [VPM Publishing](docs/design/vpm-publishing.md).
+
+This tool is written with machine assistance.
