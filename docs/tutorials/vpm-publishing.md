@@ -11,7 +11,7 @@ and the single permission **Actions: Read and write**. The rest is in
 
 ## Publish
 
-- **Stable:** push to `main`. The next patch version is released.
+- **Stable:** push to `main`. The next patch version is released: `0.1.0` first, then `0.1.1` and on to `0.1.99`, then `0.2.0`.
 - **Beta:** push to `beta`. The next beta (`<next patch>-beta.N`) is released as a prerelease.
 - **Minor or major:** run **Build Package** in `rirytools_vpm` by hand with the `version` input.
 

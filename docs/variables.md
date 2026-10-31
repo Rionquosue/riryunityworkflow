@@ -235,7 +235,7 @@ Destination workflow: `rirytools_vpm/.github/workflows/build-package.yml`
 |---|---|---|
 | `channel` | input, required | `stable` or `beta` |
 | `sha` | input | 40 lowercase hex; empty for the head of the channel's branch |
-| `version` | input | `X.Y.Z` (stable) or `X.Y.Z-beta.N` (beta), no leading zeros; empty for automatic |
+| `version` | input | `X.Y.Z` (stable) or `X.Y.Z-beta.N` (beta), no leading zeros, `Z` at most 99; empty for automatic |
 | `SOURCE_REPOSITORY` | workflow env | `Rionquosue/riryunityworkflow` |
 | `CHANNEL`, `SHA`, `VERSION` | step env | The inputs, passed only through the environment |
 | `GH_TOKEN` | step env | `github.token` |
@@ -270,6 +270,8 @@ Destination scripts (`rirytools_vpm/scripts/`):
     the package name, and the zip name `com.riry.rirytools-<version>.zip`.
   - `FIELDS` = `package.json`: the package fields; `version` and `url` are added.
   - `NUMBER`, `STABLE`, `BETA`: version patterns; `NUMBER` has no leading zeros.
+  - `FIRST` = `0.1.0`: the first stable version.
+  - `MAX_PATCH` = `99`: the highest patch; the next version is the next minor at patch 0.
   - `LFS_POINTER`: refuses LFS pointer files.
   - `FIXED_TIME` = 2020-01-01: zip timestamps, so builds are reproducible.
 - `verify_listing.py`:
