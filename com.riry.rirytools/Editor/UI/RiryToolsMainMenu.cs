@@ -53,7 +53,10 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             // The tool tabs are three lines tall, and their names wrap when the window is narrow.
-            if (tabStyle == null) tabStyle = new GUIStyle(GUI.skin.button) { wordWrap = true, fixedHeight = 0f };
+            // A name the skin has no "left"/"mid"/"right" styles for, so Toolbar draws every tab
+            // with this style instead of the skin's own, which do not wrap.
+            if (tabStyle == null)
+                tabStyle = new GUIStyle(GUI.skin.button) { name = "RiryToolsTab", wordWrap = true, fixedHeight = 0f };
             tab = GUILayout.Toolbar(tab, Tabs, tabStyle, GUILayout.Height(TabHeight));
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true)))
@@ -226,6 +229,7 @@ namespace Riry.RiryTools.Editor
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
-//   TabHeight / tabStyle     Tool tabs about three rows tall (Import Presets' row is standard), names wrapping.
+//   TabHeight / tabStyle     Tool tabs about three rows tall (Import Presets' row is standard), names wrapping;
+//                            tabStyle is named RiryToolsTab so Toolbar does not swap in the skin's non-wrapping styles.
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
