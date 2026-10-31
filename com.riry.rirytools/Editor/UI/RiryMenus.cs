@@ -79,7 +79,7 @@ namespace Riry.RiryTools.Editor
         private static void ConfigurationToolsItem() { GitActions.OpenConfiguration(); }
 
         [MenuItem(BlendshapeSync, false, 2010)]
-        private static void BlendshapeSyncItem() { BlendshapeSyncWindow.Open(); }
+        private static void BlendshapeSyncItem() { BlendshapeSyncJobs.Add(); }
 
         [MenuItem(CleanAnimationKeysMenu, false, 2020)]
         private static void CleanAnimationKeysItem() { CleanAnimationKeysWindow.Open(new UnityEngine.AnimationClip[0]); }
@@ -224,7 +224,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Main Menu (1990)               -> RiryToolsMainMenu.Open (Editor/UI/RiryToolsMainMenu.cs): every tool as a tab
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> GitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
 //   Tools/RiryTools/AutoSync/Configuration (2001) -> GitActions.OpenConfiguration -> GitConfigureWindow (Editor/UI/GitWindows.cs)
-//   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncWindow.Open (Editor/UI/BlendshapeSyncWindow.UI.cs)
+//   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSyncJobWindow.cs)
 //   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
 //   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)

@@ -3,9 +3,13 @@
 Keep the blendshape weights of clothing, hair or accessories in step with a body
 mesh while you work.
 
-## 1. Open the window
+## 1. Add a job
 
-Choose **Tools > RiryTools > Blendshape Sync**.
+Choose **Tools > RiryTools > Blendshape Sync**, or click **Add Job** in the
+**Blendshape Sync** tab of **Tools > RiryTools > Main Menu**. A popup opens for the
+new job. Closing it keeps the job running; the Main Menu tab lists your jobs with
+**Auto**, **Sync Now**, **Edit**, **Set All to Original** and **Remove**, and they come
+back when you reopen the scene.
 
 ## 2. Assign the meshes
 

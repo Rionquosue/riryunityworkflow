@@ -29,15 +29,17 @@ Tutorials and design notes are in the source repository's
 
 ## Blendshape Sync
 
-Open **Tools > RiryTools > Blendshape Sync**. Drag in a master SkinnedMeshRenderer
-and children; an empty child row appears after each addition. Use each child's
+Open **Tools > RiryTools > Blendshape Sync** to add a job: a popup where you drag in a
+master SkinnedMeshRenderer and children. Jobs keep running after the popup closes,
+are listed (Auto, Sync Now, Edit, Set All to Original, Remove) in the Main Menu's
+Blendshape Sync tab, and are saved per scene. In the popup, an empty child row appears after each addition. Use each child's
 **Manual link** foldout to override name matching with Source/Destination names.
 
 **Sync Now** copies matching weights. **Run automatically** performs one pass
 every 0.5 seconds. **Case-sensitive** enables exact matching; ambiguous
 case-insensitive matches block the pass and offer to switch to it.
 **Set All to Original** restores all cached master/child weights and stops auto
-sync. The original cache lasts while the window remains open, including script
+sync. The original cache lasts while the job runs, including script
 reloads. Closing the window ends that cache.
 
 Sync and restore pause during Play Mode transitions, animation preview/recording,
