@@ -9,8 +9,8 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Menu Mockup: lay out an example editor window from blocks. Opens two windows,
-    /// Edit (the mockup itself, Editor/UI/MenuMockupWindows.cs) and Components (the
-    /// blocks to drag in, Save Mockup and Load). Every component is a block, any
+    /// Edit (the mockup itself, Editor/UI/MenuMockupWindows.cs) and Components (a button per
+    /// block type to click or drag in, New, Save Mockup and Load). Every component is a block, any
     /// block holds blocks, and blocks lay out like flexbox. Mockups are saved as
     /// annotated .yml files in Documents/RiryTools/Mockups, which Unity never compiles.
     /// The menu entry, Tools > RiryTools > Menu Mockup, is in Editor/UI/RiryMenus.cs.

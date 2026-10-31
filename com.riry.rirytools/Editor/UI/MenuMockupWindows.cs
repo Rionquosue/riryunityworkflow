@@ -529,6 +529,15 @@ namespace Riry.RiryTools.Editor
             Rebuild();
         }
 
+        /// <summary>Components click: adds a block of the type as the window's last block.</summary>
+        internal void Append(string type)
+        {
+            Record("Add " + type);
+            MockupBlock block = MockupModel.Create(blocks, type);
+            MockupModel.Place(blocks, block, 0, int.MaxValue);
+            Rebuild();
+        }
+
         private void CancelNew()
         {
             if (newType != null) EndDrag();
@@ -626,7 +635,8 @@ namespace Riry.RiryTools.Editor
     }
 
     /// <summary>
-    /// Components: every block type, dragged into Edit to add it, with New, Save Mockup
+    /// Components: a button per block type, clicked to add it at the bottom of Edit or
+    /// dragged into place, with New, Save Mockup
     /// and Load. New starts an empty mockup. Save names a new mockup (Documents/RiryTools/Mockups/&lt;name&gt;.yml) and
     /// updates the file once it has one; Load opens a saved mockup in Edit.
     /// </summary>
@@ -670,31 +680,35 @@ namespace Riry.RiryTools.Editor
             foreach (MockupTypes.Kind kind in MockupTypes.All)
             {
                 string type = kind.Name;
+                // Drawn as a button; its own pointer handling tells a click from a drag.
                 var item = new Label(type);
-                item.style.paddingLeft = item.style.paddingRight = 6;
-                item.style.paddingTop = item.style.paddingBottom = 3;
-                item.style.marginLeft = item.style.marginRight = item.style.marginTop = item.style.marginBottom = 2;
-                item.style.borderLeftWidth = item.style.borderRightWidth = item.style.borderTopWidth = item.style.borderBottomWidth = 1;
-                Color border = new Color(0.5f, 0.5f, 0.5f, 0.6f);
-                item.style.borderLeftColor = item.style.borderRightColor = item.style.borderTopColor = item.style.borderBottomColor = border;
-                item.tooltip = "Drag into Edit.";
+                item.AddToClassList(Button.ussClassName);
+                item.tooltip = "Click to add it at the bottom of Edit, or drag it into place.";
                 item.RegisterCallback<PointerDownEvent>(evt =>
                 {
                     if (evt.button != 0) return;
                     pressedType = type;
                     pressPosition = evt.position;
+                    item.CapturePointer(evt.pointerId);
                 });
                 item.RegisterCallback<PointerMoveEvent>(evt =>
                 {
                     if (pressedType != type || (evt.pressedButtons & 1) == 0) return;
                     if (((Vector2)evt.position - pressPosition).magnitude < 4f) return;
                     pressedType = null;
+                    if (item.HasPointerCapture(evt.pointerId)) item.ReleasePointer(evt.pointerId);
                     DragAndDrop.PrepareStartDrag();
                     DragAndDrop.objectReferences = new UnityEngine.Object[0];
                     DragAndDrop.SetGenericData(MenuMockupEditWindow.DragKey, type);
                     DragAndDrop.StartDrag(type);
                 });
-                item.RegisterCallback<PointerUpEvent>(evt => pressedType = null);
+                item.RegisterCallback<PointerUpEvent>(evt =>
+                {
+                    if (item.HasPointerCapture(evt.pointerId)) item.ReleasePointer(evt.pointerId);
+                    bool clicked = pressedType == type && item.worldBound.Contains(evt.position);
+                    pressedType = null;
+                    if (clicked) Edit().Append(type);
+                });
                 list.Add(item);
             }
             rootVisualElement.Add(list);
@@ -959,11 +973,13 @@ namespace Riry.RiryTools.Editor
 //   BeginDrag / Track / CheckHover / Slide / EndDrag  The gap (placeholder) and its animation.
 //   TargetAt(at)             Before / after a block at its edges, inside it in its middle, or in the window.
 //   OnDragUpdated / OnDragPerform  A component dragged in from Components.
+//   Append(type)             A component clicked in Components: added as the window's last block.
 //   Menu(evt, block)         Right-click: Direction, Justify, Align, Grow, Padding, Auto size, Delete (not the window).
 //   Record(action) / OnUndoRedo()  Undo.RecordObject before each change; Undo and Redo draw the blocks again.
 //   Save(path) / Load(path, blocks, width, height) / New()  Through MockupFile; New empties the mockup and its name.
 //
-// MenuMockupComponentsWindow ("Components"): New, Save Mockup and Load, then every block type to drag into Edit.
+// MenuMockupComponentsWindow ("Components"): New, Save Mockup and Load, then a button per block type:
+//                           click to add it at the bottom of Edit, or drag it into place.
 // MenuMockupTextWindow ("Edit Text"): the block's Label and Content, named per type (MockupTypes.Kind).
 // MenuMockupNameWindow ("Save Mockup"): asks for the name of a new mockup; a name problem shows after Save.
 // MenuMockupPreview        The Unity control each block type stands for.
