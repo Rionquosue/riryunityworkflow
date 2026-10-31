@@ -35,6 +35,10 @@ namespace Riry.RiryTools.Editor
             public EditorWindow Window;
         }
 
+        // About three times a standard tab row.
+        private static readonly float TabHeight = 3f * (EditorGUIUtility.singleLineHeight + 2f);
+        private GUIStyle tabStyle;
+
         [SerializeField] private int tab;
         [SerializeField] private int importTab;
         [SerializeField] private List<Hosted> hosted = new List<Hosted>();
@@ -48,7 +52,9 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
-            tab = GUILayout.Toolbar(tab, Tabs);
+            // The tool tabs are three lines tall, and their names wrap when the window is narrow.
+            if (tabStyle == null) tabStyle = new GUIStyle(GUI.skin.button) { wordWrap = true, fixedHeight = 0f };
+            tab = GUILayout.Toolbar(tab, Tabs, tabStyle, GUILayout.Height(TabHeight));
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true)))
             {
@@ -220,5 +226,6 @@ namespace Riry.RiryTools.Editor
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
+//   TabHeight / tabStyle     Tool tabs about three rows tall (Import Presets' row is standard), names wrapping.
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
