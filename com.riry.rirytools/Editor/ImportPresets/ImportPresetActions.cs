@@ -91,7 +91,7 @@ namespace Riry.RiryTools.Editor
             return package != null && package.source == UnityEditor.PackageManager.PackageSource.Embedded;
         }
 
-        private static AssetImporter SelectedImporter()
+        internal static AssetImporter SelectedImporter()
         {
             if (Selection.assetGUIDs.Length != 1) return null;
             string path = AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]);

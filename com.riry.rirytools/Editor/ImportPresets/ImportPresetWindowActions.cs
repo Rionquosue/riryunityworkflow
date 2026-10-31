@@ -20,6 +20,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private string search = "";
         [SerializeField] private List<ImportPresetFolderRules.Pick> picks = new List<ImportPresetFolderRules.Pick>();
         [SerializeField] private bool betterFbx;
+        [SerializeField] private bool tagsExpanded;
+        [SerializeField] private string newTag = "";
+        [NonSerialized] private string tagProblem;
         [NonSerialized] private List<ImportPresetFolderRules.FileType> types = new List<ImportPresetFolderRules.FileType>();
         [NonSerialized] private bool hasBlend;
         [NonSerialized] private bool handEdited;

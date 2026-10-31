@@ -12,11 +12,19 @@ namespace Riry.RiryTools.Editor
     /// Folder rules by file type, shared by Set Folder Import Presets (Tools menu) and
     /// its right-click popup. A file type is everything one importer reads, so one
     /// preset fits all of it: "Image files" for every texture, "Model files" for every
-    /// model, and so on. Only files directly in a folder count, never its subfolders.
+    /// model, and so on. A decorator is a file type of its own for every file whose name
+    /// contains it: each "_word" ending of a file name in the folder ("_normal files";
+    /// number-only endings are ignored) and each tag in ImportPresetPreferences
+    /// ("normal files"; an ending whose word is a tag counts as the tag). A name holding
+    /// several uses the one that ends last, the longer when two end together. A
+    /// decorated file with no preset of its own gets its plain type's. Only files
+    /// directly in a folder count, never its subfolders.
     /// </summary>
     internal static class ImportPresetFolderRules
     {
         internal const string NoneChoice = "None";
+        private const string FilesSuffix = " files";
+        private static readonly Regex Word = new Regex("^[A-Za-z0-9]+$", RegexOptions.CultureInvariant);
 
         private static readonly Dictionary<Type, string> Labels = new Dictionary<Type, string>
         {
@@ -52,7 +60,77 @@ namespace Riry.RiryTools.Editor
             string label;
             if (Labels.TryGetValue(type, out label)) return label;
             string name = type.Name.EndsWith("Importer", StringComparison.Ordinal) ? type.Name.Substring(0, type.Name.Length - 8) : type.Name;
-            return Regex.Replace(name, "(?<=[a-z])(?=[A-Z])", " ") + " files";
+            return Regex.Replace(name, "(?<=[a-z])(?=[A-Z])", " ") + FilesSuffix;
+        }
+
+        /// <summary>"_normal" for Body_normal.png, lower case; null without a "_word" ending or when it is only digits.</summary>
+        internal static string Ending(string fileName)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName);
+            int underscore = name.LastIndexOf('_');
+            if (underscore < 0) return null;
+            string word = name.Substring(underscore + 1);
+            if (!Word.IsMatch(word) || Regex.IsMatch(word, "^[0-9]+$")) return null;
+            return "_" + word.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Of the decorators the file name contains (any case), the one that ends last, the
+        /// longer when two end together (metallicsmoothness over smoothness); else null.
+        /// </summary>
+        internal static string DecoratorIn(string fileName, ICollection<string> decorators)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
+            string best = null;
+            int bestEnd = -1;
+            foreach (string decorator in decorators)
+            {
+                int index = name.LastIndexOf(decorator, StringComparison.Ordinal);
+                if (index < 0) continue;
+                int end = index + decorator.Length;
+                if (end < bestEnd || (end == bestEnd && decorator.Length <= best.Length)) continue;
+                best = decorator;
+                bestEnd = end;
+            }
+            return best;
+        }
+
+        /// <summary>"_normal files", or "normal files" for a tag.</summary>
+        internal static string DecoratorLabel(string decorator)
+        {
+            return decorator + FilesSuffix;
+        }
+
+        // Files directly in the folder that Unity imports: no .meta, ImportPreset.md, or names Unity skips.
+        private static List<string> Files(string folder)
+        {
+            var files = new List<string>();
+            if (!Directory.Exists(folder)) return files;
+            foreach (string file in Directory.GetFiles(folder))
+            {
+                string name = Path.GetFileName(file);
+                if (name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) || name.StartsWith(".", StringComparison.Ordinal) ||
+                    name.EndsWith("~", StringComparison.Ordinal) ||
+                    string.Equals(name, ImportPresetMarker.FileName, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                files.Add(folder.TrimEnd('/') + "/" + name);
+            }
+            return files;
+        }
+
+        /// <summary>
+        /// The decorators of the folder: every tag, and every "_word" ending of its files'
+        /// names whose word is not a tag.
+        /// </summary>
+        internal static HashSet<string> Decorators(string folder)
+        {
+            var decorators = new HashSet<string>(ImportPresetPreferences.Tags(), StringComparer.Ordinal);
+            foreach (string path in Files(folder))
+            {
+                string ending = Ending(path);
+                if (ending != null && !decorators.Contains(ending.Substring(1))) decorators.Add(ending);
+            }
+            return decorators;
         }
 
         // Importers that take presets; scripts and files Unity does not import are left out.
@@ -62,25 +140,45 @@ namespace Riry.RiryTools.Editor
                 ImportPresetLibrary.CanSave(importer);
         }
 
-        /// <summary>Importers of the files directly in the folder, by file type.</summary>
+        /// <summary>
+        /// Importers of the files directly in the folder, by file type: every file under its
+        /// plain type, and a decorated file under its decorator's type as well.
+        /// </summary>
         internal static SortedDictionary<string, List<AssetImporter>> InFolder(string folder)
         {
             var types = new SortedDictionary<string, List<AssetImporter>>(StringComparer.OrdinalIgnoreCase);
-            if (!Directory.Exists(folder)) return types;
-            foreach (string file in Directory.GetFiles(folder))
+            HashSet<string> decorators = Decorators(folder);
+            foreach (string path in Files(folder))
             {
-                string name = Path.GetFileName(file);
-                if (name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) || name.StartsWith(".", StringComparison.Ordinal) ||
-                    name.EndsWith("~", StringComparison.Ordinal) ||
-                    string.Equals(name, ImportPresetMarker.FileName, StringComparison.OrdinalIgnoreCase))
-                    continue;
-                AssetImporter importer = AssetImporter.GetAtPath(folder.TrimEnd('/') + "/" + name);
+                AssetImporter importer = AssetImporter.GetAtPath(path);
                 if (!Listed(importer)) continue;
-                List<AssetImporter> list;
-                if (!types.TryGetValue(Label(importer), out list)) types.Add(Label(importer), list = new List<AssetImporter>());
-                list.Add(importer);
+                Add(types, Label(importer), importer);
+                string decorator = DecoratorIn(path, decorators);
+                if (decorator != null) Add(types, DecoratorLabel(decorator), importer);
             }
             return types;
+        }
+
+        private static void Add(SortedDictionary<string, List<AssetImporter>> types, string label, AssetImporter importer)
+        {
+            List<AssetImporter> list;
+            if (!types.TryGetValue(label, out list)) types.Add(label, list = new List<AssetImporter>());
+            list.Add(importer);
+        }
+
+        /// <summary>
+        /// The preset a file gets from the rules: its decorator's type when that has one,
+        /// else its plain type's. Decorators are those of the file's folder.
+        /// </summary>
+        internal static ImportPresetMarker.Target Effective(ImportPresetMarker.Rules rules, AssetImporter importer, ICollection<string> decorators)
+        {
+            string decorator = DecoratorIn(importer.assetPath, decorators);
+            if (decorator != null)
+            {
+                ImportPresetMarker.Target own = rules.For(DecoratorLabel(decorator));
+                if (own.Configuration != null) return own;
+            }
+            return rules.For(Label(importer));
         }
 
         /// <summary>True when the folder itself holds a .blend file.</summary>
@@ -89,21 +187,27 @@ namespace Riry.RiryTools.Editor
             return Directory.Exists(folder) && Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension).Length > 0;
         }
 
-        /// <summary>The file types in the folders, each with the library presets that fit it.</summary>
+        /// <summary>The file types in the folders, each with the library presets that fit any of its files.</summary>
         internal static List<FileType> Types(IEnumerable<string> folders)
         {
-            var found = new SortedDictionary<string, AssetImporter>(StringComparer.OrdinalIgnoreCase);
+            // One importer of each kind per file type: a decorator's files can be images and models alike.
+            var found = new SortedDictionary<string, List<AssetImporter>>(StringComparer.OrdinalIgnoreCase);
             foreach (string folder in folders)
             {
                 foreach (KeyValuePair<string, List<AssetImporter>> type in InFolder(folder))
                 {
-                    if (!found.ContainsKey(type.Key)) found.Add(type.Key, type.Value[0]);
+                    List<AssetImporter> kinds;
+                    if (!found.TryGetValue(type.Key, out kinds)) found.Add(type.Key, kinds = new List<AssetImporter>());
+                    foreach (AssetImporter importer in type.Value)
+                    {
+                        if (!kinds.Exists(kind => kind.GetType() == importer.GetType())) kinds.Add(importer);
+                    }
                 }
             }
             var types = new List<FileType>();
-            foreach (KeyValuePair<string, AssetImporter> entry in found)
+            foreach (KeyValuePair<string, List<AssetImporter>> entry in found)
             {
-                var type = new FileType { Label = entry.Key, Example = entry.Value };
+                var type = new FileType { Label = entry.Key, Example = entry.Value[0] };
                 var names = new List<string> { NoneChoice };
                 foreach (string configuration in ImportPresetLibrary.ConfigurationNames())
                 {
@@ -111,7 +215,7 @@ namespace Riry.RiryTools.Editor
                     foreach (string file in ImportPresetLibrary.PresetFiles(path))
                     {
                         Preset preset = ImportPresetLibrary.LoadPreset(Path.Combine(path, file));
-                        if (preset == null || !preset.CanBeAppliedTo(entry.Value)) continue;
+                        if (preset == null || !entry.Value.Exists(kind => preset.CanBeAppliedTo(kind))) continue;
                         string name = Path.GetFileNameWithoutExtension(file);
                         type.Presets.Add(new ImportPresetMarker.Target { Configuration = configuration, Preset = name });
                         names.Add(configuration + "/" + name);
@@ -204,13 +308,17 @@ namespace Riry.RiryTools.Editor
             bool changed;
             WriteMarker(folder, after.IsEmpty ? null : ImportPresetMarker.Generate(after), out changed);
 
+            // Each file once, by the preset it gets now (its decorator's, else its plain type's).
+            HashSet<string> decorators = Decorators(folder);
+            var done = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, List<AssetImporter>> type in InFolder(folder))
             {
-                ImportPresetMarker.Target now = after.For(type.Key);
-                if (now.Configuration == null || Same(before.For(type.Key), now)) continue;
                 foreach (AssetImporter listed in type.Value)
                 {
                     string path = listed.assetPath;
+                    if (!done.Add(path)) continue;
+                    ImportPresetMarker.Target now = Effective(after, listed, decorators);
+                    if (now.Configuration == null || Same(Effective(before, listed, decorators), now)) continue;
                     // A Better FBX source is not configured itself; its exported FBX is.
                     if (after.BetterFbx.Contains(ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path)))) continue;
                     // A model set to Automatically extract animations is extracted as Generic first.

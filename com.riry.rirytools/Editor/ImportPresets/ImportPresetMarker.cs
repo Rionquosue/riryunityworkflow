@@ -11,6 +11,7 @@ namespace Riry.RiryTools.Editor
     /// ImportPreset.md in a folder sets import presets for new files directly in
     /// that folder; subfolders are not affected. Lines:
     ///   Image files: Config/Preset      one per file type (ImportPresetFolderRules.Label)
+    ///   _normal files: Config/Preset    one per decorator: files whose name contains _normal
     ///   betterfbx: blend                export .blend files with Better FBX next to them
     /// A file type with no line gets no preset. The tool only rewrites or deletes a
     /// marker whose text is exactly what it generated.
@@ -48,9 +49,11 @@ namespace Riry.RiryTools.Editor
                 return rule != null ? new Target { Configuration = rule.Configuration, Preset = rule.Preset } : new Target();
             }
 
+            /// <summary>The preset for a file: its decorator's type when that has one, else its plain type's.</summary>
             public Target For(AssetImporter importer)
             {
-                return For(ImportPresetFolderRules.Label(importer));
+                return ImportPresetFolderRules.Effective(this, importer,
+                    ImportPresetFolderRules.Decorators(ParentFolder(importer.assetPath) ?? ""));
             }
 
             /// <summary>Sets a file type's preset; a null configuration removes it.</summary>
@@ -67,7 +70,7 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private static readonly Regex RuleLine = new Regex(@"^\s*([A-Za-z0-9.,\s]+?)\s*:\s*(.*?)\s*$",
+        private static readonly Regex RuleLine = new Regex(@"^\s*([A-Za-z0-9_.,\s]+?)\s*:\s*(.*?)\s*$",
             RegexOptions.CultureInvariant);
         private static readonly Regex ExtensionToken = new Regex(@"^[a-z0-9]+$", RegexOptions.CultureInvariant);
 

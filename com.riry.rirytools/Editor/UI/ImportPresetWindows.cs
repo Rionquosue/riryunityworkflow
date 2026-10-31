@@ -20,6 +20,14 @@ namespace Riry.RiryTools.Editor
             window.Show();
         }
 
+        /// <summary>Main Menu tab: shows the folder in the Project window, as Open does.</summary>
+        internal void ShowActiveFolder()
+        {
+            string active = ImportPresetActions.ActiveFolder();
+            Load(Usable(active) ? active : "Assets");
+            search = folder;
+        }
+
         private void OnGUI()
         {
             EditorGUILayout.Space(6);
@@ -77,6 +85,7 @@ namespace Riry.RiryTools.Editor
                     if (betterFbx) DrawBlenderSettings();
                 }
             }
+            DrawTags();
             EditorGUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(message)) EditorGUILayout.HelpBox(message, MessageType.Info);
@@ -91,6 +100,63 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
             EditorGUILayout.Space(4);
+        }
+
+        // The tags in preferences.yml: each one is a file type of its own for files whose name contains it.
+        private void DrawTags()
+        {
+            EditorGUILayout.Space(6);
+            tagsExpanded = EditorGUILayout.Foldout(tagsExpanded, new GUIContent("Tags",
+                "A file whose name contains a tag (any case) is listed under that tag's file type, such as normal files. " +
+                "Saved for every project in " + ImportPresetPreferences.FilePath + "."), true);
+            if (!tagsExpanded) return;
+            using (new EditorGUI.IndentLevelScope())
+            {
+                List<string> tags = ImportPresetPreferences.Tags();
+                foreach (string tag in tags)
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField(tag);
+                        if (!GUILayout.Button("x", GUILayout.Width(22))) continue;
+                        tags.Remove(tag);
+                        SaveTags(tags);
+                        GUIUtility.ExitGUI();
+                    }
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    newTag = EditorGUILayout.TextField(newTag);
+                    if (GUILayout.Button("Add", GUILayout.Width(60)))
+                    {
+                        string tag = newTag.Trim().ToLowerInvariant();
+                        tagProblem = ImportPresetPreferences.ValidateTag(tag);
+                        if (tagProblem == null)
+                        {
+                            if (!tags.Contains(tag)) tags.Add(tag);
+                            SaveTags(tags);
+                            newTag = "";
+                            GUI.FocusControl(null);
+                        }
+                    }
+                }
+                // A tag problem shows only after Add was clicked with it.
+                if (tagProblem != null) EditorGUILayout.HelpBox(tagProblem, MessageType.Warning);
+            }
+        }
+
+        private void SaveTags(List<string> tags)
+        {
+            try
+            {
+                ImportPresetPreferences.SaveTags(tags);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                message = "Could not save " + ImportPresetPreferences.FilePath + ": " + exception.Message;
+            }
+            Scan();
         }
 
         private static void DrawBlenderSettings()
@@ -132,6 +198,23 @@ namespace Riry.RiryTools.Editor
             window.titleContent = new GUIContent("Save Import Preset");
             window.minSize = new Vector2(420, 230);
             window.ShowUtility();
+        }
+
+        /// <summary>Main Menu tab: shows an asset's importer settings to save, as Open does.</summary>
+        internal void UseImporter(AssetImporter importer)
+        {
+            if (!ImportPresetLibrary.CanSave(importer)) return;
+            assetPath = importer.assetPath;
+            string type = importer.GetType().Name;
+            if (type.EndsWith("Importer", StringComparison.Ordinal)) type = type.Substring(0, type.Length - 8);
+            string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(importer.assetPath));
+            presetName = extension.Length > 0 ? type + " " + extension : type;
+            message = null;
+        }
+
+        internal string AssetPath
+        {
+            get { return assetPath; }
         }
 
         private void OnGUI()
@@ -196,7 +279,9 @@ namespace Riry.RiryTools.Editor
 //     message                   string        Result of Apply.
 //   UI METHODS (this file)
 //     Open()                Opens the window on the Project window's folder.
-//     OnGUI()               Folder with suggestions; one popup per file type; Better FBX (only with .blend files); Apply; Close.
+//     ShowActiveFolder()    The same for the Main Menu tab.
+//     OnGUI()               Folder with suggestions; one popup per file type; Better FBX (only with .blend files); Tags; Apply; Close.
+//     DrawTags() / SaveTags(tags)  The Tags foldout: preferences.yml tags with x, and Add (a problem shows after Add).
 //     DrawBlenderSettings() Blender path and Better FBX options.
 //   ACTIONS (ImportPresetWindowActions.cs)
 //     OnEnable() / OnProjectChange()  Find the file types again (after a domain reload or an import); the picks stay.
@@ -206,9 +291,15 @@ namespace Riry.RiryTools.Editor
 //     Suggestions(typed)    Up to 8 folders, ranked by FuzzyMatch.Score on name or path.
 //     Apply()               ImportPresetFolderRules.Apply for the folder.
 //
+// ImportPresetPreferences (Editor/ImportPresets/ImportPresetPreferences.cs): Documents/RiryTools/ImportPresets/preferences.yml
+//   Tags() (created with DefaultTags, the Substance Painter PBR map names), SaveTags(tags), ValidateTag(tag).
+//
 // ImportPresetFolderRules (Editor/ImportPresets/ImportPresetFolderRules.cs): shared with the right-click popup
 //   Label(importer)          "Image files", "Model files", "Audio files", "Video files", "Font files", else "<Type> files".
-//   InFolder(folder)         Importers of the files directly in the folder, by file type.
+//   Ending / Decorators / DecoratorIn / DecoratorLabel  Tags ("normal files") and "_word" name endings (not
+//                            number-only; "_normal files") as file types; a name containing several uses the one ending last.
+//   InFolder(folder)         Importers of the files directly in the folder, by file type (decorated files under both types).
+//   Effective(rules, importer, decorators)  A file's preset: its decorator's type's, else its plain type's.
 //   Types(folders)           The file types with the library presets that fit each (Preset.CanBeAppliedTo).
 //   Entries / Chosen / FirstIn  Popup entries ("None", "Configuration/Preset"), the pick for an entry, a configuration's preset.
 //   Apply(folder, picks, betterFbx, ref processed)  Writes ImportPreset.md; applies only changed presets to the folder's
@@ -219,6 +310,7 @@ namespace Riry.RiryTools.Editor
 //   FIELDS: assetPath, choice (configuration index), newConfiguration, presetName,
 //           saveTried (shows a name problem after Save), configurations, message.
 //   Open(importer) / OnGUI()  (this file)    Save(importer, configuration)  (ImportPresetWindowActions.cs)
+//   UseImporter(importer) / AssetPath  (this file)  For the Main Menu tab, which follows the selection.
 //
 // ImportPresetActions (Editor/ImportPresets/ImportPresetActions.cs): selection helpers
 //   ChooseFolderPreset, QuickFolderPreset / ValidateChooseFolderPreset, SaveToLibrary / ValidateSaveToLibrary,

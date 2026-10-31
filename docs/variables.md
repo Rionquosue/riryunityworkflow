@@ -38,6 +38,7 @@ EditorUserSettings: per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Enabled` | `1` / `0` | `0` | `AutoSync.Enabled` (**Sync**) |
 | `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `GitRemotes.Selected` (**Remote**) |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | remote URLs, one per line | unset | `AutoSync.LargeFileNotice`: **Do Not Show Again** |
+| `RiryTools.GuidTools.BrokenPromptOff` | scene and prefab paths, one per line | unset | `BrokenReferenceMonitor.PromptOnOpen`: **Do Not Show Again** |
 
 SessionState: until the editor quits; survives script reloads.
 
@@ -79,6 +80,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 |---|---|---|
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset`, optional `config.json` | `ImportPresetLibrary.RootPath` |
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
+| `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 
 ## Git names (AutoSync)
@@ -192,6 +194,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
 `RiryMenus.ConstraintTrainHierarchy`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
+  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
   - `Tools/RiryTools/Blendshape Sync` (2010)

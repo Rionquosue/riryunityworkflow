@@ -49,6 +49,25 @@ model (including `.blend`), and likewise **Audio files**, **Video files** and
 **Font files**; any other importer shows as `<Type> files`. Scripts and files Unity
 does not import are not listed.
 
+Decorators make file types of their own, each holding every file in the folder
+whose name contains it (any case), whatever its importer:
+
+- **Tags:** the words listed under **Tags** in the window, saved for every project
+  in `Documents/RiryTools/ImportPresets/preferences.yml`. A tag is listed as
+  **normal files**. The file starts with the PBR map names Substance Painter and
+  similar programs export: `basecolor`, `basemap`, `albedotransparency`, `diffuse`,
+  `metallic`, `roughness`, `specular`, `glossiness`, `metallicsmoothness`,
+  `specularsmoothness`, `smoothness`, `maskmap`, `normal`, `height`, `mixed_ao`,
+  `occlusion`, `emissive`, `emission`, `opacity`. Tags hold letters, digits and `_`.
+- **Endings:** every `_word` ending of a file name in the folder (`Rock_custom.png`
+  gives `_custom`; number-only endings such as `_01` are ignored), listed as
+  **_custom files**. An ending whose word is a tag counts as the tag.
+
+A name containing several uses the one that ends last, the longer when two end
+together (`Body_MetallicSmoothness.png` is a **metallicsmoothness file**, not a
+**smoothness file**). A decorated type set to **None** gives its files the plain
+type's preset.
+
 **Tools > RiryTools > Import Presets > Set Folder Import Presets** opens a window
 for one folder:
 
@@ -86,7 +105,8 @@ Model files: Avatar/Humanoid
 betterfbx: blend
 ```
 
-- `<file type>: Configuration/Preset` gives that type one preset.
+- `<file type>: Configuration/Preset` gives that type one preset, for example
+  `_normal files: Textures/Normal map` for a decorator.
   `Configuration` alone lets the configuration's rules pick the preset.
 - `betterfbx: blend` exports `.blend` files with Better FBX (see below).
 - It covers only the files directly in its folder, never its subfolders.
