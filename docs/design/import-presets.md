@@ -29,7 +29,7 @@ Each subfolder is one **configuration**, for example `Textures` or
 - A rule naming a missing preset is ignored. A rule whose preset is for another
   importer is skipped with a Console warning.
 - Open the folder with **Tools > RiryTools > Import Presets > Open Import Preset Library**. It is
-  created on first use, with a `README.txt`.
+  created on first use.
 
 ### Adding presets
 

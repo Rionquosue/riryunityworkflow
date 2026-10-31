@@ -20,7 +20,6 @@ namespace Riry.RiryTools.Editor
     {
         internal const string ConfigFileName = "config.json";
         internal const string PresetExtension = ".preset";
-        private const string ReadmeFileName = "README.txt";
 
         [Serializable]
         internal sealed class Rule
@@ -66,18 +65,6 @@ namespace Riry.RiryTools.Editor
         {
             string root = RootPath;
             Directory.CreateDirectory(root);
-            string readme = Path.Combine(root, ReadmeFileName);
-            if (!File.Exists(readme))
-            {
-                File.WriteAllText(readme,
-                    "RiryTools import preset library\n\n" +
-                    "Each folder here is one configuration. Put Unity .preset files for importers in it\n" +
-                    "(Project window: right-click an asset > RiryTools > Save Import Preset).\n\n" +
-                    "Optional config.json maps file extensions to presets; the first matching rule wins:\n" +
-                    "{ \"rules\": [ { \"extensions\": [\"png\", \"tga\"], \"preset\": \"Textures.preset\" } ] }\n" +
-                    "Use \"*\" to match every extension. Presets that no rule mentions apply to every\n" +
-                    "file their importer type accepts.\n", new UTF8Encoding(false));
-            }
             return root;
         }
 

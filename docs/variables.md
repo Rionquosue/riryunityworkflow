@@ -78,7 +78,6 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | Path | Contents | Owner |
 |---|---|---|
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset`, optional `config.json` | `ImportPresetLibrary.RootPath` |
-| `Documents/RiryTools/ImportPresets/README.txt` | How the library works | `ImportPresetLibrary.EnsureRoot` |
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
 
 ## Git names (AutoSync)
