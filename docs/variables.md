@@ -252,7 +252,7 @@ Destination workflow: `rirytools_vpm/.github/workflows/build-listing.yml`
 | `listPublishDirectory` | workflow env | `Website` |
 | `pathToCi` | workflow env | `ci` |
 | `GITHUB_TOKEN` | step env | `github.token` |
-| `github-pages` | environment | Deployment waits for the owner's approval |
+| `github-pages` | environment | Pages deployment target; main only, no required reviewers |
 | `pages` | concurrency group | Deploy job only |
 
 Destination workflow: `rirytools_vpm/.github/workflows/issue-check.yml`

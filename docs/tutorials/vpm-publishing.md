@@ -15,8 +15,8 @@ and the single permission **Actions: Read and write**. The rest is in
 - **Beta:** push to `beta`. The next beta (`<next patch>-beta.N`) is released as a prerelease.
 - **Minor or major:** run **Build Package** in `rirytools_vpm` by hand with the `version` input.
 
-Then open `rirytools_vpm`'s Actions tab, read the summary on the **Build Repo
-Listing** run, and approve its deployment.
+The listing is then rebuilt and deployed by itself; the VCC sees the new version
+once **Build Repo Listing** finishes.
 
 ## Add it to the Creator Companion
 
@@ -27,4 +27,4 @@ pre-release packages turned on.
 ## Checking a run
 
 - **No change** (Build Package): the package is identical to the previous release on that channel; nothing was published.
-- **Verify the listing failed:** the listing or landing page is not what the template and releases give. Do not approve; read the errors.
+- **Verify the listing failed:** the listing or landing page is not what the template and releases give, so nothing was deployed; read the errors.

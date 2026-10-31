@@ -138,7 +138,8 @@ Nothing is read from the source.
    - the listing's `name`, `id`, `url` and `author` match `source.json`
    - the only package is `com.riry.rirytools`
    - each version's `url` points at its release
-3. **Deploy:** waits in the `github-pages` environment for the owner's approval.
+3. **Deploy:** publishes to GitHub Pages without waiting; merging to the source's
+   `main` is the approval.
 
 Betas show in the VCC only for users who turn on pre-release packages.
 
