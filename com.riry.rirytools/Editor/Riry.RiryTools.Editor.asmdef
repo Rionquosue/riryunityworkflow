@@ -1,0 +1,22 @@
+{
+  "name": "Riry.RiryTools.Editor",
+  "rootNamespace": "Riry.RiryTools.Editor",
+  "references": [],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.7.0",
+      "define": "RIRYTOOLS_VRC_CONSTRAINTS"
+    }
+  ],
+  "noEngineReferences": false
+}

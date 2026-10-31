@@ -1,0 +1,29 @@
+{
+  "name": "Riry.RiryTools.Editor.VRChat",
+  "rootNamespace": "Riry.RiryTools.Editor",
+  "references": [
+    "Riry.RiryTools.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "VRC.Dynamics.dll",
+    "VRC.SDK3.Dynamics.Constraint.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "RIRYTOOLS_VRC_CONSTRAINTS"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.7.0",
+      "define": "RIRYTOOLS_VRC_CONSTRAINTS"
+    }
+  ],
+  "noEngineReferences": false
+}
