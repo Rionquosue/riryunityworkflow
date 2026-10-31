@@ -208,7 +208,10 @@ namespace Riry.RiryTools.Editor
 //
 // ImportPresetFolderRules (Editor/ImportPresets/ImportPresetFolderRules.cs): shared with the right-click popup
 //   Label(importer)          "Image files", "Model files", "Audio files", "Video files", "Font files", else "<Type> files".
-//   InFolder(folder)         Importers of the files directly in the folder, by file type.
+//   Ending / Decorators / DecoratorIn / DecoratorLabel  "_word" name endings (not number-only) as file types,
+//                            "_normal files"; a name containing several uses the last.
+//   InFolder(folder)         Importers of the files directly in the folder, by file type (decorated files under both types).
+//   Effective(rules, importer, decorators)  A file's preset: its decorator's type's, else its plain type's.
 //   Types(folders)           The file types with the library presets that fit each (Preset.CanBeAppliedTo).
 //   Entries / Chosen / FirstIn  Popup entries ("None", "Configuration/Preset"), the pick for an entry, a configuration's preset.
 //   Apply(folder, picks, betterFbx, ref processed)  Writes ImportPreset.md; applies only changed presets to the folder's

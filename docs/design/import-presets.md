@@ -49,6 +49,14 @@ model (including `.blend`), and likewise **Audio files**, **Video files** and
 **Font files**; any other importer shows as `<Type> files`. Scripts and files Unity
 does not import are not listed.
 
+Decorators are found by themselves: every `_word` ending of a file name in the
+folder (`Body_normal.png` gives `_normal`; number-only endings such as `_01` are
+ignored) is a file type of its own, **_normal files**, holding every file in the
+folder whose name contains it, whatever its importer. A name containing several
+uses the one that comes last (`Rock_normal_height.png` is a **_height file**). A
+decorated type set to **None** gives its files the plain type's preset, so
+`Body_normal.png` then gets the **Image files** preset.
+
 **Tools > RiryTools > Import Presets > Set Folder Import Presets** opens a window
 for one folder:
 
@@ -86,7 +94,8 @@ Model files: Avatar/Humanoid
 betterfbx: blend
 ```
 
-- `<file type>: Configuration/Preset` gives that type one preset.
+- `<file type>: Configuration/Preset` gives that type one preset, for example
+  `_normal files: Textures/Normal map` for a decorator.
   `Configuration` alone lets the configuration's rules pick the preset.
 - `betterfbx: blend` exports `.blend` files with Better FBX (see below).
 - It covers only the files directly in its folder, never its subfolders.
