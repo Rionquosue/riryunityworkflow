@@ -20,6 +20,14 @@ namespace Riry.RiryTools.Editor
             window.Show();
         }
 
+        /// <summary>Main Menu tab: shows the folder in the Project window, as Open does.</summary>
+        internal void ShowActiveFolder()
+        {
+            string active = ImportPresetActions.ActiveFolder();
+            Load(Usable(active) ? active : "Assets");
+            search = folder;
+        }
+
         private void OnGUI()
         {
             EditorGUILayout.Space(6);
@@ -192,6 +200,23 @@ namespace Riry.RiryTools.Editor
             window.ShowUtility();
         }
 
+        /// <summary>Main Menu tab: shows an asset's importer settings to save, as Open does.</summary>
+        internal void UseImporter(AssetImporter importer)
+        {
+            if (!ImportPresetLibrary.CanSave(importer)) return;
+            assetPath = importer.assetPath;
+            string type = importer.GetType().Name;
+            if (type.EndsWith("Importer", StringComparison.Ordinal)) type = type.Substring(0, type.Length - 8);
+            string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(importer.assetPath));
+            presetName = extension.Length > 0 ? type + " " + extension : type;
+            message = null;
+        }
+
+        internal string AssetPath
+        {
+            get { return assetPath; }
+        }
+
         private void OnGUI()
         {
             AssetImporter importer = string.IsNullOrEmpty(assetPath) ? null : AssetImporter.GetAtPath(assetPath);
@@ -254,6 +279,7 @@ namespace Riry.RiryTools.Editor
 //     message                   string        Result of Apply.
 //   UI METHODS (this file)
 //     Open()                Opens the window on the Project window's folder.
+//     ShowActiveFolder()    The same for the Main Menu tab.
 //     OnGUI()               Folder with suggestions; one popup per file type; Better FBX (only with .blend files); Tags; Apply; Close.
 //     DrawTags() / SaveTags(tags)  The Tags foldout: preferences.yml tags with x, and Add (a problem shows after Add).
 //     DrawBlenderSettings() Blender path and Better FBX options.
@@ -284,6 +310,7 @@ namespace Riry.RiryTools.Editor
 //   FIELDS: assetPath, choice (configuration index), newConfiguration, presetName,
 //           saveTried (shows a name problem after Save), configurations, message.
 //   Open(importer) / OnGUI()  (this file)    Save(importer, configuration)  (ImportPresetWindowActions.cs)
+//   UseImporter(importer) / AssetPath  (this file)  For the Main Menu tab, which follows the selection.
 //
 // ImportPresetActions (Editor/ImportPresets/ImportPresetActions.cs): selection helpers
 //   ChooseFolderPreset, QuickFolderPreset / ValidateChooseFolderPreset, SaveToLibrary / ValidateSaveToLibrary,

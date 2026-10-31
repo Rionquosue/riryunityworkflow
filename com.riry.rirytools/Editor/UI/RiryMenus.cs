@@ -23,6 +23,7 @@ namespace Riry.RiryTools.Editor
     internal static class RiryMenus
     {
         // ---- Tools dropdown: one entry or submenu per tool ------------------
+        private const string MainMenu = "Tools/RiryTools/Main Menu";
         private const string SyncTools = "Tools/RiryTools/AutoSync/Sync";
         private const string ConfigurationTools = "Tools/RiryTools/AutoSync/Configuration";
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
@@ -60,6 +61,9 @@ namespace Riry.RiryTools.Editor
         // =====================================================================
         // Tools dropdown
         // =====================================================================
+
+        [MenuItem(MainMenu, false, 1990)]
+        private static void MainMenuItem() { RiryToolsMainMenu.Open(); }
 
         [MenuItem(SyncTools, false, 2000)]
         private static void SyncToolsItem() { GitActions.ToggleSync(); }
@@ -217,6 +221,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // TOOLS DROPDOWN (one entry or submenu per tool; a first letter selects its entry)
+//   Tools/RiryTools/Main Menu (1990)               -> RiryToolsMainMenu.Open (Editor/UI/RiryToolsMainMenu.cs): every tool as a tab
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> GitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
 //   Tools/RiryTools/AutoSync/Configuration (2001) -> GitActions.OpenConfiguration -> GitConfigureWindow (Editor/UI/GitWindows.cs)
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncWindow.Open (Editor/UI/BlendshapeSyncWindow.UI.cs)

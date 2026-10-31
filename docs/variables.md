@@ -194,6 +194,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
 `RiryMenus.ConstraintTrainHierarchy`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
+  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
   - `Tools/RiryTools/Blendshape Sync` (2010)

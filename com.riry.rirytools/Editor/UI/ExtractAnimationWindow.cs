@@ -37,6 +37,12 @@ namespace Riry.RiryTools.Editor
             get { return target != null ? AssetDatabase.GetAssetPath(target) : null; }
         }
 
+        /// <summary>Main Menu tab: takes the selected model, as Open does.</summary>
+        internal void ShowSelection()
+        {
+            UseSelection();
+        }
+
         private void OnSelectionChange()
         {
             if (UseSelection()) Repaint();
@@ -160,6 +166,7 @@ namespace Riry.RiryTools.Editor
 //   settings                 AnimationExtractSettings  Destination, the three toggles, the cleaning options and whitelist.
 //   configure                CleanAnimationKeysWindow  The Configure window, sharing settings.CleanOptions and settings.Whitelist.
 //   Open()                   Opens the window with the selected model.
+//   ShowSelection()          The same for the Main Menu tab.
 //   UseSelection() / SetTarget(model)  Changes the target and loads its settings file, or the defaults.
 //   OnGUI()                  Target; Destination; Automatically clean keys with Configure; Save animation extract
 //                            settings (only while cleaning); Automatically extract animations; Extract.

@@ -9,8 +9,15 @@ namespace Riry.RiryTools.Editor
     /// RiryMenus.cs has the same paths showing a "VRCSDK not found" popup, so keep
     /// the priorities of both files in step.
     /// </summary>
+    [InitializeOnLoad]
     internal static class RiryVRChatMenus
     {
+        // The Main Menu's Constraint Train tab hosts this window.
+        static RiryVRChatMenus()
+        {
+            RiryToolsMainMenu.CreateConstraintTrain = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintTrainWindow>();
+        }
+
         [MenuItem(RiryMenus.ConstraintTrain, false, 2030)]
         private static void ConstraintTrainItem() { ConstraintTrainWindow.Open(); }
 
