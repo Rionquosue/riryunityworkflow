@@ -371,6 +371,13 @@ namespace Riry.RiryTools.Editor
             else blocks.Add(block);
         }
 
+        /// <summary>Removes a block and every block inside it.</summary>
+        internal static void Delete(List<MockupBlock> blocks, MockupBlock block)
+        {
+            foreach (MockupBlock child in Children(blocks, block.Id)) Delete(blocks, child);
+            blocks.Remove(block);
+        }
+
         internal static MockupBlock Create(List<MockupBlock> blocks, string type)
         {
             int id = 0;
@@ -393,4 +400,4 @@ namespace Riry.RiryTools.Editor
 // MockupTypes               The component types (Kind: Name, LabelName, ContentName, Default).
 // MockupFile                Save(path, blocks, width, height) writes the annotated .yml (defaults left out);
 //                           Load(path, out width, out height) reads it back.
-// MockupModel               Children, Find, Place (move or insert at an index), Create.
+// MockupModel               Children, Find, Place (move or insert at an index), Delete (with its blocks), Create.

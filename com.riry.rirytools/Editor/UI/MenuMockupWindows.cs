@@ -14,8 +14,9 @@ namespace Riry.RiryTools.Editor
     /// middle of each side for resizing; blocks lay out like flexbox and hold blocks.
     /// Drag a block to move it: holding it over a spot for half a second slides the
     /// other blocks aside to show where it goes. Double-click a block to edit its text;
-    /// right-click it (or the empty window) for its layout. The aspect ratio of the
-    /// mockup is shown at the top. The model and file format are in Editor/MenuMockup.cs.
+    /// right-click it (or the empty window) for its layout, Auto size and Delete. Every
+    /// change can be undone (Edit > Undo). The aspect ratio of the mockup is shown at
+    /// the top. The model and file format are in Editor/MenuMockup.cs.
     /// </summary>
     internal sealed class MenuMockupEditWindow : EditorWindow
     {
@@ -102,6 +103,32 @@ namespace Riry.RiryTools.Editor
                 blocks.Insert(0, root);
                 return root;
             }
+        }
+
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed += OnUndoRedo;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+        }
+
+        private void OnUndoRedo()
+        {
+            EndDrag();
+            pressed = null;
+            pressedBlock = null;
+            resizing = null;
+            resizingElement = null;
+            Rebuild();
+        }
+
+        /// <summary>Records the mockup for Undo before a change.</summary>
+        internal void Record(string action)
+        {
+            Undo.RecordObject(this, "Menu Mockup: " + action);
         }
 
         private void CreateGUI()
@@ -250,6 +277,7 @@ namespace Riry.RiryTools.Editor
             {
                 if (evt.button != 0) return;
                 evt.StopPropagation();
+                Record("Resize");
                 resizing = block;
                 resizingElement = element;
                 resizeSide = side;
@@ -322,6 +350,7 @@ namespace Riry.RiryTools.Editor
             if (dragged != null)
             {
                 Target target = TargetAt(evt.position) ?? placed;
+                Record("Move");
                 MockupModel.Place(blocks, draggedBlock, ((MockupBlock)target.Parent.userData).Id, target.Index);
                 EndDrag();
                 Rebuild();
@@ -493,6 +522,7 @@ namespace Riry.RiryTools.Editor
             if (type == null) return;
             DragAndDrop.AcceptDrag();
             Target target = TargetAt(evt.mousePosition) ?? placed ?? new Target(canvas, BlockChildren(canvas).Count);
+            Record("Add " + type);
             MockupBlock block = MockupModel.Create(blocks, type);
             MockupModel.Place(blocks, block, ((MockupBlock)target.Parent.userData).Id, target.Index);
             EndDrag();
@@ -521,6 +551,22 @@ namespace Riry.RiryTools.Editor
             string[] padding = { "0", "2", "4", "8", "16" };
             Choices(evt.menu, "Padding/", padding, padding, Number(block.Padding),
                 value => block.Padding = float.Parse(value, CultureInfo.InvariantCulture));
+            evt.menu.AppendSeparator();
+            evt.menu.AppendAction("Auto size", action =>
+            {
+                Record("Auto size");
+                block.Width = -1;
+                block.Height = -1;
+                Rebuild();
+            }, action => block.Width >= 0 || block.Height >= 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            // The window itself cannot be deleted.
+            if (block.Id == 0) return;
+            evt.menu.AppendAction("Delete", action =>
+            {
+                Record("Delete");
+                MockupModel.Delete(blocks, block);
+                Rebuild();
+            });
         }
 
         private void Choices(DropdownMenu menu, string path, string[] names, string[] values, string current, Action<string> set)
@@ -530,6 +576,7 @@ namespace Riry.RiryTools.Editor
                 string value = values[i];
                 menu.AppendAction(path + names[i], action =>
                 {
+                    Record(path.TrimEnd('/'));
                     set(value);
                     Rebuild();
                 }, action => value == current ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
@@ -561,16 +608,26 @@ namespace Riry.RiryTools.Editor
 
         internal void Load(string path, List<MockupBlock> loaded, float width, float height)
         {
+            Record("Load");
             blocks = loaded;
             savePath = path;
             Rebuild();
             if (width > 0 && height > 0) position = new Rect(position.x, position.y, width, height + BarHeight);
         }
+
+        /// <summary>Starts an empty mockup without a name, so the next Save asks for one.</summary>
+        internal void New()
+        {
+            Record("New");
+            blocks = new List<MockupBlock>();
+            savePath = null;
+            Rebuild();
+        }
     }
 
     /// <summary>
-    /// Components: every block type, dragged into Edit to add it, with Save Mockup and
-    /// Load. Save names a new mockup (Documents/RiryTools/Mockups/&lt;name&gt;.yml) and
+    /// Components: every block type, dragged into Edit to add it, with New, Save Mockup
+    /// and Load. New starts an empty mockup. Save names a new mockup (Documents/RiryTools/Mockups/&lt;name&gt;.yml) and
     /// updates the file once it has one; Load opens a saved mockup in Edit.
     /// </summary>
     internal sealed class MenuMockupComponentsWindow : EditorWindow
@@ -597,10 +654,13 @@ namespace Riry.RiryTools.Editor
             var buttons = new VisualElement();
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.flexShrink = 0;
+            var create = new Button(() => Edit().New()) { text = "New" };
+            create.style.flexGrow = 1;
             var save = new Button(Save) { text = "Save Mockup" };
             save.style.flexGrow = 1;
             var load = new Button(Load) { text = "Load" };
             load.style.flexGrow = 1;
+            buttons.Add(create);
             buttons.Add(save);
             buttons.Add(load);
             rootVisualElement.Add(buttons);
@@ -651,7 +711,7 @@ namespace Riry.RiryTools.Editor
         private void Load()
         {
             Directory.CreateDirectory(MenuMockup.Folder);
-            string path = EditorUtility.OpenFilePanel("Load Mockup", MenuMockup.Folder, MenuMockup.FileExtension);
+            string path = EditorUtility.OpenFilePanel("Load", MenuMockup.Folder, MenuMockup.FileExtension);
             if (string.IsNullOrEmpty(path)) return;
             try
             {
@@ -662,7 +722,7 @@ namespace Riry.RiryTools.Editor
             catch (Exception exception)
             {
                 Debug.LogException(exception);
-                EditorUtility.DisplayDialog("Load Mockup", "Could not load " + path + ":\n" + exception.Message, "OK");
+                EditorUtility.DisplayDialog("Load", "Could not load " + path + ":\n" + exception.Message, "OK");
             }
         }
     }
@@ -698,10 +758,14 @@ namespace Riry.RiryTools.Editor
                 EditorGUILayout.LabelField("This block has no text.");
                 return;
             }
-            EditorGUI.BeginChangeCheck();
-            if (kind.LabelName != null) block.Label = EditorGUILayout.TextField(kind.LabelName, block.Label);
-            if (kind.ContentName != null) block.Content = EditorGUILayout.TextField(kind.ContentName, block.Content);
-            if (EditorGUI.EndChangeCheck()) owner.Rebuild();
+            string label = block.Label, content = block.Content;
+            if (kind.LabelName != null) label = EditorGUILayout.TextField(kind.LabelName, label);
+            if (kind.ContentName != null) content = EditorGUILayout.TextField(kind.ContentName, content);
+            if (label == block.Label && content == block.Content) return;
+            owner.Record("Edit Text");
+            block.Label = label;
+            block.Content = content;
+            owner.Rebuild();
         }
     }
 
@@ -895,10 +959,11 @@ namespace Riry.RiryTools.Editor
 //   BeginDrag / Track / CheckHover / Slide / EndDrag  The gap (placeholder) and its animation.
 //   TargetAt(at)             Before / after a block at its edges, inside it in its middle, or in the window.
 //   OnDragUpdated / OnDragPerform  A component dragged in from Components.
-//   Menu(evt, block)         Right-click: Direction, Justify, Align, Grow, Padding.
-//   Save(path) / Load(path, blocks, width, height)  Through MockupFile.
+//   Menu(evt, block)         Right-click: Direction, Justify, Align, Grow, Padding, Auto size, Delete (not the window).
+//   Record(action) / OnUndoRedo()  Undo.RecordObject before each change; Undo and Redo draw the blocks again.
+//   Save(path) / Load(path, blocks, width, height) / New()  Through MockupFile; New empties the mockup and its name.
 //
-// MenuMockupComponentsWindow ("Components"): Save Mockup and Load, then every block type to drag into Edit.
+// MenuMockupComponentsWindow ("Components"): New, Save Mockup and Load, then every block type to drag into Edit.
 // MenuMockupTextWindow ("Edit Text"): the block's Label and Content, named per type (MockupTypes.Kind).
 // MenuMockupNameWindow ("Save Mockup"): asks for the name of a new mockup; a name problem shows after Save.
 // MenuMockupPreview        The Unity control each block type stands for.
