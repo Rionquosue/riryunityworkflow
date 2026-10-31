@@ -229,7 +229,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ExtractAnimationWindow.Open (Editor/UI/ExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
-//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs), a placeholder that does nothing yet
+//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
 //
 // PROJECT WINDOW RIGHT-CLICK

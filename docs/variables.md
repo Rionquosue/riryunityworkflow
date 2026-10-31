@@ -79,6 +79,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 |---|---|---|
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset`, optional `config.json` | `ImportPresetLibrary.RootPath` |
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
+| `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 
 ## Git names (AutoSync)
 
@@ -202,7 +203,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Import Presets/Extract Animation` (2052): the Extract Animation window
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
-  - `Tools/RiryTools/Menu Mockup` (2065): placeholder, does nothing yet
+  - `Tools/RiryTools/Menu Mockup` (2065): opens the Edit and Components windows
   - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
