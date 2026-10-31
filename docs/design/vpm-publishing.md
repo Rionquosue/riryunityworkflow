@@ -101,13 +101,15 @@ Only the destination's releases and the `version` input decide versions.
 Nothing is read from the source.
 
 - **Stable:** the `version` input; otherwise the previous stable release plus
-  one patch (`0.7.2` to `0.7.3`); with no stable release, `0.0.1`.
+  one patch (`0.1.0` to `0.1.1`); with no stable release, `0.1.0`.
+  - After patch 99 the minor version goes up and the patch starts again at 0
+    (`0.1.99` to `0.2.0`). A patch over 99 is refused, in the input too.
 - **Beta:** the `version` input; otherwise `<next stable>-beta.<n>`.
-  - Next stable is the highest stable release plus one patch, or `0.0.1`.
+  - Next stable is the version a stable run would publish automatically.
   - `n` is one more than the highest existing `-beta.N` for that next stable, starting at `1`.
-  - With stable `0.7.2`: `0.7.3-beta.1`, then `0.7.3-beta.2`. After `0.7.3`: `0.7.4-beta.1`.
+  - With stable `0.1.2`: `0.1.3-beta.1`, then `0.1.3-beta.2`. After `0.1.3`: `0.1.4-beta.1`.
 - **Minor and major:** a manual run with the `version` input, for example
-  `0.8.0`. Automatic versions continue from it.
+  `0.8.0`, or automatically after patch 99. Automatic versions continue from it.
 
 ## Package
 
