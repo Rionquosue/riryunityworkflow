@@ -4,7 +4,8 @@ Target: Unity 2022.3 LTS, including 2022.3.22f1. This is an Editor tool.
 
 ## Use
 
-1. Open **Tools > RiryTools > Blendshape Sync**.
+1. Open **Tools > RiryTools > Blendshape Sync** (Add Job), or click **Add Job** in
+   the Main Menu's **Blendshape Sync** tab. A job's popup opens.
 2. Drag the master scene object (or its SkinnedMeshRenderer) into **Master**.
 3. Drag child renderers into the child fields. Assigning the last field adds
    another empty drop row. Each child must be a different renderer.
@@ -17,6 +18,21 @@ The tool synchronizes **weights**, using blendshapes already on each mesh. It
 does not copy blendshape geometry, change mesh assets, or create animation keys.
 Scene objects and Prefab Mode objects are supported; prefab/model assets dragged
 directly from the Project window are rejected.
+
+## Jobs
+
+Each master with its children is a **job**. Closing a job's popup keeps the job
+running, Auto included. The Main Menu's **Blendshape Sync** tab lists every job
+as `<master> > N children` with **Auto** (Run automatically), **Sync Now**,
+**Edit** (reopens its popup), **Set All to Original** and **Remove**, then **Add
+Job**.
+
+Jobs are saved per scene, for this user, in
+`UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` (renderers as
+GlobalObjectIds), and come back, Auto included, when the scene opens again,
+also after a restart. A closing scene's jobs are saved and end with it. Jobs
+of an unsaved scene or of Prefab Mode are not saved. The weights captured for
+**Set All to Original** last while Unity runs.
 
 ## Manual links and case matching
 

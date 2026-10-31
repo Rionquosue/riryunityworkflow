@@ -71,6 +71,10 @@ namespace Riry.RiryTools.Editor
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
+                case 1:
+                    // The running jobs for review; a job is added or edited in its popup.
+                    BlendshapeSyncJobList.Draw();
+                    break;
                 case 3:
                     if (CreateConstraintTrain == null)
                         EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Train").Message, MessageType.Info);
@@ -101,7 +105,6 @@ namespace Riry.RiryTools.Editor
             switch (tab)
             {
                 case 0: return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
-                case 1: return Host("Blendshape Sync", () => CreateInstance<BlendshapeSyncWindow>(), null);
                 case 2: return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case 3: return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
                 case 4: return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
@@ -141,7 +144,7 @@ namespace Riry.RiryTools.Editor
         }
 
         // Calls one of the hosted window's own message methods, when it has it.
-        private static void Call(EditorWindow window, string method)
+        internal static void Call(EditorWindow window, string method)
         {
             MethodInfo info = window.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                 null, Type.EmptyTypes, null);
@@ -185,7 +188,7 @@ namespace Riry.RiryTools.Editor
         // The current tab's hosted window if it was made, without making it.
         private EditorWindow ActiveIfMade()
         {
-            string key = tab == 0 ? "Configuration" : tab == 5 ? (importTab < 3 ? ImportTabs[importTab] : null) : Tabs[tab];
+            string key = tab == 0 ? "Configuration" : tab == 5 ? (importTab < 3 ? ImportTabs[importTab] : null) : tab == 1 ? null : Tabs[tab];
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -218,3 +221,4 @@ namespace Riry.RiryTools.Editor
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
+//   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
