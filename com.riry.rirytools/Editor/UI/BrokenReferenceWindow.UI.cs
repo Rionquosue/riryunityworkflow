@@ -211,7 +211,9 @@ namespace Riry.RiryTools.Editor
 // BrokenReferenceSaveGuard / BrokenSaveWindow (BrokenReferenceWindow.cs): interrupt saving a scene or
 //   Prefab Mode prefab with broken asset references (FindBroken: empty references whose GUID is missing),
 //   listing each as "<last known name> in <object > component > field> (GUID:...)";
-//   CONTINUE ANYWAY needs three clicks ([2], [1]).
+//   CONTINUE ANYWAY needs three clicks ([2], [1]). Skipped while BrokenReferenceMonitor.Loading.
+// BrokenReferenceMonitor.Loading: true from EditorSceneManager.sceneOpening until two editor updates after the
+//   scene opens (StartLoading; loadNumber keeps an earlier load from ending a later one).
 // BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window every time a file opens with
 //   missing GUIDs (PromptOnOpen; Do Not Show Again turns it off for that file, OffKey), and once per session when
 //   Unity logs several missing-prefab or broken-reference messages.

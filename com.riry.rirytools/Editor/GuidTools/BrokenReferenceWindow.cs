@@ -267,12 +267,36 @@ namespace Riry.RiryTools.Editor
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private static readonly Queue<double> recent = new Queue<double>();
         private static readonly HashSet<string> prompted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static bool loading;
+        private static int loadNumber;
 
         static BrokenReferenceMonitor()
         {
             Application.logMessageReceived += OnLog;
+            EditorSceneManager.sceneOpening += (path, mode) => StartLoading();
             EditorSceneManager.sceneOpened += (scene, mode) => Inspect(scene.path);
             PrefabStage.prefabStageOpened += stage => Inspect(stage.assetPath);
+        }
+
+        /// <summary>
+        /// True while a scene is loading: from the moment it starts opening until two editor
+        /// updates after. BrokenReferenceSaveGuard skips its check then, so a save made while
+        /// a scene opens does not show the save warning.
+        /// </summary>
+        internal static bool Loading
+        {
+            get { return loading; }
+        }
+
+        private static void StartLoading()
+        {
+            loading = true;
+            int number = ++loadNumber;
+            // Opening is synchronous; the first delay call runs after it, the second one update later.
+            EditorApplication.delayCall += () => EditorApplication.delayCall += () =>
+            {
+                if (number == loadNumber) loading = false;
+            };
         }
 
         private static void OnLog(string message, string stackTrace, LogType type)
@@ -342,12 +366,15 @@ namespace Riry.RiryTools.Editor
     /// Interrupts saving a scene, or the prefab open in Prefab Mode, that holds broken
     /// asset references in memory (references whose asset GUID no longer exists): the
     /// save goes ahead only after CONTINUE ANYWAY is clicked three times
-    /// (BrokenSaveWindow). Missing scripts are not counted.
+    /// (BrokenSaveWindow). Missing scripts are not counted. Only the open scene or prefab
+    /// being saved is checked, and nothing is checked while a scene is loading
+    /// (BrokenReferenceMonitor.Loading).
     /// </summary>
     internal sealed class BrokenReferenceSaveGuard : AssetModificationProcessor
     {
         private static string[] OnWillSaveAssets(string[] paths)
         {
+            if (BrokenReferenceMonitor.Loading) return paths;
             var allowed = new List<string>();
             foreach (string path in paths)
             {
