@@ -20,7 +20,7 @@ namespace Riry.RiryTools.Editor
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "Import Presets", "Stop Auto Game"
+            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "IconCap", "Import Presets", "Stop Auto Game"
         };
         private static readonly string[] ImportTabs =
         {
@@ -91,7 +91,7 @@ namespace Riry.RiryTools.Editor
                         EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Train").Message, MessageType.Info);
                     else Draw(Active());
                     break;
-                case 5:
+                case 6:
                     importTab = GUILayout.Toolbar(importTab, ImportTabs, tabStyle, GUILayout.Height(ImportTabHeight));
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
@@ -100,7 +100,7 @@ namespace Riry.RiryTools.Editor
                     }
                     else Draw(Active());
                     break;
-                case 6:
+                case 7:
                     StopAutoGame.Enabled = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
                         "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
                     break;
@@ -119,7 +119,8 @@ namespace Riry.RiryTools.Editor
                 case 2: return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case 3: return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
                 case 4: return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
-                case 5:
+                case 5: return Host("IconCap", () => CreateInstance<IconCapWindow>(), null);
+                case 6:
                     switch (importTab)
                     {
                         case 0:
@@ -199,7 +200,7 @@ namespace Riry.RiryTools.Editor
         // The current tab's hosted window if it was made, without making it.
         private EditorWindow ActiveIfMade()
         {
-            string key = tab == 0 ? "Configuration" : tab == 5 ? (importTab < 3 ? ImportTabs[importTab] : null) : tab == 1 ? null : Tabs[tab];
+            string key = tab == 0 ? "Configuration" : tab == 6 ? (importTab < 3 ? ImportTabs[importTab] : null) : tab == 1 || tab == 7 ? null : Tabs[tab];
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -221,7 +222,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
-//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools,
+//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools, IconCap,
 //                            Import Presets, Stop Auto Game (menu order; not Menu Mockup or Documentation).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).

@@ -29,6 +29,7 @@ namespace Riry.RiryTools.Editor
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
+        private const string IconCapMenu = "Tools/RiryTools/IconCap";
         private const string ImportPresetTools = "Tools/RiryTools/Import Presets/Set Folder Import Presets";
         private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Preset";
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animation";
@@ -88,6 +89,9 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(GuidTools, false, 2040)]
         private static void GuidToolsItem() { GuidToolsWindow.Open(); }
+
+        [MenuItem(IconCapMenu, false, 2045)]
+        private static void IconCapItem() { IconCapWindow.Open(); }
 
         [MenuItem(ImportPresetTools, false, 2050)]
         private static void ImportPresetToolsItem() { ImportPresetActions.ChooseFolderPreset(); }
@@ -229,6 +233,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
 //                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
+//   Tools/RiryTools/IconCap (2045)                  -> IconCapWindow.Open (Editor/UI/IconCapWindow.cs)
 //   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ExtractAnimationWindow.Open (Editor/UI/ExtractAnimationWindow.cs)
