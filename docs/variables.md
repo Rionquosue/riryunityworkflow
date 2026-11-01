@@ -219,7 +219,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
   - `Tools/RiryTools/GUID Tools` (2040): the window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache
-  - `Tools/RiryTools/IconCap` (2045): the IconCap window (also the Main Menu's IconCap tab)
+  - `Tools/RiryTools/IconCap` (2045), written `Ic&onCap` so its menu key is O: the IconCap window (also the Main Menu's IconCap tab)
   - `Tools/RiryTools/Import Presets/Set Folder Import Presets` (2050)
   - `Tools/RiryTools/Import Presets/Save Import Preset` (2051)
   - `Tools/RiryTools/Import Presets/Extract Animation` (2052): the Extract Animation window
