@@ -18,7 +18,7 @@ name.
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
 - **Tool names:** AutoSync, Blendshape Sync, Clean Animation Keys, Constraint
-  Train, GUID Tools, Import Presets, Stop Auto Game. Class, file, folder and
+  Train, GUID Tools, IconCap, Import Presets, Stop Auto Game. Class, file, folder and
   document names follow them.
 
 ## Stored settings
@@ -72,6 +72,9 @@ In the project:
 | `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git | `AnimationExtractSettings.PathFor` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
 | `<model>_ROOT.prefab` | Constraint Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
+| `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows | `IconCapFiles.JobFileName` |
+| `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
+| `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
 
 In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
 a OneDrive redirect; `~/Documents` elsewhere):
@@ -83,6 +86,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
+| `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |
 
 ## Git names (AutoSync)
 
@@ -114,6 +118,8 @@ Environment variables set for Git commands:
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
+| Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
+| Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
 
 Every file and folder in `com.riry.rirytools/` has a `.meta` with a fixed GUID.
 Moving or renaming a file must move its `.meta` with it.
@@ -188,6 +194,17 @@ Other tools:
 | `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
 
+IconCap:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `IconCapRenderer.MaxSize` | `4096` | Largest capture size |
+| `IconCapRenderer.SensorHeight` | `24` mm | Full-frame sensor for the 35, 50 and 85mm lenses |
+| `IconCapWindow.WideWidth` | `640` | Window width from which the effect stack sits beside the preview |
+| `IconCapWindow.PreviewMaxSide` / `PreviewMaxPixels` | `512` / `1024` | Largest preview on screen / in pixels |
+| `IconCapWindow.PreviewInterval` | `0.1` s | Shortest time between live preview renders |
+| `IconCapWindow.SmallThumbnail` / `LargeThumbnail` | `64` / `128` | Icon Generator source and result size (**Large previews**) |
+
 ## Menu paths
 
 Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
@@ -202,6 +219,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
   - `Tools/RiryTools/GUID Tools` (2040): the window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache
+  - `Tools/RiryTools/IconCap` (2045), written `Ic&onCap` so its menu key is O: the IconCap window (also the Main Menu's IconCap tab)
   - `Tools/RiryTools/Import Presets/Set Folder Import Presets` (2050)
   - `Tools/RiryTools/Import Presets/Save Import Preset` (2051)
   - `Tools/RiryTools/Import Presets/Extract Animation` (2052): the Extract Animation window
