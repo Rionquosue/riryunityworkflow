@@ -31,7 +31,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
-| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, common types on, `MigratedFolder` empty | `AvatarMigrationSettings` (per-type options, sub-options, ignore children, extra types, migrated folder) |
+| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigrationSettings` (per-entry options, sub-options, ignore children, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
 
@@ -90,8 +90,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
-| `Documents/RiryTools/AvatarMigrationAssistant/extra_copier_types_template.yml` | Extra component types by category (Pumkin's Avatar Tools' categories); written when missing | `AvatarExtraTypes.TemplateName` |
-| `Documents/RiryTools/AvatarMigrationAssistant/extra_copier_types.yml` | The user's own extra types, same layout, merged in by category | `AvatarExtraTypes.FileName` |
+| `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |
 
 ## Git names (AutoSync)
@@ -124,6 +123,7 @@ Environment variables set for Git commands:
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
+| `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
 

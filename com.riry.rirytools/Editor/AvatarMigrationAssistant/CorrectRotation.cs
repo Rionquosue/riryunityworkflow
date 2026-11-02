@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -17,12 +18,14 @@ namespace Riry.RiryTools.Editor
     {
         private const string VrcAim = AvatarCopyTypes.VrcConstraintPrefix + "AimConstraint";
         private const string VrcParent = AvatarCopyTypes.VrcConstraintPrefix + "ParentConstraint";
-        // VRChat's WorldUpType.ObjectRotationUp.
+        // VRChat's WorldUpType.ObjectRotationUp (VRC.Dynamics.dll: SceneUp 0, ObjectUp 1, ObjectRotationUp 2, Vector 3, None 4).
         private const int VrcObjectRotationUp = 2;
+        // Sources stored as source0 to source15 before overflowList.
+        private const int VrcFlatSources = 16;
 
         private void CorrectRotation()
         {
-            foreach (var pair in new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<Component, Component>>(copied))
+            foreach (var pair in new List<KeyValuePair<Component, Component>>(copied))
             {
                 Component source = pair.Key;
                 Component target = pair.Value;
@@ -89,79 +92,89 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        // The equivalent fields of a VRC constraint, by name.
+        // The equivalent serialized fields of a VRC constraint (names read from the SDK's VRC.Dynamics.dll):
+        // RotationOffset and RotationAtRest on Rotation, Aim and LookAt; PositionAtRest on Parent and Position;
+        // AimAxis, UpAxis, WorldUp and WorldUpVector on Aim; per-source ParentPositionOffset and ParentRotationOffset on Parent.
         private void CorrectVrcRotation(Component source, Component target, Transform sourceObject, Transform sourceParent, Transform targetParent)
         {
-            Undo.RecordObject(target, AvatarMigrationAssistant.Title);
-            string type = target.GetType().FullName;
+            var from = new SerializedObject(source);
+            var to = new SerializedObject(target);
             Quaternion self = Delta(sourceObject, target.transform);
             Quaternion rest = Delta(sourceParent, targetParent);
-            RotateEuler(target, "RotationOffset", self);
-            RotateEuler(target, "RotationAtRest", rest);
-            RotateVector(target, "PositionAtRest", rest, sourceParent, targetParent);
+            RotateEuler(to, "RotationOffset", self);
+            RotateEuler(to, "RotationAtRest", rest);
+            RotateVector(to, "PositionAtRest", rest, sourceParent, targetParent);
+            string type = target.GetType().FullName;
             if (type == VrcAim)
             {
-                RotateVector(target, "AimAxis", self, sourceObject, target.transform);
-                RotateVector(target, "UpAxis", self, sourceObject, target.transform);
-                object worldUp = GetMember(target, "WorldUp");
-                if (worldUp != null && Convert.ToInt32(worldUp) == VrcObjectRotationUp)
+                RotateVector(to, "AimAxis", self, sourceObject, target.transform);
+                RotateVector(to, "UpAxis", self, sourceObject, target.transform);
+                SerializedProperty worldUp = to.FindProperty("WorldUp");
+                if (worldUp != null && worldUp.intValue == VrcObjectRotationUp)
                 {
-                    Transform sourceUp = OriginalTransform(GetMember(source, "WorldUpTransform") as Transform);
-                    Transform targetUp = GetMember(target, "WorldUpTransform") as Transform;
-                    RotateVector(target, "WorldUpVector", Delta(sourceUp, targetUp), sourceUp, targetUp);
+                    Transform sourceUp = OriginalTransform(Reference(from, "WorldUpTransform"));
+                    Transform targetUp = Reference(to, "WorldUpTransform");
+                    RotateVector(to, "WorldUpVector", Delta(sourceUp, targetUp), sourceUp, targetUp);
                 }
             }
-            if (type == VrcParent) ForEachVrcSource(source, target, (sourceBone, targetBone, item) =>
+            if (type == VrcParent)
             {
-                Quaternion delta = Delta(sourceBone, targetBone);
-                object offset = GetMember(item, "ParentPositionOffset");
-                if (offset is Vector3) SetMember(item, "ParentPositionOffset", delta * Mirror(sourceBone, targetBone, (Vector3)offset));
-                object angles = GetMember(item, "ParentRotationOffset");
-                if (angles is Vector3) SetMember(item, "ParentRotationOffset", (delta * Quaternion.Euler((Vector3)angles)).eulerAngles);
-            });
-            ApplyVrcChanges(target);
+                List<SerializedProperty> fromSources = VrcSources(from);
+                List<SerializedProperty> toSources = VrcSources(to);
+                for (int i = 0; i < fromSources.Count && i < toSources.Count; i++)
+                {
+                    Transform sourceBone = OriginalTransform(fromSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform);
+                    Transform targetBone = toSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform;
+                    Quaternion delta = Delta(sourceBone, targetBone);
+                    SerializedProperty offset = toSources[i].FindPropertyRelative("ParentPositionOffset");
+                    if (offset != null) offset.vector3Value = delta * Mirror(sourceBone, targetBone, offset.vector3Value);
+                    SerializedProperty angles = toSources[i].FindPropertyRelative("ParentRotationOffset");
+                    if (angles != null) angles.vector3Value = (delta * Quaternion.Euler(angles.vector3Value)).eulerAngles;
+                }
+            }
+            to.ApplyModifiedProperties();
         }
 
-        private static void RotateEuler(Component owner, string name, Quaternion delta)
+        private static Transform Reference(SerializedObject serialized, string name)
         {
-            object value = GetMember(owner, name);
-            if (value is Vector3) SetMember(owner, name, (delta * Quaternion.Euler((Vector3)value)).eulerAngles);
+            SerializedProperty property = serialized.FindProperty(name);
+            return property != null ? property.objectReferenceValue as Transform : null;
         }
 
-        private static void RotateVector(Component owner, string name, Quaternion delta, Transform sourceBone, Transform targetBone)
+        private static void RotateEuler(SerializedObject serialized, string name, Quaternion delta)
         {
-            object value = GetMember(owner, name);
-            if (value is Vector3) SetMember(owner, name, delta * Mirror(sourceBone, targetBone, (Vector3)value));
+            SerializedProperty property = serialized.FindProperty(name);
+            if (property != null && property.propertyType == SerializedPropertyType.Vector3)
+                property.vector3Value = (delta * Quaternion.Euler(property.vector3Value)).eulerAngles;
+        }
+
+        private static void RotateVector(SerializedObject serialized, string name, Quaternion delta, Transform sourceBone, Transform targetBone)
+        {
+            SerializedProperty property = serialized.FindProperty(name);
+            if (property != null && property.propertyType == SerializedPropertyType.Vector3)
+                property.vector3Value = delta * Mirror(sourceBone, targetBone, property.vector3Value);
         }
 
         /// <summary>
-        /// Calls change(sourceBone, targetBone, boxedSource) for each source of a VRC constraint
-        /// and writes the changed source back with SetSource.
+        /// A VRC constraint's sources: its Sources list stores the first sixteen as source0 to source15 and the
+        /// rest in overflowList, with totalLength the count (VRCConstraintSourceKeyableList in VRC.Dynamics.dll).
         /// </summary>
-        private void ForEachVrcSource(Component source, Component target, Action<Transform, Transform, object> change)
+        private static List<SerializedProperty> VrcSources(SerializedObject serialized)
         {
-            object count = GetMember(target, "SourceCount");
-            var getSource = target.GetType().GetMethod("GetSource", new[] { typeof(int) });
-            var sourceGetSource = source.GetType().GetMethod("GetSource", new[] { typeof(int) });
-            if (!(count is int) || getSource == null || sourceGetSource == null) return;
-            object sourceCount = GetMember(source, "SourceCount");
-            for (int i = 0; i < (int)count && sourceCount is int && i < (int)sourceCount; i++)
+            var sources = new List<SerializedProperty>();
+            SerializedProperty list = serialized.FindProperty("Sources");
+            if (list == null) return sources;
+            SerializedProperty length = list.FindPropertyRelative("totalLength");
+            SerializedProperty overflow = list.FindPropertyRelative("overflowList");
+            int count = length != null ? length.intValue : 0;
+            for (int i = 0; i < count; i++)
             {
-                object item = getSource.Invoke(target, new object[] { i });
-                object fromItem = sourceGetSource.Invoke(source, new object[] { i });
-                Transform sourceBone = OriginalTransform(GetMember(fromItem, "SourceTransform") as Transform);
-                Transform targetBone = GetMember(item, "SourceTransform") as Transform;
-                change(sourceBone, targetBone, item);
-                var setSource = target.GetType().GetMethod("SetSource", new[] { typeof(int), item.GetType() });
-                if (setSource != null) setSource.Invoke(target, new[] { (object)i, item });
+                SerializedProperty item = i < VrcFlatSources
+                    ? list.FindPropertyRelative("source" + i)
+                    : overflow != null && i - VrcFlatSources < overflow.arraySize ? overflow.GetArrayElementAtIndex(i - VrcFlatSources) : null;
+                if (item != null) sources.Add(item);
             }
-        }
-
-        private static void ApplyVrcChanges(Component target)
-        {
-            var apply = target.GetType().GetMethod("ApplyConfigurationChanges", Type.EmptyTypes);
-            if (apply != null) apply.Invoke(target, null);
-            EditorUtility.SetDirty(target);
+            return sources;
         }
 
         /// <summary>The rotation from a bone's space on the source to its counterpart's on the target, in avatar-root space.</summary>
@@ -196,7 +209,7 @@ namespace Riry.RiryTools.Editor
 //                          translation and rotation at rest (the constrained object's parent). Aim: aim and up vectors and
 //                          rotation offset (the constrained object), world up vector with ObjectRotationUp (worldUpObject),
 //                          rotation at rest (parent). Rotation and LookAt: rotation offset (object), at rest (parent).
-//                          Position: translation at rest (parent). VRC constraints: the same by field name
-//                          (CorrectVrcRotation, ForEachVrcSource, ApplyVrcChanges).
+//                          Position: translation at rest (parent). VRC constraints: the same serialized fields
+//                          (CorrectVrcRotation; VrcSources reads source0 to source15 and overflowList).
 //   Delta(sourceBone, targetBone)  Inverse(targetRootRot⁻¹ · targetBoneRot) · (sourceRootRot⁻¹ · sourceBoneRot).
 //   Mirror(...)            Negates the axes whose lossyScale sign differs between the two bones.

@@ -16,27 +16,17 @@ namespace Riry.RiryTools.Editor
         // Names an armature object may have when it is not the parent of the humanoid hips.
         private static readonly string[] ArmatureNames = { "armature", "skeleton", "root", "rig" };
 
-        private static readonly string[] ConstraintIds =
-        {
-            "aimconstraint", "lookatconstraint", "parentconstraint", "positionconstraint", "rotationconstraint", "scaleconstraint"
-        };
-
-        private static bool IsUnityConstraint(AvatarCopyType type)
-        {
-            return Array.IndexOf(ConstraintIds, type.Id) >= 0;
-        }
-
         // The root Animator is copied only with that option on.
         private bool TypeRuleAllows(AvatarCopyType type, Component source)
         {
-            if (type.Id == AvatarCopyTypes.Animators && source.transform == sourceRoot && !settings.RootAnimator) return false;
+            if (type.Rule == AvatarCopyTypes.AnimatorsRule && source.transform == sourceRoot && !settings.RootAnimator) return false;
             return true;
         }
 
         // A Camera is copied only onto an object without one.
         private static bool TargetRuleAllows(AvatarCopyType type, Component source, Transform target)
         {
-            if (type.Id == AvatarCopyTypes.Cameras && target.GetComponent<Camera>() != null) return false;
+            if (type.Rule == AvatarCopyTypes.CamerasRule && target.GetComponent<Camera>() != null) return false;
             return true;
         }
 
@@ -104,7 +94,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>Active state, tag and layer, set on each matched object (not the root).</summary>
         private void CopyActiveTagLayer()
         {
-            if (!settings.Type(AvatarCopyTypes.Get(AvatarCopyTypes.Transforms)).Enabled) return;
+            if (!settings.RuleEnabled(AvatarCopyTypes.TransformsRule)) return;
             if (!settings.TransformTagLayer && !settings.TransformActive) return;
             foreach (Transform source in sourceRoot.GetComponentsInChildren<Transform>(true))
             {
@@ -235,7 +225,8 @@ namespace Riry.RiryTools.Editor
         private static readonly string[] ExpressionNames = { "customExpressions", "expressionsMenu", "expressionParameters" };
         private static readonly string[] ColliderNames =
         {
-            "collidersMirrored", "collider_head", "collider_torso", "collider_handR", "collider_footR", "collider_fingerIndexR",
+            // Field names from the SDK's VRCSDK3A.dll; each ColliderConfig keeps its own isMirrored.
+            "collider_head", "collider_torso", "collider_handR", "collider_footR", "collider_fingerIndexR",
             "collider_fingerMiddleR", "collider_fingerRingR", "collider_fingerLittleR", "collider_handL", "collider_footL",
             "collider_fingerIndexL", "collider_fingerMiddleL", "collider_fingerRingL", "collider_fingerLittleL"
         };

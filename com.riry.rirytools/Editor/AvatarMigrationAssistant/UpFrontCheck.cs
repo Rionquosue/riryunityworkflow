@@ -77,7 +77,8 @@ namespace Riry.RiryTools.Editor
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
             {
                 AvatarTypeSettings typeSettings = settings.Type(type);
-                if (!typeSettings.Enabled || typeSettings.CreateMissing || type.Id == AvatarCopyTypes.Prefabs || type.Id == AvatarCopyTypes.Transforms) continue;
+                if (!typeSettings.Enabled || typeSettings.CreateMissing || type.Rule == AvatarCopyTypes.PrefabsRule ||
+                    type.Rule == AvatarCopyTypes.TransformsRule || type.Rule == AvatarCopyTypes.SkinnedMeshRenderersRule) continue;
                 int count = 0;
                 foreach (Type componentType in type.Types)
                 {
@@ -93,7 +94,7 @@ namespace Riry.RiryTools.Editor
 
             // Child prefabs.
             List<Transform> prefabs = scope.OutermostChildPrefabs();
-            if (prefabs.Count > 0 && !settings.Type(AvatarCopyTypes.Get(AvatarCopyTypes.Prefabs)).Enabled)
+            if (prefabs.Count > 0 && !settings.RuleEnabled(AvatarCopyTypes.PrefabsRule))
                 issues.Add(prefabs.Count + " child prefab" + (prefabs.Count == 1 ? " is" : "s are") + " not copied, and their parts are never copied " +
                     "separately. Turn on Prefabs to copy them.");
             foreach (Transform prefab in prefabs)
@@ -115,21 +116,19 @@ namespace Riry.RiryTools.Editor
             }
 
             // Questions.
-            AvatarCopyType skinned = AvatarCopyTypes.Get(AvatarCopyTypes.SkinnedMeshRenderers);
-            if (settings.Type(skinned).Enabled && Count<SkinnedMeshRenderer>(source, inScope) > 0)
+            if (settings.RuleEnabled(AvatarCopyTypes.SkinnedMeshRenderersRule) && Count<SkinnedMeshRenderer>(source, inScope) > 0)
                 questions.Add(new Question
                 {
                     Text = "Copy SkinnedMeshRenderer settings, materials and bounds? (" + Count<SkinnedMeshRenderer>(source, inScope) +
                         " found. No copies only their blendshape values.)",
                     Apply = (answers, yes) => answers.CopySkinnedMeshRenderers = yes
                 });
-            AvatarCopyType meshes = AvatarCopyTypes.Get(AvatarCopyTypes.MeshRenderers);
             int meshCount = 0;
             foreach (MeshRenderer renderer in source.GetComponentsInChildren<MeshRenderer>(true))
             {
                 if (renderer.GetComponent<MeshFilter>() != null && inScope(renderer.transform)) meshCount++;
             }
-            if (settings.Type(meshes).Enabled && meshCount > 0)
+            if (settings.RuleEnabled(AvatarCopyTypes.MeshRenderersRule) && meshCount > 0)
                 questions.Add(new Question
                 {
                     Text = "Copy MeshRenderers with their MeshFilters? (" + meshCount + " found.)",
@@ -158,7 +157,7 @@ namespace Riry.RiryTools.Editor
             int count = 0;
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
             {
-                if (!type.Id.EndsWith("constraint", StringComparison.Ordinal) || type.NeedsSdk || !settings.Type(type).Enabled) continue;
+                if (type.Rule != AvatarCopyTypes.UnityConstraintRule || !settings.Type(type).Enabled) continue;
                 foreach (Type componentType in type.Types)
                 {
                     foreach (Component component in root.GetComponentsInChildren(componentType, true))
@@ -174,7 +173,9 @@ namespace Riry.RiryTools.Editor
         {
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
             {
-                if (type.Id.EndsWith("constraint", StringComparison.Ordinal) && settings.Type(type).Enabled) return true;
+                bool constraint = type.Rule == AvatarCopyTypes.UnityConstraintRule ||
+                    type.TypeNames.Exists(name => name.StartsWith(AvatarCopyTypes.VrcConstraintPrefix, StringComparison.Ordinal));
+                if (constraint && settings.Type(type).Enabled) return true;
             }
             return false;
         }

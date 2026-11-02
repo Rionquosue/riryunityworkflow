@@ -44,7 +44,6 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private Vector2 scroll;
 
         [NonSerialized] private AvatarMigrationSettings settings;
-        [NonSerialized] private List<AvatarExtraTypes.Category> extraCategories;
         [NonSerialized] private List<Transform> targetPrefabs;
 
         internal static void Open()
@@ -79,7 +78,6 @@ namespace Riry.RiryTools.Editor
 
         private void OnFocus()
         {
-            extraCategories = null;
             targetPrefabs = null;
         }
 
@@ -129,10 +127,31 @@ namespace Riry.RiryTools.Editor
             foldCopy = EditorGUILayout.Foldout(foldCopy, "Copy", true);
             if (!foldCopy) return;
             EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField(new GUIContent("Types: " + AvatarCopyTypes.FilePath, "Edit this file to change the list; it is read again when it changes."),
+                EditorStyles.wordWrappedMiniLabel);
             Settings.ShowAll = GUILayout.Toolbar(Settings.ShowAll ? 1 : 0, ListNames) == 1;
+            // Grouped by category (the file's kinds of type); each category folds.
+            var categories = new List<string>();
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
             {
-                if (type.Common || Settings.ShowAll) DrawType(type);
+                if ((type.Common || Settings.ShowAll) && !categories.Contains(type.Category)) categories.Add(type.Category);
+            }
+            foreach (string category in categories)
+            {
+                string key = "category:" + category;
+                bool open = EditorGUILayout.Foldout(openTypes.Contains(key), category, true);
+                if (open != openTypes.Contains(key))
+                {
+                    if (open) openTypes.Add(key);
+                    else openTypes.Remove(key);
+                }
+                if (!open) continue;
+                EditorGUI.indentLevel++;
+                foreach (AvatarCopyType type in AvatarCopyTypes.All)
+                {
+                    if (type.Category == category && (type.Common || Settings.ShowAll)) DrawType(type);
+                }
+                EditorGUI.indentLevel--;
             }
             EditorGUI.indentLevel--;
         }
@@ -163,8 +182,8 @@ namespace Riry.RiryTools.Editor
             }
             if (!available || !typeSettings.Enabled || !open) return;
             EditorGUI.indentLevel++;
-            bool creates = type.Id != AvatarCopyTypes.SkinnedMeshRenderers && type.Id != AvatarCopyTypes.AvatarDescriptor;
-            bool replaces = creates && type.Id != AvatarCopyTypes.Transforms;
+            bool creates = type.Rule != AvatarCopyTypes.SkinnedMeshRenderersRule && type.Rule != AvatarCopyTypes.DescriptorRule;
+            bool replaces = creates && type.Rule != AvatarCopyTypes.TransformsRule;
             if (creates)
                 typeSettings.CreateMissing = EditorGUILayout.Toggle(new GUIContent("Create missing objects",
                     "Make target objects for source objects that are still unmatched, under the nearest matched parent."), typeSettings.CreateMissing);
@@ -172,25 +191,25 @@ namespace Riry.RiryTools.Editor
                 typeSettings.Replace = EditorGUILayout.Popup(new GUIContent("Existing on target",
                     "Add: alongside the target's own, skipping any that is identical. Replace: remove the target's first."),
                     typeSettings.Replace ? 1 : 0, ToContents(AddReplace)) == 1;
-            switch (type.Id)
+            switch (type.Rule)
             {
-                case AvatarCopyTypes.Transforms:
+                case AvatarCopyTypes.TransformsRule:
                     Settings.TransformPosition = EditorGUILayout.Toggle("Position", Settings.TransformPosition);
                     Settings.TransformRotation = EditorGUILayout.Toggle("Rotation", Settings.TransformRotation);
                     Settings.TransformScale = EditorGUILayout.Toggle("Scale", Settings.TransformScale);
                     Settings.TransformTagLayer = EditorGUILayout.Toggle("Tag and layer", Settings.TransformTagLayer);
                     Settings.TransformActive = EditorGUILayout.Toggle("Active state", Settings.TransformActive);
                     break;
-                case AvatarCopyTypes.SkinnedMeshRenderers:
+                case AvatarCopyTypes.SkinnedMeshRenderersRule:
                     Settings.SkinnedSettings = EditorGUILayout.Toggle("Settings", Settings.SkinnedSettings);
                     Settings.SkinnedBlendshapes = EditorGUILayout.Toggle(new GUIContent("Blendshapes", "Values matched by name."), Settings.SkinnedBlendshapes);
                     Settings.SkinnedMaterials = EditorGUILayout.Toggle("Materials", Settings.SkinnedMaterials);
                     Settings.SkinnedBounds = EditorGUILayout.Toggle("Bounds", Settings.SkinnedBounds);
                     break;
-                case AvatarCopyTypes.Animators:
+                case AvatarCopyTypes.AnimatorsRule:
                     Settings.RootAnimator = EditorGUILayout.Toggle(new GUIContent("Root animator", "Also the Animator on the avatar root."), Settings.RootAnimator);
                     break;
-                case AvatarCopyTypes.AvatarDescriptor:
+                case AvatarCopyTypes.DescriptorRule:
                     Settings.DescriptorViewpoint = EditorGUILayout.Toggle("Viewpoint", Settings.DescriptorViewpoint);
                     Settings.DescriptorLipSync = EditorGUILayout.Toggle("Lip sync and visemes", Settings.DescriptorLipSync);
                     Settings.DescriptorEyeLook = EditorGUILayout.Toggle("Eye look", Settings.DescriptorEyeLook);
@@ -201,35 +220,8 @@ namespace Riry.RiryTools.Editor
                     Settings.DescriptorAvatarScale = EditorGUILayout.Toggle(new GUIContent("Avatar scale",
                         "Copy the root scale and move the viewpoint to match."), Settings.DescriptorAvatarScale);
                     break;
-                case AvatarCopyTypes.ExtraTypes:
-                    DrawExtraTypes();
-                    break;
             }
             EditorGUI.indentLevel--;
-        }
-
-        private void DrawExtraTypes()
-        {
-            if (extraCategories == null) extraCategories = AvatarExtraTypes.Categories();
-            EditorGUILayout.LabelField("Lists: " + AvatarExtraTypes.Folder, EditorStyles.wordWrappedMiniLabel);
-            foreach (AvatarExtraTypes.Category category in extraCategories)
-            {
-                EditorGUILayout.LabelField(category.Name, EditorStyles.boldLabel);
-                EditorGUI.indentLevel++;
-                foreach (string entry in category.Entries)
-                {
-                    bool found = AvatarExtraTypes.Resolve(entry).Count > 0;
-                    bool enabled = Settings.ExtraTypesEnabled.Contains(entry);
-                    using (new EditorGUI.DisabledScope(!found))
-                    {
-                        bool now = EditorGUILayout.ToggleLeft(entry + (found ? "" : " (not in project)"), enabled);
-                        if (now == enabled) continue;
-                        if (now) Settings.ExtraTypesEnabled.Add(entry);
-                        else Settings.ExtraTypesEnabled.Remove(entry);
-                    }
-                }
-                EditorGUI.indentLevel--;
-            }
         }
 
         private void DrawIgnore()
@@ -406,10 +398,11 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Avatar Migration Assistant window
 // The menu entry, Tools > RiryTools > Avatar Migration Assistant (menu key N), is in RiryMenus.cs;
 // the Main Menu's Avatar Migration Assistant tab hosts this window. Its parts are in Editor/AvatarMigrationAssistant/:
-//   MatchObjects.cs (1, the object map), ManualMatching.cs (2), CopyTypes.cs (3), Settings.cs (EditorPrefs),
+//   MatchObjects.cs (1, the object map), ManualMatching.cs (2), CopyTypes.cs and types.yml (3 and 14, the type list),
+//   Settings.cs (EditorPrefs),
 //   UpFrontCheck.cs (everything up front), CopyRun.cs (the run, 4 and 15), TypeRules.cs, CopyPrefabs.cs (11),
 //   UpgradeConstraints.cs, RepointReferences.cs (5 and 12), CorrectRotation.cs (7), CorrectScale.cs (6), IgnoreList.cs (13),
-//   ExtraTypes.cs (14), RunReport.cs, RetargetAnimations.cs (8), VrcFuryPrefabs.cs (9), MigratedFolder.cs (10),
+//   RunReport.cs, RetargetAnimations.cs (8), VrcFuryPrefabs.cs (9), MigratedFolder.cs (10),
 //   SdkNotice.cs (the VRC SDK not detected popup).
 // ============================================================================
 //
@@ -418,9 +411,9 @@ namespace Riry.RiryTools.Editor
 //                            VRChat types are shown as not available; the rest still runs.
 //   Source / Target          Scene avatars (old and new); copying an avatar onto itself, or onto one inside it, is blocked.
 //   Matching                 Structure tolerance, Manual matching.
-//   Copy                     Common / All list; per type: Enabled, Options (Create missing objects, Existing on target: Add
-//                            or Replace, and the sub-options of Transforms, SkinnedMeshRenderers, Animators, the Avatar
-//                            Descriptor and Extra types).
+//   Copy                     The type list's file; Common / All; the entries grouped by category (each folds); per entry:
+//                            Enabled, Options (Create missing objects, Existing on target: Add or Replace, and the
+//                            sub-options of Transforms, SkinnedMeshRenderers, Animators and the Avatar Descriptor).
 //   Ignore list              Objects on either avatar (not the roots), Include children.
 //   Animations               Migrated folder (Browse), Include child prefab per target child prefab, Retarget animations.
 //   Copy / Run()             Map (BuildMap: features 1 and 2), ignore list, up-front check, the run, the report popup.

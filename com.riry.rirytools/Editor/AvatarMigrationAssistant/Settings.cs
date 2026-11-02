@@ -53,9 +53,6 @@ namespace Riry.RiryTools.Editor
         // Feature 13: ignored objects' children are ignored too.
         public bool IgnoreChildren = true;
 
-        // Feature 14: the extra type entries (full names or Namespace.*) that are copied.
-        public List<string> ExtraTypesEnabled = new List<string>();
-
         // Feature 10: the root folder inside Assets for every file the tool creates.
         public string MigratedFolder = "";
 
@@ -64,9 +61,16 @@ namespace Riry.RiryTools.Editor
         {
             AvatarTypeSettings found = Types.Find(entry => entry.Id == type.Id);
             if (found != null) return found;
-            found = new AvatarTypeSettings { Id = type.Id, Enabled = type.Common, CreateMissing = true };
+            found = new AvatarTypeSettings { Id = type.Id, Enabled = type.DefaultEnabled, CreateMissing = true };
             Types.Add(found);
             return found;
+        }
+
+        /// <summary>Whether the entry with a built-in rule is in the list and ticked.</summary>
+        internal bool RuleEnabled(string rule)
+        {
+            AvatarCopyType type = AvatarCopyTypes.WithRule(rule);
+            return type != null && Type(type).Enabled;
         }
 
         internal static AvatarMigrationSettings Load()
@@ -112,10 +116,10 @@ namespace Riry.RiryTools.Editor
 // AvatarMigrationSettings (this file): EditorPrefs RiryTools.AvatarMigrationAssistant.Settings (JSON)
 //   StructureTolerance   Feature 1 structure match distance in avatar-root space (default 0.001).
 //   ManualMatching       Feature 2: open Manual matching on every run with every row listed.
-//   Types / Type(type) / ShowAll  Feature 3 per-type settings (common types start enabled) and the Common/All list.
+//   Types / Type(type) / RuleEnabled(rule) / ShowAll  Feature 3 per-entry settings (starting as the entry's "enabled"),
+//                        whether a built-in entry is ticked, and the Common/All list.
 //   Transform*, Skinned*, RootAnimator, Descriptor*  Sub-options (DescriptorBlueprintId: "Copy original blueprint ID?").
 //   IgnoreChildren       Feature 13: ignored objects' children are ignored too.
-//   ExtraTypesEnabled    Feature 14: the enabled extra type entries (ExtraTypes.cs).
 //   MigratedFolder       Feature 10: the root folder for migrated files (MigratedFolder.cs).
 //   Load() / Save()
 // AvatarTypeSettings     Per component type: Enabled, CreateMissing (feature 4), Replace (feature 12; off adds).

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -21,7 +22,7 @@ namespace Riry.RiryTools.Editor
 
         private void CorrectScale()
         {
-            foreach (var pair in new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<Component, Component>>(copied))
+            foreach (var pair in new List<KeyValuePair<Component, Component>>(copied))
             {
                 Component source = pair.Key;
                 Component target = pair.Value;
@@ -107,26 +108,33 @@ namespace Riry.RiryTools.Editor
             serialized.ApplyModifiedProperties();
         }
 
-        // A VRC constraint's position offset and at-rest values (the constrained object's parent) and,
-        // for a parent constraint, each source's position offset (that source).
+        // A VRC constraint's PositionOffset and PositionAtRest (the constrained object's parent) and, for a
+        // parent constraint, each source's ParentPositionOffset (that source).
         private void ScaleVrcConstraint(Component source, Component target, Vector3 parentFactor)
         {
-            Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+            var to = new SerializedObject(target);
             if (!IsOne(parentFactor))
             {
                 foreach (string name in new[] { "PositionOffset", "PositionAtRest" })
                 {
-                    object value = GetMember(target, name);
-                    if (value is Vector3) SetMember(target, name, ScaleVector((Vector3)value, parentFactor));
+                    SerializedProperty property = to.FindProperty(name);
+                    if (property != null && property.propertyType == SerializedPropertyType.Vector3) property.vector3Value = ScaleVector(property.vector3Value, parentFactor);
                 }
             }
-            if (target.GetType().FullName == VrcParent) ForEachVrcSource(source, target, (sourceBone, targetBone, item) =>
+            if (target.GetType().FullName == VrcParent)
             {
-                Vector3 factor = Factor(sourceBone, targetBone);
-                object offset = GetMember(item, "ParentPositionOffset");
-                if (!IsOne(factor) && offset is Vector3) SetMember(item, "ParentPositionOffset", ScaleVector((Vector3)offset, factor));
-            });
-            ApplyVrcChanges(target);
+                List<SerializedProperty> fromSources = VrcSources(new SerializedObject(source));
+                List<SerializedProperty> toSources = VrcSources(to);
+                for (int i = 0; i < fromSources.Count && i < toSources.Count; i++)
+                {
+                    Transform sourceBone = OriginalTransform(fromSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform);
+                    Transform targetBone = toSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform;
+                    Vector3 factor = Factor(sourceBone, targetBone);
+                    SerializedProperty offset = toSources[i].FindPropertyRelative("ParentPositionOffset");
+                    if (!IsOne(factor) && offset != null) offset.vector3Value = ScaleVector(offset.vector3Value, factor);
+                }
+            }
+            to.ApplyModifiedProperties();
         }
 
         private static Vector3 Factor(Transform sourceBone, Transform targetBone)

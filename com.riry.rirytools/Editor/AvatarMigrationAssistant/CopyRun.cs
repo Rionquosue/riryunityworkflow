@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
@@ -71,7 +70,7 @@ namespace Riry.RiryTools.Editor
                     if (typeSettings.Enabled && type.Available && (!type.NeedsSdk || AvatarMigrationAssistant.SdkPresent))
                         Step(type.Label, () => CopyStep(type, typeSettings));
                     // Active state, tag and layer (Transforms sub-options) have their place after Cameras.
-                    if (type.Id == AvatarCopyTypes.Cameras) Step("Active state, tag and layer", CopyActiveTagLayer);
+                    if (type.Rule == AvatarCopyTypes.CamerasRule) Step("Active state, tag and layer", CopyActiveTagLayer);
                 }
                 Step("Re-pointing references", RepointReferences);
                 Step("Correcting rotation", CorrectRotation);
@@ -106,28 +105,25 @@ namespace Riry.RiryTools.Editor
 
         private void CopyStep(AvatarCopyType type, AvatarTypeSettings typeSettings)
         {
-            switch (type.Id)
+            switch (type.Rule)
             {
-                case AvatarCopyTypes.Prefabs:
+                case AvatarCopyTypes.PrefabsRule:
                     CopyPrefabs(typeSettings);
                     return;
-                case AvatarCopyTypes.Transforms:
+                case AvatarCopyTypes.TransformsRule:
                     CopyTransforms(typeSettings);
                     return;
-                case AvatarCopyTypes.MeshRenderers:
+                case AvatarCopyTypes.MeshRenderersRule:
                     if (answers.CopyMeshRenderers) CopyMeshRenderers(typeSettings);
                     return;
-                case AvatarCopyTypes.SkinnedMeshRenderers:
+                case AvatarCopyTypes.SkinnedMeshRenderersRule:
                     CopySkinnedMeshRenderers();
                     return;
-                case AvatarCopyTypes.AvatarDescriptor:
+                case AvatarCopyTypes.DescriptorRule:
                     CopyAvatarDescriptor();
                     return;
-                case AvatarCopyTypes.ExtraTypes:
-                    foreach (Type extra in AvatarExtraTypes.Enabled(settings)) CopyComponents(type, typeSettings, extra);
-                    return;
             }
-            if (IsUnityConstraint(type) && answers.UpgradeConstraints)
+            if (type.Rule == AvatarCopyTypes.UnityConstraintRule && answers.UpgradeConstraints)
             {
                 CopyUpgradedConstraints(type, typeSettings);
                 return;
@@ -280,36 +276,6 @@ namespace Riry.RiryTools.Editor
             string path = AnimationUtility.CalculateTransformPath(component.transform, root);
             return ObjectNames.NicifyVariableName(component.GetType().Name) + " on " + (path.Length == 0 ? component.name : path);
         }
-
-        // ---- Reflection (VRChat and other optional types) ---------------------------
-
-        private const BindingFlags MemberFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
-        /// <summary>A field or property value by name, or null when there is none.</summary>
-        private static object GetMember(object owner, string name)
-        {
-            if (owner == null) return null;
-            FieldInfo field = owner.GetType().GetField(name, MemberFlags);
-            if (field != null) return field.GetValue(owner);
-            PropertyInfo property = owner.GetType().GetProperty(name, MemberFlags);
-            return property != null && property.CanRead && property.GetIndexParameters().Length == 0 ? property.GetValue(owner) : null;
-        }
-
-        /// <summary>Sets a field or property by name; false when there is none.</summary>
-        private static bool SetMember(object owner, string name, object value)
-        {
-            if (owner == null) return false;
-            FieldInfo field = owner.GetType().GetField(name, MemberFlags);
-            if (field != null)
-            {
-                field.SetValue(owner, value);
-                return true;
-            }
-            PropertyInfo property = owner.GetType().GetProperty(name, MemberFlags);
-            if (property == null || !property.CanWrite) return false;
-            property.SetValue(owner, value);
-            return true;
-        }
     }
 }
 
@@ -321,6 +287,8 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // AvatarCopyRun
+//   CopyStep(type, settings)  The entry's built-in rule (prefabs, transforms, meshrenderers, skinnedmeshrenderers,
+//                        descriptor, unityconstraint with the upgrade), else every one of its types copied generically.
 //   Execute(map, settings, answers, ignored)  The run: one Undo group (RegisterFullObjectHierarchyUndo on the target),
 //                        each type's step in run order, active state/tag/layer after Cameras, then references, rotation,
 //                        scale and duplicates. Each step in its own try/catch (Step). Returns the AvatarRunReport.
@@ -331,4 +299,3 @@ namespace Riry.RiryTools.Editor
 //                        (TargetFor: its match, or new objects when Create missing objects is on, added to the map).
 //   CopyComponent(source, target)  Unity's component clipboard; pastes into the existing component for types allowed once
 //                        per object (OncePerObject), else into a new one; a ParticleSystem brings its renderer's values.
-//   GetMember / SetMember  Fields or properties by name, for optional types.
