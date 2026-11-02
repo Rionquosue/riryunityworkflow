@@ -11,8 +11,8 @@ namespace Riry.RiryTools.Editor
     /// window; its parts are in Editor/AvatarMigrationAssistant/, named by what they do.
     /// A run first builds the object map (MatchObjects.cs) and opens Manual matching
     /// (ManualMatching.cs) when anything is unmatched, or on every run with Manual
-    /// matching on. Without the VRChat SDK it still runs; the VRChat parts are left out
-    /// and an error says so. Opened from Tools > RiryTools > Avatar Migration Assistant
+    /// matching on. Without the VRChat SDK it still runs with the VRChat parts left out;
+    /// opening it then shows the VRC SDK notice (SdkNotice.cs). Opened from Tools > RiryTools > Avatar Migration Assistant
     /// and the Main Menu's tab.
     /// </summary>
     internal sealed class AvatarMigrationAssistant : EditorWindow
@@ -20,8 +20,6 @@ namespace Riry.RiryTools.Editor
         internal const string Title = "Avatar Migration Assistant";
         // The VRChat Avatars SDK is in the project when this type is.
         private const string SdkProbeType = "VRC.SDK3.Avatars.Components.VRCAvatarDescriptor";
-        internal const string SdkMissingMessage = "VRChat SDK not found. PhysBones, PhysBone colliders, contacts, VRC constraints, " +
-            "VRCStation, VRCHeadChop, the Avatar Descriptor and the VRC constraint upgrade will not be available. Everything else can still be copied.";
 
         private static bool? sdkPresent;
 
@@ -36,6 +34,7 @@ namespace Riry.RiryTools.Editor
             AvatarMigrationAssistant window = GetWindow<AvatarMigrationAssistant>(Title);
             window.minSize = new Vector2(380f, 220f);
             window.Show();
+            EditorApplication.delayCall += AvatarMigrationSdkNotice.ShowIfNeeded;
         }
 
         private AvatarMigrationSettings Settings
@@ -62,7 +61,6 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
-            if (!SdkPresent) EditorGUILayout.HelpBox(SdkMissingMessage, MessageType.Error);
             source = SceneObject("Source (old avatar)", source);
             target = SceneObject("Target (new avatar)", target);
 
@@ -102,7 +100,6 @@ namespace Riry.RiryTools.Editor
         private void Run()
         {
             if (Problem() != null) return;
-            if (!SdkPresent) Debug.LogError(Title + ": " + SdkMissingMessage);
             AvatarMigrationMap map = AvatarMigrationMap.Build(source.transform, target.transform, Settings.StructureTolerance);
             List<AvatarMatch> unmatched = map.Unmatched();
             if (Settings.ManualMatching || unmatched.Count > 0)
@@ -146,12 +143,13 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Avatar Migration Assistant window
 // The menu entry, Tools > RiryTools > Avatar Migration Assistant (menu key N), is in RiryMenus.cs;
 // the Main Menu's Avatar Migration Assistant tab hosts this window. Its parts are in Editor/AvatarMigrationAssistant/:
-//   MatchObjects.cs (feature 1, the object map), ManualMatching.cs (feature 2), Settings.cs (EditorPrefs).
+//   MatchObjects.cs (feature 1, the object map), ManualMatching.cs (feature 2), Settings.cs (EditorPrefs),
+//   SdkNotice.cs (the VRC SDK not detected popup).
 // ============================================================================
 //
 // AvatarMigrationAssistant (this file)
-//   SdkPresent / SdkMissingMessage  The VRChat SDK, found by type name; without it an error is shown and logged and
-//                            the VRChat parts are left out, the rest still runs.
+//   SdkPresent               The VRChat SDK, found by type name. Without it, Open shows AvatarMigrationSdkNotice and
+//                            the VRChat parts are left out; the rest still runs.
 //   Source / Target          Scene avatars (old and new); copying an avatar onto itself, or onto one inside it, is blocked.
 //   Structure tolerance / Manual matching  AvatarMigrationSettings (EditorPrefs, saved on change).
 //   Copy / Run()             Builds the map (feature 1), opens Manual matching when something is unmatched or Manual

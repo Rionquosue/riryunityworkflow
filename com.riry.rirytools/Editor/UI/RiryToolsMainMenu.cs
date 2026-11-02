@@ -60,7 +60,10 @@ namespace Riry.RiryTools.Editor
             // with this style instead of the skin's own, which do not wrap.
             if (tabStyle == null)
                 tabStyle = new GUIStyle(GUI.skin.button) { name = "RiryToolsTab", wordWrap = true, fixedHeight = 0f };
+            int previous = tab;
             tab = GUILayout.Toolbar(tab, Tabs, tabStyle, GUILayout.Height(TabHeight));
+            // Opening Avatar Migration Assistant's tab shows its VRC SDK notice, as its menu entry does.
+            if (tab != previous && Current == "Avatar Migration Assistant") EditorApplication.delayCall += AvatarMigrationSdkNotice.ShowIfNeeded;
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true)))
             {
@@ -238,6 +241,7 @@ namespace Riry.RiryTools.Editor
 //                            Documentation). Current is the selected tab's name; tabs are handled by name.
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
+//   Avatar Migration Assistant tab  Switching to it shows AvatarMigrationSdkNotice when the VRChat SDK is missing.
 //   CreateConstraintTrain    Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.

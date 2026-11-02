@@ -41,6 +41,7 @@ EditorUserSettings: per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `GitRemotes.Selected` (**Remote**) |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | remote URLs, one per line | unset | `AutoSync.LargeFileNotice`: **Do Not Show Again** |
 | `RiryTools.GuidTools.BrokenPromptOff` | scene and prefab paths, one per line | unset | `BrokenReferenceMonitor.PromptOnOpen`: **Do Not Show Again** |
+| `RiryTools.AvatarMigrationAssistant.SdkNoticeOff` | `1` | unset | `AvatarMigrationSdkNotice`: **Do not show again** on the VRC SDK not detected popup |
 
 SessionState: until the editor quits; survives script reloads.
 
@@ -217,7 +218,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
-  - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs and shows which parts are not available
+  - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
   - `Tools/RiryTools/Blendshape Sync` (2010): Add Job (a new job in its popup)
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
