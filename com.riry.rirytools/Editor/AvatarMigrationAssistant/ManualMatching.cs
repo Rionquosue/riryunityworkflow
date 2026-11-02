@@ -11,7 +11,10 @@ namespace Riry.RiryTools.Editor
     /// target hierarchy, and how it was matched. Automatic mode lists the unmatched rows;
     /// manual mode lists every row. Animation paths that resolve to no source object are
     /// listed too. Continue applies the edits to the map; Cancel stops the run with
-    /// nothing changed. A row left empty stays unmatched.
+    /// nothing changed. A row left empty stays unmatched. After each edit, automatic
+    /// matching runs again for every row the user has not edited, using the targets now
+    /// set above it, so the objects below a parent matched by hand fill in by themselves
+    /// and can still be corrected.
     /// </summary>
     internal sealed class AvatarMigrationMatchWindow : EditorWindow
     {
@@ -24,10 +27,15 @@ namespace Riry.RiryTools.Editor
             internal string AnimationPath;
             internal string Original = "";
             internal string Path = "";
+            // True once the user typed or picked in this row; the row is then manual.
+            internal bool Edited;
+            // How the row's current path was found when it is not edited.
+            internal AvatarMatchMethod Auto;
         }
 
         private AvatarMigrationMap map;
         private readonly List<Row> rows = new List<Row>();
+        private readonly Dictionary<Transform, Row> rowOf = new Dictionary<Transform, Row>();
         private bool accepted;
         private Vector2 scroll;
         private GUIStyle invalidStyle;
@@ -47,7 +55,9 @@ namespace Riry.RiryTools.Editor
             {
                 if (match.Source == map.SourceRoot || (!everyRow && match.Target != null)) continue;
                 string path = map.TargetPath(match.Target);
-                window.rows.Add(new Row { Match = match, Original = path, Path = path });
+                var row = new Row { Match = match, Original = path, Path = path, Auto = match.Method };
+                window.rows.Add(row);
+                window.rowOf[match.Source] = row;
             }
             if (animationPaths != null)
             {
@@ -68,11 +78,33 @@ namespace Riry.RiryTools.Editor
                     animationTargets[row.AnimationPath] = target;
                     continue;
                 }
-                if (path == row.Original) continue;
+                if (!row.Edited && path == row.Original) continue;
                 row.Match.Target = target;
-                row.Match.Method = target != null ? AvatarMatchMethod.Manual : AvatarMatchMethod.None;
+                row.Match.Method = target == null ? AvatarMatchMethod.None : row.Edited ? AvatarMatchMethod.Manual : row.Auto;
             }
             return true;
+        }
+
+        // The target the source object has now: its row's path, else the map's match.
+        private Transform CurrentTarget(Transform source)
+        {
+            Row row;
+            if (source == null || !rowOf.TryGetValue(source, out row)) return map.TargetOf(source);
+            string path = row.Path.Trim();
+            return path.Length == 0 ? null : map.FindOnTarget(path);
+        }
+
+        // Automatic matching again for every row not edited, parents first (rows are in map order).
+        private void Rematch()
+        {
+            foreach (Row row in rows)
+            {
+                if (row.Match == null || row.Edited) continue;
+                AvatarMatchMethod method;
+                Transform found = map.AutoMatch(row.Match.Source, CurrentTarget(row.Match.Source.parent), out method);
+                row.Path = map.TargetPath(found);
+                row.Auto = method;
+            }
         }
 
         private bool Invalid(Row row)
@@ -104,6 +136,7 @@ namespace Riry.RiryTools.Editor
             }
 
             bool anyInvalid = false;
+            bool changed = false;
             scroll = EditorGUILayout.BeginScrollView(scroll);
             foreach (Row row in rows)
             {
@@ -113,15 +146,28 @@ namespace Riry.RiryTools.Editor
                 {
                     string source = row.Match != null ? row.Match.SourcePath : row.AnimationPath + " (animation path)";
                     EditorGUILayout.SelectableLabel(source, GUILayout.Width(position.width * 0.35f), GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                    row.Path = EditorGUILayout.TextField(row.Path, invalid ? invalidStyle : EditorStyles.textField);
+                    string typed = EditorGUILayout.TextField(row.Path, invalid ? invalidStyle : EditorStyles.textField);
+                    if (typed != row.Path)
+                    {
+                        row.Path = typed;
+                        row.Edited = true;
+                        changed = true;
+                    }
                     Transform current = invalid || row.Path.Trim().Length == 0 ? null : map.FindOnTarget(row.Path.Trim());
                     var picked = (Transform)EditorGUILayout.ObjectField(current, typeof(Transform), true, GUILayout.Width(150f));
                     if (picked != current)
                     {
-                        if (picked == null) row.Path = "";
+                        if (picked == null)
+                        {
+                            row.Path = "";
+                            row.Edited = true;
+                            changed = true;
+                        }
                         else if (picked == map.TargetRoot || picked.IsChildOf(map.TargetRoot))
                         {
                             row.Path = map.TargetPath(picked);
+                            row.Edited = true;
+                            changed = true;
                             GUI.FocusControl(null);
                         }
                         else ShowNotification(new GUIContent("Pick an object under " + map.TargetRoot.name + "."));
@@ -130,6 +176,7 @@ namespace Riry.RiryTools.Editor
                 }
             }
             EditorGUILayout.EndScrollView();
+            if (changed) Rematch();
             if (anyInvalid) EditorGUILayout.HelpBox("Paths in red are not on the target.", MessageType.Warning);
 
             using (new EditorGUILayout.HorizontalScope())
@@ -150,9 +197,8 @@ namespace Riry.RiryTools.Editor
         private static string Method(Row row)
         {
             string path = row.Path.Trim();
-            if (row.Match == null) return path.Length > 0 ? "Manual" : "None";
-            if (path != row.Original) return path.Length > 0 ? "Manual" : "None";
-            switch (row.Match.Method)
+            if (row.Match == null || row.Edited) return path.Length > 0 ? "Manual" : "None";
+            switch (row.Auto)
             {
                 case AvatarMatchMethod.NamePath: return "Name path";
                 default: return row.Match.Method.ToString();
@@ -171,3 +217,5 @@ namespace Riry.RiryTools.Editor
 //                        Manual, None). everyRow: manual mode, every row; else only unmatched rows. Continue (disabled
 //                        while a path is red) writes the edits into the map; Cancel returns false with nothing changed.
 //   Animation paths      Listed with "(animation path)"; their chosen targets come back in animationTargets.
+//   Rematch()            After each edit: AvatarMigrationMap.AutoMatch again for every row not edited, with the targets
+//                        now set above it; Matched by shows the method it found. Edited rows are Manual.

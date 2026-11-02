@@ -45,18 +45,16 @@ namespace Riry.RiryTools.Editor
         public Transform SourceRoot;
         public Transform TargetRoot;
         public List<AvatarMatch> Matches = new List<AvatarMatch>();
+        public float Tolerance = AvatarMigrationSettings.DefaultTolerance;
 
         [NonSerialized] private Dictionary<Transform, AvatarMatch> bySource;
+        // Humanoid look-up, made on first use: the source's bones (empty unless both avatars are humanoid).
+        [NonSerialized] private Dictionary<Transform, HumanBodyBones> sourceBones;
+        [NonSerialized] private Animator targetAnimator;
 
         internal static AvatarMigrationMap Build(Transform sourceRoot, Transform targetRoot, float tolerance)
         {
-            var map = new AvatarMigrationMap { SourceRoot = sourceRoot, TargetRoot = targetRoot };
-            Animator sourceAnimator = HumanoidAnimator(sourceRoot);
-            Animator targetAnimator = HumanoidAnimator(targetRoot);
-            Dictionary<Transform, HumanBodyBones> sourceBones = sourceAnimator != null && targetAnimator != null
-                ? HumanBones(sourceAnimator)
-                : null;
-
+            var map = new AvatarMigrationMap { SourceRoot = sourceRoot, TargetRoot = targetRoot, Tolerance = tolerance };
             // GetComponentsInChildren lists parents before their children.
             foreach (Transform source in sourceRoot.GetComponentsInChildren<Transform>(true))
             {
@@ -69,34 +67,48 @@ namespace Riry.RiryTools.Editor
                     match.Method = AvatarMatchMethod.NamePath;
                     continue;
                 }
-                AvatarMatch parent;
-                if (!map.Index().TryGetValue(source.parent, out parent) || parent.Target == null) continue;
-
-                Transform found = targetRoot.Find(match.SourcePath);
-                if (found != null)
-                {
-                    match.Target = found;
-                    match.Method = AvatarMatchMethod.NamePath;
-                    continue;
-                }
-                if (sourceBones != null)
-                {
-                    found = ByHumanoid(source, sourceRoot, sourceBones, targetAnimator);
-                    if (found != null)
-                    {
-                        match.Target = found;
-                        match.Method = AvatarMatchMethod.Humanoid;
-                        continue;
-                    }
-                }
-                found = ByStructure(source, sourceRoot, parent.Target, targetRoot, tolerance);
-                if (found != null)
-                {
-                    match.Target = found;
-                    match.Method = AvatarMatchMethod.Structure;
-                }
+                AvatarMatchMethod method;
+                match.Target = map.AutoMatch(source, map.TargetOf(source.parent), out method);
+                match.Method = method;
             }
             return map;
+        }
+
+        /// <summary>
+        /// The automatic match of one source object, given its parent's target (null: the
+        /// parent is unmatched, so the object is too): name path, then humanoid, then structure.
+        /// Manual matching calls this again for the objects below a parent the user matched.
+        /// </summary>
+        internal Transform AutoMatch(Transform source, Transform parentTarget, out AvatarMatchMethod method)
+        {
+            method = AvatarMatchMethod.None;
+            if (source == null || parentTarget == null || TargetRoot == null) return null;
+            Transform found = TargetRoot.Find(AnimationUtility.CalculateTransformPath(source, SourceRoot));
+            if (found != null)
+            {
+                method = AvatarMatchMethod.NamePath;
+                return found;
+            }
+            if (sourceBones == null)
+            {
+                Animator sourceAnimator = HumanoidAnimator(SourceRoot);
+                targetAnimator = HumanoidAnimator(TargetRoot);
+                sourceBones = sourceAnimator != null && targetAnimator != null
+                    ? HumanBones(sourceAnimator)
+                    : new Dictionary<Transform, HumanBodyBones>();
+            }
+            if (sourceBones.Count > 0)
+            {
+                found = ByHumanoid(source, SourceRoot, sourceBones, targetAnimator);
+                if (found != null)
+                {
+                    method = AvatarMatchMethod.Humanoid;
+                    return found;
+                }
+            }
+            found = ByStructure(source, SourceRoot, parentTarget, TargetRoot, Tolerance);
+            if (found != null) method = AvatarMatchMethod.Structure;
+            return found;
         }
 
         private Dictionary<Transform, AvatarMatch> Index()
@@ -221,6 +233,8 @@ namespace Riry.RiryTools.Editor
 //                            names below it (both avatars humanoid), then structure (same avatar-root-space position
 //                            among the children of the parent's match, within tolerance; none on a tie). An
 //                            unmatched parent leaves its children unmatched.
+//   AutoMatch(source, parentTarget, out method)  One object's automatic match given its parent's target; Build uses it,
+//                            and Manual matching calls it again below a parent the user matched.
 //   MatchOf / TargetOf / Unmatched()  Look-ups.
 //   FindOnTarget(path) / TargetPath(target)  Paths from the target root.
 //   TieEpsilon (1e-7)        Distances this close count as a tie.
