@@ -31,7 +31,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
-| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off | `AvatarMigrationSettings` |
+| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, common types on, `MigratedFolder` empty | `AvatarMigrationSettings` (per-type options, sub-options, ignore children, extra types, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
 
@@ -77,6 +77,7 @@ In the project:
 | `<model>_ROOT.prefab` | Constraint Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows | `IconCapFiles.JobFileName` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
+| `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
 
 In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
@@ -89,6 +90,8 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
+| `Documents/RiryTools/AvatarMigrationAssistant/extra_copier_types_template.yml` | Extra component types by category (Pumkin's Avatar Tools' categories); written when missing | `AvatarExtraTypes.TemplateName` |
+| `Documents/RiryTools/AvatarMigrationAssistant/extra_copier_types.yml` | The user's own extra types, same layout, merged in by category | `AvatarExtraTypes.FileName` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |
 
 ## Git names (AutoSync)
@@ -196,6 +199,16 @@ Other tools:
 | `StopAutoGame.HandleDelayMs` | `100` | Delay after Play Mode starts before focus is restored |
 | `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
+
+Avatar Migration Assistant:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `AvatarMigrationSettings.DefaultTolerance` | `0.001` | Structure match distance in avatar-root space |
+| `AvatarMigrationMap.TieEpsilon` | `1e-7` | Candidates this close in distance are a tie (left unmatched) |
+| `AvatarCopyRun.ScaleDecimals` | `8` | Decimal places of every scale-corrected value |
+| `AvatarCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig` | Names treated as the armature, besides the parent of the hips |
+| `AvatarCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints` | The VRChat SDK's constraint converter, found by name |
 
 IconCap:
 

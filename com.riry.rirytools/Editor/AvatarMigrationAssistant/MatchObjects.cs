@@ -12,7 +12,9 @@ namespace Riry.RiryTools.Editor
         NamePath,
         Humanoid,
         Structure,
-        Manual
+        Manual,
+        // Made on the target by the run (feature 4), or part of a copied prefab (feature 11).
+        Created
     }
 
     /// <summary>One source object and its counterpart on the target (null when unmatched).</summary>
@@ -136,6 +138,31 @@ namespace Riry.RiryTools.Editor
             return match != null ? match.Target : null;
         }
 
+        /// <summary>Adds an object the run made on the target for a source object.</summary>
+        internal void AddCreated(Transform source, Transform target)
+        {
+            AvatarMatch match = MatchOf(source);
+            if (match == null)
+            {
+                match = new AvatarMatch { Source = source, SourcePath = AnimationUtility.CalculateTransformPath(source, SourceRoot) };
+                Matches.Add(match);
+                Index()[source] = match;
+            }
+            match.Target = target;
+            match.Method = AvatarMatchMethod.Created;
+        }
+
+        /// <summary>The source object matched to a target object, or null.</summary>
+        internal Transform SourceOf(Transform target)
+        {
+            if (target == null) return null;
+            foreach (AvatarMatch match in Matches)
+            {
+                if (match.Target == target) return match.Source;
+            }
+            return null;
+        }
+
         internal List<AvatarMatch> Unmatched()
         {
             return Matches.FindAll(match => match.Target == null);
@@ -226,7 +253,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Avatar Migration Assistant object map (MatchObjects.cs, part of Editor/AvatarMigrationAssistant.cs)
 // ============================================================================
 //
-// AvatarMatchMethod        None, NamePath, Humanoid, Structure, Manual: how a source object found its target.
+// AvatarMatchMethod        None, NamePath, Humanoid, Structure, Manual, Created: how a source object found its target.
 // AvatarMatch              Source, Target (null when unmatched), Method, SourcePath (from the avatar root).
 // AvatarMigrationMap (this file)
 //   Build(source, target, tolerance)  Every source Transform, parents first: name path, then humanoid slot plus the
@@ -235,6 +262,7 @@ namespace Riry.RiryTools.Editor
 //                            unmatched parent leaves its children unmatched.
 //   AutoMatch(source, parentTarget, out method)  One object's automatic match given its parent's target; Build uses it,
 //                            and Manual matching calls it again below a parent the user matched.
-//   MatchOf / TargetOf / Unmatched()  Look-ups.
+//   MatchOf / TargetOf / SourceOf / Unmatched()  Look-ups.
+//   AddCreated(source, target)  An object the run made on the target (feature 4) or a copied prefab's object.
 //   FindOnTarget(path) / TargetPath(target)  Paths from the target root.
 //   TieEpsilon (1e-7)        Distances this close count as a tie.
