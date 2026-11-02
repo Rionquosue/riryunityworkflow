@@ -26,6 +26,8 @@ namespace Riry.RiryTools.Editor
         private const string MainMenu = "Tools/RiryTools/Main Menu";
         private const string SyncTools = "Tools/RiryTools/AutoSync/Sync";
         private const string ConfigurationTools = "Tools/RiryTools/AutoSync/Configuration";
+        // "&n" makes N its menu key (A is AutoSync's, M Main Menu's and Menu Mockup's).
+        private const string AvatarMigrationAssistantMenu = "Tools/RiryTools/Avatar Migratio&n Assistant";
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
@@ -59,8 +61,6 @@ namespace Riry.RiryTools.Editor
         // U+00A0, because Unity reads "<space>&..." at the end of a path as an Alt shortcut.
         internal const string ConstraintTrain = "Tools/RiryTools/Constraint\u00A0&Train";
         internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Train";
-        // "&n" makes N its menu key (A is AutoSync's, M Main Menu's and Menu Mockup's).
-        internal const string AvatarMigrationAssistant = "Tools/RiryTools/Avatar Migratio&n Assistant";
 
         // =====================================================================
         // Tools dropdown
@@ -82,7 +82,8 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConfigurationTools, false, 2001)]
         private static void ConfigurationToolsItem() { GitActions.OpenConfiguration(); }
 
-        // Avatar Migration Assistant is 2005 (RiryVRChatMenus.cs).
+        [MenuItem(AvatarMigrationAssistantMenu, false, 2005)]
+        private static void AvatarMigrationAssistantItem() { AvatarMigrationAssistant.Open(); }
 
         [MenuItem(BlendshapeSync, false, 2010)]
         private static void BlendshapeSyncItem() { BlendshapeSyncJobs.Add(); }
@@ -204,9 +205,6 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConstraintTrain, false, 2030)]
         private static void ConstraintTrainItem() { VrcSdkMissing("Constraint Train"); }
 
-        [MenuItem(AvatarMigrationAssistant, false, 2005)]
-        private static void AvatarMigrationAssistantItem() { VrcSdkMissing("Avatar Migration Assistant"); }
-
         [MenuItem(ConstraintTrainHierarchy, false, 20)]
         private static void ConstraintTrainHierarchyItem() { VrcSdkMissing("Constraint Train"); }
 
@@ -236,9 +234,9 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Main Menu (1990)               -> RiryToolsMainMenu.Open (Editor/UI/RiryToolsMainMenu.cs): every tool as a tab
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> GitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
 //   Tools/RiryTools/AutoSync/Configuration (2001) -> GitActions.OpenConfiguration -> GitConfigureWindow (Editor/UI/GitWindows.cs)
-//   Tools/RiryTools/Avatar Migration Assistant (2005), menu key N -> AvatarMigrationAssistantWindow.Open
-//                                                      (Editor/VRChat/AvatarMigrationAssistantWindow.cs, entry in Editor/VRChat/
-//                                                      RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
+//   Tools/RiryTools/Avatar Migration Assistant (2005), menu key N -> AvatarMigrationAssistant.Open
+//                                                      (Editor/AvatarMigrationAssistant.cs); without the VRChat SDK it still
+//                                                      opens and shows which parts are not available
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSyncJobWindow.cs)
 //   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
 //   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in

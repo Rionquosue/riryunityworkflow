@@ -211,7 +211,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant map
+// GLOSSARY: Avatar Migration Assistant object map (MatchObjects.cs, part of Editor/AvatarMigrationAssistant.cs)
 // ============================================================================
 //
 // AvatarMatchMethod        None, NamePath, Humanoid, Structure, Manual: how a source object found its target.

@@ -118,7 +118,7 @@ Environment variables set for Git commands:
 |---|---|---|
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
-| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train and Avatar Migration Assistant windows and menus |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
@@ -217,7 +217,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
-  - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK, the **VRCSDK not found** popup
+  - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs and shows which parts are not available
   - `Tools/RiryTools/Blendshape Sync` (2010): Add Job (a new job in its popup)
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T

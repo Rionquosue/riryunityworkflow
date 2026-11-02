@@ -162,7 +162,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Manual matching window
+// GLOSSARY: Manual matching window (ManualMatching.cs, part of Editor/AvatarMigrationAssistant.cs)
 // ============================================================================
 //
 // AvatarMigrationMatchWindow (this file)

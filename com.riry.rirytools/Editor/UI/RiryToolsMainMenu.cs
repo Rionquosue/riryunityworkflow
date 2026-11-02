@@ -17,7 +17,6 @@ namespace Riry.RiryTools.Editor
     {
         // Set by Editor/VRChat/RiryVRChatMenus.cs when the VRChat SDK is in the project.
         internal static Func<EditorWindow> CreateConstraintTrain;
-        internal static Func<EditorWindow> CreateAvatarMigrationAssistant;
 
         private static readonly string[] Tabs =
         {
@@ -90,11 +89,6 @@ namespace Riry.RiryTools.Editor
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
-                case "Avatar Migration Assistant":
-                    if (CreateAvatarMigrationAssistant == null)
-                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Avatar Migration Assistant").Message, MessageType.Info);
-                    else Draw(Active());
-                    break;
                 case "Blendshape Sync":
                     // The running jobs for review; a job is added or edited in its popup.
                     BlendshapeSyncJobList.Draw();
@@ -129,8 +123,7 @@ namespace Riry.RiryTools.Editor
             switch (Current)
             {
                 case "AutoSync": return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
-                case "Avatar Migration Assistant":
-                    return CreateAvatarMigrationAssistant == null ? null : Host("Avatar Migration Assistant", CreateAvatarMigrationAssistant, null);
+                case "Avatar Migration Assistant": return Host("Avatar Migration Assistant", () => CreateInstance<AvatarMigrationAssistant>(), null);
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Train": return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
@@ -245,8 +238,7 @@ namespace Riry.RiryTools.Editor
 //                            Documentation). Current is the selected tab's name; tabs are handled by name.
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   CreateConstraintTrain / CreateAvatarMigrationAssistant  Set by Editor/VRChat/RiryVRChatMenus.cs; null without the
-//                            VRChat SDK (the tab says so).
+//   CreateConstraintTrain    Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or

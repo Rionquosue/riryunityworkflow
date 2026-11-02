@@ -45,7 +45,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant settings
+// GLOSSARY: Avatar Migration Assistant settings (Settings.cs, part of Editor/AvatarMigrationAssistant.cs)
 // ============================================================================
 //
 // AvatarMigrationSettings (this file): EditorPrefs RiryTools.AvatarMigrationAssistant.Settings (JSON)

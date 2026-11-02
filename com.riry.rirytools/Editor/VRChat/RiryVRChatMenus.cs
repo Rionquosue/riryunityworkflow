@@ -12,15 +12,11 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class RiryVRChatMenus
     {
-        // The Main Menu's Constraint Train and Avatar Migration Assistant tabs host these windows.
+        // The Main Menu's Constraint Train tab hosts this window.
         static RiryVRChatMenus()
         {
             RiryToolsMainMenu.CreateConstraintTrain = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintTrainWindow>();
-            RiryToolsMainMenu.CreateAvatarMigrationAssistant = () => UnityEngine.ScriptableObject.CreateInstance<AvatarMigrationAssistantWindow>();
         }
-
-        [MenuItem(RiryMenus.AvatarMigrationAssistant, false, 2005)]
-        private static void AvatarMigrationAssistantItem() { AvatarMigrationAssistantWindow.Open(); }
 
         [MenuItem(RiryMenus.ConstraintTrain, false, 2030)]
         private static void ConstraintTrainItem() { ConstraintTrainWindow.Open(); }
@@ -41,8 +37,6 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: VRChat menu entries
-//   Tools/RiryTools/Avatar Migration Assistant (2005), menu key N -> AvatarMigrationAssistantWindow.Open
-//                                                      (Editor/VRChat/AvatarMigrationAssistantWindow.cs)
 //   Tools/RiryTools/Constraint Train (2030)         -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs)
 //   GameObject/RiryTools/Constraint Train (20)   -> ConstraintTrainWindow.OpenFromHierarchy: the active
 //                                                      object becomes the chain start, a selected descendant the end.
