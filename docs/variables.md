@@ -17,8 +17,9 @@ name.
   (`RiryToolsProjectFolder.cs`).
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
-- **Tool names:** AutoSync, Blendshape Sync, Clean Animation Keys, Constraint
-  Train, GUID Tools, IconCap, Import Presets, Stop Auto Game. Class, file, folder and
+- **Tool names:** AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
+  Animation Keys, Constraint Train, GUID Tools, IconCap, Import Presets, Stop
+  Auto Game. Class, file, folder and
   document names follow them.
 
 ## Stored settings
@@ -30,6 +31,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
+| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off | `AvatarMigrationSettings` |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
 
@@ -116,7 +118,7 @@ Environment variables set for Git commands:
 |---|---|---|
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
-| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train and Avatar Migration Assistant windows and menus |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
@@ -215,6 +217,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
+  - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK, the **VRCSDK not found** popup
   - `Tools/RiryTools/Blendshape Sync` (2010): Add Job (a new job in its popup)
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T

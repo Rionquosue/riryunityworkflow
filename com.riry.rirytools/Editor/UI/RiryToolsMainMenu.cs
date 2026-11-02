@@ -17,10 +17,12 @@ namespace Riry.RiryTools.Editor
     {
         // Set by Editor/VRChat/RiryVRChatMenus.cs when the VRChat SDK is in the project.
         internal static Func<EditorWindow> CreateConstraintTrain;
+        internal static Func<EditorWindow> CreateAvatarMigrationAssistant;
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "IconCap", "Import Presets", "Stop Auto Game"
+            "AutoSync", "Avatar Migration Assistant", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "IconCap",
+            "Import Presets", "Stop Auto Game"
         };
         private static readonly string[] ImportTabs =
         {
@@ -72,26 +74,37 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // The current tab's name; the tabs are told apart by name, not by number.
+        private string Current
+        {
+            get { return Tabs[Mathf.Clamp(tab, 0, Tabs.Length - 1)]; }
+        }
+
         private void DrawTab()
         {
-            switch (tab)
+            switch (Current)
             {
-                case 0:
+                case "AutoSync":
                     bool sync = EditorGUILayout.ToggleLeft("Sync", AutoSync.Enabled);
                     if (sync != AutoSync.Enabled) GitActions.ToggleSync();
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
-                case 1:
+                case "Avatar Migration Assistant":
+                    if (CreateAvatarMigrationAssistant == null)
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Avatar Migration Assistant").Message, MessageType.Info);
+                    else Draw(Active());
+                    break;
+                case "Blendshape Sync":
                     // The running jobs for review; a job is added or edited in its popup.
                     BlendshapeSyncJobList.Draw();
                     break;
-                case 3:
+                case "Constraint Train":
                     if (CreateConstraintTrain == null)
                         EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Train").Message, MessageType.Info);
                     else Draw(Active());
                     break;
-                case 6:
+                case "Import Presets":
                     importTab = GUILayout.Toolbar(importTab, ImportTabs, tabStyle, GUILayout.Height(ImportTabHeight));
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
@@ -100,7 +113,7 @@ namespace Riry.RiryTools.Editor
                     }
                     else Draw(Active());
                     break;
-                case 7:
+                case "Stop Auto Game":
                     StopAutoGame.Enabled = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
                         "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
                     break;
@@ -113,14 +126,16 @@ namespace Riry.RiryTools.Editor
         // The hosted window for the current tab, made on first use; null for tabs without one.
         private EditorWindow Active()
         {
-            switch (tab)
+            switch (Current)
             {
-                case 0: return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
-                case 2: return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
-                case 3: return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
-                case 4: return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
-                case 5: return Host("IconCap", () => CreateInstance<IconCapWindow>(), null);
-                case 6:
+                case "AutoSync": return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
+                case "Avatar Migration Assistant":
+                    return CreateAvatarMigrationAssistant == null ? null : Host("Avatar Migration Assistant", CreateAvatarMigrationAssistant, null);
+                case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
+                case "Constraint Train": return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
+                case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
+                case "IconCap": return Host("IconCap", () => CreateInstance<IconCapWindow>(), null);
+                case "Import Presets":
                     switch (importTab)
                     {
                         case 0:
@@ -200,7 +215,10 @@ namespace Riry.RiryTools.Editor
         // The current tab's hosted window if it was made, without making it.
         private EditorWindow ActiveIfMade()
         {
-            string key = tab == 0 ? "Configuration" : tab == 6 ? (importTab < 3 ? ImportTabs[importTab] : null) : tab == 1 || tab == 7 ? null : Tabs[tab];
+            string name = Current;
+            string key = name == "AutoSync" ? "Configuration"
+                : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
+                : name == "Blendshape Sync" || name == "Stop Auto Game" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -222,11 +240,13 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
-//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools, IconCap,
-//                            Import Presets, Stop Auto Game (menu order; not Menu Mockup or Documentation).
+//   Tabs                     AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean Animation Keys, Constraint Train,
+//                            GUID Tools, IconCap, Import Presets, Stop Auto Game (menu order; not Menu Mockup or
+//                            Documentation). Current is the selected tab's name; tabs are handled by name.
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   CreateConstraintTrain    Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK (the tab says so).
+//   CreateConstraintTrain / CreateAvatarMigrationAssistant  Set by Editor/VRChat/RiryVRChatMenus.cs; null without the
+//                            VRChat SDK (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
