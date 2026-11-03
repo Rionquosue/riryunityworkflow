@@ -119,6 +119,8 @@ namespace Riry.RiryTools.Editor
             m.SetVector("_Corner", CornerOrigin(effect.Corner));
             m.SetVector("_Centre", effect.Centre);
             m.SetVector("_Offset", effect.Offset * pixelScale);
+            m.SetVector("_LayerOffset", effect.Position * pixelScale);
+            m.SetFloat("_LayerScale", effect.Scale);
             m.SetFloat("_Zoom", effect.Zoom);
             m.SetFloat("_Angle", effect.Angle);
             m.SetFloat("_FlipX", effect.FlipX ? 1f : 0f);
@@ -186,4 +188,4 @@ namespace Riry.RiryTools.Editor
 //   Material                                        Hidden/RiryTools/IconCap/Effects (Shaders/IconCapEffects.shader):
 //                                                   one pass per effect (CustomMaterial runs the user's material instead),
 //                                                   then CompositePass (18) and LatLongPass (19).
-// Pixel settings (Thickness, Blur, Offset) are in pixels of the final image; pixelScale scales them for previews.
+// Pixel settings (Thickness, Blur, Offset, Position) are in pixels of the final image; pixelScale scales them for previews.

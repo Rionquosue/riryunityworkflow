@@ -228,7 +228,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
 `RiryMenus.ConstraintTrainHierarchy`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
-  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
+  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
   - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
@@ -236,7 +236,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
   - `Tools/RiryTools/GUID Tools` (2040): the window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache
-  - `Tools/RiryTools/IconCap` (2045), written `Ic&onCap` so its menu key is O: the IconCap window (also the Main Menu's IconCap tab)
+  - `Tools/RiryTools/IconCap` (2045), written `Ic&onCap` so its menu key is O: the IconCap window (also from the Main Menu's Tools tab, in its own window)
   - `Tools/RiryTools/Import Presets/Set Folder Import Presets` (2050)
   - `Tools/RiryTools/Import Presets/Save Import Preset` (2051)
   - `Tools/RiryTools/Import Presets/Extract Animation` (2052): the Extract Animation window
