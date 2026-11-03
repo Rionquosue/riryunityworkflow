@@ -9,7 +9,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// IconCap: square PNG icons captured from the Scene View, run through an effect
     /// stack and saved to an export folder; captures can be saved as jobs and remade
-    /// with Run. Opened from Tools > RiryTools > IconCap and the Main Menu's IconCap tab.
+    /// with Run. Opened from Tools > RiryTools > IconCap and the Main Menu's Tools tab (in its own window).
     /// The live preview renders only while the window is shown: it is requested when the
     /// window draws and rendered on the next editor update (Watch).
     /// </summary>
@@ -71,6 +71,14 @@ namespace Riry.RiryTools.Editor
         internal static void Open()
         {
             IconCapWindow window = GetWindow<IconCapWindow>("IconCap");
+            window.minSize = new Vector2(360f, 420f);
+            window.Show();
+        }
+
+        /// <summary>The Main Menu's Tools tab: IconCap in its own floating window.</summary>
+        internal static void OpenPopup()
+        {
+            IconCapWindow window = GetWindow<IconCapWindow>(true, "IconCap");
             window.minSize = new Vector2(360f, 420f);
             window.Show();
         }
@@ -1056,7 +1064,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: IconCap window
-// The menu entry, Tools > RiryTools > IconCap, is in RiryMenus.cs; the Main Menu's IconCap tab hosts this window.
+// The menu entry, Tools > RiryTools > IconCap, is in RiryMenus.cs; the Main Menu's Tools tab opens it in its own window.
 // ============================================================================
 //
 // IconCapWindow (this file)
@@ -1076,6 +1084,7 @@ namespace Riry.RiryTools.Editor
 //   Icon Generator      Asset, New, Regenerate, Large previews, sources beside their results, Prefix, Suffix,
 //                       Template, Generator effect stack.
 //   Jobs                Every job in Assets and in the export folder: name, folder, icon count, Run, and its icons.
+//   Open() / OpenPopup() The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window).
 //   [SerializeField]    settings, onlySelected, slots, isolated, exportFolder, session, latest, lastSavedPath,
 //                       lastCapture, lastSave, throughGenerator, generator, largePreviews, jobChoice, presetName,
 //                       the fold states, scroll.

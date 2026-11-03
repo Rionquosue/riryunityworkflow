@@ -20,9 +20,10 @@ namespace Riry.RiryTools.Editor
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Avatar Migration Assistant", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "IconCap",
-            "Import Presets", "Stop Auto Game"
+            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "Import Presets", "Stop Auto Game", "Tools"
         };
+        // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
+        private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
         private static readonly string[] ImportTabs =
         {
             "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
@@ -36,10 +37,18 @@ namespace Riry.RiryTools.Editor
             public EditorWindow Window;
         }
 
-        // About three times a standard tab row; Import Presets' sub-tabs about twice.
-        private static readonly float TabHeight = 3f * (EditorGUIUtility.singleLineHeight + 2f);
-        private static readonly float ImportTabHeight = 2f * (EditorGUIUtility.singleLineHeight + 2f);
-        private GUIStyle tabStyle;
+        // The tab strip: flat cells of equal width with no gaps, the active one lighter and bold, a
+        // hover tint, wrapping onto more rows when the window is narrow (like YGDR Animator Editor's).
+        private const float TabMinWidth = 110f;
+        private const float TabMinHeight = 24f;
+        private static readonly Color DarkTab = new Color32(56, 56, 56, 255);
+        private static readonly Color DarkActiveTab = new Color32(90, 90, 90, 255);
+        private static readonly Color LightTab = new Color32(200, 200, 200, 255);
+        private static readonly Color LightActiveTab = new Color32(160, 160, 160, 255);
+        private static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.35f);
+        private const float HoverTint = 0.1f;
+        private GUIStyle tabLabel;
+        private GUIStyle activeTabLabel;
 
         [SerializeField] private int tab;
         [SerializeField] private int importTab;
@@ -49,21 +58,14 @@ namespace Riry.RiryTools.Editor
         {
             RiryToolsMainMenu window = GetWindow<RiryToolsMainMenu>("RiryTools");
             window.minSize = new Vector2(480f, 380f);
+            window.wantsMouseMove = true;
             window.Show();
         }
 
         private void OnGUI()
         {
-            // The tool tabs are three lines tall, Import Presets' sub-tabs two, and their names wrap
-            // when the window is narrow.
-            // A name the skin has no "left"/"mid"/"right" styles for, so Toolbar draws every tab
-            // with this style instead of the skin's own, which do not wrap.
-            if (tabStyle == null)
-                tabStyle = new GUIStyle(GUI.skin.button) { name = "RiryToolsTab", wordWrap = true, fixedHeight = 0f };
-            int previous = tab;
-            tab = GUILayout.Toolbar(tab, Tabs, tabStyle, GUILayout.Height(TabHeight));
-            // Opening Avatar Migration Assistant's tab shows its VRC SDK notice, as its menu entry does.
-            if (tab != previous && Current == "Avatar Migration Assistant") EditorApplication.delayCall += AvatarMigrationSdkNotice.ShowIfNeeded;
+            wantsMouseMove = true;
+            tab = TabStrip(tab, Tabs);
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true)))
             {
@@ -102,7 +104,7 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case "Import Presets":
-                    importTab = GUILayout.Toolbar(importTab, ImportTabs, tabStyle, GUILayout.Height(ImportTabHeight));
+                    importTab = TabStrip(importTab, ImportTabs);
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
                     {
@@ -113,6 +115,15 @@ namespace Riry.RiryTools.Editor
                 case "Stop Auto Game":
                     StopAutoGame.Enabled = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
                         "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
+                    break;
+                case "Tools":
+                    // Each opens in its own window, not in this one, which may be docked small.
+                    foreach (string tool in PopupTools)
+                    {
+                        if (!GUILayout.Button(tool, GUILayout.Height(28f))) continue;
+                        if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
+                        else EditorApplication.delayCall += AvatarMigrationAssistant.OpenPopup;
+                    }
                     break;
                 default:
                     Draw(Active());
@@ -126,11 +137,9 @@ namespace Riry.RiryTools.Editor
             switch (Current)
             {
                 case "AutoSync": return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
-                case "Avatar Migration Assistant": return Host("Avatar Migration Assistant", () => CreateInstance<AvatarMigrationAssistant>(), null);
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Train": return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
-                case "IconCap": return Host("IconCap", () => CreateInstance<IconCapWindow>(), null);
                 case "Import Presets":
                     switch (importTab)
                     {
@@ -147,6 +156,55 @@ namespace Riry.RiryTools.Editor
                     return null;
                 default: return null;
             }
+        }
+
+        /// <summary>
+        /// A row of tabs, wrapping onto more rows when they don't fit at TabMinWidth. Every tab in
+        /// a row is the same width, and as tall as its name needs (at least TabMinHeight).
+        /// Returns the tab chosen.
+        /// </summary>
+        private int TabStrip(int selected, string[] names)
+        {
+            if (tabLabel == null)
+            {
+                tabLabel = new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter, wordWrap = true, fontSize = 12, padding = new RectOffset(4, 4, 3, 3)
+                };
+                activeTabLabel = new GUIStyle(tabLabel) { fontStyle = FontStyle.Bold };
+            }
+            float available = position.width - 8f;
+            int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
+            int rows = (names.Length + perRow - 1) / perRow;
+            float width = available / perRow;
+            float height = TabMinHeight;
+            foreach (string name in names) height = Mathf.Max(height, activeTabLabel.CalcHeight(new GUIContent(name), width));
+            Rect area = GUILayoutUtility.GetRect(available, rows * height, GUILayout.ExpandWidth(true));
+            bool dark = EditorGUIUtility.isProSkin;
+            Event current = Event.current;
+            for (int i = 0; i < names.Length; i++)
+            {
+                var cell = new Rect(area.x + (i % perRow) * width, area.y + (i / perRow) * height, width, height);
+                bool active = i == selected;
+                if (current.type == EventType.Repaint)
+                {
+                    Color color = active ? (dark ? DarkActiveTab : LightActiveTab) : (dark ? DarkTab : LightTab);
+                    if (!active && cell.Contains(current.mousePosition))
+                        color = dark ? color + new Color(HoverTint, HoverTint, HoverTint, 0f) : color - new Color(HoverTint / 2f, HoverTint / 2f, HoverTint / 2f, 0f);
+                    EditorGUI.DrawRect(cell, color);
+                    EditorGUI.DrawRect(new Rect(cell.xMax - 1f, cell.y, 1f, cell.height), TabSeparator);
+                    EditorGUI.DrawRect(new Rect(cell.x, cell.yMax - 1f, cell.width, 1f), TabSeparator);
+                    (active ? activeTabLabel : tabLabel).Draw(cell, new GUIContent(names[i]), false, false, false, false);
+                }
+                else if (current.type == EventType.MouseDown && current.button == 0 && cell.Contains(current.mousePosition))
+                {
+                    selected = i;
+                    GUI.changed = true;
+                    current.Use();
+                }
+                else if (current.type == EventType.MouseMove && cell.Contains(current.mousePosition)) Repaint();
+            }
+            return selected;
         }
 
         private EditorWindow Host(string key, Func<EditorWindow> create, Action<EditorWindow> initialize)
@@ -214,7 +272,7 @@ namespace Riry.RiryTools.Editor
             string name = Current;
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
-                : name == "Blendshape Sync" || name == "Stop Auto Game" ? null : name;
+                : name == "Blendshape Sync" || name == "Stop Auto Game" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -236,20 +294,22 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
-//   Tabs                     AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean Animation Keys, Constraint Train,
-//                            GUID Tools, IconCap, Import Presets, Stop Auto Game (menu order; not Menu Mockup or
-//                            Documentation). Current is the selected tab's name; tabs are handled by name.
+//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools, Import Presets,
+//                            Stop Auto Game, Tools (not Menu Mockup or Documentation). Current is the selected tab's
+//                            name; tabs are handled by name.
+//   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
+//                            the tool in its own floating window (OpenPopup), not inside this one.
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   Avatar Migration Assistant tab  Switching to it shows AvatarMigrationSdkNotice when the VRChat SDK is missing.
 //   CreateConstraintTrain    Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
-//   TabHeight / ImportTabHeight / tabStyle
-//                            Tool tabs about three rows tall, Import Presets' sub-tabs two, names wrapping;
-//                            tabStyle is named RiryToolsTab so Toolbar does not swap in the skin's non-wrapping styles.
+//   TabStrip(selected, names)  The tool tabs and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
+//                            110), wrapping onto more rows, each as tall as its wrapped name (at least TabMinHeight,
+//                            24); the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
+//                            (HoverTint), like YGDR Animator Editor's tab strip.
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
