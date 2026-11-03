@@ -86,6 +86,7 @@ namespace Riry.RiryTools.Editor
             {
                 case IconCapEffectType.Overlay:
                 case IconCapEffectType.DrawUnder:
+                    return effect.Textures.Count + 4;
                 case IconCapEffectType.Mask:
                 case IconCapEffectType.InverseMask:
                     return effect.Textures.Count + 2;
@@ -138,6 +139,12 @@ namespace Riry.RiryTools.Editor
                             effect.Corner = (IconCapCorner)EditorGUI.EnumPopup(Next(ref line), "Corner", effect.Corner);
                         DrawTextures(ref line, effect);
                         effect.Tint = EditorGUI.ColorField(Next(ref line), "Tint", effect.Tint);
+                        if (effect.Type == IconCapEffectType.Overlay || effect.Type == IconCapEffectType.DrawUnder)
+                        {
+                            effect.Position = Vector2Row(Next(ref line), new GUIContent("Position", "Pixels of the final image: x right, y down."),
+                                effect.Position);
+                            effect.Scale = EditorGUI.Slider(Next(ref line), new GUIContent("Scale", "1 fills the icon."), effect.Scale, 0.05f, 10f);
+                        }
                         if (effect.Type == IconCapEffectType.GrayOut)
                             effect.Amount = EditorGUI.Slider(Next(ref line), "Darken", effect.Amount, 0f, 1f);
                         break;
@@ -246,4 +253,5 @@ namespace Riry.RiryTools.Editor
 //                             group; a new effect goes on top). True when the stack changed.
 //   DrawTextures              A texture layer's textures: an empty field adds one; clearing a field removes it.
 //   FieldLines / Height       Each effect type's rows.
-//   Vector2Row                Offset and Centre: X and Y on one row, so they never wrap onto the row below.
+//   Vector2Row                Offset, Centre and Position: X and Y on one row, so they never wrap onto the row below.
+//   Overlay / Draw under      Textures, Tint, Position (pixels, x right, y down) and Scale (1 fills the icon).

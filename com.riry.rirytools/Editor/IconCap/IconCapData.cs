@@ -151,6 +151,10 @@ namespace Riry.RiryTools.Editor
         // Texture layers: the textures (cycled across an icon list) and their tint.
         public List<string> Textures = new List<string>();
         public Color Tint = Color.white;
+        // Overlay and Draw under: where the texture sits (pixels of the final image, x right, y down)
+        // and its size (1 fills the icon), around the centre.
+        public Vector2 Position;
+        public float Scale = 1f;
         public IconCapCorner Corner = IconCapCorner.TopRight;
         // Custom material: the material's GUID.
         public string Material = "";
@@ -296,6 +300,7 @@ namespace Riry.RiryTools.Editor
 // IconCapOptions          AlphaCutout, Lighting (Scene, HDRI, Flat), Hdri (cubemap GUID), the six Exclude switches.
 // IconCapObjects          OnlySelected, Renderers and Isolated as GlobalObjectId strings.
 // IconCapEffect           One effect: Type, Enabled and the settings of every type; Textures and Material are GUIDs.
+//                         Position and Scale move and size Overlay and Draw under's texture.
 //                         Create(type) sets a type's defaults; TextureFor(iconIndex) cycles the textures.
 // IconCapSettings         Size, Camera, Background, Options, Effects: what a capture is made with; a preset holds these.
 // IconCapEntry            One capture: FileName, SavedPath (empty until exported), Settings, Objects; Image this session.
