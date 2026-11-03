@@ -18,9 +18,9 @@ name.
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
 - **Tool names:** Attach To, AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
-  Animation Keys, Constraint Train, GUID Tools, IconCap, Import Presets, Stop
+  Animation Keys, Constraint Tool (subtools Train and Bezier), GUID Tools, IconCap, Import Presets, Stop
   Auto Game. Class, file, folder and
-  document names follow them.
+  document names follow them; Constraint Tool's subtools are `ConstraintTrain*` and `ConstraintBezier*`.
 
 ## Stored settings
 
@@ -64,7 +64,7 @@ In the project:
 
 | Path | Contents | Owner |
 |---|---|---|
-| `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
+| `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Tool Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
 | `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateGuid.CacheDirectoryPath` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt`, `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `BetterFbxExporter` |
 | `Library/RiryTools/GuidTools/` | `restore`, `restore-meta` while a Git backup is written | `GuidReferenceRepair.Restore` |
@@ -76,7 +76,7 @@ In the project:
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips (or the model's Destination) | `ImportPresetAnimations.FolderName` |
 | `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git | `AnimationExtractSettings.PathFor` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
-| `<model>_ROOT.prefab` | Constraint Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
+| `<model>_ROOT.prefab` | Constraint Tool Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows | `IconCapFiles.JobFileName` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
 | `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
@@ -123,7 +123,7 @@ Environment variables set for Git commands:
 |---|---|---|
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
-| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Tool window (Train and Bezier tabs) and menu |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
 | `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
@@ -198,10 +198,16 @@ Other tools:
 | `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1` | **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves |
 | `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
 | `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of an extraction (replaced clips are recorded; new files are not removed by Undo) |
-| Settings Undo names | `Constraint Train settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
+| `ConstraintToolWindow.Title` / `Tabs` | `Constraint Tool` / `Train`, `Bezier` | The Constraint Tool window and its tabs (also the Main Menu's `ConstraintTabs`); minSize 420 x 500 |
+| `ConstraintBezierWindow.UndoName` | `Bezier rig` | Undo group of Generate rig; Remove rig is `Remove Bezier rig` |
+| `ConstraintBezierWindow.RigPrefix` / `MechanismPrefix` | `BezierRig_` / `Bezier_` | The rig object and the mechanism chain, each a sibling of the chain start named prefix + its name |
+| Bezier rig objects | `Anchor Start`, `Anchor End`, `Handle Start`, `Handle End`, `Samples/Sample NN`, `Twist/Twist NN` | Children of `BezierRig_<start>` (handles under their anchors with **Handles follow anchors**) |
+| `ConstraintBezierWindow.MinAimDistance` | `1e-5` | Shorter directions are not aimed along |
+| `ConstraintBezierCurve.ArcSteps` / `FitRounds` / `Regularization` | `256` / `4` / `1e-6` | Length table steps, fit rounds, and the pull of P1/P2 to straight-line handles |
 | `StopAutoGame.HandleDelayMs` | `100` | Delay after Play Mode starts before focus is restored |
 | `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
@@ -241,9 +247,9 @@ IconCap:
 
 ## Menu paths
 
-Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
-`VRChat/RiryVRChatMenus.cs` and use `RiryMenus.ConstraintTrain` and
-`RiryMenus.ConstraintTrainHierarchy`. The number is the priority.
+Defined in `UI/RiryMenus.cs`. Constraint Tool's entries are in
+`VRChat/RiryVRChatMenus.cs` and use `RiryMenus.ConstraintTool`,
+`RiryMenus.ConstraintTrainHierarchy` and `RiryMenus.ConstraintBezierHierarchy`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows (Documentation link at its bottom right; no Menu Mockup tab)
@@ -252,7 +258,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
   - `Tools/RiryTools/Blendshape Sync` (2010): Add Job (a new job in its popup)
   - `Tools/RiryTools/Clean Animation Keys` (2020)
-  - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
+  - `Tools/RiryTools/Constraint Tool` (2030), written `Constraint\u00A0&Tool` so its menu key is T: the Constraint Tool window on the tab used last
   - `Tools/RiryTools/GUID Tools` (2040): the window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache
   - `Tools/RiryTools/IconCap` (2045), written `Ic&onCap` so its menu key is O: the IconCap window (also from the Main Menu's Tools tab, in its own window)
   - `Tools/RiryTools/Import Presets/Set Folder Import Presets` (2050)
@@ -271,7 +277,8 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Assets/RiryTools/Clean Animation Keys` (2005)
 - **Hierarchy right-click** (also in the GameObject menu):
   - `GameObject/RiryTools/Attach To` (19): the Attach To popup; enabled when scene objects are selected; in no other menu
-  - `GameObject/RiryTools/Constraint Train` (20)
+  - `GameObject/RiryTools/Constraint Tool/Train` (20): the Train tab, with the selection as the chain
+  - `GameObject/RiryTools/Constraint Tool/Bezier` (21): the Bezier tab, with the selection as the chain
 - **Git menu:**
   - `Git/Sync` (1), check mark
   - `Git/Configuration` (2)

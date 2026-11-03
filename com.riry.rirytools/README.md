@@ -12,7 +12,7 @@ to `main` is published there as a new version after the owner approves it; see
 The package's own files are replaced on every update. Anything that
 has to live inside the project is unpacked into **`Assets/RiryTools`** on first
 load, and tools save generated assets there when they have no better place
-(Constraint Train clips, `_ROOT` variants of read-only prefabs). Existing files
+(Constraint Tool Train clips, `_ROOT` variants of read-only prefabs). Existing files
 there are never overwritten, so edits survive updates; delete a file to get the
 package's copy back. Shader applets will live there too.
 
@@ -25,7 +25,7 @@ entry's first letter.
 ## Main Menu
 
 **Tools > RiryTools > Main Menu** opens one dockable window with a tab per tool
-(AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools,
+(AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools,
 Import Presets, Stop Auto Game and Tools). Each tab draws the tool's own window, so
 it works there as it does on its own, and scrolls when the window is small. The
 **Tools** tab opens IconCap and Avatar Migration Assistant in their own windows.
@@ -86,16 +86,41 @@ that had focus get it back, and a Game view that Play Mode opened because the la
 closed when Play Mode ends. Choose the entry again to turn it off. It is a
 per-user setting. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/stop-auto-game.md).
 
-## Constraint Train
+## Constraint Tool
 
-Requires the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > RiryTools >
-Constraint Train** (or right-click a bone in the Hierarchy > **RiryTools >
-Constraint Train**) to drive a real bone chain onto up to five physics chains
+Requires the VRChat Avatars SDK 3.7.0 or newer. **Tools > RiryTools >
+Constraint Tool** opens one window with a tab per subtool, **Train** and
+**Bezier**; right-clicking a bone in the Hierarchy > **RiryTools > Constraint
+Tool > Train** or **Bezier** opens that tab with the selection as the chain.
+
+**Train** drives a real bone chain onto up to five physics chains
 with VRC Parent Constraints and a Motion Time clip. The tip leads a staggered
 "train" onto physics chain 1, then every bone blends from chain to chain along an
 editable curve. It can generate `Phys1_`..`Phys5_` and `Rest_` empty chains,
 with endpoints, without unpacking prefabs.
 See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/constraint-train.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/constraint-train.md).
+
+**Bezier** rigs a bone chain to one cubic Bezier curve with VRC constraints.
+**Generate rig** fits the curve to the chain at rest and adds `BezierRig_<start>`
+beside it: two anchors at the chain's ends, two handles, and a sample per bone
+held on the curve. Each bone aims along the curve, so no rotation changes at
+rest. Options:
+
+- **Handles follow anchors**: each handle moves and turns with its anchor, or
+  stays a separate object.
+- **Mode**: **Stretch** holds every bone on the curve; **Keep length** holds only
+  the first, and the rest aim along the curve at their own lengths.
+- **Constrain**: the **Deform bones**, or a **Mechanism chain** (`Bezier_` copy of
+  the chain) that carries the curve's constraints while each bone follows its copy
+  by a VRC Parent Constraint.
+- **Spacing**: each bone's place on the curve comes from the distances between
+  the bones, as they are (**Existing**) or evened out (**Even**).
+- **Twist from anchors**: rotating an anchor twists the chain, blended along it.
+
+Before generating, the window shows how far the bones are from the fitted curve
+and how many constraints the rig adds; once made, its constraint count and
+depth. **Generate rig** and **Remove rig** are one Undo step each, and nothing is
+unpacked.
 
 ## GUID Tools
 
@@ -196,8 +221,9 @@ Mockups are saved as annotated `.yml` files in `Documents/RiryTools/Mockups`.
 ## Editing the UI
 
 Every menu entry (Tools dropdown, Project and Hierarchy right-click, Git menu)
-is in `Editor/UI/RiryMenus.cs`, except Constraint Train's, which are in
+is in `Editor/UI/RiryMenus.cs`, except Constraint Tool's, which are in
 `Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
 path or priority there to move an entry. Each window's drawing code is in
-`Editor/UI/` (Constraint Train's in `Editor/VRChat/ConstraintTrainWindow.UI.cs`),
+`Editor/UI/` (Constraint Tool's in `Editor/VRChat/`: `ConstraintToolWindow.cs`, and its
+tabs `ConstraintTrainWindow.UI.cs` and `ConstraintBezierWindow.UI.cs`),
 with a glossary of its fields and methods at the bottom of each file.

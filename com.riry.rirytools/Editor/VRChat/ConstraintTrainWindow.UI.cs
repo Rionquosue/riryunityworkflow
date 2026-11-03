@@ -8,24 +8,14 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Everything the Constraint Train window draws. Its menu entries are in
+    /// Everything Constraint Tool's Train tab draws. It is shown in a tab of
+    /// ConstraintToolWindow (and the Main Menu), whose menu entries are in
     /// RiryVRChatMenus.cs. The state and the actions behind the buttons are in
     /// ConstraintTrainWindow.cs; both files are one class, so methods and fields
     /// can be moved between them freely. A glossary is at the bottom.
     /// </summary>
     internal sealed partial class ConstraintTrainWindow
     {
-        internal static void Open()
-        {
-            GetWindow<ConstraintTrainWindow>("Constraint Train");
-        }
-
-        internal static void OpenFromHierarchy()
-        {
-            ConstraintTrainWindow window = GetWindow<ConstraintTrainWindow>("Constraint Train");
-            window.UseSelection(Selection.activeTransform, Selection.transforms);
-        }
-
         private void OnGUI()
         {
             bool blocked = EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling;
@@ -229,13 +219,11 @@ namespace Riry.RiryTools.Editor
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
 //
-// MENU ENTRIES (Editor/VRChat/RiryVRChatMenus.cs)
-//   Tools/RiryTools/Constraint Train          -> Open()
-//   GameObject/RiryTools/Constraint Train  -> OpenFromHierarchy() (Hierarchy right-click)
+// MENU ENTRIES (Editor/VRChat/RiryVRChatMenus.cs; the window is Editor/VRChat/ConstraintToolWindow.cs)
+//   Tools/RiryTools/Constraint Tool              -> ConstraintToolWindow.OpenFromTools(): the tab used last
+//   GameObject/RiryTools/Constraint Tool/Train   -> ConstraintToolWindow.OpenTrainFromHierarchy(): this tab, UseSelection
 //
 // UI METHODS (ConstraintTrainWindow.UI.cs)
-//   Open()                         Opens the window (Tools menu).
-//   OpenFromHierarchy()            Opens it with the Hierarchy selection (calls UseSelection).
 //   OnGUI()                        Draws the sections in order; blocks them in Play Mode.
 //   DrawRealChain(realBones)       Start, end and avatar root fields; fills realBones.
 //   DrawTargets(realBones)         Chain count, endpoints, Rest/Physics rows, Generate buttons.
@@ -245,7 +233,7 @@ namespace Riry.RiryTools.Editor
 //   DrawPrefabSave()               Save as Prefab Overrides / Save to <name>_ROOT (prefab instances only).
 //
 // ACTIONS AND HELPERS (ConstraintTrainWindow.cs)
-//   UseSelection(active, selected) Sets realStart (and realEnd from a selected descendant).
+//   UseSelection(active, selected) Internal; sets realStart (and realEnd from a selected descendant).
 //   OnEnable()                     Window size and field repair; repaints on Undo/Redo (OnUndoRedo).
 //   SettingsUndo                   "Constraint Train settings": Undo name of every field edit (RiryGui.Set), so Ctrl+Z
 //                                  puts back the chain, slots, timing, curves and clip; generating also fills slots undoably.

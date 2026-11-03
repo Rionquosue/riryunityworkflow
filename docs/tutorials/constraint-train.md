@@ -1,4 +1,4 @@
-# Tutorial: Constraint Train
+# Tutorial: Constraint Tool's Train
 
 Animate a bone chain (a tail, ears, hair) so it slides onto physics-driven
 copies of itself, one bone after another, driven by a single float.
@@ -9,10 +9,10 @@ show **VRCSDK not found**.
 ## 1. Open the window on the chain
 
 Right-click the first bone of the chain in the Hierarchy (the one closest to the
-root) and choose **RiryTools > Constraint Train**. To fill in the last bone
+root) and choose **RiryTools > Constraint Tool > Train**. To fill in the last bone
 too, Ctrl/Cmd-click it first so both are selected.
 
-You can also choose **Tools > RiryTools > Constraint Train** and drag the bones
+You can also choose **Tools > RiryTools > Constraint Tool**, open the **Train** tab, and drag the bones
 into **Start (RB1)** and **End**. **Avatar root** fills itself in with the
 avatar's Animator.
 

@@ -17,13 +17,16 @@ namespace Riry.RiryTools.Editor
     {
         // Set by Editor/VRChat/RiryVRChatMenus.cs when the VRChat SDK is in the project.
         internal static Func<EditorWindow> CreateConstraintTrain;
+        internal static Func<EditorWindow> CreateConstraintBezier;
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "Import Presets", "Stop Auto Game", "Tools"
+            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Stop Auto Game", "Tools"
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
+        // Constraint Tool's sub-tabs, as in its own window (Editor/VRChat/ConstraintToolWindow.cs).
+        private static readonly string[] ConstraintTabs = { "Train", "Bezier" };
         private static readonly string[] ImportTabs =
         {
             "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
@@ -47,10 +50,11 @@ namespace Riry.RiryTools.Editor
         private static readonly Color LightActiveTab = new Color32(160, 160, 160, 255);
         private static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.35f);
         private const float HoverTint = 0.1f;
-        private GUIStyle tabLabel;
-        private GUIStyle activeTabLabel;
+        private static GUIStyle tabLabel;
+        private static GUIStyle activeTabLabel;
 
         [SerializeField] private int tab;
+        [SerializeField] private int constraintTab;
         [SerializeField] private int importTab;
         // The current tab's scroll position; back to the top when the tab changes.
         [SerializeField] private Vector2 tabScroll;
@@ -67,7 +71,7 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             wantsMouseMove = true;
-            int chosen = TabStrip(tab, Tabs);
+            int chosen = TabStrip(this, tab, Tabs);
             if (chosen != tab) tabScroll = Vector2.zero;
             tab = chosen;
             EditorGUILayout.Space(4f);
@@ -104,13 +108,18 @@ namespace Riry.RiryTools.Editor
                     // The running jobs for review; a job is added or edited in its popup.
                     BlendshapeSyncJobList.Draw();
                     break;
-                case "Constraint Train":
+                case "Constraint Tool":
                     if (CreateConstraintTrain == null)
-                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Train").Message, MessageType.Info);
-                    else Draw(Active());
+                    {
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Tool").Message, MessageType.Info);
+                        break;
+                    }
+                    constraintTab = TabStrip(this, constraintTab, ConstraintTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                    EditorGUILayout.Space(4f);
+                    Draw(Active());
                     break;
                 case "Import Presets":
-                    importTab = TabStrip(importTab, ImportTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                    importTab = TabStrip(this, importTab, ImportTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
                     {
@@ -144,7 +153,9 @@ namespace Riry.RiryTools.Editor
             {
                 case "AutoSync": return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
-                case "Constraint Train": return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
+                case "Constraint Tool":
+                    if (CreateConstraintTrain == null) return null;
+                    return constraintTab == 1 ? Host("Bezier", CreateConstraintBezier, null) : Host("Train", CreateConstraintTrain, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
                 case "Import Presets":
                     switch (importTab)
@@ -167,9 +178,10 @@ namespace Riry.RiryTools.Editor
         /// <summary>
         /// A row of tabs, wrapping onto more rows when they don't fit at TabMinWidth. Every tab in
         /// a row is the same width, and as tall as its name needs (at least TabMinHeight).
-        /// Returns the tab chosen.
+        /// Returns the tab chosen. owner is the window it is drawn in (its width, and repainted on hover).
+        /// Also used by Constraint Tool's window.
         /// </summary>
-        private int TabStrip(int selected, string[] names, float inset = 0f)
+        internal static int TabStrip(EditorWindow owner, int selected, string[] names, float inset = 0f)
         {
             if (tabLabel == null)
             {
@@ -180,7 +192,7 @@ namespace Riry.RiryTools.Editor
                 activeTabLabel = new GUIStyle(tabLabel) { fontStyle = FontStyle.Bold };
             }
             // inset: room kept free on the right (the tab scroll view's scrollbar, for the sub-tabs).
-            float available = position.width - 8f - inset;
+            float available = owner.position.width - 8f - inset;
             int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
             int rows = (names.Length + perRow - 1) / perRow;
             float width = available / perRow;
@@ -209,7 +221,7 @@ namespace Riry.RiryTools.Editor
                     GUI.changed = true;
                     current.Use();
                 }
-                else if (current.type == EventType.MouseMove && cell.Contains(current.mousePosition)) Repaint();
+                else if (current.type == EventType.MouseMove && cell.Contains(current.mousePosition)) owner.Repaint();
             }
             return selected;
         }
@@ -279,6 +291,7 @@ namespace Riry.RiryTools.Editor
             string name = Current;
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
+                : name == "Constraint Tool" ? ConstraintTabs[Mathf.Clamp(constraintTab, 0, 1)]
                 : name == "Blendshape Sync" || name == "Stop Auto Game" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
@@ -301,21 +314,24 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
-//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools, Import Presets,
+//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, Import Presets,
 //                            Stop Auto Game, Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
 //                            the tool in its own floating window (OpenPopup), not inside this one.
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   CreateConstraintTrain    Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK (the tab says so).
+//   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train and Bezier, hosted as "Train"
+//                            and "Bezier", like its own window (Editor/VRChat/ConstraintToolWindow.cs).
+//   CreateConstraintTrain / CreateConstraintBezier  Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK
+//                            (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool in a scroll view (tabScroll, [SerializeField], reset on a tab
 //                            change), and the Documentation link at the bottom right.
-//   TabStrip(selected, names, inset)  The tool tabs and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
+//   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
 //                            110), wrapping onto more rows, each as tall as its wrapped name (at least TabMinHeight,
 //                            24); the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip.
