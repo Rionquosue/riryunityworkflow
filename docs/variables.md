@@ -17,7 +17,7 @@ name.
   (`RiryToolsProjectFolder.cs`).
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
-- **Tool names:** AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
+- **Tool names:** Attach To, AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
   Animation Keys, Constraint Train, GUID Tools, IconCap, Import Presets, Stop
   Auto Game. Class, file, folder and
   document names follow them.
@@ -31,6 +31,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
+| `RiryTools.AttachTo.AddedBones` | string | `""` | `AttachTo.AddedBonesKey`: bones added with **Add bone** (HumanBodyBones names, comma separated), listed after `AttachTo.CommonBones` |
 | `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigrationSettings` (per-entry options, sub-options, ignore children, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
@@ -52,6 +53,7 @@ SessionState: until the editor quits; survives script reloads.
 | `RiryTools.StopAutoGame.FocusedWindows` | comma-separated instance IDs | `StopAutoGame`: windows focused when Play Mode started |
 | `RiryTools.StopAutoGame.GameViewWasOpen` | bool | `StopAutoGame`: a Game view existed before Play Mode |
 | `RiryTools.ScriptLoadGuard.Guarded` | newline-separated asset paths | `ScriptLoadGuard` |
+| `RiryTools.AttachTo.LastAvatar` | instance ID | `AttachToAvatarTracker`: the last avatar selected in the Hierarchy (VRCAvatarDescriptor, else humanoid Animator); fills **Target avatar** |
 
 Window fields marked `[SerializeField]` survive script reloads while the window
 is open. Each window file lists them in its glossary.
@@ -200,6 +202,16 @@ Other tools:
 | `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
 
+Attach To:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `AttachTo.CommonBones` | Head, Chest, Hips, Left/Right Hand, Left/Right Foot, Left/Right Upper Leg | Bones listed before any added with **Add bone** |
+| `AttachTo.UndoName` | `Attach To` | Popup title; Undo group `Attach To <bone>` |
+| `AttachTo.DialogNames` | `10` | Names a dialog lists before "and n more" |
+| `AttachToBones.IgnoredParts` | `j`, `bip`, `c`, `def`, `mixamorig`, `bone` | Name parts dropped before name matching |
+| `AttachToBones.CentreNames` / `SidedNames` | e.g. `chest`, `head`, `hips`/`pelvis`; `hand`/`wrist`, `upperleg`/`thigh`, `foot` | Name matching: a name without its side (`L`, `R`, `Left`, `Right`) to its bone |
+
 Avatar Migration Assistant:
 
 | Constant | Value | Meaning |
@@ -251,7 +263,9 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Assets/RiryTools/Extract Animation` (2003): the Extract Animation window with the selected model; enabled only for a model with embedded animations
   - `Assets/RiryTools/Repair Missing GUID References` (2004)
   - `Assets/RiryTools/Clean Animation Keys` (2005)
-- **Hierarchy right-click:** `GameObject/RiryTools/Constraint Train` (20)
+- **Hierarchy right-click** (also in the GameObject menu):
+  - `GameObject/RiryTools/Attach To` (19): the Attach To popup; enabled when scene objects are selected; in no other menu
+  - `GameObject/RiryTools/Constraint Train` (20)
 - **Git menu:**
   - `Git/Sync` (1), check mark
   - `Git/Configuration` (2)

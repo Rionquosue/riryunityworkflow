@@ -52,6 +52,9 @@ namespace Riry.RiryTools.Editor
         private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
         private const string CleanAnimationKeysAssets = "Assets/RiryTools/Clean Animation Keys";
 
+        // ---- Hierarchy right-click -------------------------------------------
+        private const string AttachToHierarchy = "GameObject/RiryTools/Attach To";
+
         // ---- Git menu -------------------------------------------------------
         private const string Sync = "Git/Sync";
         private const string Configuration = "Git/Configuration";
@@ -179,6 +182,18 @@ namespace Riry.RiryTools.Editor
         private static bool CleanAnimationKeysAssetsValid() { return Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0; }
 
         // =====================================================================
+        // Hierarchy right-click (also in the GameObject menu)
+        // =====================================================================
+
+        [MenuItem(AttachToHierarchy, false, 19)]
+        private static void AttachToItem() { AttachToWindow.Open(); }
+
+        [MenuItem(AttachToHierarchy, true)]
+        private static bool AttachToValid() { return AttachTo.Selected().Count > 0; }
+
+        // Constraint Train is 20 (RiryVRChatMenus.cs, or below without the VRChat SDK).
+
+        // =====================================================================
         // Git menu
         // =====================================================================
 
@@ -260,7 +275,9 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
 //   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //
-// HIERARCHY RIGHT-CLICK
+// HIERARCHY RIGHT-CLICK (also in the GameObject menu)
+//   GameObject/RiryTools/Attach To (19)         -> AttachToWindow.Open (Editor/UI/AttachToWindow.cs): the Attach To popup;
+//                                                      enabled when scene objects are selected (AttachTo.Selected, Editor/AttachTo.cs)
 //   GameObject/RiryTools/Constraint Train (20)   -> ConstraintTrainWindow.OpenFromHierarchy (entry in Editor/VRChat/RiryVRChatMenus.cs);
 //                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //
