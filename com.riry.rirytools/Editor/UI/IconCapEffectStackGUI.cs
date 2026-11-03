@@ -148,7 +148,7 @@ namespace Riry.RiryTools.Editor
                         break;
                     case IconCapEffectType.CropAndZoom:
                         effect.Zoom = EditorGUI.Slider(Next(ref line), "Zoom", effect.Zoom, 0.1f, 10f);
-                        effect.Centre = EditorGUI.Vector2Field(Next(ref line), "Centre", effect.Centre);
+                        effect.Centre = Vector2Row(Next(ref line), new GUIContent("Centre"), effect.Centre);
                         break;
                     case IconCapEffectType.RotateAndFlip:
                         effect.Angle = EditorGUI.Slider(Next(ref line), "Rotate", effect.Angle, -180f, 180f);
@@ -173,7 +173,7 @@ namespace Riry.RiryTools.Editor
                         break;
                     case IconCapEffectType.DropShadow:
                         effect.Colour = EditorGUI.ColorField(Next(ref line), "Colour", effect.Colour);
-                        effect.Offset = EditorGUI.Vector2Field(Next(ref line), new GUIContent("Offset", "Pixels: x right, y down."), effect.Offset);
+                        effect.Offset = Vector2Row(Next(ref line), new GUIContent("Offset", "Pixels: x right, y down."), effect.Offset);
                         effect.Blur = EditorGUI.Slider(Next(ref line), new GUIContent("Blur", "Pixels of the final image."), effect.Blur, 0f, 64f);
                         break;
                     case IconCapEffectType.ColourOverlay:
@@ -212,6 +212,23 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // X and Y on one row. EditorGUI.Vector2Field moves its fields to a second line when the
+        // window is narrow, which overlapped the row below since each row is one line tall.
+        private static Vector2 Vector2Row(Rect line, GUIContent label, Vector2 value)
+        {
+            Rect fields = EditorGUI.PrefixLabel(line, label);
+            int indent = EditorGUI.indentLevel;
+            float labelWidth = EditorGUIUtility.labelWidth;
+            EditorGUI.indentLevel = 0;
+            EditorGUIUtility.labelWidth = 14f;
+            float half = fields.width / 2f;
+            value.x = EditorGUI.FloatField(new Rect(fields.x, fields.y, half - 2f, fields.height), "X", value.x);
+            value.y = EditorGUI.FloatField(new Rect(fields.x + half + 2f, fields.y, half - 2f, fields.height), "Y", value.y);
+            EditorGUIUtility.labelWidth = labelWidth;
+            EditorGUI.indentLevel = indent;
+            return value;
+        }
+
         private static Rect Next(ref Rect line)
         {
             line.y += Line;
@@ -229,3 +246,4 @@ namespace Riry.RiryTools.Editor
 //                             group; a new effect goes on top). True when the stack changed.
 //   DrawTextures              A texture layer's textures: an empty field adds one; clearing a field removes it.
 //   FieldLines / Height       Each effect type's rows.
+//   Vector2Row                Offset and Centre: X and Y on one row, so they never wrap onto the row below.

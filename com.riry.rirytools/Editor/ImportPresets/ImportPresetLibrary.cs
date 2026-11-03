@@ -302,8 +302,8 @@ namespace Riry.RiryTools.Editor
 
         internal static bool CanSave(AssetImporter importer)
         {
-            return importer != null && new PresetType(importer).IsValid() &&
-                !Preset.IsObjectExcludedFromPresets(importer);
+            // PresetType.IsValid also covers what the obsolete Preset.IsObjectExcludedFromPresets checked.
+            return importer != null && new PresetType(importer).IsValid();
         }
 
         /// <summary>
