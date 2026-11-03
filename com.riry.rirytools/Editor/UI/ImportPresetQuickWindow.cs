@@ -110,7 +110,7 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Abort", GUILayout.Width(80.0f))) Close();
                 using (new EditorGUI.DisabledScope(folders.Count == 0))
                 {
-                    if (GUILayout.Button("Apply", GUILayout.Width(80.0f))) Apply();
+                    if (GUILayout.Button("Apply", GUILayout.Width(80.0f))) { Apply(); RiryGui.ExitAfterModal(); }
                 }
             }
             EditorGUILayout.Space(4.0f);

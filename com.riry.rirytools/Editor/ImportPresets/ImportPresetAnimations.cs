@@ -210,6 +210,8 @@ namespace Riry.RiryTools.Editor
             return clips;
         }
 
+        internal const string UndoName = "Extract Animation";
+
         private static int ExtractClips(string modelPath, AnimationExtractSettings settings, Func<string, bool> mayReplace,
             out List<string> skipped)
         {
@@ -223,32 +225,47 @@ namespace Riry.RiryTools.Editor
             string modelName = Path.GetFileNameWithoutExtension(modelPath);
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var written = new List<string>();
-            foreach (AnimationClip clip in clips)
+            // One Undo step: replacing a clip (and cleaning it) undoes back to the clip as it was.
+            // New clip files are not removed by Undo.
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName(UndoName);
+            try
             {
-                string path = folder + "/" + ClipFileName(modelName, clip.name, used);
-                var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
-                if ((existing != null || File.Exists(path)) && !mayReplace(path))
+                foreach (AnimationClip clip in clips)
                 {
-                    skipped.Add(path);
-                    continue;
+                    string path = folder + "/" + ClipFileName(modelName, clip.name, used);
+                    var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                    if ((existing != null || File.Exists(path)) && !mayReplace(path))
+                    {
+                        skipped.Add(path);
+                        continue;
+                    }
+                    AnimationClip copy = UnityEngine.Object.Instantiate(clip);
+                    copy.name = Path.GetFileNameWithoutExtension(path);
+                    if (existing != null)
+                    {
+                        // Copy into the existing asset so its GUID and references stay. Recorded first,
+                        // so Ctrl+Z puts the replaced clip back instead of losing it.
+                        Undo.RegisterCompleteObjectUndo(existing, UndoName);
+                        EditorUtility.CopySerialized(copy, existing);
+                        UnityEngine.Object.DestroyImmediate(copy);
+                        EditorUtility.SetDirty(existing);
+                    }
+                    else
+                    {
+                        AssetDatabase.CreateAsset(copy, path);
+                    }
+                    written.Add(path);
                 }
-                AnimationClip copy = UnityEngine.Object.Instantiate(clip);
-                copy.name = Path.GetFileNameWithoutExtension(path);
-                if (existing != null)
-                {
-                    // Copy into the existing asset so its GUID and references stay.
-                    EditorUtility.CopySerialized(copy, existing);
-                    UnityEngine.Object.DestroyImmediate(copy);
-                    EditorUtility.SetDirty(existing);
-                }
-                else
-                {
-                    AssetDatabase.CreateAsset(copy, path);
-                }
-                written.Add(path);
+                AssetDatabase.SaveAssets();
+                if (settings != null && settings.AutoClean && written.Count > 0) Clean(written, settings);
             }
-            AssetDatabase.SaveAssets();
-            if (settings != null && settings.AutoClean && written.Count > 0) Clean(written, settings);
+            finally
+            {
+                Undo.SetCurrentGroupName(UndoName);
+                Undo.CollapseUndoOperations(undoGroup);
+            }
             // Recorded after cleaning, so a cleaned clip still counts as unchanged.
             foreach (string path in written) ImportPresetOwnedFiles.Record(path);
             return written.Count;

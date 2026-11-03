@@ -52,6 +52,8 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private int tab;
         [SerializeField] private int importTab;
+        // The current tab's scroll position; back to the top when the tab changes.
+        [SerializeField] private Vector2 tabScroll;
         [SerializeField] private List<Hosted> hosted = new List<Hosted>();
 
         internal static void Open()
@@ -65,10 +67,14 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             wantsMouseMove = true;
-            tab = TabStrip(tab, Tabs);
+            int chosen = TabStrip(tab, Tabs);
+            if (chosen != tab) tabScroll = Vector2.zero;
+            tab = chosen;
             EditorGUILayout.Space(4f);
-            using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true)))
+            // A scroll view, so a tool taller or wider than the window stays usable.
+            using (var scroll = new EditorGUILayout.ScrollViewScope(tabScroll, GUILayout.ExpandHeight(true)))
             {
+                tabScroll = scroll.scrollPosition;
                 DrawTab();
             }
             using (new EditorGUILayout.HorizontalScope())
@@ -90,7 +96,7 @@ namespace Riry.RiryTools.Editor
             {
                 case "AutoSync":
                     bool sync = EditorGUILayout.ToggleLeft("Sync", AutoSync.Enabled);
-                    if (sync != AutoSync.Enabled) GitActions.ToggleSync();
+                    if (sync != AutoSync.Enabled) { GitActions.ToggleSync(); RiryGui.ExitAfterModal(); }
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
@@ -104,7 +110,7 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case "Import Presets":
-                    importTab = TabStrip(importTab, ImportTabs);
+                    importTab = TabStrip(importTab, ImportTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
                     {
@@ -163,7 +169,7 @@ namespace Riry.RiryTools.Editor
         /// a row is the same width, and as tall as its name needs (at least TabMinHeight).
         /// Returns the tab chosen.
         /// </summary>
-        private int TabStrip(int selected, string[] names)
+        private int TabStrip(int selected, string[] names, float inset = 0f)
         {
             if (tabLabel == null)
             {
@@ -173,7 +179,8 @@ namespace Riry.RiryTools.Editor
                 };
                 activeTabLabel = new GUIStyle(tabLabel) { fontStyle = FontStyle.Bold };
             }
-            float available = position.width - 8f;
+            // inset: room kept free on the right (the tab scroll view's scrollbar, for the sub-tabs).
+            float available = position.width - 8f - inset;
             int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
             int rows = (names.Length + perRow - 1) / perRow;
             float width = available / perRow;
@@ -306,8 +313,9 @@ namespace Riry.RiryTools.Editor
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
-//   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
-//   TabStrip(selected, names)  The tool tabs and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
+//   OnGUI()                  The tabs, the current tool in a scroll view (tabScroll, [SerializeField], reset on a tab
+//                            change), and the Documentation link at the bottom right.
+//   TabStrip(selected, names, inset)  The tool tabs and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
 //                            110), wrapping onto more rows, each as tall as its wrapped name (at least TabMinHeight,
 //                            24); the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip.

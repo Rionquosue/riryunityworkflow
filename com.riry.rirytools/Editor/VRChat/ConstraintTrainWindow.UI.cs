@@ -51,14 +51,14 @@ namespace Riry.RiryTools.Editor
         private void DrawRealChain(List<Transform> realBones)
         {
             EditorGUILayout.LabelField("Real bone chain", EditorStyles.boldLabel);
-            realStart = (Transform)EditorGUILayout.ObjectField("Start (RB1)", realStart, typeof(Transform), true);
-            realEnd = (Transform)EditorGUILayout.ObjectField("End", realEnd, typeof(Transform), true);
+            realStart = RiryGui.Set(this, SettingsUndo, realStart, (Transform)EditorGUILayout.ObjectField("Start (RB1)", realStart, typeof(Transform), true));
+            realEnd = RiryGui.Set(this, SettingsUndo, realEnd, (Transform)EditorGUILayout.ObjectField("End", realEnd, typeof(Transform), true));
             if (avatarRoot == null && realStart != null)
                 avatarRoot = ConstraintTrainChains.FindAvatarRoot(realStart);
-            avatarRoot = (Transform)EditorGUILayout.ObjectField(
+            avatarRoot = RiryGui.Set(this, SettingsUndo, avatarRoot, (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("Avatar root", "Animation paths are relative to this Animator. " +
                     "Defaults to the outermost Animator above the chain."),
-                avatarRoot, typeof(Transform), true);
+                avatarRoot, typeof(Transform), true));
 
             string error;
             if (realStart == null || realEnd == null) return;
@@ -82,21 +82,22 @@ namespace Riry.RiryTools.Editor
             int chains = EditorGUILayout.IntSlider("Physics chains", chainCount, 1, ConstraintTrainPlanner.MaxChains);
             if (chains != chainCount)
             {
+                Undo.RecordObject(this, SettingsUndo);
                 // The chain ends spread out again after the train end; the train end stays.
                 chainEnds = ConstraintTrainPlanner.DefaultChainEnds(trainEnd, chains);
                 chainCount = chains;
             }
-            addEndpoints = EditorGUILayout.Toggle(
+            addEndpoints = RiryGui.Set(this, SettingsUndo, addEndpoints, EditorGUILayout.Toggle(
                 new GUIContent("Add endpoints", "Generated physics chains get an extra end bone that " +
-                    "repeats the offset between the last two real bones."), addEndpoints);
+                    "repeats the offset between the last two real bones."), addEndpoints));
 
             bool canGenerate = realBones.Count > 0 && GenerationError(realBones) == null;
-            restStart = DrawChainRow("Rest", restStart, realBones, ConstraintTrainChains.RestPrefix, false,
-                canGenerate);
+            restStart = RiryGui.Set(this, SettingsUndo, restStart, DrawChainRow("Rest", restStart, realBones, ConstraintTrainChains.RestPrefix, false,
+                canGenerate));
             for (int c = 0; c < chainCount; c++)
             {
-                chainStarts[c] = DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,
-                    ConstraintTrainChains.ChainPrefix(c), addEndpoints, canGenerate);
+                chainStarts[c] = RiryGui.Set(this, SettingsUndo, chainStarts[c], DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,
+                    ConstraintTrainChains.ChainPrefix(c), addEndpoints, canGenerate));
             }
             using (new EditorGUI.DisabledScope(!canGenerate))
             {
@@ -127,28 +128,40 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Timing", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
-                trainEnd = EditorGUILayout.Slider(
+                trainEnd = RiryGui.Set(this, SettingsUndo, trainEnd, EditorGUILayout.Slider(
                     new GUIContent("Train end", "Value where every bone reaches its physics chain 1 bone."),
-                    trainEnd, 0.01f, 1f);
+                    trainEnd, 0.01f, 1f));
                 if (GUILayout.Button("Default", GUILayout.Width(65)))
-                    trainEnd = ConstraintTrainPlanner.DefaultTrainEnd(chainCount);
+                    trainEnd = RiryGui.Set(this, SettingsUndo, trainEnd, ConstraintTrainPlanner.DefaultTrainEnd(chainCount));
             }
             var unit = new Rect(0, 0, 1, 1);
-            stepCurve = EditorGUILayout.CurveField(
+            EditorGUI.BeginChangeCheck();
+            AnimationCurve step = EditorGUILayout.CurveField(
                 new GUIContent("Train step curve", "Shape of each move from one target to the next."),
                 stepCurve, Color.cyan, unit);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(this, SettingsUndo);
+                stepCurve = step;
+            }
             using (new EditorGUI.DisabledScope(chainCount < 2))
             {
-                blendCurve = EditorGUILayout.CurveField(
+                EditorGUI.BeginChangeCheck();
+                AnimationCurve blend = EditorGUILayout.CurveField(
                     new GUIContent("Chain blend curve",
                         "Influence of the next physics chain across each blend. Rescaled to run 0 to 1."),
                     blendCurve, Color.green, unit);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(this, SettingsUndo);
+                    blendCurve = blend;
+                }
             }
             for (int c = 0; c < chainCount - 1; c++)
             {
-                chainEnds[c] = EditorGUILayout.Slider(
+                chainEnds[c] = RiryGui.Set(this, SettingsUndo, chainEnds[c], EditorGUILayout.Slider(
                     new GUIContent("Chain " + (c + 2) + " end", "Value where every bone reaches physics chain " + (c + 2) + "."),
-                    chainEnds[c], 0.01f, 1f);
+                    chainEnds[c], 0.01f, 1f));
             }
             string settingsError = ConstraintTrainPlanner.Validate(CurrentSettings(1));
             if (settingsError != null) EditorGUILayout.HelpBox(settingsError, MessageType.Warning);
@@ -167,25 +180,25 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.HelpBox("These bones are in an instance of " + source + ". Generated chains and constraints " +
                     "are overrides in this scene until saved to the prefab.", MessageType.Info);
-                if (GUILayout.Button("Save as Prefab Overrides")) SaveToPrefab();
+                if (GUILayout.Button("Save as Prefab Overrides")) { SaveToPrefab(); RiryGui.ExitAfterModal(); }
                 return;
             }
             EditorGUILayout.HelpBox(source + " is a model or read-only prefab and cannot hold overrides. Saving creates " +
                 ConstraintTrainPrefabs.RootPrefabPath(source) + " as a variant of it with these changes, and connects " +
                 "this object to it.", MessageType.Info);
-            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) SaveToPrefab();
+            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) { SaveToPrefab(); RiryGui.ExitAfterModal(); }
         }
 
         private void DrawOutput()
         {
             EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
-            clip = (AnimationClip)EditorGUILayout.ObjectField(
+            clip = RiryGui.Set(this, SettingsUndo, clip, (AnimationClip)EditorGUILayout.ObjectField(
                 new GUIContent("Clip", "Leave empty to save a new clip. An assigned clip is replaced."),
-                clip, typeof(AnimationClip), false);
+                clip, typeof(AnimationClip), false));
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Set up constraints")) SetUpConstraints();
-                if (GUILayout.Button("Build animation")) BuildAnimation();
+                if (GUILayout.Button("Set up constraints")) { SetUpConstraints(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Build animation")) { BuildAnimation(); RiryGui.ExitAfterModal(); }
             }
             DrawPrefabSave();
         }
@@ -233,7 +246,9 @@ namespace Riry.RiryTools.Editor
 //
 // ACTIONS AND HELPERS (ConstraintTrainWindow.cs)
 //   UseSelection(active, selected) Sets realStart (and realEnd from a selected descendant).
-//   OnEnable()                     Window size and field repair.
+//   OnEnable()                     Window size and field repair; repaints on Undo/Redo (OnUndoRedo).
+//   SettingsUndo                   "Constraint Train settings": Undo name of every field edit (RiryGui.Set), so Ctrl+Z
+//                                  puts back the chain, slots, timing, curves and clip; generating also fills slots undoably.
 //   SaveToPrefab()                 Applies overrides to the prefab, or saves a _ROOT variant.
 //   CurrentSettings(boneCount)     Planner settings from the timing fields.
 //   GenerationError(realBones)     Why chains cannot be generated, or null.

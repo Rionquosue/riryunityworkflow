@@ -195,6 +195,10 @@ Other tools:
 | `CleanAnimationKeys.BoneValueDecimalPlaces` | `3` | Rounding for bone endpoint comparison |
 | `CleanAnimationKeysButton.ScanIntervalSeconds` | `0.5` | How often the focused Animation window is checked |
 | `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys` | UI Toolkit name of the **Clean Keys** button |
+| `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1` | **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves |
+| `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
+| `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of an extraction (replaced clips are recorded; new files are not removed by Undo) |
+| Settings Undo names | `Constraint Train settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
@@ -229,6 +233,8 @@ IconCap:
 | `IconCapRenderer.MaxSize` | `4096` | Largest capture size |
 | `IconCapRenderer.SensorHeight` | `24` mm | Full-frame sensor for the 35, 50 and 85mm lenses |
 | `IconCapWindow.WideWidth` | `640` | Window width from which the effect stack sits beside the preview |
+| `IconCapWindow.PrefixSuffixRow` / `JobRow` / `RestoreRow` | `460` / `440` / `420` | Window widths below which Prefix/Suffix, the Job row's buttons and Restore's buttons go on a second line |
+| `IconCapWindow.RowMargin` | `40` | Scroll bar and margins left out of a job row's width; a longer row puts its folder, count and Run on a second line |
 | `IconCapWindow.PreviewMaxSide` / `PreviewMaxPixels` | `512` / `1024` | Largest preview on screen / in pixels |
 | `IconCapWindow.PreviewInterval` | `0.1` s | Shortest time between live preview renders |
 | `IconCapWindow.SmallThumbnail` / `LargeThumbnail` | `64` / `128` | Icon Generator source and result size (**Large previews**) |

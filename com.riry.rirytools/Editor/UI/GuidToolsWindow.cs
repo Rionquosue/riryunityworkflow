@@ -10,7 +10,8 @@ namespace Riry.RiryTools.Editor
         {
             GuidToolsWindow window = GetWindow<GuidToolsWindow>();
             window.titleContent = new GUIContent("GUID Tools");
-            window.minSize = new Vector2(360f, 220f);
+            // Fits every row, down to the Cache and Logs paths, with a little to spare.
+            window.minSize = new Vector2(360f, 280f);
             window.Show();
         }
 
@@ -26,16 +27,28 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUI.DisabledScope(!RegenerateGuid.HasValidSelection()))
             {
                 if (GUILayout.Button("Regenerate GUID", GUILayout.Height(30f)))
+                {
                     RegenerateGuid.RegenerateSelectedGuids();
+                    RiryGui.ExitAfterModal();
+                }
                 if (GUILayout.Button("Repair Missing GUID References", GUILayout.Height(24f)))
+                {
                     GuidReferenceRepair.RepairSelected();
+                    RiryGui.ExitAfterModal();
+                }
             }
 
             GUILayout.Space(4f);
             if (GUILayout.Button("Check for Broken References", GUILayout.Height(24f)))
+            {
                 BrokenReferenceWindow.OpenForOpenScenes("Checked from the GUID Tools window.");
+                RiryGui.ExitAfterModal();
+            }
             if (GUILayout.Button("Delete GUID Reference Cache", GUILayout.Height(24f)))
+            {
                 GuidReferenceCache.DeleteWithConfirmation();
+                RiryGui.ExitAfterModal();
+            }
 
             GUILayout.Space(6f);
             EditorGUILayout.LabelField("Cache: " + RegenerateGuid.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);

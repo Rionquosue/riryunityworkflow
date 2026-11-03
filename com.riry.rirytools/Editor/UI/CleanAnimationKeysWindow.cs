@@ -24,6 +24,14 @@ namespace Riry.RiryTools.Editor
         // Set when opened by Configure in Extract Animation: the options and whitelist are that window's settings.
         [SerializeField] private ExtractAnimationWindow extract;
         private Vector2 animationScroll;
+        private const string SettingsUndo = "Clean Animation Keys settings";
+        // What the options and whitelist belong to, for Undo: Extract Animation's settings in Configure, else this window.
+        private UnityEngine.Object SettingsOwner
+        {
+            get { return extract != null ? (UnityEngine.Object)extract : this; }
+        }
+        // Scrolls everything above Clean.
+        private Vector2 outerScroll;
         private Vector2 whitelistScroll;
         // Every shapekey and bone name keyed in the listed animations, for suggestions.
         private List<string> keyedNames;
@@ -76,6 +84,7 @@ namespace Riry.RiryTools.Editor
 
         internal void AddToWhitelist(IEnumerable<string> names)
         {
+            Undo.RecordObject(SettingsOwner, SettingsUndo);
             foreach (string name in names)
             {
                 if (!whitelist.Contains(name)) whitelist.Add(name);
@@ -101,6 +110,26 @@ namespace Riry.RiryTools.Editor
             if (extract != null) extract.SettingsChanged();
         }
 
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+            Undo.undoRedoPerformed += OnUndoRedo;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+        }
+
+        // A list, whitelist or option put back by Undo or Redo: refresh, and in Configure save the settings again.
+        private void OnUndoRedo()
+        {
+            keyedNames = null;
+            summary = null;
+            if (extract != null) extract.SettingsChanged();
+            Repaint();
+        }
+
         private void OnGUI()
         {
             if (extract != null)
@@ -108,6 +137,8 @@ namespace Riry.RiryTools.Editor
                 options = extract.Settings.CleanOptions;
                 whitelist = extract.Settings.Whitelist;
             }
+            // Everything above Clean scrolls, so suggestions or a short window never push Clean out of view.
+            outerScroll = EditorGUILayout.BeginScrollView(outerScroll);
             EditorGUILayout.Space(6.0f);
             EditorGUILayout.LabelField("Utility for removing blank animation shapekeys from imported animations that " +
                 "automatically key every bone and shapekey.", EditorStyles.wordWrappedLabel);
@@ -122,22 +153,22 @@ namespace Riry.RiryTools.Editor
 
             EditorGUILayout.Space(6.0f);
             EditorGUI.BeginChangeCheck();
-            options.KeepNonZeroShapekeys = EditorGUILayout.ToggleLeft(new GUIContent("Keep non-zero shapekeys",
-                "Keep a shapekey curve that has any non-zero key."), options.KeepNonZeroShapekeys);
-            options.KeepShapekeyTangentMotion = EditorGUILayout.ToggleLeft(new GUIContent("Keep shapekey tangent motion",
-                "Keep a shapekey whose keys are 0 but whose tangents move the value between keys."), options.KeepShapekeyTangentMotion);
-            options.KeepMovingBones = EditorGUILayout.ToggleLeft(new GUIContent("Keep moving bones",
-                "Keep a bone's translation, rotation or scale when its start and finish differ (3 decimal places)."), options.KeepMovingBones);
-            options.KeepBoneMidKeys = EditorGUILayout.ToggleLeft(new GUIContent("Keep bone mid-keys/tangents",
+            options.KeepNonZeroShapekeys = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepNonZeroShapekeys, EditorGUILayout.ToggleLeft(new GUIContent("Keep non-zero shapekeys",
+                "Keep a shapekey curve that has any non-zero key."), options.KeepNonZeroShapekeys));
+            options.KeepShapekeyTangentMotion = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepShapekeyTangentMotion, EditorGUILayout.ToggleLeft(new GUIContent("Keep shapekey tangent motion",
+                "Keep a shapekey whose keys are 0 but whose tangents move the value between keys."), options.KeepShapekeyTangentMotion));
+            options.KeepMovingBones = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepMovingBones, EditorGUILayout.ToggleLeft(new GUIContent("Keep moving bones",
+                "Keep a bone's translation, rotation or scale when its start and finish differ (3 decimal places)."), options.KeepMovingBones));
+            options.KeepBoneMidKeys = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepBoneMidKeys, EditorGUILayout.ToggleLeft(new GUIContent("Keep bone mid-keys/tangents",
                 "Keep a bone's translation, rotation or scale with more than a start and finish key, or whose tangents " +
-                "move between matching endpoints."), options.KeepBoneMidKeys);
+                "move between matching endpoints."), options.KeepBoneMidKeys));
             if (EditorGUI.EndChangeCheck()) Changed();
+            EditorGUILayout.EndScrollView();
 
-            GUILayout.FlexibleSpace();
             if (summary != null) EditorGUILayout.HelpBox(summary, MessageType.Info);
             using (new EditorGUI.DisabledScope(animations.Count == 0))
             {
-                if (GUILayout.Button("Clean", GUILayout.Height(28.0f))) Clean();
+                if (GUILayout.Button("Clean", GUILayout.Height(28.0f))) { Clean(); RiryGui.ExitAfterModal(); }
             }
             EditorGUILayout.Space(6.0f);
         }
@@ -156,6 +187,7 @@ namespace Riry.RiryTools.Editor
                     var chosen = (AnimationClip)EditorGUILayout.ObjectField(current, typeof(AnimationClip), false);
                     if (chosen != current)
                     {
+                        Undo.RecordObject(this, SettingsUndo);
                         if (chosen == null) animations.RemoveAt(i);
                         else if (!animations.Contains(chosen))
                         {
@@ -215,6 +247,7 @@ namespace Riry.RiryTools.Editor
                     EditorGUILayout.LabelField(whitelist[i]);
                     if (GUILayout.Button("x", GUILayout.Width(22.0f)))
                     {
+                        Undo.RecordObject(SettingsOwner, SettingsUndo);
                         whitelist.RemoveAt(i);
                         Changed();
                         GUIUtility.ExitGUI();
@@ -331,6 +364,9 @@ namespace Riry.RiryTools.Editor
         private const string ButtonElementName =
             "rirytools-clean-animation-keys";
         private const double ScanIntervalSeconds = 0.5;
+        // Where the button sits: the hierarchy pane's bottom bar, past the Dopesheet and Curves buttons.
+        private const float ButtonLeft = 170.0f;
+        private const float ButtonBottom = 1.0f;
 
         private static readonly object ButtonOwner = new object();
 
@@ -395,12 +431,14 @@ namespace Riry.RiryTools.Editor
 
             // The AnimationWindow toolbar is IMGUI in Unity 2022.3, so the
             // public rootVisualElement is the accessible attachment point.
-            // Absolute positioning keeps this button out of the window layout.
+            // Absolute positioning keeps this button out of the window layout. It sits in the
+            // bottom bar of the hierarchy pane, right of the Dopesheet and Curves buttons, where
+            // nothing is drawn; the top right would cover the time ruler and events strip.
             button.style.position = Position.Absolute;
-            button.style.top = 2.0f;
-            button.style.right = 6.0f;
+            button.style.bottom = ButtonBottom;
+            button.style.left = ButtonLeft;
             button.style.width = 78.0f;
-            button.style.height = 20.0f;
+            button.style.height = 18.0f;
 
             root.Add(button);
         }
@@ -437,6 +475,10 @@ namespace Riry.RiryTools.Editor
 //   Suggestions(typed)       Ranks names with FuzzyMatch.Score (Editor/FuzzyMatch.cs): starts with, contains, letters in order.
 //   AddToWhitelist(names)    Adds names (from Add, a suggestion, or APPLY).
 //   Clean()                  CleanAnimationKeys.Clean, then shows the summary.
+//   outerScroll              Everything above the summary and Clean scrolls, so Clean always stays in view.
+//   SettingsUndo / SettingsOwner  "Clean Animation Keys settings": Undo of the animation list (this window) and the
+//                            whitelist and options (Extract Animation in Configure, else this window); OnUndoRedo
+//                            refreshes and, in Configure, saves the settings.
 //
 // CleanAnimationKeysWhitelistWindow (this file): the Whitelist popup
 //   Open(owner, clip)        Lists the groups Clean would remove from the clip.
@@ -445,6 +487,8 @@ namespace Riry.RiryTools.Editor
 // CleanAnimationKeysButton (this file): the "Clean Keys" button
 //   ButtonElementName        const string    UI Toolkit name, used to find an installed button.
 //   ScanIntervalSeconds      const double    How often the focused window is checked (0.5 s).
+//   ButtonLeft / ButtonBottom  const float   170 / 1: the button in the hierarchy pane's bottom bar, right of Dopesheet
+//                                            and Curves (not over the time ruler).
 //   WatchForAnimationWindows()  Installs the button on a focused Animation window.
 //   InstallButton(window)    Adds the button, which opens the window with that window's clip.
 //

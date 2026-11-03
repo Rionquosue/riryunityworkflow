@@ -796,7 +796,9 @@ namespace Riry.RiryTools.Editor
             window.owner = owner;
             window.titleContent = new GUIContent("Save Mockup");
             Rect over = owner.position;
-            window.position = new Rect(over.center.x - 150f, over.center.y - 40f, 300f, 80f);
+            // Tall enough for the name problem's HelpBox above the buttons, with a little to spare.
+            window.position = new Rect(over.center.x - 150f, over.center.y - 62f, 300f, 124f);
+            window.minSize = window.maxSize = new Vector2(300f, 124f);
             window.ShowModalUtility();
         }
 
@@ -810,7 +812,7 @@ namespace Riry.RiryTools.Editor
             {
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Cancel", GUILayout.Width(80f))) Close();
-                if (GUILayout.Button("Save", GUILayout.Width(80f))) Save();
+                if (GUILayout.Button("Save", GUILayout.Width(80f))) { Save(); RiryGui.ExitAfterModal(); }
             }
         }
 

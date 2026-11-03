@@ -98,23 +98,32 @@ namespace Riry.RiryTools.Editor
         internal static string Clean(IList<AnimationClip> clips, Options options, ICollection<string> whitelist)
         {
             int removedCurves = 0, cleaned = 0, skipped = 0;
+            // A new group of its own, so the user's last action is never merged into the clean
+            // (auto-clean runs from a delayed call, with no input event to start a group).
+            Undo.IncrementCurrentGroup();
             int undoGroup = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(DisplayName);
-            foreach (AnimationClip clip in clips)
+            try
             {
-                string error;
-                if (!TryValidateEditableClip(clip, out error))
+                foreach (AnimationClip clip in clips)
                 {
-                    skipped++;
-                    continue;
+                    string error;
+                    if (!TryValidateEditableClip(clip, out error))
+                    {
+                        skipped++;
+                        continue;
+                    }
+                    var bindings = new List<EditorCurveBinding>();
+                    foreach (Group group in Removable(clip, options, whitelist)) bindings.AddRange(group.Bindings);
+                    if (!TryRemoveBindings(clip, bindings, DisplayName, out error)) throw new InvalidOperationException(error);
+                    removedCurves += bindings.Count;
+                    cleaned++;
                 }
-                var bindings = new List<EditorCurveBinding>();
-                foreach (Group group in Removable(clip, options, whitelist)) bindings.AddRange(group.Bindings);
-                if (!TryRemoveBindings(clip, bindings, DisplayName, out error)) throw new InvalidOperationException(error);
-                removedCurves += bindings.Count;
-                cleaned++;
             }
-            Undo.CollapseUndoOperations(undoGroup);
+            finally
+            {
+                Undo.CollapseUndoOperations(undoGroup);
+            }
             RepaintAnimationWindows();
             EditorApplication.RepaintProjectWindow();
             return "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +

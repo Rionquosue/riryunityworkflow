@@ -86,6 +86,9 @@ namespace Riry.RiryTools.Editor
             constraintHolder.SetActive(false);
             GameObject copy = Object.Instantiate(sourceRoot.gameObject, constraintHolder.transform);
             copy.hideFlags = HideFlags.HideAndDontSave;
+            // Recorded in the run's Undo group, with its removal (RemoveConstraintCopy), so whatever the
+            // converter records on the copy undoes and redoes with it: one Ctrl+Z undoes the whole run.
+            Undo.RegisterCreatedObjectUndo(constraintHolder, AvatarMigrationAssistant.Title);
             Transform[] from = sourceRoot.GetComponentsInChildren<Transform>(true);
             Transform[] to = copy.GetComponentsInChildren<Transform>(true);
             for (int i = 0; i < from.Length && i < to.Length; i++)
@@ -135,7 +138,7 @@ namespace Riry.RiryTools.Editor
 
         private void RemoveConstraintCopy()
         {
-            if (constraintHolder != null) Object.DestroyImmediate(constraintHolder);
+            if (constraintHolder != null) Undo.DestroyObjectImmediate(constraintHolder);
             constraintHolder = null;
         }
     }
@@ -151,4 +154,5 @@ namespace Riry.RiryTools.Editor
 //   ConvertOnCopy()        Once per run: the source copied whole under a hidden, inactive holder; alias maps the copy's
 //                          objects and components to the source's; AvatarDynamicsSetup.DoConvertUnityConstraints(constraints,
 //                          null, false) converts the in-scope ones. Failures go to the report's possible issues.
-//   RemoveConstraintCopy() Deletes the temporary copy at the end of the run.
+//   RemoveConstraintCopy() Deletes the temporary copy at the end of the run, through Undo; its creation is recorded
+//                          too, so the run stays one Undo step that the converter's own records undo within.
