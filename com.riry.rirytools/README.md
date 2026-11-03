@@ -22,6 +22,15 @@ Every tool is under **Tools > RiryTools**, as one entry or a submenu named after
 the tool. On Windows, the menus can be walked from the keyboard by typing each
 entry's first letter.
 
+## Main Menu
+
+**Tools > RiryTools > Main Menu** opens one dockable window with a tab per tool
+(AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools,
+Import Presets, Stop Auto Game and Tools). Each tab draws the tool's own window, so
+it works there as it does on its own, and scrolls when the window is small. The
+**Tools** tab opens IconCap and Avatar Migration Assistant in their own windows.
+Documentation is a link at the bottom right.
+
 ## Documentation
 
 Tutorials and design notes are in the source repository's
@@ -124,6 +133,65 @@ templates in `Documents/RiryTools/GitTemplates`, and enables Git LFS.
 **Configuration** picks other templates and sets **Push to remote**; sign-in
 goes through Git's credential manager. AutoSync also blocks saving a scene or
 prefab that a script stopped from loading. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/autosync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/autosync.md).
+
+## Attach To
+
+Select objects in the Hierarchy, then right-click > **RiryTools > Attach To** (also
+**GameObject > RiryTools > Attach To**); it is the one tool not under **Tools >
+RiryTools**. The popup's **Target avatar** starts as the last avatar selected in the
+Hierarchy. Bones are found from the humanoid rig, else the Avatar's bone map, else
+by object name. Head, Chest, Hips, hands, feet and upper legs are listed;
+**Add bone** lists any other found bone, and **Remove** takes it off again. Clicking
+a bone snaps every selected object to its global position, leaving rotation and
+scale alone, then one **Move in hierarchy?** prompt offers to reparent them all to
+the bone, keeping their global position, rotation and scale. A prefab is only
+unpacked after the **Unpack prefabs?** warning, which can also skip those objects.
+Each attach is one Undo step.
+
+## Avatar Migration Assistant
+
+Open **Tools > RiryTools > Avatar Migration Assistant** to copy components and
+settings from an old avatar (source) to a new one (target) and retarget the new
+one's animations; the source and the original files are never changed. The objects
+of both avatars are matched automatically, and **Manual matching** lists the
+unmatched rows (or every row) to correct, re-matching below parents you set by
+hand. An up-front check lists the possible issues and asks every question before
+anything changes. Copying covers the component types in `types.yml`, re-points
+references into the target, corrects constraint rotation for bone roll and
+collision and constraint values for scale, drops duplicates, copies child prefabs
+whole without unpacking, can leave objects out with an ignore list, and can
+upgrade Unity constraints to VRC constraints. Each Copy is one Undo step and ends
+with a report. **Retarget animations** duplicates the target's controllers and
+clips into a migrated folder you pick, rewrites their paths through the object
+map, and repairs VRCFury in the child prefabs you include as scene overrides.
+Without the VRChat SDK it runs with the VRChat parts left out and shows a
+**VRC SDK not detected!** notice.
+
+## IconCap
+
+Open **Tools > RiryTools > IconCap** to capture square PNG icons from the Scene View,
+with a live preview. Capture every skinned mesh, only the selected objects, or one
+isolated item; set the camera's field of view, far clip and roll; use a colour,
+skybox, HDRI or alpha cutout background; and override or exclude scene, global and
+world lights, baked lighting, reflections and shadows. Every change to the scene is
+put back after the capture. Captures run through an effect stack (Overlay, Draw
+under, Mask, Inverse mask, Gray out, Corner badge, Custom material, Crop and zoom,
+Rotate and flip, Padding, Adjustments, Outline, Drop shadow, Colour overlay, Hue
+shift, Invert, Grayscale, Posterize, Sharpen) and are saved to an export folder.
+Captures can be saved as jobs and remade with **Run**, which moves replaced icons
+into `OLD_<n>` folders. Presets are kept in `Documents/RiryTools/iconcap presets`.
+**Icon Generator** assets run source textures through an effect stack and save the
+outputs beside the asset, renamed to follow renamed sources.
+
+## Menu Mockup
+
+Open **Tools > RiryTools > Menu Mockup** to lay out an example editor window from
+blocks. **Components** adds blocks by click or drag and has **New**, **Save Mockup**
+and **Load**; **Edit** is the mockup itself. Blocks hold blocks and lay out like
+flexbox: drag the handle on a side to resize, drag a block to move it,
+double-click to edit its text, and right-click for its layout, **Auto size** and
+**Delete**. Every change can be undone, and the aspect ratio is shown at the top.
+Mockups are saved as annotated `.yml` files in `Documents/RiryTools/Mockups`.
 
 ## Editing the UI
 
