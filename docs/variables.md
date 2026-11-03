@@ -17,8 +17,9 @@ name.
   (`RiryToolsProjectFolder.cs`).
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
-- **Tool names:** AutoSync, Blendshape Sync, Clean Animation Keys, Constraint
-  Train, GUID Tools, IconCap, Import Presets, Stop Auto Game. Class, file, folder and
+- **Tool names:** AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
+  Animation Keys, Constraint Train, GUID Tools, IconCap, Import Presets, Stop
+  Auto Game. Class, file, folder and
   document names follow them.
 
 ## Stored settings
@@ -30,6 +31,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
+| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigrationSettings` (per-entry options, sub-options, ignore children, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
 
@@ -39,6 +41,7 @@ EditorUserSettings: per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `GitRemotes.Selected` (**Remote**) |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | remote URLs, one per line | unset | `AutoSync.LargeFileNotice`: **Do Not Show Again** |
 | `RiryTools.GuidTools.BrokenPromptOff` | scene and prefab paths, one per line | unset | `BrokenReferenceMonitor.PromptOnOpen`: **Do Not Show Again** |
+| `RiryTools.AvatarMigrationAssistant.SdkNoticeOff` | `1` | unset | `AvatarMigrationSdkNotice`: **Do not show again** on the VRC SDK not detected popup |
 
 SessionState: until the editor quits; survives script reloads.
 
@@ -74,6 +77,7 @@ In the project:
 | `<model>_ROOT.prefab` | Constraint Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows | `IconCapFiles.JobFileName` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
+| `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
 
 In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
@@ -86,6 +90,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
+| `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |
 
 ## Git names (AutoSync)
@@ -118,6 +123,7 @@ Environment variables set for Git commands:
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Train window and menu |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
+| `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
 
@@ -194,6 +200,16 @@ Other tools:
 | `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
 
+Avatar Migration Assistant:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `AvatarMigrationSettings.DefaultTolerance` | `0.001` | Structure match distance in avatar-root space |
+| `AvatarMigrationMap.TieEpsilon` | `1e-7` | Candidates this close in distance are a tie (left unmatched) |
+| `AvatarCopyRun.ScaleDecimals` | `8` | Decimal places of every scale-corrected value |
+| `AvatarCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig` | Names treated as the armature, besides the parent of the hips |
+| `AvatarCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints` | The VRChat SDK's constraint converter, found by name |
+
 IconCap:
 
 | Constant | Value | Meaning |
@@ -215,6 +231,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Train's entries are in
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
+  - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
   - `Tools/RiryTools/Blendshape Sync` (2010): Add Job (a new job in its popup)
   - `Tools/RiryTools/Clean Animation Keys` (2020)
   - `Tools/RiryTools/Constraint Train` (2030), written `Constraint\u00A0&Train` so its menu key is T
