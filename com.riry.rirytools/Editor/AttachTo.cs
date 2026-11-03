@@ -65,6 +65,17 @@ namespace Riry.RiryTools.Editor
             EditorPrefs.SetString(AddedBonesKey, string.Join(",", added.Select(each => each.ToString())));
         }
 
+        internal static void RemoveBone(HumanBodyBones bone)
+        {
+            List<HumanBodyBones> added = ListedBones().Skip(CommonBones.Length).Where(each => each != bone).ToList();
+            EditorPrefs.SetString(AddedBonesKey, string.Join(",", added.Select(each => each.ToString())));
+        }
+
+        internal static bool IsAdded(HumanBodyBones bone)
+        {
+            return !CommonBones.Contains(bone) && ListedBones().Contains(bone);
+        }
+
         internal static string Label(HumanBodyBones bone)
         {
             return ObjectNames.NicifyVariableName(bone.ToString());
@@ -371,6 +382,7 @@ namespace Riry.RiryTools.Editor
 //   CommonBones             Head, Chest, Hips, both hands, both feet, both upper legs: listed before any added bone.
 //   AddedBonesKey           EditorPrefs "RiryTools.AttachTo.AddedBones": bones added with Add bone, comma separated.
 //   ListedBones / AddBone   The common bones then the added ones / remembers one more.
+//   RemoveBone / IsAdded    Forgets an added bone / true for a bone added with Add bone (never a common one).
 //   Label                   A bone's display name ("Left Upper Leg").
 //   Selected                The selected scene objects, top level only.
 //   Attach                  Snaps to the bone's global position, asks Move in hierarchy?; Yes reparents (keeping global

@@ -18,6 +18,7 @@ namespace Riry.RiryTools.Editor
         private Dictionary<HumanBodyBones, Transform> bones;
         private GameObject bonesFor;
         private Vector2 scroll;
+        private const float RemoveWidth = 64f;
 
         internal static void Open()
         {
@@ -70,6 +71,7 @@ namespace Riry.RiryTools.Editor
                 Transform found;
                 if (!bones.TryGetValue(bone, out found) || found == null) continue;
                 string label = AttachTo.Label(bone);
+                EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button(new GUIContent(label, found.name)))
                 {
                     List<Transform> attaching = objects.ToList();
@@ -77,6 +79,14 @@ namespace Riry.RiryTools.Editor
                     Close();
                     GUIUtility.ExitGUI();
                 }
+                // Remove: only on bones added with Add bone.
+                if (AttachTo.IsAdded(bone) && GUILayout.Button(new GUIContent("Remove", "Take " + label + " off the list"), GUILayout.Width(RemoveWidth)))
+                {
+                    AttachTo.RemoveBone(bone);
+                    EditorGUILayout.EndHorizontal();
+                    GUIUtility.ExitGUI();
+                }
+                EditorGUILayout.EndHorizontal();
             }
             EditorGUILayout.EndScrollView();
 
@@ -99,4 +109,5 @@ namespace Riry.RiryTools.Editor
 //   bones / bonesFor   AttachToBones.Find's result and the avatar it was found for; cleared when the hierarchy changes.
 //   Bone buttons       One per AttachTo.ListedBones() bone the avatar has; the tooltip is the bone's object name.
 //                      Clicking runs AttachTo.Attach, then closes the popup.
+//   Remove             Beside each bone added with Add bone (RemoveWidth 64): takes it off the list (AttachTo.RemoveBone).
 //   Add bone           Every found bone not listed yet; picking one adds it for good (AttachTo.AddBone).

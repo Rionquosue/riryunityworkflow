@@ -31,7 +31,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
-| `RiryTools.AttachTo.AddedBones` | string | `""` | `AttachTo.AddedBonesKey`: bones added with **Add bone** (HumanBodyBones names, comma separated), listed after `AttachTo.CommonBones` |
+| `RiryTools.AttachTo.AddedBones` | string | `""` | `AttachTo.AddedBonesKey`: bones added with **Add bone** (HumanBodyBones names, comma separated), listed after `AttachTo.CommonBones`; **Remove** takes one off |
 | `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigrationSettings` (per-entry options, sub-options, ignore children, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
