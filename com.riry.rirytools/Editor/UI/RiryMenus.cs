@@ -38,6 +38,7 @@ namespace Riry.RiryTools.Editor
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animation";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
+        private const string ReloadDomainMenu = "Tools/RiryTools/Reload domain";
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
         private const string Documentation = "Tools/RiryTools/Documentation";
 
@@ -117,6 +118,10 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
+
+        // Unity 2022.3 has no menu item for this, only the Play Mode setting in Project Settings > Editor.
+        [MenuItem(ReloadDomainMenu, false, 2058)]
+        internal static void ReloadDomain() { EditorUtility.RequestScriptReload(); }
 
         [MenuItem(StopAutoGameMenu, false, 2060)]
         private static void StopAutoGameItem() { StopAutoGame.Enabled = !StopAutoGame.Enabled; }
@@ -267,6 +272,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ExtractAnimationWindow.Open (Editor/UI/ExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
+//   Tools/RiryTools/Reload domain (2058)            -> ReloadDomain: EditorUtility.RequestScriptReload (also the Main Menu's Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser

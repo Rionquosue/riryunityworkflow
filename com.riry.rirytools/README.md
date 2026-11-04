@@ -29,7 +29,7 @@ entry's first letter.
 Import Presets and Tools). Each tab draws the tool's own window, so
 it works there as it does on its own, and scrolls when the window is small. The
 **Tools** tab opens IconCap and Avatar Migration Assistant in their own windows, and
-has the **Stop Auto Game** toggle.
+has **Reload domain** and the **Stop Auto Game** toggle.
 Documentation is a link at the bottom right.
 
 ## Documentation
@@ -79,6 +79,14 @@ settings are never changed. Models can have their animations extracted to
 **RiryTools > Extract Animation**, which can also clean the keys), and `.blend` files can be
 exported with the Better FBX Blender add-on. Save presets from any asset with
 **RiryTools > Save Import Preset**. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/import-presets.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/import-presets.md).
+
+## Reload domain
+
+**Tools > RiryTools > Reload domain** (also on the Main Menu's Tools tab) reloads the
+script domain on the next frame, as entering Play Mode does, without recompiling.
+Unity 2022.3 has no button for it; its **Reload Domain** setting under **Edit >
+Project Settings > Editor > Enter Play Mode Options** only controls whether Play Mode
+reloads.
 
 ## Stop Auto Game
 
