@@ -129,8 +129,10 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case "Stop Auto Game":
-                    StopAutoGame.Enabled = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
+                    // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
+                    bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
                         "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
+                    if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
                     break;
                 case "Tools":
                     // Each opens in its own window, not in this one, which may be docked small.
