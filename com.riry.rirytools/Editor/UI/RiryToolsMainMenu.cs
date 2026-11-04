@@ -22,7 +22,7 @@ namespace Riry.RiryTools.Editor
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Stop Auto Game", "Tools"
+            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Tools"
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
@@ -128,12 +128,6 @@ namespace Riry.RiryTools.Editor
                     }
                     else Draw(Active());
                     break;
-                case "Stop Auto Game":
-                    // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
-                    bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
-                        "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
-                    if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
-                    break;
                 case "Tools":
                     // Each opens in its own window, not in this one, which may be docked small.
                     foreach (string tool in PopupTools)
@@ -142,6 +136,11 @@ namespace Riry.RiryTools.Editor
                         if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
                         else EditorApplication.delayCall += AvatarMigrationAssistant.OpenPopup;
                     }
+                    EditorGUILayout.Space(4f);
+                    // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
+                    bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
+                        "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
+                    if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
                     break;
                 default:
                     Draw(Active());
@@ -200,8 +199,12 @@ namespace Riry.RiryTools.Editor
             int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
             int rows = (names.Length + perRow - 1) / perRow;
             float width = available / perRow;
+            // Measured at the narrowest a cell gets (TabMinWidth), not the current width: measured at the current
+            // width, the strip shrank to one line in the band of widths where every name happened to fit, then
+            // jumped back when the cells narrowed again. Now it only changes when the number of rows does.
+            float measure = Mathf.Min(width, TabMinWidth);
             float height = TabMinHeight;
-            foreach (string name in names) height = Mathf.Max(height, activeTabLabel.CalcHeight(new GUIContent(name), width));
+            foreach (string name in names) height = Mathf.Max(height, activeTabLabel.CalcHeight(new GUIContent(name), measure));
             Rect area = GUILayoutUtility.GetRect(available, rows * height, GUILayout.ExpandWidth(true));
             bool dark = EditorGUIUtility.isProSkin;
             Event current = Event.current;
@@ -296,7 +299,7 @@ namespace Riry.RiryTools.Editor
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
                 : name == "Constraint Tool" ? ConstraintTabs[Mathf.Clamp(constraintTab, 0, ConstraintTabs.Length - 1)]
-                : name == "Blendshape Sync" || name == "Stop Auto Game" || name == "Tools" ? null : name;
+                : name == "Blendshape Sync" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -319,10 +322,11 @@ namespace Riry.RiryTools.Editor
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
 //   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, Import Presets,
-//                            Stop Auto Game, Tools (not Menu Mockup or Documentation). Current is the selected tab's
+//                            Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
-//                            the tool in its own floating window (OpenPopup), not inside this one.
+//                            the tool in its own floating window (OpenPopup), not inside this one; then the Stop Auto
+//                            Game toggle (StopAutoGame.Enabled, set only when clicked).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
 //   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train, Bezier and Insertable prop,
@@ -336,8 +340,8 @@ namespace Riry.RiryTools.Editor
 //   OnGUI()                  The tabs, the current tool in a scroll view (tabScroll, [SerializeField], reset on a tab
 //                            change), and the Documentation link at the bottom right.
 //   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
-//                            110), wrapping onto more rows, each as tall as its wrapped name (at least TabMinHeight,
-//                            24); the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
+//                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
+//                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip.
-//   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
+//   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.

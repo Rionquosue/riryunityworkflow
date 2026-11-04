@@ -26,9 +26,10 @@ entry's first letter.
 
 **Tools > RiryTools > Main Menu** opens one dockable window with a tab per tool
 (AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools,
-Import Presets, Stop Auto Game and Tools). Each tab draws the tool's own window, so
+Import Presets and Tools). Each tab draws the tool's own window, so
 it works there as it does on its own, and scrolls when the window is small. The
-**Tools** tab opens IconCap and Avatar Migration Assistant in their own windows.
+**Tools** tab opens IconCap and Avatar Migration Assistant in their own windows, and
+has the **Stop Auto Game** toggle.
 Documentation is a link at the bottom right.
 
 ## Documentation
