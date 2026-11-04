@@ -199,8 +199,12 @@ namespace Riry.RiryTools.Editor
             int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
             int rows = (names.Length + perRow - 1) / perRow;
             float width = available / perRow;
+            // Measured at the narrowest a cell gets (TabMinWidth), not the current width: measured at the current
+            // width, the strip shrank to one line in the band of widths where every name happened to fit, then
+            // jumped back when the cells narrowed again. Now it only changes when the number of rows does.
+            float measure = Mathf.Min(width, TabMinWidth);
             float height = TabMinHeight;
-            foreach (string name in names) height = Mathf.Max(height, activeTabLabel.CalcHeight(new GUIContent(name), width));
+            foreach (string name in names) height = Mathf.Max(height, activeTabLabel.CalcHeight(new GUIContent(name), measure));
             Rect area = GUILayoutUtility.GetRect(available, rows * height, GUILayout.ExpandWidth(true));
             bool dark = EditorGUIUtility.isProSkin;
             Event current = Event.current;
@@ -336,8 +340,8 @@ namespace Riry.RiryTools.Editor
 //   OnGUI()                  The tabs, the current tool in a scroll view (tabScroll, [SerializeField], reset on a tab
 //                            change), and the Documentation link at the bottom right.
 //   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
-//                            110), wrapping onto more rows, each as tall as its wrapped name (at least TabMinHeight,
-//                            24); the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
+//                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
+//                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip.
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
