@@ -261,7 +261,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's entries are in
 `RiryMenus.ConstraintTrainHierarchy` and `RiryMenus.ConstraintBezierHierarchy`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
-  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows (Documentation link at its bottom right; no Menu Mockup tab)
+  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with the Stop Auto Game toggle (Documentation link at its bottom right; no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
   - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
