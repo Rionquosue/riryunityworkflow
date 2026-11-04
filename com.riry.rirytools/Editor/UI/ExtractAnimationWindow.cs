@@ -179,3 +179,9 @@ namespace Riry.RiryTools.Editor
 //   ".<model>_ani-extract.json~" beside the model: no .meta (Unity skips "." and "~" names), hidden on Windows.
 //   Worth                    AutoExtract, or AutoClean with SaveCleanSettings: only then the file exists.
 //   Load(model) / Save(model, settings)  Reads; writes or deletes, then git add (and queued for Sync when it is on).
+//
+// ImportPresetOwnedFiles (Editor/ImportPresets/ImportPresetOwnedFiles.cs)
+//   Library/RiryTools/ImportPresets/owned.txt: "path<TAB>length<TAB>ticks[<TAB>model GUID]" per file this tool wrote.
+//   IsUnchanged(path)        Still as written: replaced automatically. Record(path, owner) stores a clip's model GUID.
+//   OwnedByOther(path, owner)  A clip extracted from another model (still in the project): never replaced, even when the
+//                            Extract dialog's Replace is chosen; reported with that model (OwnerPath) as kept.

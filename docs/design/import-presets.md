@@ -149,7 +149,9 @@ FBX is reimported. There is one FBX, not a copy.
   Git repository it is staged with `git add --force`, and Sync commits it when on.
 - A clip the tool wrote is refreshed automatically only while unchanged. One you
   edited, or one it did not write, is kept and listed in the Console; **Extract**
-  asks before replacing those.
+  asks before replacing those. A clip extracted from another model (two models
+  with the same file name and Destination) is never replaced, and is listed with
+  that model; set another Destination for one of them.
 - Pending extractions are stored in `Library/RiryTools/ImportPresets`, so they resume
   after a script reload.
 

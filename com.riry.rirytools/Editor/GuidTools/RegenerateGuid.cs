@@ -224,6 +224,9 @@ internal static class RegenerateGuid
             if (patches.Count == 0)
                 throw new InvalidOperationException("No GUID occurrences were found. No files were changed.");
 
+            if (!ConfirmUnusualFiles(patches, log))
+                return;
+
             foreach (FilePatch patch in patches)
             {
                 EnsureWritable(patch.File.FullPath);
@@ -270,6 +273,8 @@ internal static class RegenerateGuid
                     GuidRemapLedger.RelativePath + ":\n" + exception.Message);
             }
 
+            // Before the scenes reload, so their jobs save under the new GUID.
+            RenameGuidNamedFiles(targets, projectRoot, log);
             ReloadScenes(sceneSetup, log);
 
             int referenceFileCount = CountReferenceFiles(targets);
@@ -575,13 +580,81 @@ internal static class RegenerateGuid
         }
     }
 
+    /// <summary>
+    /// Before anything is written: lists the files whose GUID text would change that are not Unity
+    /// references (scripts, JSON, text and other non-serialized files) or that are under Packages/,
+    /// where the package manager or VCC may put the original back. False when the user cancels.
+    /// RiryTools' own files under UserSettings/RiryTools are expected and not listed.
+    /// </summary>
+    private static bool ConfirmUnusualFiles(List<FilePatch> patches, GuidToolLog log)
+    {
+        var unusual = new List<string>();
+        foreach (FilePatch patch in patches)
+        {
+            string path = patch.File.RelativePath.Replace('\\', '/');
+            if (path.StartsWith("UserSettings/RiryTools/", StringComparison.OrdinalIgnoreCase)) continue;
+            string extension = Path.GetExtension(path);
+            bool serialized = extension.Equals(".meta", StringComparison.OrdinalIgnoreCase) || UnitySerializedExtensions.Contains(extension);
+            if (!serialized || path.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase)) unusual.Add(path);
+        }
+        if (unusual.Count == 0) return true;
+        const int Shown = 15;
+        string list = string.Join("\n", unusual.GetRange(0, Math.Min(Shown, unusual.Count))) +
+            (unusual.Count > Shown ? "\n... and " + (unusual.Count - Shown) + " more (listed in the GUID Tools log)" : "");
+        foreach (string path in unusual) log.Write("Unusual file to patch: " + path);
+        bool proceed = EditorUtility.DisplayDialog("Regenerate GUID",
+            "The GUID text also appears in these files, which are not Unity references or are inside Packages/:\n\n" + list +
+            "\n\nThey will be rewritten too. Files under Packages/ may be put back by the package manager or VCC, which " +
+            "would break those references again.", "Rewrite Them Too", "Cancel");
+        if (!proceed) log.Write("Cancelled at the unusual files dialog; no files were changed.");
+        return proceed;
+    }
+
+    /// <summary>
+    /// After the change: files under UserSettings/RiryTools named by an old GUID (Blendshape Sync's
+    /// per-scene jobs) are renamed to the new one. A failure only warns: the references are already done.
+    /// </summary>
+    private static void RenameGuidNamedFiles(List<Target> targets, string projectRoot, GuidToolLog log)
+    {
+        string folder = Path.Combine(projectRoot, "UserSettings", "RiryTools");
+        if (!Directory.Exists(folder)) return;
+        var byOld = new Dictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
+        foreach (Target target in targets) byOld[target.OldGuid] = target;
+        foreach (string file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
+        {
+            Target target;
+            if (!byOld.TryGetValue(Path.GetFileNameWithoutExtension(file), out target)) continue;
+            string renamed = Path.Combine(Path.GetDirectoryName(file), target.NewGuid + Path.GetExtension(file));
+            try
+            {
+                if (File.Exists(renamed))
+                {
+                    log.Write("Not renamed, the new name is taken: " + file);
+                    Debug.LogWarning("GUID Tools: " + MakeProjectRelative(projectRoot, file) + " was not renamed to " +
+                        Path.GetFileName(renamed) + " because that file exists; both were kept.");
+                    continue;
+                }
+                File.Move(file, renamed);
+                log.Write("Renamed GUID-named file: " + file + " -> " + renamed);
+            }
+            catch (Exception exception)
+            {
+                log.Write("Rename failure: " + file + " | " + exception);
+                Debug.LogWarning("GUID Tools could not rename " + MakeProjectRelative(projectRoot, file) + " to " +
+                    Path.GetFileName(renamed) + ":\n" + exception.Message);
+            }
+        }
+    }
+
     private static List<FileState> EnumerateProjectTextFiles(string projectRoot)
     {
         string[] roots =
         {
             Path.Combine(projectRoot, "Assets"),
             Path.Combine(projectRoot, "ProjectSettings"),
-            Path.Combine(projectRoot, "Packages")
+            Path.Combine(projectRoot, "Packages"),
+            // RiryTools' own per-user files (Blendshape Sync jobs hold scene GUIDs in their object IDs).
+            Path.Combine(projectRoot, "UserSettings", "RiryTools")
         };
 
         var files = new List<FileState>();

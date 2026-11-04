@@ -149,9 +149,11 @@ and **Seated pose** handles in the Scene view and Generate again to apply them.
 - **Append to controller:** and **Append to parameters:** choose where the layers,
   parameters and synced state go (empty: the avatar's FX controller and Expression
   Parameters), each with a **New** button. Clips are saved in
-  `Assets/RiryTools/InsertableProps`. Everything is named `IP_<avatar>_<prop>`, so
-  Generate updates the pair without duplicating anything, and **Remove** takes it
-  out.
+  `Assets/RiryTools/InsertableProps`, one folder per pair and controller.
+  Everything is named `IP_<avatar>_<prop>`, so Generate updates the pair without
+  duplicating anything, and **Remove** takes it out. When the controller already
+  has the pair's layers but the avatar has no rig for them (another avatar with
+  the same name), Generate asks before replacing them.
 
 ## GUID Tools
 
@@ -234,8 +236,8 @@ put back after the capture. Captures run through an effect stack (Overlay, Draw
 under, Mask, Inverse mask, Gray out, Corner badge, Custom material, Crop and zoom,
 Rotate and flip, Padding, Adjustments, Outline, Drop shadow, Colour overlay, Hue
 shift, Invert, Grayscale, Posterize, Sharpen) and are saved to an export folder.
-Captures can be saved as jobs and remade with **Run**, which moves replaced icons
-into `OLD_<n>` folders. Presets are kept in `Documents/RiryTools/iconcap presets`.
+Captures can be saved as jobs and remade with **Run**, which lists the icons it
+replaces and asks first, then moves them into `OLD_<n>` folders. Presets are kept in `Documents/RiryTools/iconcap presets`.
 **Icon Generator** assets run source textures through an effect stack and save the
 outputs beside the asset, renamed to follow renamed sources.
 

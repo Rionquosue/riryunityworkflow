@@ -574,7 +574,8 @@ namespace Riry.RiryTools.Editor
                     EditorApplication.delayCall += NewGenerator;
                 using (new EditorGUI.DisabledScope(generator == null))
                 {
-                    if (GUILayout.Button(new GUIContent("Regenerate", "Remakes every output beside the asset."), GUILayout.Width(85f)))
+                    if (GUILayout.Button(new GUIContent("Regenerate", "Remakes every output beside the asset. Never replaces a file it did not make. " +
+                        "Undo can't revert the PNG files."), GUILayout.Width(85f)))
                         EditorApplication.delayCall += Regenerate;
                 }
             }
@@ -993,6 +994,14 @@ namespace Riry.RiryTools.Editor
 
         private void Run(string folder, IconCapJob job)
         {
+            // Replaced images move to OLD_<n>, but the new ones take over their GUIDs, so whatever used them shows the new icon.
+            List<string> replaced = IconCapFiles.ExistingIcons(folder, job);
+            if (replaced.Count > 0 && !EditorUtility.DisplayDialog("IconCap", "Run replaces " + replaced.Count + " existing image(s):\n" +
+                    string.Join("\n", replaced.GetRange(0, Math.Min(10, replaced.Count))) +
+                    (replaced.Count > 10 ? "\n... and " + (replaced.Count - 10) + " more" : "") +
+                    "\n\nThe old images move into a new " + IconCapFiles.OldFolderPrefix + "<n> folder. The new icons keep the old " +
+                    "files' GUIDs, so materials and other assets that used those images show the new icons.", "Run", "Cancel"))
+                return;
             string problems = IconCapFiles.Run(folder, job);
             if (problems.Length > 0) EditorUtility.DisplayDialog("IconCap", "Some icons were not remade:\n\n" + problems, "OK");
             ForgetFiles();
@@ -1003,6 +1012,10 @@ namespace Riry.RiryTools.Editor
         {
             string name = IconCapNamePrompt.Ask("Save a preset", "Preset name", presetName);
             if (name == null) return;
+            string existing = IconCapFiles.ExistingPreset(name);
+            if (existing != null && !EditorUtility.DisplayDialog("IconCap", "The preset " + existing + " already exists" +
+                    (existing != name.Trim() ? " (\"" + name + "\" saves to the same file)" : "") + ". Replace it?", "Replace", "Cancel"))
+                return;
             IconCapFiles.SavePreset(name, IconCapAssets.Copy(settings));
             presetName = name;
             presetNames = null;

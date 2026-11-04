@@ -97,6 +97,12 @@ namespace Riry.RiryTools.Editor
             {
                 if (job.Master != null && job.Master.gameObject.scene == scene) saved.Jobs.Add(job.Save());
             }
+            // Saved jobs whose master is not found (not restored on load) are written back, never dropped.
+            // A file that cannot be read is left as it is rather than replaced.
+            SavedJobs earlier = Read(file);
+            if (earlier == null && File.Exists(file)) return;
+            if (earlier != null && earlier.Jobs != null)
+                saved.Jobs.AddRange(earlier.Jobs.FindAll(job => job != null && BlendshapeSyncWindow.Find(job.Master) == null));
             try
             {
                 if (saved.Jobs.Count == 0)
@@ -117,26 +123,46 @@ namespace Riry.RiryTools.Editor
         {
             string file = FileFor(scene);
             if (file == null || !scene.isLoaded || !File.Exists(file)) return;
-            SavedJobs saved;
+            SavedJobs saved = Read(file);
+            if (saved == null || saved.Jobs == null) return;
+            List<BlendshapeSyncWindow> running = All();
+            int missingJobs = 0, missingChildren = 0;
+            foreach (BlendshapeSyncWindow.SavedJob job in saved.Jobs)
+            {
+                if (job == null) continue;
+                SkinnedMeshRenderer master = BlendshapeSyncWindow.Find(job.Master);
+                if (master == null)
+                {
+                    missingJobs++;
+                    continue;
+                }
+                // A job already running (after a script reload) is not loaded twice.
+                if (running.Exists(other => other.Master == master)) continue;
+                BlendshapeSyncWindow created = Create();
+                missingChildren += created.Load(job, master);
+                running.Add(created);
+            }
+            if (missingJobs + missingChildren > 0)
+                Debug.LogWarning("Blendshape Sync: in " + scene.path + ", " + missingJobs + " saved job(s) whose master and " +
+                    missingChildren + " child renderer(s) were not found, so they were not restored. They stay saved in " + file +
+                    " and come back once the objects are found again.");
+        }
+
+        private static readonly HashSet<string> unreadable = new HashSet<string>(StringComparer.Ordinal);
+
+        // The saved jobs in the file, or null when it is missing or unreadable (reported once per file and problem).
+        private static SavedJobs Read(string file)
+        {
+            if (!File.Exists(file)) return null;
             try
             {
-                saved = JsonUtility.FromJson<SavedJobs>(File.ReadAllText(file));
+                return JsonUtility.FromJson<SavedJobs>(File.ReadAllText(file));
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("Blendshape Sync: could not read " + file + ": " + exception.Message);
-                return;
-            }
-            if (saved == null || saved.Jobs == null) return;
-            List<BlendshapeSyncWindow> running = All();
-            foreach (BlendshapeSyncWindow.SavedJob job in saved.Jobs)
-            {
-                SkinnedMeshRenderer master = BlendshapeSyncWindow.Find(job.Master);
-                // A job already running (after a script reload) is not loaded twice.
-                if (master == null || running.Exists(other => other.Master == master)) continue;
-                BlendshapeSyncWindow created = Create();
-                created.Load(job, master);
-                running.Add(created);
+                if (unreadable.Add(file + "\n" + exception.Message))
+                    Debug.LogWarning("Blendshape Sync: could not read " + file + "; it is left as it is and not saved over: " + exception.Message);
+                return null;
             }
         }
 

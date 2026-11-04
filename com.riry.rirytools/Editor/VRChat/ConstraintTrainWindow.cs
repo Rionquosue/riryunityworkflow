@@ -99,7 +99,7 @@ namespace Riry.RiryTools.Editor
 
         private void SaveToPrefab()
         {
-            ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, component => component is VRCParentConstraint);
+            ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, realEnd, component => component is VRCParentConstraint);
             if (changes == null) return;
             try
             {
@@ -112,7 +112,8 @@ namespace Riry.RiryTools.Editor
                     }
                     if (!EditorUtility.DisplayDialog("Constraint Train", "Apply " + changes.AddedChains.Count + " chain(s), " +
                             changes.AddedConstraints.Count + " new constraint(s) and " + changes.ChangedConstraints.Count +
-                            " changed constraint(s) to " + changes.AssetPath + "?\n\nEvery instance of that prefab gets them.",
+                            " changed constraint(s) to " + changes.AssetPath + "?\n\nOn: " + ConstraintTrainPrefabs.Describe(changes) +
+                            "\n\nEvery instance of that prefab gets them. Other overrides on the avatar are left as they are.",
                             "Apply", "Cancel"))
                         return;
                     ConstraintTrainPrefabs.ApplyToSource(changes, UndoName);

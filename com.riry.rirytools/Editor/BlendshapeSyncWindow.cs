@@ -197,10 +197,58 @@ namespace Riry.RiryTools.Editor
                     if (i != childIndex && children[i].Renderer == renderer)
                         error = "This renderer is already assigned as a child.";
                 }
+                if (error == null && childIndex >= 0 && master != null) error = CrossJobError(master, renderer);
+                for (int i = 0; i < children.Count && error == null && childIndex < 0; i++)
+                {
+                    if (children[i].Renderer != null && Reaches(children[i].Renderer, renderer))
+                        error = LoopError(renderer, children[i].Renderer);
+                }
             }
             if (error == null) return true;
             ShowNotification(new GUIContent(error));
             result = error;
+            return false;
+        }
+
+        /// <summary>
+        /// Why this job may not write from <paramref name="from"/> to <paramref name="to"/> across jobs, or null: another
+        /// job already writes to it, or the link would close a loop of jobs syncing each other.
+        /// </summary>
+        private string CrossJobError(SkinnedMeshRenderer from, SkinnedMeshRenderer to)
+        {
+            foreach (BlendshapeSyncWindow other in BlendshapeSyncJobs.All())
+            {
+                if (other != this && other.children.Exists(child => child.Renderer == to))
+                    return to.name + " is already a child in job " + other.JobNumber + "; two jobs would overwrite each other.";
+            }
+            return Reaches(to, from) ? LoopError(from, to) : null;
+        }
+
+        private static string LoopError(SkinnedMeshRenderer from, SkinnedMeshRenderer to)
+        {
+            return "Syncing " + to.name + " from " + from.name + " would make jobs sync each other in a loop.";
+        }
+
+        /// <summary>Whether <paramref name="goal"/> is synced from <paramref name="start"/> through any job (master to children).</summary>
+        private static bool Reaches(SkinnedMeshRenderer start, SkinnedMeshRenderer goal)
+        {
+            List<BlendshapeSyncWindow> jobs = BlendshapeSyncJobs.All();
+            var seen = new HashSet<SkinnedMeshRenderer> { start };
+            var queue = new Queue<SkinnedMeshRenderer>();
+            queue.Enqueue(start);
+            while (queue.Count > 0)
+            {
+                SkinnedMeshRenderer current = queue.Dequeue();
+                if (current == goal) return true;
+                foreach (BlendshapeSyncWindow job in jobs)
+                {
+                    if (job.master != current) continue;
+                    foreach (ChildEntry child in job.children)
+                    {
+                        if (child.Renderer != null && seen.Add(child.Renderer)) queue.Enqueue(child.Renderer);
+                    }
+                }
+            }
             return false;
         }
 
@@ -313,6 +361,16 @@ namespace Riry.RiryTools.Editor
                 error = RendererError(plan.Renderer);
                 if (error == null && (plan.Renderer == master || !assigned.Add(plan.Renderer)))
                     error = "A renderer may only be assigned once, and cannot sync to itself.";
+                // Jobs saved before this check, or loaded together, may still clash.
+                if (error == null)
+                {
+                    foreach (BlendshapeSyncWindow other in BlendshapeSyncJobs.All())
+                    {
+                        if (other != this && other.children.Exists(entry => entry.Renderer == plan.Renderer))
+                            error = "It is also a child in job " + other.JobNumber + "; two jobs would overwrite each other.";
+                    }
+                }
+                if (error == null && Reaches(plan.Renderer, master)) error = LoopError(master, plan.Renderer);
                 if (error != null)
                 {
                     planError = "Child " + plan.Renderer.name + ": " + error;

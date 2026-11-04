@@ -187,6 +187,9 @@ namespace Riry.RiryTools.Editor
 //   GetPauseReason()           Why syncing is paused (Play Mode, animation preview, Animator editing).
 //   SyncNow()                  Copies the master's weights to every child (one Undo step).
 //   RestoreOriginals()         Restores every captured weight and stops automatic sync.
+//   CrossJobError / Reaches / LoopError  Across jobs: a renderer may be a child in one job only, and no job may sync a
+//                              renderer that (through any jobs) syncs its master. Checked on assigning (CanAssign) and in
+//                              BuildPlan, which pauses the job with the reason.
 //   BuildPlan() / TryBuildLinks(...)  Match blendshape names to indices.
 //   EditorTick()               Runs automatic passes.
 //   OnUndoRedo(undo) / IsOwnUndo(undo)  Stops automatic sync when this job's own pass is undone (its name and a group in

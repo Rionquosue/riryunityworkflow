@@ -179,6 +179,6 @@ namespace Riry.RiryTools.Editor
 //   RigConstraints(bones) / Report(bones)  Constraint report: count and Depth of the rig in the scene.
 //   Depth(...)                      Longest run of constraints waiting on each other (sources, world up, parents).
 //   RemoveRig(bones)                Removes BezierRig_, Bezier_ and the bones' rig constraints as one Undo step;
-//                                   refuses objects saved in the prefab itself.
+//                                   refuses objects saved in the prefab itself; asks first, listing what goes.
 //   OnGUI / DrawChain / DrawOptions / DrawRig / DrawRestFit (this file)  Bone chain, Options, Rig (rest fit or
 //                                   report, Generate rig, Remove rig), status.

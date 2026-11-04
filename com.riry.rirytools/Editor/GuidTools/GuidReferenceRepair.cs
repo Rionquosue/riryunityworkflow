@@ -79,12 +79,11 @@ namespace Riry.RiryTools.Editor
         public string RepoPath;
         /// <summary>GUIDs the restored file uses that have no asset now.</summary>
         public readonly List<string> MissingReferences = new List<string>();
-        /// <summary>Another file is at Path now and would be overwritten.</summary>
+        /// <summary>Another file is at Path now; the restore goes beside it (Destination) and never overwrites it.</summary>
         public bool PathTaken;
         /// <summary>The asset that has this GUID now, or null.</summary>
         public string GuidInUseBy;
         public BreakDecision MissingDecision;
-        public BreakDecision PathDecision;
         public BreakDecision GuidDecision;
 
         public bool IsRestore
@@ -97,15 +96,18 @@ namespace Riry.RiryTools.Editor
         {
             get
             {
-                return (MissingReferences.Count > 0 && MissingDecision != BreakDecision.Fix) ||
-                    (PathTaken && PathDecision != BreakDecision.Fix) || GuidInUseBy != null;
+                return (MissingReferences.Count > 0 && MissingDecision != BreakDecision.Fix) || GuidInUseBy != null;
             }
         }
 
-        /// <summary>Where a restore writes: beside the taken path when that break is fixed.</summary>
+        /// <summary>
+        /// Where a restore writes: Path, or a free name beside it when Path is taken. The restored .meta keeps the missing
+        /// GUID, so the references follow the restored file wherever it lands; the file at Path is never touched.
+        /// </summary>
         public string Destination
         {
-            get { return PathTaken && PathDecision == BreakDecision.Fix ? AssetDatabase.GenerateUniqueAssetPath(Path) : Path; }
+            // Worked out when asked, so a restore made earlier in the same Apply counts as taking its path.
+            get { return GuidReferenceRepair.FreePath(Path); }
         }
     }
 
@@ -229,7 +231,7 @@ namespace Riry.RiryTools.Editor
                 candidate.MissingReferences.RemoveAll(guid => !IsMissing(guid));
                 string fullPath = System.IO.Path.Combine(RiryToolsPaths.ProjectRoot, candidate.Path);
                 candidate.PathTaken = File.Exists(fullPath) || Directory.Exists(fullPath) || File.Exists(fullPath + ".meta");
-                candidate.MissingDecision = candidate.PathDecision = candidate.GuidDecision = BreakDecision.Undecided;
+                candidate.MissingDecision = candidate.GuidDecision = BreakDecision.Undecided;
             }
         }
 
@@ -537,6 +539,27 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        /// <summary>
+        /// A free asset path beside <paramref name="path"/>: Unity's unique name, then checked on disk (the file, a folder
+        /// and a .meta, also one left without its asset), numbering on until nothing is there.
+        /// </summary>
+        internal static string FreePath(string path)
+        {
+            string free = AssetDatabase.GenerateUniqueAssetPath(path);
+            if (string.IsNullOrEmpty(free)) free = path;
+            string folder = (Path.GetDirectoryName(path) ?? "").Replace('\\', '/');
+            string name = Path.GetFileNameWithoutExtension(path);
+            string extension = Path.GetExtension(path);
+            for (int number = 1; Taken(free); number++) free = (folder.Length > 0 ? folder + "/" : "") + name + " " + number + extension;
+            return free;
+        }
+
+        private static bool Taken(string assetPath)
+        {
+            string fullPath = Path.Combine(RiryToolsPaths.ProjectRoot, assetPath);
+            return File.Exists(fullPath) || Directory.Exists(fullPath) || File.Exists(fullPath + ".meta");
+        }
+
         /// <summary>A file a restore wrote, with what was there before (null when nothing was).</summary>
         private sealed class RestoredFile
         {
@@ -547,7 +570,9 @@ namespace Riry.RiryTools.Editor
         /// <summary>
         /// Writes the asset and its .meta from the candidate's commit to
         /// <paramref name="destination"/>, through Git's filters (so Git LFS files
-        /// come back as their content). Files it replaces are kept for rollback.
+        /// come back as their content). Never overwrites: a file already at the
+        /// destination stops the restore (before it is listed for rollback, so
+        /// rollback never deletes it).
         /// </summary>
         private static void Restore(RepairCandidate restore, string destination, List<RestoredFile> restored, GuidToolLog log)
         {
@@ -562,9 +587,15 @@ namespace Riry.RiryTools.Editor
                 if (!result.Succeeded)
                     throw new InvalidOperationException(result.Describe("Restoring " + restore.RepoPath + suffix + " from " + restore.Commit));
                 string target = Path.Combine(project, destination + suffix);
-                restored.Add(new RestoredFile { FullPath = target, Previous = File.Exists(target) ? File.ReadAllBytes(target) : null });
+                if (File.Exists(target) || Directory.Exists(target))
+                {
+                    File.Delete(temporary);
+                    throw new InvalidOperationException("Restoring " + restore.RepoPath + suffix + ": " + destination + suffix +
+                        " is taken by another file, so nothing was overwritten.");
+                }
                 Directory.CreateDirectory(Path.GetDirectoryName(target));
-                File.Copy(temporary, target, true);
+                File.Copy(temporary, target, false);
+                restored.Add(new RestoredFile { FullPath = target, Previous = null });
                 File.Delete(temporary);
             }
             log.Write("Restored " + restore.RepoPath + " from " + restore.Commit + " to " + destination);

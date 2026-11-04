@@ -125,6 +125,17 @@ namespace Riry.RiryTools.Editor
                 status = "The controller or parameters asset is read-only.";
                 return;
             }
+            // The layers are named by the pair ID only, so another avatar of the same name may own them.
+            string id = Id;
+            if (InsertablePropRig.FindRoot(avatar.transform, id) == null && InsertablePropAnimator.HasLayers(controller, id) &&
+                !EditorUtility.DisplayDialog(UndoName, controller.name + " already has the layers of " + InsertablePropRig.RootPrefix + id +
+                    ", but " + avatar.name + " has no rig for them. Another avatar with the same name may use them, and Generate " +
+                    "would replace them for this avatar.\n\nRename this avatar, or choose another controller under Append to " +
+                    "controller, to keep both.", "Replace them", "Cancel"))
+            {
+                status = "Generate cancelled; " + controller.name + " was not changed.";
+                return;
+            }
 
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
@@ -160,7 +171,7 @@ namespace Riry.RiryTools.Editor
             }
             AnimatorController controller = InsertablePropAnimator.TargetController(appendController, avatar);
             VRCExpressionParameters expressions = InsertablePropAnimator.TargetParameters(appendParameters, avatar);
-            string folder = "Assets/RiryTools/" + InsertablePropAnimator.ClipFolder + "/" + InsertablePropRig.RootPrefix + id;
+            string folder = InsertablePropAnimator.ClipFolderPath(id, controller);
             int choice = EditorUtility.DisplayDialogComplex(UndoName, "Remove " + InsertablePropRig.RootPrefix + id + " from the avatar" +
                 (controller != null ? ", " + controller.name : "") + (expressions != null ? " and " + expressions.name : "") + "?\n\n" +
                 "Its clips are in " + folder + ". Undo can't bring back deleted files.", "Remove, keep clips", "Cancel", "Remove and delete clips");

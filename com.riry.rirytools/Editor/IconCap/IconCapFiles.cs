@@ -203,6 +203,24 @@ namespace Riry.RiryTools.Editor
             return names;
         }
 
+        /// <summary>The name of the saved preset whose file this name would write, or null when there is none.</summary>
+        internal static string ExistingPreset(string name)
+        {
+            string path = Path.Combine(PresetFolder, SafeName(name) + ".json");
+            return File.Exists(path) ? Path.GetFileNameWithoutExtension(path) : null;
+        }
+
+        /// <summary>The job's icons that exist now in the folder, so Run would replace them.</summary>
+        internal static List<string> ExistingIcons(string folderFullPath, IconCapJob job)
+        {
+            var existing = new List<string>();
+            foreach (IconCapEntry entry in job.Entries)
+            {
+                if (File.Exists(Path.Combine(folderFullPath, entry.FileName))) existing.Add(entry.FileName);
+            }
+            return existing;
+        }
+
         internal static void SavePreset(string name, IconCapSettings settings)
         {
             Directory.CreateDirectory(PresetFolder);
@@ -246,3 +264,6 @@ namespace Riry.RiryTools.Editor
 //   NextOldFolder / OldFolderPrefix (OLD_)  The next free OLD_<n> in the export folder.
 //   PresetFolder                 Documents/RiryTools/iconcap presets: <name>.json, an IconCapSettings each.
 //   PresetNames / SavePreset / LoadPreset
+//   ExistingPreset(name)         The saved preset a name would overwrite (names that sanitize alike share a file); the
+//                                window asks before replacing it.
+//   ExistingIcons(folder, job)   The job's images in the folder now; the window lists them and asks before Run.

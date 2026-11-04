@@ -75,7 +75,12 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.LabelField(string.Join("; ", candidate.Sources), EditorStyles.wordWrappedMiniLabel);
                 if (!candidate.IsRestore || !on) return;
-                if (candidate.MissingReferences.Count == 0 && !candidate.PathTaken && candidate.GuidInUseBy == null) return;
+                // A taken path is not a break: the restore goes beside it, and its references follow it by GUID.
+                if (candidate.PathTaken)
+                    EditorGUILayout.LabelField(candidate.Path + " is taken by another file, so it is restored as " +
+                        System.IO.Path.GetFileName(candidate.Destination) + " beside it. Nothing is overwritten; references follow " +
+                        "the restored file by its GUID.", EditorStyles.wordWrappedMiniLabel);
+                if (candidate.MissingReferences.Count == 0 && candidate.GuidInUseBy == null) return;
                 // Past the second level of fixes, what this restore breaks stays broken until the next run.
                 bool recursive = plan.DepthOf(missing) >= RepairPlan.MaxFixDepth;
                 Color previous = GUI.backgroundColor;
@@ -104,11 +109,6 @@ namespace Riry.RiryTools.Editor
                             Repaint();
                         },
                         decision => candidate.MissingDecision = decision);
-                if (candidate.PathTaken)
-                    DrawBreak(candidate.Path + " is taken by another file, which restoring would overwrite.",
-                        "Restore as " + System.IO.Path.GetFileName(AssetDatabase.GenerateUniqueAssetPath(candidate.Path)),
-                        candidate.PathDecision, () => candidate.PathDecision = BreakDecision.Fix,
-                        decision => candidate.PathDecision = decision);
                 if (candidate.GuidInUseBy != null)
                     DrawBreak(candidate.GuidInUseBy + " uses this GUID now; Unity would give one of them a new GUID.",
                         null, candidate.GuidDecision, null, decision => candidate.GuidDecision = decision);
@@ -199,7 +199,9 @@ namespace Riry.RiryTools.Editor
 // RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidReferenceRepair.cs)
 //   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.
 //   RepairCandidate: TargetGuid or a restore (Commit, RepoPath), Path, Sources, and the restore's
-//     breaks: MissingReferences, PathTaken, GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept).
+//     breaks: MissingReferences and GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept). PathTaken is not
+//     a break: Destination is a free name beside the taken path (GuidReferenceRepair.FreePath), so nothing is
+//     overwritten and the references follow the restored file by its GUID; Restore refuses a destination that exists.
 // RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): levels shown per pass; a restore at the third
 //   level that breaks something is a recursive break, and its references come in the next pass.
 // RepairCache: Candidates and LastKnownPaths searched so far.

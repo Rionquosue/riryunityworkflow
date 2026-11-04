@@ -120,6 +120,9 @@ namespace Riry.RiryTools.Editor
 // BlendshapeSyncWindow, job part (Editor/BlendshapeSyncJob.cs)
 //   JobNumber, Master, ChildCount, Auto, HasOriginals, Problem, RunSync(), RunRestore().
 //   SavedJob / SavedChild / Save() / Load(saved, master) / Find(id)  Renderers saved as GlobalObjectId strings.
+//   missingChildren     [S] Saved children not found on Load; saved again with the job, so they are never dropped.
+//   Save(scene) keeps saved jobs whose master is not found (Read), and never replaces a file it cannot read. Load warns
+//   once about jobs and children it could not restore.
 // BlendshapeSyncJobWindow (this file): the job popup; draws the job's own window; closing keeps the job.
 // BlendshapeSyncJobList (this file): the Main Menu tab: one row per job (master > children, Auto, Sync Now,
 //   Edit, Set All to Original, Remove), then Add Job. Below WideRow (570) window width the buttons go on a second line.

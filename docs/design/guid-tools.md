@@ -24,15 +24,21 @@ before scanning.
 For each selected asset, the tool:
 
 1. Reads its current 32-character GUID and generates a unique replacement.
-2. Scans eligible text files under `Assets`, `ProjectSettings`, and the
-   project-local `Packages` directory for exact GUID occurrences.
+2. Scans eligible text files under `Assets`, `ProjectSettings`, the
+   project-local `Packages` directory and `UserSettings/RiryTools` for exact GUID
+   occurrences. When any of the files to change is not a Unity reference file
+   (a script, JSON, text and so on) or is under `Packages`, they are listed first
+   with **Rewrite Them Too** and **Cancel**; files under `Packages` may be put back
+   by the package manager or VCC. Nothing is written before this.
 3. Verifies that every affected file is writable and that each expected GUID is
    still present at its scanned byte offset.
 4. Rewrites references first and selected `.meta` files last. Reference
    `fileID` values and all unrelated bytes remain unchanged.
 5. Refreshes the Asset Database, verifies every new asset GUID, and reconciles
    files Unity changed during import.
-6. Reloads the open scenes from disk so no in-memory object keeps an old
+6. Renames files under `UserSettings/RiryTools` named by an old GUID (Blendshape
+   Sync's per-scene jobs) to the new one.
+7. Reloads the open scenes from disk so no in-memory object keeps an old
    reference. This also happens after a rollback.
 
 If a write or verification fails, the command attempts to restore every GUID
@@ -111,10 +117,12 @@ cause further broken references. Please run tool again afterwards." with
 
 - **It references assets that are missing now.** Fix adds those GUIDs to the
   list, each with its own candidates.
-- **Another file is at that path now.** Fix restores beside it under a free
-  name; Accept break overwrites it.
 - **Another asset uses that GUID now.** Accept break only; Unity then gives one
   of them a new GUID.
+
+When another file is at the restore's path now, it is not a break: the restore
+goes beside it under a free name, and its references follow it by GUID. Nothing
+is overwritten or deleted.
 
 When the window scans, it follows every Git restore's missing references, and
 theirs, to the end, and caches every candidate it finds, so nothing is searched

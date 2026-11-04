@@ -217,7 +217,8 @@ namespace Riry.RiryTools.Editor
                     "Make target objects for source objects that are still unmatched, under the nearest matched parent."), typeSettings.CreateMissing);
             if (replaces)
                 typeSettings.Replace = EditorGUILayout.Popup(new GUIContent("Existing on target",
-                    "Add: alongside the target's own, skipping any that is identical. Replace: remove the target's first."),
+                    "Add: alongside the target's own, skipping any that is identical. Replace: remove the target's first, on the objects " +
+                    "the source copies into (not on ignored objects, objects only the target has, or child prefabs)."),
                     typeSettings.Replace ? 1 : 0, ToContents(AddReplace)) == 1;
             switch (type.Rule)
             {

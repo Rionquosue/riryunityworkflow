@@ -460,6 +460,17 @@ namespace Riry.RiryTools.Editor
                 return;
             }
 
+            // The rig is found by name, so the user sees what will go before anything is deleted.
+            var names = new List<string>();
+            foreach (Transform root in roots) names.Add(root.name + " (with " + (root.GetComponentsInChildren<Transform>(true).Length - 1) + " child object(s))");
+            if (!EditorUtility.DisplayDialog("Remove Bezier rig", "Remove these objects beside " + bones[0].name + ":\n" +
+                    string.Join("\n", names) + "\n\nand " + onBones.Count + " constraint(s) on the bones whose sources are all inside them?" +
+                    "\n\nThey are found by name. Ctrl+Z brings everything back.", "Remove", "Cancel"))
+            {
+                status = "Remove cancelled; nothing was changed.";
+                return;
+            }
+
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName("Remove " + UndoName);
@@ -485,5 +496,6 @@ namespace Riry.RiryTools.Editor
 //
 //   Mode / Target / Spacing   Stretch or KeepLength; DeformBones or MechanismChain; Existing or Even.
 //   Generate(bones)           Fits the curve (ConstraintBezierCurve.FitTo) and builds BezierRig_<start>, as one Undo step.
-//   RemoveRig(bones)          Removes it, Bezier_<start> and the bones' rig constraints, as one Undo step.
+//   RemoveRig(bones)          After a confirmation listing them (they are found by name), removes it, Bezier_<start> and
+//                             the bones' rig constraints, as one Undo step.
 //   Report(bones) / Depth     Constraint report: count and depth of the rig in the scene.

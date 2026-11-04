@@ -149,7 +149,7 @@ namespace Riry.RiryTools.Editor
                 int written = ImportPresetAnimations.ExtractPreservingSettings(importer,
                     AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, out skipped);
                 Debug.Log("Import Presets: refreshed " + written + " clip(s) from " + fbx +
-                    (skipped.Count > 0 ? "; kept " + skipped.Count + " edited clip(s)." : "."));
+                    (skipped.Count > 0 ? "; kept " + skipped.Count + " clip(s) that were edited or extracted from another model." : "."));
             }
             catch (Exception exception)
             {

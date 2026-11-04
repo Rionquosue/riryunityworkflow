@@ -259,4 +259,6 @@ namespace Riry.RiryTools.Editor
 //     MaxChains, Settings, DefaultTrainEnd, DefaultChainEnds, Validate, SourceCount, ChainSource,
 //     EvaluateWeights, BreakTimes, Shape, DescribeSource, BuildCurves, SourceWeightProperty.
 //   ConstraintTrainPrefabs (Editor/ConstraintTrain/ConstraintTrainPrefabs.cs)
-//     Changes, Collect, IsGeneratedChain, ApplyToSource, RootPrefabPath, SaveAsRootVariant.
+//     Changes, Collect(bone, end, isConstraint) (only chains added beside the start and constraints on the real chain
+//     or inside those chains; TrainScope), Describe (names for the Apply dialog), IsGeneratedChain, ApplyToSource
+//     (one Undo group, collapsed in finally), RootPrefabPath, SaveAsRootVariant.

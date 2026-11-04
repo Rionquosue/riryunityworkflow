@@ -93,11 +93,14 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// Cleans every editable clip as one Undo step. Imported and read-only clips
-        /// are skipped. Returns the summary line; throws when curves cannot be removed.
+        /// are skipped. A clip whose curves cannot be removed is put back and the rest
+        /// are still cleaned; then it throws with the summary and each failed clip.
+        /// Returns the summary line.
         /// </summary>
         internal static string Clean(IList<AnimationClip> clips, Options options, ICollection<string> whitelist)
         {
             int removedCurves = 0, cleaned = 0, skipped = 0;
+            var failures = new List<string>();
             // A new group of its own, so the user's last action is never merged into the clean
             // (auto-clean runs from a delayed call, with no input event to start a group).
             Undo.IncrementCurrentGroup();
@@ -115,7 +118,11 @@ namespace Riry.RiryTools.Editor
                     }
                     var bindings = new List<EditorCurveBinding>();
                     foreach (Group group in Removable(clip, options, whitelist)) bindings.AddRange(group.Bindings);
-                    if (!TryRemoveBindings(clip, bindings, DisplayName, out error)) throw new InvalidOperationException(error);
+                    if (!TryRemoveBindings(clip, bindings, DisplayName, out error))
+                    {
+                        failures.Add(AssetDatabase.GetAssetPath(clip) + ": " + error);
+                        continue;
+                    }
                     removedCurves += bindings.Count;
                     cleaned++;
                 }
@@ -126,8 +133,12 @@ namespace Riry.RiryTools.Editor
             }
             RepaintAnimationWindows();
             EditorApplication.RepaintProjectWindow();
-            return "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
+            string summary = "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
                 (skipped > 0 ? " Skipped " + skipped + " imported or read-only " + (skipped == 1 ? "animation." : "animations.") : "");
+            if (failures.Count > 0)
+                throw new InvalidOperationException(summary + "\n\nCould not clean " + failures.Count + " animation(s); they were left as they were:\n" +
+                    string.Join("\n", failures));
+            return summary;
         }
 
         // A curve that cannot be read, or holds NaN or Infinity, was never checked, so it is always kept.

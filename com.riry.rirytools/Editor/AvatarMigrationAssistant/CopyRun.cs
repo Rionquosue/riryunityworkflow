@@ -26,6 +26,7 @@ namespace Riry.RiryTools.Editor
         private readonly Transform targetRoot;
         private readonly HashSet<Transform> ignored;
         private readonly AvatarPrefabScope scope;
+        private readonly AvatarPrefabScope targetScope;
 
         // Source component to the target component it was copied into.
         private readonly Dictionary<Component, Component> copied = new Dictionary<Component, Component>();
@@ -45,6 +46,7 @@ namespace Riry.RiryTools.Editor
             sourceRoot = map.SourceRoot;
             targetRoot = map.TargetRoot;
             scope = new AvatarPrefabScope(sourceRoot);
+            targetScope = new AvatarPrefabScope(targetRoot);
         }
 
         /// <summary>Runs the copy and shows the report. Returns the report.</summary>
@@ -206,13 +208,19 @@ namespace Riry.RiryTools.Editor
             return false;
         }
 
-        /// <summary>Replace: removes the target's components of the type, never the source's.</summary>
+        /// <summary>
+        /// Replace: removes the target's components of the type, never the source's, and only on objects the run copies
+        /// into: those matched to a source object in scope (InScope). Components on target-only objects, on objects matched
+        /// to ignored or child-prefab source objects, and inside the target's child prefab instances (those the Prefabs
+        /// step keeps or places) are kept, since nothing would be copied back in their place.
+        /// </summary>
         private void ClearTarget(Type componentType)
         {
             if (typeof(Transform).IsAssignableFrom(componentType)) return;
             foreach (Component existing in targetRoot.GetComponentsInChildren(componentType, true))
             {
                 if (existing == null || made.Contains(existing)) continue;
+                if (targetScope.ChildPrefabRoot(existing.transform) != null || !InScope(map.SourceOf(existing.transform))) continue;
                 try
                 {
                     Undo.DestroyObjectImmediate(existing);
@@ -294,6 +302,9 @@ namespace Riry.RiryTools.Editor
 //                        scale and duplicates. Each step in its own try/catch (Step). Returns the AvatarRunReport.
 //   copied / made / alias  Source component to its target copy; components added this run; temporary-copy objects to
 //                        the source objects they copy.
+//   ClearTarget(componentType)  Replace: removes the type's target components only on objects matched to an in-scope
+//                        source object; target-only objects, ignored or child-prefab matches, and the target's child
+//                        prefab instances (targetScope) keep theirs.
 //   CopyComponents(type, settings, componentType)  Replace clears the target's first (ClearTarget); then every source
 //                        component in scope (InScope: not ignored, not inside a child prefab) is copied onto its target
 //                        (TargetFor: its match, or new objects when Create missing objects is on, added to the map).

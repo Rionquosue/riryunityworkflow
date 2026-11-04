@@ -223,6 +223,7 @@ namespace Riry.RiryTools.Editor
             EnsureFolder(folder);
 
             string modelName = Path.GetFileNameWithoutExtension(modelPath);
+            string modelGuid = AssetDatabase.AssetPathToGUID(modelPath);
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var written = new List<string>();
             // One Undo step: replacing a clip (and cleaning it) undoes back to the clip as it was.
@@ -235,6 +236,12 @@ namespace Riry.RiryTools.Editor
                 foreach (AnimationClip clip in clips)
                 {
                     string path = folder + "/" + ClipFileName(modelName, clip.name, used);
+                    // A clip extracted from another model of the same name is never replaced, even when asked.
+                    if (ImportPresetOwnedFiles.OwnedByOther(path, modelGuid))
+                    {
+                        skipped.Add(path + " (extracted from " + ImportPresetOwnedFiles.OwnerPath(path) + "; set another Destination)");
+                        continue;
+                    }
                     var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
                     if ((existing != null || File.Exists(path)) && !mayReplace(path))
                     {
@@ -267,7 +274,7 @@ namespace Riry.RiryTools.Editor
                 Undo.CollapseUndoOperations(undoGroup);
             }
             // Recorded after cleaning, so a cleaned clip still counts as unchanged.
-            foreach (string path in written) ImportPresetOwnedFiles.Record(path);
+            foreach (string path in written) ImportPresetOwnedFiles.Record(path, modelGuid);
             return written.Count;
         }
 
@@ -316,7 +323,7 @@ namespace Riry.RiryTools.Editor
         {
             if (skipped.Count == 0) return;
             Debug.LogWarning("Import Presets: kept " + skipped.Count + " clip(s) from " + modelPath +
-                " that were edited or not created by this tool:\n" + string.Join("\n", skipped));
+                " that were edited, not created by this tool, or extracted from another model:\n" + string.Join("\n", skipped));
         }
 
         /// <summary>
@@ -327,9 +334,12 @@ namespace Riry.RiryTools.Editor
         {
             string folder = Destination(importer.assetPath, settings);
             int blocked = 0;
+            string modelGuid = AssetDatabase.AssetPathToGUID(importer.assetPath);
             foreach (string path in PlannedPaths(importer.assetPath, folder))
             {
-                if (File.Exists(path) && !ImportPresetOwnedFiles.IsUnchanged(path)) blocked++;
+                // Another model's clips are kept whatever is chosen, so they are not asked about.
+                if (File.Exists(path) && !ImportPresetOwnedFiles.IsUnchanged(path) && !ImportPresetOwnedFiles.OwnedByOther(path, modelGuid))
+                    blocked++;
             }
             bool replaceAll = blocked > 0 && EditorUtility.DisplayDialog("Extract Animation",
                 blocked + " clip(s) in " + folder + " were edited or not created by this tool. Replace them too?",
