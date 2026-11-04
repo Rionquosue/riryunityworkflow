@@ -56,6 +56,8 @@ namespace Riry.RiryTools.Editor
                 if (candidate != active && candidate.IsChildOf(active) && (end == null || candidate.IsChildOf(end)))
                     end = candidate;
             }
+            // One Undo step, so a later Ctrl+Z of another setting does not bring back the old chain fields.
+            Undo.RecordObject(this, SettingsUndo);
             if (active != realStart)
             {
                 // Chains and the avatar root found for the previous start do not apply to a new one.
@@ -393,6 +395,7 @@ namespace Riry.RiryTools.Editor
                 var created = new AnimationClip { frameRate = 60 };
                 WriteCurves(created, plan);
                 AssetDatabase.CreateAsset(created, path);
+                Undo.RecordObject(this, SettingsUndo);
                 clip = created;
             }
             else

@@ -79,6 +79,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private bool caseSensitive;
         // Window serialization keeps the baseline over assembly reloads.
         [SerializeField] private List<OriginalState> originals = new List<OriginalState>();
+        // The live snapshots: Undo records this window, so after any Undo or Redo they are put back (OnUndoRedo) and an
+        // undone setting never wipes snapshots taken after it.
+        [NonSerialized] private List<OriginalState> keptOriginals;
 
         [NonSerialized] private List<ChildPlan> plans;
         [NonSerialized] private List<WeightChange> changes;
@@ -103,6 +106,7 @@ namespace Riry.RiryTools.Editor
             changes = new List<WeightChange>();
             if (children == null) children = new List<ChildEntry>();
             if (originals == null) originals = new List<OriginalState>();
+            keptOriginals = originals;
             EnsureChildRow();
             planDirty = true;
             nextTick = EditorApplication.timeSinceStartup + Interval;
@@ -142,6 +146,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnUndoRedo(in UndoRedoInfo undo)
         {
+            if (keptOriginals != null) originals = keptOriginals;
             InvalidatePlan();
             // A job edit put back by Undo or Redo is saved like the edit was.
             if (undo.undoName == SettingsUndo) BlendshapeSyncJobs.SaveAll();

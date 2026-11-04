@@ -134,8 +134,10 @@ namespace Riry.RiryTools.Editor
         {
             var chosen = new List<ImportPresetFolderRules.Pick>();
             foreach (ImportPresetFolderRules.FileType type in types) chosen.Add(PickFor(type.Label));
+            bool? fbx = hasBlend ? betterFbx : (bool?)null;
+            if (!ImportPresetFolderRules.ConfirmApply(ImportPresetFolderRules.WouldChange(folder, chosen, fbx), folder)) return;
             int processed = 0;
-            if (!ImportPresetFolderRules.Apply(folder, chosen, hasBlend ? betterFbx : (bool?)null, ref processed))
+            if (!ImportPresetFolderRules.Apply(folder, chosen, fbx, ref processed))
             {
                 message = "ImportPreset.md in " + folder + " was edited by hand, so it was left unchanged.";
                 return;

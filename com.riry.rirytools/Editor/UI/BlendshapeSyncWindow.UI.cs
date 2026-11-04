@@ -154,7 +154,8 @@ namespace Riry.RiryTools.Editor
 //   children            [S] List<ChildEntry>     Child rows; the last one is always empty.
 //   runAutomatically    [S] bool                 Sync every Interval seconds.
 //   caseSensitive       [S] bool                 "Case-sensitive": exact names, including case.
-//   originals           [S] List<OriginalState>  Weights captured before the first change.
+//   originals           [S] List<OriginalState>  Weights captured before the first change; keptOriginals (the live list)
+//                       is put back after any Undo/Redo, so an undone setting never drops newer snapshots.
 //   plans                   List<ChildPlan>      Name-to-index links, rebuilt when dirty.
 //   planDirty               bool                 The plan must be rebuilt.
 //   planError               string               Why the plan cannot be used, shown as a warning.

@@ -91,7 +91,9 @@ choosing one sets each file type to that configuration's preset for it. Its
 enabled only for a model with embedded animations.
 
 **Apply**, in both, writes the folder's `ImportPreset.md` and applies each changed
-preset to the files of that type already in the folder, without Undo. A type set
+preset to the files of that type already in the folder, without Undo. When it
+would reimport any file, it first says how many and that Ctrl+Z can't revert
+them, with **Apply** and **Cancel**. A type set
 to **None**, or left unchanged, keeps its files' settings and nothing is
 reimported. Presets of file types not in the folder stay in `ImportPreset.md`.
 

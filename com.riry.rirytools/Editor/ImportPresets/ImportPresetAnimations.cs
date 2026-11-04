@@ -79,7 +79,7 @@ namespace Riry.RiryTools.Editor
             EnsureGeneric(importer);
             AnimationExtractSettings settings = AnimationExtractSettings.Load(assetPath);
             List<string> skipped;
-            int written = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, out skipped);
+            int written = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, false, out skipped);
             ReportSkipped(assetPath, skipped);
 
             ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(assetPath);
@@ -98,16 +98,18 @@ namespace Riry.RiryTools.Editor
         /// <summary>
         /// Extracts clips from a model whose settings may already be configured:
         /// a snapshot of its settings is restored after a temporary Generic import.
+        /// <paramref name="undoable"/>: only the Extract button's run is recorded for Undo; automatic runs
+        /// (first import, re-export, Folder Rules Apply) are not, so they never take the user's next Ctrl+Z.
         /// </summary>
         internal static int ExtractPreservingSettings(ModelImporter importer, AnimationExtractSettings settings,
-            Func<string, bool> mayReplace, out List<string> skipped)
+            Func<string, bool> mayReplace, bool undoable, out List<string> skipped)
         {
             Preset snapshot = new Preset(importer);
             bool changed = false;
             try
             {
                 changed = EnsureGeneric(importer);
-                return ExtractClips(importer.assetPath, settings, mayReplace, out skipped);
+                return ExtractClips(importer.assetPath, settings, mayReplace, undoable, out skipped);
             }
             finally
             {
@@ -213,7 +215,7 @@ namespace Riry.RiryTools.Editor
         internal const string UndoName = "Extract Animation";
 
         private static int ExtractClips(string modelPath, AnimationExtractSettings settings, Func<string, bool> mayReplace,
-            out List<string> skipped)
+            bool undoable, out List<string> skipped)
         {
             skipped = new List<string>();
             List<AnimationClip> clips = Clips(modelPath);
@@ -272,6 +274,15 @@ namespace Riry.RiryTools.Editor
             {
                 Undo.SetCurrentGroupName(UndoName);
                 Undo.CollapseUndoOperations(undoGroup);
+                // An automatic run leaves nothing for Ctrl+Z: its records (the replaced clips and the clean) are cleared.
+                if (!undoable)
+                {
+                    foreach (string path in written)
+                    {
+                        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                        if (clip != null) Undo.ClearUndo(clip);
+                    }
+                }
             }
             // Recorded after cleaning, so a cleaned clip still counts as unchanged.
             foreach (string path in written) ImportPresetOwnedFiles.Record(path, modelGuid);
@@ -346,7 +357,7 @@ namespace Riry.RiryTools.Editor
                 "Replace", "Keep");
             List<string> skipped;
             int written = ExtractPreservingSettings(importer, settings,
-                path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), out skipped);
+                path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), true, out skipped);
             ReportSkipped(importer.assetPath, skipped);
             Debug.Log("Import Presets: extracted " + written + " clip(s) from " + importer.assetPath + " to " + folder + ".");
         }

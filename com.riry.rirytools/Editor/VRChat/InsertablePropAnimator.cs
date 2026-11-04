@@ -31,6 +31,8 @@ namespace Riry.RiryTools.Editor
         internal const string OneName = "One";
         internal const string IsLocal = "IsLocal";
         internal const string ClipFolder = "InsertableProps";
+        // Undo name of the sub-assets made inside the controller; the window's group gives the step its name.
+        private const string CreatedUndo = "Insertable prop";
         // Below this separation (meters) the grip reading is too weak; PointSeparation is -1 with no finger.
         internal const float WeakSeparation = 0.01f;
         // Above this sheath proximity the tip is inside the capture radius.
@@ -237,6 +239,8 @@ namespace Riry.RiryTools.Editor
         {
             var machine = new AnimatorStateMachine { name = name, hideFlags = HideFlags.HideInHierarchy };
             AssetDatabase.AddObjectToAsset(machine, controller);
+            // Registered, so Ctrl+Z removes it from the controller file instead of leaving a hidden orphan.
+            Undo.RegisterCreatedObjectUndo(machine, CreatedUndo);
             controller.AddLayer(new AnimatorControllerLayer { name = name, defaultWeight = 1f, stateMachine = machine });
             return machine;
         }
@@ -374,6 +378,7 @@ namespace Riry.RiryTools.Editor
             AnimatorStateMachine machine = AddLayer(controller, LayerName(id, "Blend"));
             var direct = new BlendTree { name = LayerName(id, "Blend"), blendType = BlendTreeType.Direct, hideFlags = HideFlags.HideInHierarchy };
             AssetDatabase.AddObjectToAsset(direct, controller);
+            Undo.RegisterCreatedObjectUndo(direct, CreatedUndo);
             float r = InsertablePropRig.GripReceiverRadius;
             var children = new List<ChildMotion>();
             for (int axis = 0; axis < 3; axis++)
@@ -391,6 +396,7 @@ namespace Riry.RiryTools.Editor
         {
             var tree = new BlendTree { name = parameter, blendType = BlendTreeType.Simple1D, blendParameter = parameter, useAutomaticThresholds = false, hideFlags = HideFlags.HideInHierarchy };
             AssetDatabase.AddObjectToAsset(tree, controller);
+            Undo.RegisterCreatedObjectUndo(tree, CreatedUndo);
             tree.children = new[]
             {
                 new ChildMotion { motion = lowMotion, threshold = low, timeScale = 1f },
@@ -553,6 +559,8 @@ namespace Riry.RiryTools.Editor
 //   WritesDefaults                 Generated states copy what most of the controller's states use.
 //   Clips                          Saved in ClipFolderPath: Assets/RiryTools/InsertableProps/IP_<id>_<first 8 of the controller
 //                                  GUID>/ ("IP_<id> <name>.anim"); replaced in place. One folder per pair and controller.
+//   CreatedUndo                    Each layer's state machine and every blend tree are registered as created (after
+//                                  AddObjectToAsset), so Ctrl+Z takes them out of the controller file; clip files stay.
 //   HasLayers(controller, id)      The controller has some of the pair's layers (the window asks before replacing them when
 //                                  this avatar has no rig for the pair: another avatar of the same name uses them).
 //   Remove(...)                    Removes the layers, parameters and synced State; the clips folder is the window's call.

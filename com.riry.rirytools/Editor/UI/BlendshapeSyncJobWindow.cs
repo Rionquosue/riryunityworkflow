@@ -96,7 +96,11 @@ namespace Riry.RiryTools.Editor
                     }
                     if (GUILayout.Button("Remove", GUILayout.Width(65f)))
                     {
-                        BlendshapeSyncJobs.Remove(job);
+                        // Ctrl+Z can't bring a job back, and its original weights go with it.
+                        if (EditorUtility.DisplayDialog("Blendshape Sync", "Remove job " + job.JobNumber + " (" + name + ")?" +
+                                (job.HasOriginals ? "\n\nIts original weights (Set All to Original) are lost with it." : "") +
+                                "\n\nCtrl+Z can't bring the job back. The renderers' current weights stay.", "Remove", "Cancel"))
+                            BlendshapeSyncJobs.Remove(job);
                         GUIUtility.ExitGUI();
                     }
                 }
@@ -125,4 +129,4 @@ namespace Riry.RiryTools.Editor
 //   once about jobs and children it could not restore.
 // BlendshapeSyncJobWindow (this file): the job popup; draws the job's own window; closing keeps the job.
 // BlendshapeSyncJobList (this file): the Main Menu tab: one row per job (master > children, Auto, Sync Now,
-//   Edit, Set All to Original, Remove), then Add Job. Below WideRow (570) window width the buttons go on a second line.
+//   Edit, Set All to Original, Remove (asks first: not undoable, its originals go with it)), then Add Job. Below WideRow (570) window width the buttons go on a second line.

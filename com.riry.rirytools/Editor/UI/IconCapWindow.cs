@@ -91,17 +91,81 @@ namespace Riry.RiryTools.Editor
 
         private const string SettingsUndo = "IconCap settings";
 
+        /// <summary>
+        /// The window's state that is not a capture setting. Undo records the whole window, so after any Undo or Redo
+        /// these are put back as they were (OnUndoRedo): Ctrl+Z of a setting never brings back old captures, exports,
+        /// the export folder, the generator or the other fields.
+        /// </summary>
+        private sealed class Kept
+        {
+            public List<IconCapEntry> Session;
+            public int Latest, JobChoice;
+            public string LastSavedPath, ExportFolder, PresetName;
+            public IconCapEntry LastCapture, LastSave;
+            public IconGenerator ThroughGenerator, Generator;
+            public bool LargePreviews, FoldEffects, FoldSession, FoldObjects, FoldCamera, FoldBackground, FoldOptions, FoldRestore,
+                FoldGenerator, FoldGeneratorStack, FoldJobs;
+            public Vector2 Scroll;
+        }
+
+        [NonSerialized] private Kept kept;
+
+        // Called after every draw and every action that changes that state.
+        private void Keep()
+        {
+            kept = new Kept
+            {
+                Session = session, Latest = latest, JobChoice = jobChoice, LastSavedPath = lastSavedPath, ExportFolder = exportFolder,
+                PresetName = presetName, LastCapture = lastCapture, LastSave = lastSave, ThroughGenerator = throughGenerator,
+                Generator = generator, LargePreviews = largePreviews, FoldEffects = foldEffects, FoldSession = foldSession,
+                FoldObjects = foldObjects, FoldCamera = foldCamera, FoldBackground = foldBackground, FoldOptions = foldOptions,
+                FoldRestore = foldRestore, FoldGenerator = foldGenerator, FoldGeneratorStack = foldGeneratorStack, FoldJobs = foldJobs,
+                Scroll = scroll
+            };
+        }
+
+        private void OnUndoRedo()
+        {
+            if (kept != null)
+            {
+                session = kept.Session;
+                latest = kept.Latest;
+                jobChoice = kept.JobChoice;
+                lastSavedPath = kept.LastSavedPath;
+                exportFolder = kept.ExportFolder;
+                presetName = kept.PresetName;
+                lastCapture = kept.LastCapture;
+                lastSave = kept.LastSave;
+                throughGenerator = kept.ThroughGenerator;
+                generator = kept.Generator;
+                largePreviews = kept.LargePreviews;
+                foldEffects = kept.FoldEffects;
+                foldSession = kept.FoldSession;
+                foldObjects = kept.FoldObjects;
+                foldCamera = kept.FoldCamera;
+                foldBackground = kept.FoldBackground;
+                foldOptions = kept.FoldOptions;
+                foldRestore = kept.FoldRestore;
+                foldGenerator = kept.FoldGenerator;
+                foldGeneratorStack = kept.FoldGeneratorStack;
+                foldJobs = kept.FoldJobs;
+                scroll = kept.Scroll;
+            }
+            Repaint();
+        }
+
         private void OnEnable()
         {
-            Undo.undoRedoPerformed -= Repaint;
-            Undo.undoRedoPerformed += Repaint;
+            Undo.undoRedoPerformed -= OnUndoRedo;
+            Undo.undoRedoPerformed += OnUndoRedo;
+            Keep();
             EditorApplication.update += Watch;
             if (slots.TrueForAll(slot => slot == null)) SnapToSelection();
         }
 
         private void OnDisable()
         {
-            Undo.undoRedoPerformed -= Repaint;
+            Undo.undoRedoPerformed -= OnUndoRedo;
             EditorApplication.update -= Watch;
             ReleasePreviews();
         }
@@ -239,6 +303,7 @@ namespace Riry.RiryTools.Editor
                     Undo.RecordObject(this, SettingsUndo);
                     JsonUtility.FromJsonOverwrite(settingsAfter, settings);
                 }
+                Keep();
             }
         }
 
@@ -855,6 +920,7 @@ namespace Riry.RiryTools.Editor
             session.Add(entry);
             latest = session.Count - 1;
             lastCapture = IconCapAssets.Copy(entry);
+            Keep();
             Repaint();
         }
 
@@ -919,6 +985,7 @@ namespace Riry.RiryTools.Editor
             lastSavedPath = path;
             lastSave = IconCapAssets.Copy(entry);
             jobFiles.Clear();
+            Keep();
             Repaint();
         }
 
@@ -929,6 +996,7 @@ namespace Riry.RiryTools.Editor
             session.RemoveAt(index);
             if (latest == index) latest = session.Count - 1;
             else if (latest > index) latest--;
+            Keep();
         }
 
         private static bool SamePath(string left, string right)
@@ -988,6 +1056,7 @@ namespace Riry.RiryTools.Editor
             file.Jobs.Add(new IconCapJob { Name = name, Entries = SavedHere(folder) });
             IconCapFiles.WriteJobs(folder, file);
             jobChoice = file.Jobs.Count - 1;
+            Keep();
             ForgetFiles();
             Repaint();
         }
@@ -1019,6 +1088,7 @@ namespace Riry.RiryTools.Editor
             IconCapFiles.SavePreset(name, IconCapAssets.Copy(settings));
             presetName = name;
             presetNames = null;
+            Keep();
             Repaint();
         }
 
@@ -1049,6 +1119,7 @@ namespace Riry.RiryTools.Editor
             AssetDatabase.CreateAsset(created, path);
             AssetDatabase.SaveAssets();
             generator = created;
+            Keep();
             Repaint();
         }
 
@@ -1177,6 +1248,9 @@ namespace Riry.RiryTools.Editor
 //                       a change is put back, recorded and set again, so Ctrl+Z undoes Size, a loaded preset, the
 //                       effect stack, camera, background and options. Capture only selected, the object slots and
 //                       Isolated item record the same way (RiryGui.Set). Repaints on Undo/Redo.
+//   Kept / Keep() / OnUndoRedo()  Everything else (session, latest, last capture and save, export folder, generators,
+//                       job, preset name, folds, scroll), kept after each draw and action and put back after any
+//                       Undo/Redo, so Ctrl+Z of a setting never reverts captures or exports.
 //   [SerializeField]    settings, onlySelected, slots, isolated, exportFolder, session, latest, lastSavedPath,
 //                       lastCapture, lastSave, throughGenerator, generator, largePreviews, jobChoice, presetName,
 //                       the fold states, scroll.

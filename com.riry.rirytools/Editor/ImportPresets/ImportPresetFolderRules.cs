@@ -298,6 +298,66 @@ namespace Riry.RiryTools.Editor
         {
             if (HandEdited(folder)) return false;
             ImportPresetMarker.Rules before = Read(folder);
+            ImportPresetMarker.Rules after = After(folder, picks, betterFbx);
+            bool changed;
+            WriteMarker(folder, after.IsEmpty ? null : ImportPresetMarker.Generate(after), out changed);
+
+            foreach (KeyValuePair<AssetImporter, ImportPresetMarker.Target> change in Changes(folder, before, after))
+            {
+                AssetImporter listed = change.Key;
+                ImportPresetMarker.Target now = change.Value;
+                string path = listed.assetPath;
+                // A model set to Automatically extract animations is extracted as Generic first.
+                var model = listed as ModelImporter;
+                if (model != null && ImportPresetAnimations.ShouldExtract(path))
+                {
+                    List<string> skipped;
+                    ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
+                        ImportPresetOwnedFiles.IsUnchanged, false, out skipped);
+                }
+                AssetImporter importer = AssetImporter.GetAtPath(path);
+                string applied;
+                if (importer == null || !ImportPresetLibrary.TryApply(importer, now.Configuration, now.Preset, out applied)) continue;
+                importer.SaveAndReimport();
+                processed++;
+            }
+            if (betterFbx == true && !before.BetterFbx.Contains(BetterFbxExporter.SourceExtension))
+            {
+                foreach (string file in Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension))
+                {
+                    ImportPresetPostprocessor.ExportOne(folder.TrimEnd('/') + "/" + Path.GetFileName(file), false);
+                    processed++;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// How many files Apply would reimport with a new preset or export with Better FBX, changing nothing; 0 for a
+        /// hand-edited ImportPreset.md. The windows show it before Apply, which Undo can't revert.
+        /// </summary>
+        internal static int WouldChange(string folder, IEnumerable<Pick> picks, bool? betterFbx)
+        {
+            if (HandEdited(folder)) return 0;
+            ImportPresetMarker.Rules before = Read(folder);
+            int count = Changes(folder, before, After(folder, picks, betterFbx)).Count;
+            if (betterFbx == true && !before.BetterFbx.Contains(BetterFbxExporter.SourceExtension))
+                count += Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension).Length;
+            return count;
+        }
+
+        /// <summary>Asks before an Apply that reimports files, which Undo can't revert. True to go on (also when nothing changes).</summary>
+        internal static bool ConfirmApply(int files, string where)
+        {
+            return files == 0 || EditorUtility.DisplayDialog("Set Folder Import Presets", "Apply changes the import settings of " + files +
+                " file(s) in " + where + " and reimports them (models set to extract animations are extracted again, and .blend " +
+                "files are exported when Better FBX is turned on).\n\nCtrl+Z can't revert import settings or exported files. " +
+                "Commit or back up first if you may want them back.", "Apply", "Cancel");
+        }
+
+        // The folder's rules with the picks and Better FBX choice applied.
+        private static ImportPresetMarker.Rules After(string folder, IEnumerable<Pick> picks, bool? betterFbx)
+        {
             ImportPresetMarker.Rules after = Read(folder);
             foreach (Pick pick in picks) after.Set(pick.Label, pick.Configuration, pick.Configuration != null ? pick.Preset : null);
             if (betterFbx.HasValue)
@@ -305,10 +365,14 @@ namespace Riry.RiryTools.Editor
                 after.BetterFbx.Remove(BetterFbxExporter.SourceExtension);
                 if (betterFbx.Value) after.BetterFbx.Add(BetterFbxExporter.SourceExtension);
             }
-            bool changed;
-            WriteMarker(folder, after.IsEmpty ? null : ImportPresetMarker.Generate(after), out changed);
+            return after;
+        }
 
-            // Each file once, by the preset it gets now (its decorator's, else its plain type's).
+        // Each file once, with the preset it gets now (its decorator's, else its plain type's), when that changed.
+        private static List<KeyValuePair<AssetImporter, ImportPresetMarker.Target>> Changes(string folder,
+            ImportPresetMarker.Rules before, ImportPresetMarker.Rules after)
+        {
+            var changes = new List<KeyValuePair<AssetImporter, ImportPresetMarker.Target>>();
             HashSet<string> decorators = Decorators(folder);
             var done = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, List<AssetImporter>> type in InFolder(folder))
@@ -321,30 +385,10 @@ namespace Riry.RiryTools.Editor
                     if (now.Configuration == null || Same(Effective(before, listed, decorators), now)) continue;
                     // A Better FBX source is not configured itself; its exported FBX is.
                     if (after.BetterFbx.Contains(ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path)))) continue;
-                    // A model set to Automatically extract animations is extracted as Generic first.
-                    var model = listed as ModelImporter;
-                    if (model != null && ImportPresetAnimations.ShouldExtract(path))
-                    {
-                        List<string> skipped;
-                        ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
-                            ImportPresetOwnedFiles.IsUnchanged, out skipped);
-                    }
-                    AssetImporter importer = AssetImporter.GetAtPath(path);
-                    string applied;
-                    if (importer == null || !ImportPresetLibrary.TryApply(importer, now.Configuration, now.Preset, out applied)) continue;
-                    importer.SaveAndReimport();
-                    processed++;
+                    changes.Add(new KeyValuePair<AssetImporter, ImportPresetMarker.Target>(listed, now));
                 }
             }
-            if (betterFbx == true && !before.BetterFbx.Contains(BetterFbxExporter.SourceExtension))
-            {
-                foreach (string file in Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension))
-                {
-                    ImportPresetPostprocessor.ExportOne(folder.TrimEnd('/') + "/" + Path.GetFileName(file), false);
-                    processed++;
-                }
-            }
-            return true;
+            return changes;
         }
 
         /// <summary>

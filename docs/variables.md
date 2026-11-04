@@ -198,8 +198,8 @@ Other tools:
 | `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1` | **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves |
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px | Tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs |
 | `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
-| `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of an extraction (replaced clips are recorded; new files are not removed by Undo) |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
+| `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of the Extract button's extraction (replaced clips are recorded; new files are not removed by Undo). Automatic extractions (first import, re-export, Folder Rules Apply) leave no Undo step |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |

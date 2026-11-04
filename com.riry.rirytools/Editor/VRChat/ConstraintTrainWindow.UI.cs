@@ -233,7 +233,7 @@ namespace Riry.RiryTools.Editor
 //   DrawPrefabSave()               Save as Prefab Overrides / Save to <name>_ROOT (prefab instances only).
 //
 // ACTIONS AND HELPERS (ConstraintTrainWindow.cs)
-//   UseSelection(active, selected) Internal; sets realStart (and realEnd from a selected descendant).
+//   UseSelection(active, selected) Internal; sets realStart (and realEnd from a selected descendant), recorded for Undo.
 //   OnEnable()                     Window size and field repair; repaints on Undo/Redo (OnUndoRedo).
 //   SettingsUndo                   "Constraint Train settings": Undo name of every field edit (RiryGui.Set), so Ctrl+Z
 //                                  puts back the chain, slots, timing, curves and clip; generating also fills slots undoably.

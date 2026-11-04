@@ -147,7 +147,8 @@ namespace Riry.RiryTools.Editor
                 int cost = InsertablePropAnimator.SyncedCost(expressions);
                 status = "Generated " + InsertablePropRig.RootPrefix + rig.Id + " into " + controller.name + " and " + expressions.name + ": " +
                     InsertablePropRig.Report(avatar.transform, socket, rig.Id) + ". Synced parameters use " + cost + " of 256 bits." +
-                    " Move the handles in the Scene view, then Generate again to apply them.";
+                    " Move the handles in the Scene view, then Generate again to apply them. Ctrl+Z undoes the objects, layers and " +
+                    "parameters; new clip files in " + InsertablePropAnimator.ClipFolderPath(rig.Id, controller) + " stay.";
                 if (cost > 256) status += " That is over VRChat's limit, so the avatar can't be uploaded until some are removed.";
             }
             catch (Exception exception)
@@ -174,7 +175,9 @@ namespace Riry.RiryTools.Editor
             string folder = InsertablePropAnimator.ClipFolderPath(id, controller);
             int choice = EditorUtility.DisplayDialogComplex(UndoName, "Remove " + InsertablePropRig.RootPrefix + id + " from the avatar" +
                 (controller != null ? ", " + controller.name : "") + (expressions != null ? " and " + expressions.name : "") + "?\n\n" +
-                "Its clips are in " + folder + ". Undo can't bring back deleted files.", "Remove, keep clips", "Cancel", "Remove and delete clips");
+                "Its clips are in " + folder + ". Undo can't bring back deleted files: after Ctrl+Z of \"Remove and delete clips\", " +
+                "the layers come back with their clips missing (Generate again to remake them).", "Remove, keep clips", "Cancel",
+                "Remove and delete clips");
             if (choice == 1) return;
 
             Undo.IncrementCurrentGroup();
