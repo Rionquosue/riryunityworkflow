@@ -12,7 +12,11 @@
   "overrideReferences": true,
   "precompiledReferences": [
     "VRC.Dynamics.dll",
-    "VRC.SDK3.Dynamics.Constraint.dll"
+    "VRC.SDK3.Dynamics.Constraint.dll",
+    "VRC.SDK3.Dynamics.Contact.dll",
+    "VRC.SDK3.Dynamics.PhysBone.dll",
+    "VRCSDK3A.dll",
+    "VRCSDKBase.dll"
   ],
   "autoReferenced": false,
   "defineConstraints": [

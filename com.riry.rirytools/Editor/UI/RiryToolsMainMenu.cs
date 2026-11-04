@@ -18,6 +18,7 @@ namespace Riry.RiryTools.Editor
         // Set by Editor/VRChat/RiryVRChatMenus.cs when the VRChat SDK is in the project.
         internal static Func<EditorWindow> CreateConstraintTrain;
         internal static Func<EditorWindow> CreateConstraintBezier;
+        internal static Func<EditorWindow> CreateConstraintInsertable;
 
         private static readonly string[] Tabs =
         {
@@ -26,7 +27,7 @@ namespace Riry.RiryTools.Editor
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
         // Constraint Tool's sub-tabs, as in its own window (Editor/VRChat/ConstraintToolWindow.cs).
-        private static readonly string[] ConstraintTabs = { "Train", "Bezier" };
+        private static readonly string[] ConstraintTabs = { "Train", "Bezier", "Insertable prop" };
         private static readonly string[] ImportTabs =
         {
             "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
@@ -155,6 +156,7 @@ namespace Riry.RiryTools.Editor
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Tool":
                     if (CreateConstraintTrain == null) return null;
+                    if (constraintTab == 2) return Host("Insertable prop", CreateConstraintInsertable, null);
                     return constraintTab == 1 ? Host("Bezier", CreateConstraintBezier, null) : Host("Train", CreateConstraintTrain, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
                 case "Import Presets":
@@ -291,7 +293,7 @@ namespace Riry.RiryTools.Editor
             string name = Current;
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
-                : name == "Constraint Tool" ? ConstraintTabs[Mathf.Clamp(constraintTab, 0, 1)]
+                : name == "Constraint Tool" ? ConstraintTabs[Mathf.Clamp(constraintTab, 0, ConstraintTabs.Length - 1)]
                 : name == "Blendshape Sync" || name == "Stop Auto Game" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
@@ -321,9 +323,9 @@ namespace Riry.RiryTools.Editor
 //                            the tool in its own floating window (OpenPopup), not inside this one.
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train and Bezier, hosted as "Train"
-//                            and "Bezier", like its own window (Editor/VRChat/ConstraintToolWindow.cs).
-//   CreateConstraintTrain / CreateConstraintBezier  Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK
+//   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train, Bezier and Insertable prop,
+//                            hosted under those names, like its own window (Editor/VRChat/ConstraintToolWindow.cs).
+//   CreateConstraintTrain / CreateConstraintBezier / CreateConstraintInsertable  Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK
 //                            (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.

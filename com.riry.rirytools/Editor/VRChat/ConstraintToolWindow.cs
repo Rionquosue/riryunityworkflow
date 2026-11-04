@@ -4,21 +4,23 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool: one window with a tab per subtool, Train (ConstraintTrainWindow) and
-    /// Bezier (ConstraintBezierWindow). Each subtool is its own window, hosted unseen and drawn
+    /// Constraint Tool: one window with a tab per subtool, Train (ConstraintTrainWindow),
+    /// Bezier (ConstraintBezierWindow) and Insertable prop (InsertablePropWindow). Each subtool is its own window, hosted unseen and drawn
     /// by calling its OnGUI, as the Main Menu does. Opened from Tools > RiryTools > Constraint
     /// Tool and the Hierarchy's RiryTools > Constraint Tool > Train / Bezier (RiryVRChatMenus.cs).
     /// </summary>
     internal sealed class ConstraintToolWindow : EditorWindow
     {
         internal const string Title = "Constraint Tool";
-        internal static readonly string[] Tabs = { "Train", "Bezier" };
+        internal static readonly string[] Tabs = { "Train", "Bezier", "Insertable prop" };
         internal const int TrainTab = 0;
         internal const int BezierTab = 1;
+        internal const int InsertableTab = 2;
 
         [SerializeField] private int tab;
         [SerializeField] private ConstraintTrainWindow train;
         [SerializeField] private ConstraintBezierWindow bezier;
+        [SerializeField] private InsertablePropWindow insertable;
 
         /// <summary>Opens the window on that tab; a tab below 0 keeps the one it had.</summary>
         internal static ConstraintToolWindow Open(int tab)
@@ -63,6 +65,15 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        private InsertablePropWindow Insertable
+        {
+            get
+            {
+                if (insertable == null) insertable = Hidden<InsertablePropWindow>();
+                return insertable;
+            }
+        }
+
         private static T Hidden<T>() where T : EditorWindow
         {
             var window = CreateInstance<T>();
@@ -72,7 +83,7 @@ namespace Riry.RiryTools.Editor
 
         private EditorWindow Current
         {
-            get { return tab == BezierTab ? (EditorWindow)Bezier : Train; }
+            get { return tab == InsertableTab ? Insertable : tab == BezierTab ? (EditorWindow)Bezier : Train; }
         }
 
         private void OnGUI()
@@ -106,6 +117,7 @@ namespace Riry.RiryTools.Editor
         {
             if (train != null) DestroyImmediate(train);
             if (bezier != null) DestroyImmediate(bezier);
+            if (insertable != null) DestroyImmediate(insertable);
         }
     }
 }
@@ -115,10 +127,11 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // ConstraintToolWindow        The "Constraint Tool" window (Title); minSize 420 x 500.
-//   Tabs                      Train (TrainTab 0, ConstraintTrainWindow) and Bezier (BezierTab 1, ConstraintBezierWindow),
+//   Tabs                      Train (TrainTab 0, ConstraintTrainWindow), Bezier (BezierTab 1, ConstraintBezierWindow) and
+//                             Insertable prop (InsertableTab 2, InsertablePropWindow),
 //                             drawn with RiryToolsMainMenu.TabStrip.
 //   tab                       [SerializeField] The open tab.
-//   train / bezier            [SerializeField] The subtool windows, made on first use (Hidden) and never shown;
+//   train / bezier / insertable  [SerializeField] The subtool windows, made on first use (Hidden) and never shown;
 //                             drawn by calling their OnGUI (RiryToolsMainMenu.Call). Destroyed with this window.
 //   Open(tab)                 Opens the window on that tab (below 0 keeps the last one). OpenFromTools: Tools > RiryTools >
 //                             Constraint Tool, on the tab used last. OpenTrainFromHierarchy / OpenBezierFromHierarchy:

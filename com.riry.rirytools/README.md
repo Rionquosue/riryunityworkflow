@@ -89,8 +89,8 @@ per-user setting. See the [tutorial](https://github.com/Rionquosue/riryunitywork
 ## Constraint Tool
 
 Requires the VRChat Avatars SDK 3.7.0 or newer. **Tools > RiryTools >
-Constraint Tool** opens one window with a tab per subtool, **Train** and
-**Bezier**; right-clicking a bone in the Hierarchy > **RiryTools > Constraint
+Constraint Tool** opens one window with a tab per subtool, **Train**,
+**Bezier** and **Insertable prop**; right-clicking a bone in the Hierarchy > **RiryTools > Constraint
 Tool > Train** or **Bezier** opens that tab with the selection as the chain.
 
 **Train** drives a real bone chain onto up to five physics chains
@@ -121,6 +121,28 @@ Before generating, the window shows how far the bones are from the fitted curve
 and how many constraints the rig adds; once made, its constraint count and
 depth. **Generate rig** and **Remove rig** are one Undo step each, and nothing is
 unpacked.
+
+**Insertable prop** (needs SDK 3.10.6 or newer) builds a draw, drop and reinsert
+system for a prop and its socket, such as a dagger and sheath. Choose the avatar,
+the prop prefab (placed as an instance; the asset is never changed) and the
+socket, then **Generate**. Move the **Grip**, **Insertion tip**, **Socket opening**
+and **Seated pose** handles in the Scene view and Generate again to apply them.
+
+- The prop starts seated and follows the socket. The wearer or other players
+  (**Wearer can grab**, **Others can grab**) grab it through a PhysBone; it turns
+  with the holder's hand, read from their little finger by a contact receiver with
+  advanced parameters, or from the wearer's own hand bones.
+- Released with its tip inside the **Capture radius**, or while the hand reading is
+  too weak, it aims into the socket and slides in (**Insert smoothing**). Otherwise
+  it drops: on **PC** as a physics body joined to the hand by a ConfigurableJoint
+  (**Stiffness**), so it can be thrown; on **Android** onto what a raycast below it
+  hits.
+- **Append to controller:** and **Append to parameters:** choose where the layers,
+  parameters and synced state go (empty: the avatar's FX controller and Expression
+  Parameters), each with a **New** button. Clips are saved in
+  `Assets/RiryTools/InsertableProps`. Everything is named `IP_<avatar>_<prop>`, so
+  Generate updates the pair without duplicating anything, and **Remove** takes it
+  out.
 
 ## GUID Tools
 
@@ -225,5 +247,5 @@ is in `Editor/UI/RiryMenus.cs`, except Constraint Tool's, which are in
 `Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
 path or priority there to move an entry. Each window's drawing code is in
 `Editor/UI/` (Constraint Tool's in `Editor/VRChat/`: `ConstraintToolWindow.cs`, and its
-tabs `ConstraintTrainWindow.UI.cs` and `ConstraintBezierWindow.UI.cs`),
+tabs `ConstraintTrainWindow.UI.cs`, `ConstraintBezierWindow.UI.cs` and `InsertablePropWindow.UI.cs`),
 with a glossary of its fields and methods at the bottom of each file.

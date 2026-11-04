@@ -12,11 +12,12 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class RiryVRChatMenus
     {
-        // The Main Menu's Constraint Tool tab hosts these windows (its Train and Bezier sub-tabs).
+        // The Main Menu's Constraint Tool tab hosts these windows (its Train, Bezier and Insertable prop sub-tabs).
         static RiryVRChatMenus()
         {
             RiryToolsMainMenu.CreateConstraintTrain = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintTrainWindow>();
             RiryToolsMainMenu.CreateConstraintBezier = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintBezierWindow>();
+            RiryToolsMainMenu.CreateConstraintInsertable = () => UnityEngine.ScriptableObject.CreateInstance<InsertablePropWindow>();
         }
 
         [MenuItem(RiryMenus.ConstraintTool, false, 2030)]

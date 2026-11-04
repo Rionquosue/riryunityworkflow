@@ -18,9 +18,9 @@ name.
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
 - **Tool names:** Attach To, AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
-  Animation Keys, Constraint Tool (subtools Train and Bezier), GUID Tools, IconCap, Import Presets, Stop
+  Animation Keys, Constraint Tool (subtools Train, Bezier and Insertable prop), GUID Tools, IconCap, Import Presets, Stop
   Auto Game. Class, file, folder and
-  document names follow them; Constraint Tool's subtools are `ConstraintTrain*` and `ConstraintBezier*`.
+  document names follow them; Constraint Tool's subtools are `ConstraintTrain*`, `ConstraintBezier*` and `InsertableProp*`.
 
 ## Stored settings
 
@@ -123,7 +123,7 @@ Environment variables set for Git commands:
 |---|---|---|
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
-| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll` and `VRC.SDK3.Dynamics.Constraint.dll` | Constraint Tool window (Train and Bezier tabs) and menu |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll` | Constraint Tool window (Train, Bezier and Insertable prop tabs) and menu |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
 | `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
@@ -198,16 +198,25 @@ Other tools:
 | `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1` | **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves |
 | `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
 | `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of an extraction (replaced clips are recorded; new files are not removed by Undo) |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
-| `ConstraintToolWindow.Title` / `Tabs` | `Constraint Tool` / `Train`, `Bezier` | The Constraint Tool window and its tabs (also the Main Menu's `ConstraintTabs`); minSize 420 x 500 |
+| `ConstraintToolWindow.Title` / `Tabs` | `Constraint Tool` / `Train`, `Bezier`, `Insertable prop` | The Constraint Tool window and its tabs (also the Main Menu's `ConstraintTabs`); minSize 420 x 500 |
 | `ConstraintBezierWindow.UndoName` | `Bezier rig` | Undo group of Generate rig; Remove rig is `Remove Bezier rig` |
 | `ConstraintBezierWindow.RigPrefix` / `MechanismPrefix` | `BezierRig_` / `Bezier_` | The rig object and the mechanism chain, each a sibling of the chain start named prefix + its name |
 | Bezier rig objects | `Anchor Start`, `Anchor End`, `Handle Start`, `Handle End`, `Samples/Sample NN`, `Twist/Twist NN` | Children of `BezierRig_<start>` (handles under their anchors with **Handles follow anchors**) |
 | `ConstraintBezierWindow.MinAimDistance` | `1e-5` | Shorter directions are not aimed along |
 | `ConstraintBezierCurve.ArcSteps` / `FitRounds` / `Regularization` | `256` / `4` / `1e-6` | Length table steps, fit rounds, and the pull of P1/P2 to straight-line handles |
+| `InsertablePropRig.RootPrefix` / pair ID | `IP_` / `<avatar>_<prop>` (non-alphanumerics as `_`) | Names of the pair's objects, contact tag (`IP_<id>_Tip`), parameters, layers and clip folder |
+| Insertable prop objects | `IP_<id>/Prop`, `Rig/Anchor/End`, `Rig/GripSense/Marker`, `Rig/Frame Remote`, `Frame Wearer L`, `Frame Wearer R`, `Frame Sheath`, `Rig/HandFrame`, `Rig/Hand`, `World/Body`, `World/Follower` (PC), `Drop/RayOrigin`, `Landed`, `DropYaw/Lying` (Android); on the prop `IP Grip`, `IP Tip`; on the socket `IP_<id> Seat`, `Opening`, `Entry` | Generated by `InsertablePropRig.Build` |
+| Insertable prop parameters | `IP_<id>_IsGrabbed`, `IP_<id>_Grip_SenderType`, `_SenderLocalPositionX/Y/Z`, `_PointSeparation`, `_CollisionTag_FingerLittleL/R`, `IP_<id>_Sheath`, `IP_<id>_State` (synced Int: Seated 0, Held 1, Inserting 2, Dropped 3), `IP_<id>_One` | Animator and Expression parameters (`InsertablePropAnimator`) |
+| Insertable prop layers | `IP_<id> Decide`, `Pose`, `Hand`, `Blend` | Appended to the chosen controller, else the avatar's FX |
+| Insertable prop clips | `Assets/RiryTools/InsertableProps/IP_<id>/` | `InsertablePropAnimator.ClipFolder`; replaced in place on Generate |
+| `InsertablePropWindow.Settings` defaults | capture radius `0.05` m, grip smoothing `0.08` s, insert smoothing `0.15` s, stiffness `1500` | Insertable prop tab options |
+| `InsertablePropMath.MaxStretch` / `AnchorLength` / `EntryMargin` / `SettledFraction` | `5` / `1.7` m / `0.03` m / `0.99` | PhysBone stretch cap (SDK), root-to-end rest distance (reach about 10 m), entry point margin, slide step end |
+| `InsertablePropRig.TipRadius` / `GripReceiverRadius` / `GrabRadius` / `PickupLayer` | `0.01` / `0.15` / `0.06` m / `13` | Tip sender, grip receiver, PhysBone grab radius, body layer |
+| `InsertablePropAnimator.WeakSeparation` / `InsideSheath` | `0.01` m / `0.001` | Grip reading too weak below this; tip inside the capture radius above this proximity |
 | `StopAutoGame.HandleDelayMs` | `100` | Delay after Play Mode starts before focus is restored |
 | `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
