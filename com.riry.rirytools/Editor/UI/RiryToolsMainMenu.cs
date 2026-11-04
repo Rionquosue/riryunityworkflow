@@ -136,6 +136,8 @@ namespace Riry.RiryTools.Editor
                         if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
                         else EditorApplication.delayCall += AvatarMigrationAssistant.OpenPopup;
                     }
+                    // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
+                    if (GUILayout.Button("Reload domain", GUILayout.Height(28f))) RiryMenus.ReloadDomain();
                     EditorGUILayout.Space(4f);
                     // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
                     bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
@@ -325,8 +327,8 @@ namespace Riry.RiryTools.Editor
 //                            Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
-//                            the tool in its own floating window (OpenPopup), not inside this one; then the Stop Auto
-//                            Game toggle (StopAutoGame.Enabled, set only when clicked).
+//                            the tool in its own floating window (OpenPopup), not inside this one; then Reload domain
+//                            (RiryMenus.ReloadDomain) and the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
 //   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train, Bezier and Insertable prop,

@@ -18,4 +18,5 @@ First release of RiryTools (`com.riry.rirytools`), editor-only tools for Unity 2
 - **Import Presets**: per-folder import presets, animation extraction (with an Extract Animation window that can clean keys and extract a model automatically) and Better FBX export.
 - **Main Menu**: one dockable window with a tab per tool.
 - **Menu Mockup**: lays out an example editor window from blocks and saves it as `.yml`.
+- **Reload domain**: reloads the script domain on demand, from the Tools menu or the Main Menu's Tools tab.
 - **Stop Auto Game**: keeps focus off the Game view when Play Mode starts.
