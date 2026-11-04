@@ -49,7 +49,13 @@ namespace Riry.RiryTools.Editor
         private static readonly Color DarkActiveTab = new Color32(90, 90, 90, 255);
         private static readonly Color LightTab = new Color32(200, 200, 200, 255);
         private static readonly Color LightActiveTab = new Color32(160, 160, 160, 255);
-        private static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.35f);
+        private static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.5f);
+        // Outline around every tab, in whole pixels so it draws crisply.
+        private const float TabBorder = 2f;
+        // Space above the sub-tab strips (Constraint Tool, Import Presets), under the main tabs.
+        private const float SubTabGap = 8f;
+        // Space above the main tabs, so their top outline isn't hidden under the window's own tab.
+        private const float TopMargin = 2f;
         private const float HoverTint = 0.1f;
         private static GUIStyle tabLabel;
         private static GUIStyle activeTabLabel;
@@ -72,6 +78,7 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             wantsMouseMove = true;
+            GUILayout.Space(TopMargin);
             int chosen = TabStrip(this, tab, Tabs);
             if (chosen != tab) tabScroll = Vector2.zero;
             tab = chosen;
@@ -115,11 +122,13 @@ namespace Riry.RiryTools.Editor
                         EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Tool").Message, MessageType.Info);
                         break;
                     }
+                    EditorGUILayout.Space(SubTabGap);
                     constraintTab = TabStrip(this, constraintTab, ConstraintTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
                     Draw(Active());
                     break;
                 case "Import Presets":
+                    EditorGUILayout.Space(SubTabGap);
                     importTab = TabStrip(this, importTab, ImportTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
                     if (importTab == 3)
@@ -212,7 +221,12 @@ namespace Riry.RiryTools.Editor
             Event current = Event.current;
             for (int i = 0; i < names.Length; i++)
             {
-                var cell = new Rect(area.x + (i % perRow) * width, area.y + (i / perRow) * height, width, height);
+                // Edges rounded to whole pixels: at fractional positions the outlines drew faintly or not at all.
+                int column = i % perRow;
+                int row = i / perRow;
+                float left = Mathf.Round(area.x + column * width);
+                float top = Mathf.Round(area.y + row * height);
+                var cell = new Rect(left, top, Mathf.Round(area.x + (column + 1) * width) - left, Mathf.Round(area.y + (row + 1) * height) - top);
                 bool active = i == selected;
                 if (current.type == EventType.Repaint)
                 {
@@ -220,8 +234,12 @@ namespace Riry.RiryTools.Editor
                     if (!active && cell.Contains(current.mousePosition))
                         color = dark ? color + new Color(HoverTint, HoverTint, HoverTint, 0f) : color - new Color(HoverTint / 2f, HoverTint / 2f, HoverTint / 2f, 0f);
                     EditorGUI.DrawRect(cell, color);
-                    EditorGUI.DrawRect(new Rect(cell.xMax - 1f, cell.y, 1f, cell.height), TabSeparator);
-                    EditorGUI.DrawRect(new Rect(cell.x, cell.yMax - 1f, cell.width, 1f), TabSeparator);
+                    // An outline TabBorder thick on every side: each tab draws its right and bottom edges, and the
+                    // first column and row their left and top, so shared edges aren't doubled.
+                    EditorGUI.DrawRect(new Rect(cell.xMax - TabBorder, cell.y, TabBorder, cell.height), TabSeparator);
+                    EditorGUI.DrawRect(new Rect(cell.x, cell.yMax - TabBorder, cell.width, TabBorder), TabSeparator);
+                    if (column == 0) EditorGUI.DrawRect(new Rect(cell.x, cell.y, TabBorder, cell.height), TabSeparator);
+                    if (row == 0) EditorGUI.DrawRect(new Rect(cell.x, cell.y, cell.width, TabBorder), TabSeparator);
                     (active ? activeTabLabel : tabLabel).Draw(cell, new GUIContent(names[i]), false, false, false, false);
                 }
                 else if (current.type == EventType.MouseDown && current.button == 0 && cell.Contains(current.mousePosition))
@@ -344,6 +362,8 @@ namespace Riry.RiryTools.Editor
 //   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
 //                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
 //                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
-//                            (HoverTint), like YGDR Animator Editor's tab strip.
+//                            (HoverTint), like YGDR Animator Editor's tab strip. Every tab has a TabBorder (2 px) outline
+//                            in TabSeparator, on edges rounded to whole pixels.
+//   TopMargin / SubTabGap    2 px above the main tabs; 8 px between them and a tab's sub-tabs (Constraint Tool, Import Presets).
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.

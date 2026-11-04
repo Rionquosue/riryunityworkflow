@@ -196,6 +196,7 @@ Other tools:
 | `CleanAnimationKeysButton.ScanIntervalSeconds` | `0.5` | How often the focused Animation window is checked |
 | `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys` | UI Toolkit name of the **Clean Keys** button |
 | `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1` | **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves |
+| `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px | Tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs |
 | `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
 | `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of an extraction (replaced clips are recorded; new files are not removed by Undo) |
 | Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
