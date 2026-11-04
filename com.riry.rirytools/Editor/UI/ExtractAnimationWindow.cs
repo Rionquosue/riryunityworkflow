@@ -111,7 +111,7 @@ namespace Riry.RiryTools.Editor
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(problem != null))
                 {
-                    if (GUILayout.Button("Extract", GUILayout.Height(28.0f))) Extract(path);
+                    if (GUILayout.Button("Extract", GUILayout.Height(28.0f))) { Extract(path); RiryGui.ExitAfterModal(); }
                 }
                 EditorGUILayout.Space(6.0f);
             }
@@ -139,6 +139,7 @@ namespace Riry.RiryTools.Editor
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("Extract Animation", "Could not save " + AnimationExtractSettings.PathFor(path) +
                     ":\n" + exception.Message, "OK");
+                RiryGui.ExitAfterModal();
             }
         }
 

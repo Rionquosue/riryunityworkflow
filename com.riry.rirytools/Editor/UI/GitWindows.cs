@@ -79,7 +79,10 @@ namespace Riry.RiryTools.Editor
                     using (new EditorGUI.DisabledScope(remoteUrl.Length == 0 || remoteUrl == currentRemoteUrl))
                     {
                         if (GUILayout.Button(selectedRemote == null ? "Add Remote" : "Change Remote", GUILayout.Width(110f)))
+                        {
                             GitActions.Guard(SaveRemote);
+                            RiryGui.ExitAfterModal();
+                        }
                     }
                     // Files over 100 MiB fail behind a Cloudflare proxy, which only affects HTTP(S).
                     if (GitRemotes.IsHttps(remoteUrl) && largeFiles.Count > 0 &&
@@ -96,7 +99,7 @@ namespace Riry.RiryTools.Editor
                     : MessageType.Warning);
 
             GUILayout.Space(6f);
-            if (GUILayout.Button("Apply", GUILayout.Height(28f))) GitActions.Guard(Apply);
+            if (GUILayout.Button("Apply", GUILayout.Height(28f))) { GitActions.Guard(Apply); RiryGui.ExitAfterModal(); }
             EditorGUILayout.EndScrollView();
         }
 
@@ -113,6 +116,7 @@ namespace Riry.RiryTools.Editor
                     GitTemplates.Save(templateName, extension, File.ReadAllText(GitActions.ProjectFile(extension)));
                     Reload();
                 });
+                RiryGui.ExitAfterModal();
             }
         }
     }
@@ -151,7 +155,7 @@ namespace Riry.RiryTools.Editor
                 }
             }
             EditorGUILayout.EndScrollView();
-            if (GUILayout.Button("OK", GUILayout.Height(28f))) GitActions.Guard(Ok);
+            if (GUILayout.Button("OK", GUILayout.Height(28f))) { GitActions.Guard(Ok); RiryGui.ExitAfterModal(); }
         }
     }
 }

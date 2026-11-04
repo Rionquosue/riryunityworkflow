@@ -38,6 +38,8 @@ namespace Riry.RiryTools.Editor
                 string path = typed.Trim().TrimEnd('/');
                 if (path != folder && Usable(path)) Load(path);
             }
+            // The suggestions scroll with the rest, so they never push the buttons below out of view.
+            scroll = EditorGUILayout.BeginScrollView(scroll);
             if (search.Trim().Length > 0 && search.Trim().TrimEnd('/') != folder)
             {
                 foreach (string suggestion in Suggestions(search.Trim()))
@@ -51,7 +53,6 @@ namespace Riry.RiryTools.Editor
             }
 
             EditorGUILayout.Space(6);
-            scroll = EditorGUILayout.BeginScrollView(scroll);
             if (!Usable(folder))
             {
                 EditorGUILayout.HelpBox("Choose a folder in Assets.", MessageType.Info);
@@ -170,6 +171,7 @@ namespace Riry.RiryTools.Editor
                 {
                     string chosen = EditorUtility.OpenFilePanel("Blender executable", "", "");
                     if (!string.IsNullOrEmpty(chosen)) BetterFbxExporter.BlenderPath = chosen;
+                    RiryGui.ExitAfterModal();
                 }
             }
             string resolved = BetterFbxExporter.ResolveBlender();
@@ -251,7 +253,11 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Save", GUILayout.Width(80)))
                 {
                     if (error != null) saveTried = true;
-                    else Save(importer, configuration);
+                    else
+                    {
+                        Save(importer, configuration);
+                        RiryGui.ExitAfterModal();
+                    }
                 }
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
@@ -270,7 +276,8 @@ namespace Riry.RiryTools.Editor
 // ImportPresetFolderWindow: edits one folder's ImportPreset.md (Tools menu)
 //   FIELDS (ImportPresetWindowActions.cs; [S] = serialized)
 //     folder                [S] string        The folder shown; first the Project window's (ImportPresetActions.ActiveFolder).
-//     search                [S] string        Folder field text; suggestions show while it is not the folder.
+//     search                [S] string        Folder field text; suggestions show while it is not the folder, at the top
+//                                             of the scroll view (so they never push Apply and Close out of view).
 //     picks                 [S] List<Pick>    The chosen preset (or none) per file type.
 //     betterFbx             [S] bool          Export .blend with Better FBX.
 //     types                     List<FileType>  File types directly in the folder, each with the presets that fit it.

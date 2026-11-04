@@ -53,6 +53,9 @@ namespace Riry.RiryTools.Editor
     /// <summary>The Main Menu's Blendshape Sync tab: the running jobs, and Add Job.</summary>
     internal static class BlendshapeSyncJobList
     {
+        // The window width a job's row fits on one line in: its fixed widths (495), spacing and padding, plus a buffer.
+        private const float WideRow = 570f;
+
         internal static void Draw()
         {
             List<BlendshapeSyncWindow> jobs = BlendshapeSyncJobs.All();
@@ -61,16 +64,27 @@ namespace Riry.RiryTools.Editor
                     MessageType.Info);
             foreach (BlendshapeSyncWindow job in jobs)
             {
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                // Narrower than the row needs (a docked window can be any size): the name on one line
+                // and the buttons on the next, instead of cutting off Remove.
+                bool wide = EditorGUIUtility.currentViewWidth >= WideRow;
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                using (new EditorGUILayout.HorizontalScope())
                 {
                     int count = job.ChildCount;
                     string name = job.Master != null
                         ? job.Master.name + " > " + count + (count == 1 ? " child" : " children")
                         : "No master yet";
                     EditorGUILayout.LabelField(new GUIContent(name, job.Problem), GUILayout.MinWidth(120f));
+                    if (!wide)
+                    {
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                    }
                     bool auto = GUILayout.Toggle(job.Auto, new GUIContent("Auto", "Sync automatically."), GUILayout.Width(50f));
                     if (auto != job.Auto)
                     {
+                        Undo.RecordObject(job, BlendshapeSyncWindow.SettingsUndo);
                         job.Auto = auto;
                         BlendshapeSyncJobs.SaveAll();
                     }
@@ -108,4 +122,4 @@ namespace Riry.RiryTools.Editor
 //   SavedJob / SavedChild / Save() / Load(saved, master) / Find(id)  Renderers saved as GlobalObjectId strings.
 // BlendshapeSyncJobWindow (this file): the job popup; draws the job's own window; closing keeps the job.
 // BlendshapeSyncJobList (this file): the Main Menu tab: one row per job (master > children, Auto, Sync Now,
-//   Edit, Set All to Original, Remove), then Add Job.
+//   Edit, Set All to Original, Remove), then Add Job. Below WideRow (570) window width the buttons go on a second line.

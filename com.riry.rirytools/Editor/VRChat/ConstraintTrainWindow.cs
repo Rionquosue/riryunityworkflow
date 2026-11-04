@@ -8,15 +8,16 @@ using VRC.SDK3.Dynamics.Constraint.Components;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Sets up VRC Parent Constraints on a real bone chain and builds a Motion
-    /// Time clip that moves the chain onto physics chains as a staggered train.
-    /// This file holds the state and the actions; everything drawn in the window,
-    /// and the Open methods, are in ConstraintTrainWindow.UI.cs. The menu entries
-    /// are in RiryVRChatMenus.cs.
+    /// Constraint Tool's Train tab: sets up VRC Parent Constraints on a real bone chain and
+    /// builds a Motion Time clip that moves the chain onto physics chains as a staggered train.
+    /// This file holds the state and the actions; everything drawn in the tab is in
+    /// ConstraintTrainWindow.UI.cs. The window and its Open methods are in
+    /// ConstraintToolWindow.cs, and the menu entries in RiryVRChatMenus.cs.
     /// </summary>
     internal sealed partial class ConstraintTrainWindow : EditorWindow
     {
         private const string UndoName = "Constraint Train";
+        private const string SettingsUndo = "Constraint Train settings";
 
         private sealed class Plan
         {
@@ -47,7 +48,7 @@ namespace Riry.RiryTools.Editor
         /// The active object becomes the chain start; another selected object below
         /// it becomes the end (the deepest one when several are).
         /// </summary>
-        private void UseSelection(Transform active, Transform[] selected)
+        internal void UseSelection(Transform active, Transform[] selected)
         {
             Transform end = null;
             foreach (Transform candidate in selected)
@@ -68,8 +69,20 @@ namespace Riry.RiryTools.Editor
             Repaint();
         }
 
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+        }
+
+        private void OnUndoRedo()
+        {
+            Repaint();
+        }
+
         private void OnEnable()
         {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+            Undo.undoRedoPerformed += OnUndoRedo;
             minSize = new Vector2(420, 480);
             if (chainStarts == null || chainStarts.Length != ConstraintTrainPlanner.MaxChains)
             {
@@ -165,14 +178,32 @@ namespace Riry.RiryTools.Editor
 
         private void GenerateMissing(List<Transform> realBones)
         {
-            if (restStart == null)
-                restStart = Generate(realBones, ConstraintTrainChains.RestPrefix, false);
-            for (int c = 0; c < chainCount; c++)
+            // One Undo step for every chain made, and the slots they fill.
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            try
             {
-                if (chainStarts[c] == null)
-                    chainStarts[c] = Generate(realBones, ConstraintTrainChains.ChainPrefix(c), addEndpoints);
+                // Each slot is recorded after its chain is made (Generate starts a group) and before it is set.
+                if (restStart == null)
+                {
+                    Transform made = Generate(realBones, ConstraintTrainChains.RestPrefix, false);
+                    Undo.RecordObject(this, SettingsUndo);
+                    restStart = made;
+                }
+                for (int c = 0; c < chainCount; c++)
+                {
+                    if (chainStarts[c] != null) continue;
+                    Transform made = Generate(realBones, ConstraintTrainChains.ChainPrefix(c), addEndpoints);
+                    Undo.RecordObject(this, SettingsUndo);
+                    chainStarts[c] = made;
+                }
+                status = "All chains are assigned.";
             }
-            status = "All chains are assigned.";
+            finally
+            {
+                Undo.SetCurrentGroupName(UndoName);
+                Undo.CollapseUndoOperations(group);
+            }
         }
 
         private bool TryGather(out Plan plan, out string error)

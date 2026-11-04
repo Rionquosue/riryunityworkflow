@@ -94,6 +94,23 @@ namespace Riry.RiryTools.Editor
 
         // ---- Drawing ----------------------------------------------------------------
 
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed -= DropLastMap;
+            Undo.undoRedoPerformed += DropLastMap;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= DropLastMap;
+        }
+
+        // After Undo or Redo the last run's map can point at objects the run made, so Retarget builds a new one.
+        private void DropLastMap()
+        {
+            lastMap = null;
+        }
+
         private void OnGUI()
         {
             scroll = EditorGUILayout.BeginScrollView(scroll);
@@ -280,6 +297,7 @@ namespace Riry.RiryTools.Editor
                         Settings.MigratedFolder = chosen;
                         GUI.changed = true;
                     }
+                    RiryGui.ExitAfterModal();
                 }
             }
             if (target != null)
@@ -822,6 +840,7 @@ namespace Riry.RiryTools.Editor
 //   Open() / OpenPopup()     The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window); both show the
 //                            VRC SDK notice when the SDK is missing.
 //   [SerializeField]         source, target, lastRun, ignore, includedPrefabs, lastMap, the fold states, openTypes, scroll.
+//   DropLastMap()            Undo.undoRedoPerformed: forgets lastMap, so Retarget rebuilds the map after Undo or Redo.
 //
 // ---- Type list (this file) ----
 // AvatarMigrationAssistant/types.yml  The template: every type from Pumkin's Avatar Tools, sorted by kind into categories;

@@ -133,11 +133,13 @@ namespace Riry.RiryTools.Editor
                 GUILayout.Label("Source path", EditorStyles.miniBoldLabel, GUILayout.Width(position.width * 0.35f));
                 GUILayout.Label("Target path", EditorStyles.miniBoldLabel);
                 GUILayout.Label("Matched by", EditorStyles.miniBoldLabel, GUILayout.Width(80f));
+                // The rows' scroll bar is always shown, so the headers keep the same room for it.
+                GUILayout.Space(GUI.skin.verticalScrollbar.fixedWidth);
             }
 
             bool anyInvalid = false;
             bool changed = false;
-            scroll = EditorGUILayout.BeginScrollView(scroll);
+            scroll = EditorGUILayout.BeginScrollView(scroll, false, true);
             foreach (Row row in rows)
             {
                 bool invalid = Invalid(row);

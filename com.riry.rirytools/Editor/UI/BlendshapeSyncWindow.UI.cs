@@ -30,6 +30,7 @@ namespace Riry.RiryTools.Editor
                     "Master", master, typeof(SkinnedMeshRenderer), true);
                 if (selected != master && CanAssign(selected, -1))
                 {
+                    Undo.RecordObject(this, SettingsUndo);
                     master = selected;
                     CaptureOriginal(master);
                 }
@@ -50,6 +51,7 @@ namespace Riry.RiryTools.Editor
                                 "Child " + (i + 1), child.Renderer, typeof(SkinnedMeshRenderer), true);
                             if (selected != child.Renderer && CanAssign(selected, i))
                             {
+                                Undo.RecordObject(this, SettingsUndo);
                                 child.Renderer = selected;
                                 CaptureOriginal(selected);
                             }
@@ -59,7 +61,11 @@ namespace Riry.RiryTools.Editor
                         if (child.Expanded) DrawManualLinks(child);
                     }
                 }
-                if (removeChild >= 0) children.RemoveAt(removeChild);
+                if (removeChild >= 0)
+                {
+                    Undo.RecordObject(this, SettingsUndo);
+                    children.RemoveAt(removeChild);
+                }
                 EnsureChildRow();
                 if (EditorGUI.EndChangeCheck() || removeChild >= 0) InvalidatePlan();
                 EditorGUILayout.EndScrollView();
@@ -69,6 +75,7 @@ namespace Riry.RiryTools.Editor
                     bool automatic = EditorGUILayout.ToggleLeft("Run automatically", runAutomatically);
                     if (automatic != runAutomatically)
                     {
+                        Undo.RecordObject(this, SettingsUndo);
                         runAutomatically = automatic;
                         nextTick = EditorApplication.timeSinceStartup + Interval;
                     }
@@ -77,6 +84,7 @@ namespace Riry.RiryTools.Editor
                         "Button", GUILayout.Width(100));
                     if (exact != caseSensitive)
                     {
+                        Undo.RecordObject(this, SettingsUndo);
                         caseSensitive = exact;
                         lastAmbiguity = null;
                         InvalidatePlan();
@@ -115,19 +123,20 @@ namespace Riry.RiryTools.Editor
                     {
                         EditorGUILayout.LabelField(new GUIContent("Source", "Name on the master."),
                             EditorStyles.miniLabel);
-                        link.Source = EditorGUILayout.TextField(link.Source);
+                        link.Source = RiryGui.Set(this, SettingsUndo, link.Source, EditorGUILayout.TextField(link.Source));
                     }
                     using (new EditorGUILayout.VerticalScope())
                     {
                         EditorGUILayout.LabelField(new GUIContent("Destination", "Name on this child."),
                             EditorStyles.miniLabel);
-                        link.Destination = EditorGUILayout.TextField(link.Destination);
+                        link.Destination = RiryGui.Set(this, SettingsUndo, link.Destination, EditorGUILayout.TextField(link.Destination));
                     }
                     if (GUILayout.Button("X", GUILayout.Width(22))) remove = i;
                 }
             }
             if (remove >= 0)
             {
+                Undo.RecordObject(this, SettingsUndo);
                 child.Links.RemoveAt(remove);
                 InvalidatePlan();
             }
@@ -156,6 +165,8 @@ namespace Riry.RiryTools.Editor
 //   scroll                  Vector2              Scroll position of the child list.
 //   Interval                const double         Seconds between automatic passes (0.5).
 //   SyncUndoName / RestoreUndoName  const string Undo names; also identify own Undo steps.
+//   SettingsUndo         "Blendshape Sync settings": Undo name of the job's edits (master, children, Remove, manual
+//                        links, Run automatically, Case-sensitive, the Main Menu's Auto); undoing one saves the jobs.
 //
 // TYPES
 //   ChildEntry      Renderer, Expanded (Manual link foldout), Links.
@@ -178,4 +189,7 @@ namespace Riry.RiryTools.Editor
 //   RestoreOriginals()         Restores every captured weight and stops automatic sync.
 //   BuildPlan() / TryBuildLinks(...)  Match blendshape names to indices.
 //   EditorTick()               Runs automatic passes.
-//   OnUndoRedo(undo) / IsOwnUndo(name)  Stops automatic sync when its own pass is undone.
+//   OnUndoRedo(undo) / IsOwnUndo(undo)  Stops automatic sync when this job's own pass is undone (its name and a group in
+//                                   ownGroups); another job's pass leaves it running.
+//   ownGroups                        [NonSerialized] Undo groups this job's passes made.
+//   ApplyChanges joinHeld            While a control is held (a slider drag), the sync joins that Undo step instead of its own.

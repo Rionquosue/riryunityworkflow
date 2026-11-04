@@ -16,6 +16,12 @@ namespace Riry.RiryTools.Editor
     internal sealed class IconCapWindow : EditorWindow
     {
         private const float WideWidth = 640f;
+        // Narrower windows than these put a row's parts on two lines (each is the row's width plus a buffer).
+        private const float PrefixSuffixRow = 460f;
+        private const float JobRow = 440f;
+        private const float RestoreRow = 420f;
+        // A row's fixed space besides its contents: the scroll bar and the window margins.
+        private const float RowMargin = 40f;
         private const float PreviewMaxSide = 512f;
         private const int PreviewMaxPixels = 1024;
         private const double PreviewInterval = 0.1;
@@ -83,14 +89,19 @@ namespace Riry.RiryTools.Editor
             window.Show();
         }
 
+        private const string SettingsUndo = "IconCap settings";
+
         private void OnEnable()
         {
+            Undo.undoRedoPerformed -= Repaint;
+            Undo.undoRedoPerformed += Repaint;
             EditorApplication.update += Watch;
             if (slots.TrueForAll(slot => slot == null)) SnapToSelection();
         }
 
         private void OnDisable()
         {
+            Undo.undoRedoPerformed -= Repaint;
             EditorApplication.update -= Watch;
             ReleasePreviews();
         }
@@ -212,6 +223,27 @@ namespace Riry.RiryTools.Editor
         {
             if (captureStack == null) captureStack = new IconCapEffectStackGUI();
             if (generatorStack == null) generatorStack = new IconCapEffectStackGUI();
+            // Every change to the capture settings (Size, preset, effect stack, camera, background, options) in this
+            // draw is one Undo step: the settings are put back as they were, recorded, then set again.
+            string settingsBefore = JsonUtility.ToJson(settings);
+            try
+            {
+                DrawWindow();
+            }
+            finally
+            {
+                string settingsAfter = JsonUtility.ToJson(settings);
+                if (settingsAfter != settingsBefore)
+                {
+                    JsonUtility.FromJsonOverwrite(settingsBefore, settings);
+                    Undo.RecordObject(this, SettingsUndo);
+                    JsonUtility.FromJsonOverwrite(settingsAfter, settings);
+                }
+            }
+        }
+
+        private void DrawWindow()
+        {
             scroll = EditorGUILayout.BeginScrollView(scroll);
             DrawTop();
             float width = EditorGUIUtility.currentViewWidth;
@@ -302,6 +334,7 @@ namespace Riry.RiryTools.Editor
                         exportFolder = IconCapFiles.DisplayFolder(chosen);
                         GUI.FocusControl(null);
                     }
+                    RiryGui.ExitAfterModal();
                 }
             }
             using (new EditorGUILayout.HorizontalScope())
@@ -358,15 +391,22 @@ namespace Riry.RiryTools.Editor
             IconCapJobFile jobs = Jobs(folder);
             bool any = SavedHere(folder).Count > 0;
             var tip = any ? "" : "Save icons into the export folder first.";
+            // The Popup's label is already indented by indentLevel, so no extra space before it.
             using (new EditorGUILayout.HorizontalScope())
             {
-                GUILayout.Space(EditorGUI.indentLevel * 15f);
                 if (jobs.Jobs.Count > 0)
                 {
                     var names = new string[jobs.Jobs.Count];
                     for (int i = 0; i < names.Length; i++) names[i] = jobs.Jobs[i].Name;
                     jobChoice = Mathf.Clamp(jobChoice, 0, names.Length - 1);
                     jobChoice = EditorGUILayout.Popup("Job", jobChoice, names);
+                    if (EditorGUIUtility.currentViewWidth < JobRow)
+                    {
+                        // Narrow: the buttons on their own line.
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                    }
                     using (new EditorGUI.DisabledScope(!any))
                     {
                         if (GUILayout.Button(new GUIContent("Add to job", tip), GUILayout.Width(80f)))
@@ -386,7 +426,7 @@ namespace Riry.RiryTools.Editor
             foldObjects = EditorGUILayout.Foldout(foldObjects, "Objects", true);
             if (!foldObjects) return;
             EditorGUI.indentLevel++;
-            onlySelected = EditorGUILayout.ToggleLeft("Capture only selected objects", onlySelected);
+            onlySelected = RiryGui.Set(this, SettingsUndo, onlySelected, EditorGUILayout.ToggleLeft("Capture only selected objects", onlySelected));
             if (onlySelected)
             {
                 EditorGUI.indentLevel++;
@@ -395,6 +435,7 @@ namespace Riry.RiryTools.Editor
                     SkinnedMeshRenderer current = i < slots.Count ? slots[i] : null;
                     var chosen = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(i == 0 ? "Objects" : " ", current, typeof(SkinnedMeshRenderer), true);
                     if (chosen == current) continue;
+                    Undo.RecordObject(this, SettingsUndo);
                     if (i == slots.Count)
                     {
                         if (chosen != null) slots.Add(chosen);
@@ -407,11 +448,11 @@ namespace Riry.RiryTools.Editor
             }
             using (new EditorGUILayout.HorizontalScope())
             {
-                isolated = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Isolated item", "Only this item and its children are captured."),
-                    isolated, typeof(GameObject), true);
+                isolated = RiryGui.Set(this, SettingsUndo, isolated, (GameObject)EditorGUILayout.ObjectField(new GUIContent("Isolated item", "Only this item and its children are captured."),
+                    isolated, typeof(GameObject), true));
                 using (new EditorGUI.DisabledScope(isolated == null))
                 {
-                    if (GUILayout.Button("Clear", GUILayout.Width(50f))) isolated = null;
+                    if (GUILayout.Button("Clear", GUILayout.Width(50f))) isolated = RiryGui.Set(this, SettingsUndo, isolated, (GameObject)null);
                 }
             }
             if (isolated != null && EditorUtility.IsPersistent(isolated)) isolated = null;
@@ -506,6 +547,13 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField(label, GUILayout.Width(EditorGUIUtility.labelWidth));
+                if (EditorGUIUtility.currentViewWidth < RestoreRow)
+                {
+                    // Narrow: the buttons on their own line.
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Space(EditorGUI.indentLevel * 15f);
+                }
                 using (new EditorGUI.DisabledScope(!has))
                 {
                     if (GUILayout.Button("Restore camera")) RestoreCamera(entry);
@@ -540,7 +588,15 @@ namespace Riry.RiryTools.Editor
             EditorGUI.BeginChangeCheck();
             largePreviews = EditorGUILayout.Toggle("Large previews", largePreviews);
             DrawSources();
-            using (new EditorGUILayout.HorizontalScope())
+            if (EditorGUIUtility.currentViewWidth >= PrefixSuffixRow)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    generator.Prefix = EditorGUILayout.TextField("Prefix", generator.Prefix);
+                    generator.Suffix = EditorGUILayout.TextField("Suffix", generator.Suffix);
+                }
+            }
+            else
             {
                 generator.Prefix = EditorGUILayout.TextField("Prefix", generator.Prefix);
                 generator.Suffix = EditorGUILayout.TextField("Suffix", generator.Suffix);
@@ -564,7 +620,8 @@ namespace Riry.RiryTools.Editor
         private void DrawSources()
         {
             float thumbnail = largePreviews ? LargeThumbnail : SmallThumbnail;
-            float cell = thumbnail * 2f + 12f;
+            // Source field, result and the 12 px gap, plus the fields' margins and a buffer.
+            float cell = thumbnail * 2f + 12f + 12f;
             int perRow = Mathf.Max(1, Mathf.FloorToInt((EditorGUIUtility.currentViewWidth - 40f) / cell));
             List<IconGenerator.Source> sources = generator.Sources;
             sources.RemoveAll(source => source == null || source.Texture == null);
@@ -662,13 +719,27 @@ namespace Riry.RiryTools.Editor
                 foreach (IconCapJob job in file.Jobs)
                 {
                     string key = folder + "|" + job.Name;
+                    string folderName = IconCapFiles.DisplayFolder(folder);
+                    string countText = job.Entries.Count + (job.Entries.Count == 1 ? " icon" : " icons");
+                    // The foldout as wide as its name, so the name never runs under the folder label.
+                    float nameWidth = EditorGUI.indentLevel * 15f + 16f + EditorStyles.foldout.CalcSize(new GUIContent(job.Name)).x + 4f;
+                    float rowWidth = nameWidth + EditorStyles.miniLabel.CalcSize(new GUIContent(folderName)).x +
+                        EditorStyles.miniLabel.CalcSize(new GUIContent(countText)).x + 50f + 24f;
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        bool open = EditorGUILayout.Foldout(openJobs.Contains(key), job.Name, true);
+                        Rect nameRect = GUILayoutUtility.GetRect(nameWidth, EditorGUIUtility.singleLineHeight, GUILayout.Width(nameWidth));
+                        bool open = EditorGUI.Foldout(nameRect, openJobs.Contains(key), job.Name, true);
                         if (open) openJobs.Add(key);
                         else openJobs.Remove(key);
-                        GUILayout.Label(IconCapFiles.DisplayFolder(folder), EditorStyles.miniLabel);
-                        GUILayout.Label(job.Entries.Count + (job.Entries.Count == 1 ? " icon" : " icons"), EditorStyles.miniLabel);
+                        if (rowWidth > EditorGUIUtility.currentViewWidth - RowMargin)
+                        {
+                            // Too narrow: the folder, count and Run on the next line.
+                            EditorGUILayout.EndHorizontal();
+                            EditorGUILayout.BeginHorizontal();
+                            GUILayout.Space((EditorGUI.indentLevel + 1) * 15f);
+                        }
+                        GUILayout.Label(folderName, EditorStyles.miniLabel);
+                        GUILayout.Label(countText, EditorStyles.miniLabel);
                         string runFolder = folder;
                         IconCapJob runJob = job;
                         if (GUILayout.Button(new GUIContent("Run", "Remakes every icon; the files replaced are moved into a new OLD_<n> folder."),
@@ -1084,7 +1155,15 @@ namespace Riry.RiryTools.Editor
 //   Icon Generator      Asset, New, Regenerate, Large previews, sources beside their results, Prefix, Suffix,
 //                       Template, Generator effect stack.
 //   Jobs                Every job in Assets and in the export folder: name, folder, icon count, Run, and its icons.
+//   Narrow rows         Below PrefixSuffixRow (460), JobRow (440) and RestoreRow (420) window width, Prefix/Suffix,
+//                       the Job row's buttons and Restore's buttons go on a second line. A job's foldout is as wide as
+//                       its name; when the row passes the window width less RowMargin (40), its folder, count and Run
+//                       go on a second line.
 //   Open() / OpenPopup() The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window).
+//   SettingsUndo        "IconCap settings": OnGUI compares the settings' JSON before and after each draw (DrawWindow);
+//                       a change is put back, recorded and set again, so Ctrl+Z undoes Size, a loaded preset, the
+//                       effect stack, camera, background and options. Capture only selected, the object slots and
+//                       Isolated item record the same way (RiryGui.Set). Repaints on Undo/Redo.
 //   [SerializeField]    settings, onlySelected, slots, isolated, exportFolder, session, latest, lastSavedPath,
 //                       lastCapture, lastSave, throughGenerator, generator, largePreviews, jobChoice, presetName,
 //                       the fold states, scroll.

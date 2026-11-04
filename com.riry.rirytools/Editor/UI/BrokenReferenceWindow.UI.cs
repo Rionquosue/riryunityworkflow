@@ -18,7 +18,7 @@ namespace Riry.RiryTools.Editor
         {
             EditorGUILayout.LabelField(reason, EditorStyles.wordWrappedLabel);
             EditorGUILayout.LabelField("Files: " + string.Join(", ", files), EditorStyles.wordWrappedMiniLabel);
-            if (GUILayout.Button("Rescan")) Rescan();
+            if (GUILayout.Button("Rescan")) { Rescan(); RiryGui.ExitAfterModal(); }
             if (plan == null) return;
             if (plan.Missing.Count == 0)
             {
@@ -53,7 +53,7 @@ namespace Riry.RiryTools.Editor
             int ready = Redirects().Count + Restores().Count;
             using (new EditorGUI.DisabledScope(ready == 0))
             {
-                if (GUILayout.Button("Apply " + ready + " Repair(s)", GUILayout.Height(28f))) ApplyRedirects();
+                if (GUILayout.Button("Apply " + ready + " Repair(s)", GUILayout.Height(28f))) { ApplyRedirects(); RiryGui.ExitAfterModal(); }
             }
         }
 

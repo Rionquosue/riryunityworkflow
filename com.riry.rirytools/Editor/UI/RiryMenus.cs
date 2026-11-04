@@ -5,7 +5,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Every menu entry of this package in one place: the Tools dropdown, the
     /// Project window right-click menu (Assets/...), and the Git menu. Constraint
-    /// Train's entries (Tools and Hierarchy right-click) are in
+    /// Tool's entries (Tools and Hierarchy right-click) are in
     /// Editor/VRChat/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
     /// Without the SDK, the same entries at the bottom of this file show a
     /// "VRCSDK not found" popup instead.
@@ -52,6 +52,9 @@ namespace Riry.RiryTools.Editor
         private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
         private const string CleanAnimationKeysAssets = "Assets/RiryTools/Clean Animation Keys";
 
+        // ---- Hierarchy right-click -------------------------------------------
+        private const string AttachToHierarchy = "GameObject/RiryTools/Attach To";
+
         // ---- Git menu -------------------------------------------------------
         private const string Sync = "Git/Sync";
         private const string Configuration = "Git/Configuration";
@@ -59,8 +62,9 @@ namespace Riry.RiryTools.Editor
         // ---- VRChat tools (also used by RiryVRChatMenus.cs) -----------------
         // "&T" makes T its menu key (Clean Animation Keys has C). The space before it is
         // U+00A0, because Unity reads "<space>&..." at the end of a path as an Alt shortcut.
-        internal const string ConstraintTrain = "Tools/RiryTools/Constraint\u00A0&Train";
-        internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Train";
+        internal const string ConstraintTool = "Tools/RiryTools/Constraint\u00A0&Tool";
+        internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Tool/Train";
+        internal const string ConstraintBezierHierarchy = "GameObject/RiryTools/Constraint Tool/Bezier";
 
         // =====================================================================
         // Tools dropdown
@@ -91,7 +95,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(CleanAnimationKeysMenu, false, 2020)]
         private static void CleanAnimationKeysItem() { CleanAnimationKeysWindow.Open(new UnityEngine.AnimationClip[0]); }
 
-        // Constraint Train is 2030 (RiryVRChatMenus.cs).
+        // Constraint Tool is 2030 (RiryVRChatMenus.cs).
 
         [MenuItem(GuidTools, false, 2040)]
         private static void GuidToolsItem() { GuidToolsWindow.Open(); }
@@ -179,6 +183,18 @@ namespace Riry.RiryTools.Editor
         private static bool CleanAnimationKeysAssetsValid() { return Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0; }
 
         // =====================================================================
+        // Hierarchy right-click (also in the GameObject menu)
+        // =====================================================================
+
+        [MenuItem(AttachToHierarchy, false, 19)]
+        private static void AttachToItem() { AttachToWindow.Open(); }
+
+        [MenuItem(AttachToHierarchy, true)]
+        private static bool AttachToValid() { return AttachTo.Selected().Count > 0; }
+
+        // Constraint Tool/Train is 20 and Constraint Tool/Bezier 21 (RiryVRChatMenus.cs, or below without the VRChat SDK).
+
+        // =====================================================================
         // Git menu
         // =====================================================================
 
@@ -202,11 +218,14 @@ namespace Riry.RiryTools.Editor
         // the priorities of both files in step.
         // =====================================================================
 
-        [MenuItem(ConstraintTrain, false, 2030)]
-        private static void ConstraintTrainItem() { VrcSdkMissing("Constraint Train"); }
+        [MenuItem(ConstraintTool, false, 2030)]
+        private static void ConstraintToolItem() { VrcSdkMissing("Constraint Tool"); }
 
         [MenuItem(ConstraintTrainHierarchy, false, 20)]
-        private static void ConstraintTrainHierarchyItem() { VrcSdkMissing("Constraint Train"); }
+        private static void ConstraintTrainHierarchyItem() { VrcSdkMissing("Constraint Tool"); }
+
+        [MenuItem(ConstraintBezierHierarchy, false, 21)]
+        private static void ConstraintBezierHierarchyItem() { VrcSdkMissing("Constraint Tool"); }
 
         /// <summary>Throws VrcSdkNotFoundException and shows it as the "VRCSDK not found" popup.</summary>
         private static void VrcSdkMissing(string tool)
@@ -239,8 +258,9 @@ namespace Riry.RiryTools.Editor
 //                                                      opens, after the VRC SDK not detected popup
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSyncJobWindow.cs)
 //   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
-//   Tools/RiryTools/Constraint Train (2030), menu key T -> ConstraintTrainWindow.Open (Editor/VRChat/ConstraintTrainWindow.UI.cs, entry in
-//                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not found" popup (this file)
+//   Tools/RiryTools/Constraint Tool (2030), menu key T -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/ConstraintToolWindow.cs, entry in
+//                                                      Editor/VRChat/RiryVRChatMenus.cs): Train and Bezier tabs, on the one used last;
+//                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidToolsWindow.cs)
 //   Tools/RiryTools/IconCap (2045), menu key O     -> IconCapWindow.Open (Editor/UI/IconCapWindow.cs)
 //   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
@@ -260,9 +280,12 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
 //   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //
-// HIERARCHY RIGHT-CLICK
-//   GameObject/RiryTools/Constraint Train (20)   -> ConstraintTrainWindow.OpenFromHierarchy (entry in Editor/VRChat/RiryVRChatMenus.cs);
-//                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
+// HIERARCHY RIGHT-CLICK (also in the GameObject menu)
+//   GameObject/RiryTools/Attach To (19)         -> AttachToWindow.Open (Editor/UI/AttachToWindow.cs): the Attach To popup;
+//                                                      enabled when scene objects are selected (AttachTo.Selected, Editor/AttachTo.cs)
+//   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy (entry in Editor/VRChat/RiryVRChatMenus.cs)
+//   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy (same file); both use the selection
+//                                                      as the chain; without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //
 // GIT MENU (main menu bar)
 //   Git/Sync (1)  [check mark]                      -> GitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/GitActions.cs)
@@ -271,5 +294,6 @@ namespace Riry.RiryTools.Editor
 // OTHER UI OUTSIDE MENUS
 //   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/CleanAnimationKeysWindow.cs)
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/ScriptLoadFailureWindow.cs
-//   Constraint Train window                         -> Editor/VRChat/ConstraintTrainWindow.UI.cs
+//   Constraint Tool window                          -> Editor/VRChat/ConstraintToolWindow.cs; its Train tab Editor/VRChat/ConstraintTrainWindow.UI.cs,
+//                                                      its Bezier tab Editor/VRChat/ConstraintBezierWindow.UI.cs
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.

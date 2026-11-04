@@ -16,6 +16,7 @@ namespace Riry.RiryTools.Editor
         private const double Interval = 0.5;
         private const string SyncUndoName = "Sync Blendshape Weights";
         private const string RestoreUndoName = "Restore Original Blendshape Weights";
+        internal const string SettingsUndo = "Blendshape Sync settings";
 
         [Serializable]
         internal sealed class ManualLink
@@ -73,6 +74,8 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private SkinnedMeshRenderer master;
         [SerializeField] private List<ChildEntry> children = new List<ChildEntry>();
         [SerializeField] private bool runAutomatically;
+        // The Undo groups this job's own passes made; IsOwnUndo stops only the job whose pass is undone.
+        [NonSerialized] private readonly HashSet<int> ownGroups = new HashSet<int>();
         [SerializeField] private bool caseSensitive;
         // Window serialization keeps the baseline over assembly reloads.
         [SerializeField] private List<OriginalState> originals = new List<OriginalState>();
@@ -140,19 +143,25 @@ namespace Riry.RiryTools.Editor
         private void OnUndoRedo(in UndoRedoInfo undo)
         {
             InvalidatePlan();
+            // A job edit put back by Undo or Redo is saved like the edit was.
+            if (undo.undoName == SettingsUndo) BlendshapeSyncJobs.SaveAll();
             // Undoing another edit (for example a master weight) should simply
             // resync. Undoing this tool's own pass must stay effective, so the
             // next automatic tick may not reapply it.
-            if (!IsOwnUndo(undo.undoName)) return;
+            if (!IsOwnUndo(undo)) return;
             runAutomatically = false;
             result = "Automatic sync stopped after Undo/Redo.";
         }
 
-        internal static bool IsOwnUndo(string undoName)
+        /// <summary>
+        /// True for an Undo step this job made: its name is this tool's and its group is one this
+        /// job recorded, so undoing another job's pass leaves this job running.
+        /// </summary>
+        private bool IsOwnUndo(in UndoRedoInfo undo)
         {
             // An unnamed group cannot be identified; stop to be safe.
-            return string.IsNullOrEmpty(undoName) || undoName == SyncUndoName ||
-                undoName == RestoreUndoName;
+            if (string.IsNullOrEmpty(undo.undoName)) return true;
+            return (undo.undoName == SyncUndoName || undo.undoName == RestoreUndoName) && ownGroups.Contains(undo.undoGroup);
         }
 
         private void InvalidatePlan()
@@ -534,9 +543,16 @@ namespace Riry.RiryTools.Editor
             if (changes.Count == 0) return;
             HashSet<SkinnedMeshRenderer> renderers = new HashSet<SkinnedMeshRenderer>();
             foreach (WeightChange change in changes) renderers.Add(change.Renderer);
-            Undo.IncrementCurrentGroup();
+            // While a control is held (a slider being dragged), the sync joins that Undo step, so
+            // the drag and its sync undo together instead of being split every Interval.
+            bool joinHeld = GUIUtility.hotControl != 0;
+            if (!joinHeld) Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName(undoName);
+            if (!joinHeld)
+            {
+                Undo.SetCurrentGroupName(undoName);
+                ownGroups.Add(group);
+            }
             foreach (SkinnedMeshRenderer renderer in renderers) Undo.RecordObject(renderer, undoName);
             int applied = 0;
             try
@@ -553,7 +569,7 @@ namespace Riry.RiryTools.Editor
                     EditorSceneManager.MarkSceneDirty(renderer.gameObject.scene);
                 }
                 Undo.FlushUndoRecordObjects();
-                Undo.CollapseUndoOperations(group);
+                if (!joinHeld) Undo.CollapseUndoOperations(group);
             }
             catch
             {
@@ -565,7 +581,8 @@ namespace Riry.RiryTools.Editor
                         change.Renderer.SetBlendShapeWeight(change.Index, change.Before);
                 }
                 Undo.FlushUndoRecordObjects();
-                Undo.RevertAllDownToGroup(group);
+                // A joined step also holds the user's own change, so only this pass is put back (above).
+                if (!joinHeld) Undo.RevertAllDownToGroup(group);
                 throw;
             }
         }

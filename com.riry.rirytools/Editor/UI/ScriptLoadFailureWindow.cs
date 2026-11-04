@@ -64,11 +64,14 @@ namespace Riry.RiryTools.Editor
                 });
             if (GUILayout.Button("Quit Unity Without Saving"))
                 Finish(() => EditorApplication.Exit(0));
-            if (GUILayout.Button("The File Loaded Correctly (Allow Saving)", EditorStyles.miniButton) &&
-                EditorUtility.DisplayDialog("Allow Saving",
-                    "Only continue if the file really is complete. Saving a broken load overwrites the good file.",
-                    "Allow Saving", "Cancel"))
-                Finish(() => { foreach (string guardedPath in guarded) ScriptLoadGuard.Override(guardedPath); });
+            if (GUILayout.Button("The File Loaded Correctly (Allow Saving)", EditorStyles.miniButton))
+            {
+                if (EditorUtility.DisplayDialog("Allow Saving",
+                        "Only continue if the file really is complete. Saving a broken load overwrites the good file.",
+                        "Allow Saving", "Cancel"))
+                    Finish(() => { foreach (string guardedPath in guarded) ScriptLoadGuard.Override(guardedPath); });
+                RiryGui.ExitAfterModal();
+            }
         }
 
         private void Finish(Action action)

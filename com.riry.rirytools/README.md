@@ -12,7 +12,7 @@ to `main` is published there as a new version after the owner approves it; see
 The package's own files are replaced on every update. Anything that
 has to live inside the project is unpacked into **`Assets/RiryTools`** on first
 load, and tools save generated assets there when they have no better place
-(Constraint Train clips, `_ROOT` variants of read-only prefabs). Existing files
+(Constraint Tool Train clips, `_ROOT` variants of read-only prefabs). Existing files
 there are never overwritten, so edits survive updates; delete a file to get the
 package's copy back. Shader applets will live there too.
 
@@ -21,6 +21,15 @@ package's copy back. Shader applets will live there too.
 Every tool is under **Tools > RiryTools**, as one entry or a submenu named after
 the tool. On Windows, the menus can be walked from the keyboard by typing each
 entry's first letter.
+
+## Main Menu
+
+**Tools > RiryTools > Main Menu** opens one dockable window with a tab per tool
+(AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools,
+Import Presets, Stop Auto Game and Tools). Each tab draws the tool's own window, so
+it works there as it does on its own, and scrolls when the window is small. The
+**Tools** tab opens IconCap and Avatar Migration Assistant in their own windows.
+Documentation is a link at the bottom right.
 
 ## Documentation
 
@@ -77,16 +86,63 @@ that had focus get it back, and a Game view that Play Mode opened because the la
 closed when Play Mode ends. Choose the entry again to turn it off. It is a
 per-user setting. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/stop-auto-game.md).
 
-## Constraint Train
+## Constraint Tool
 
-Requires the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > RiryTools >
-Constraint Train** (or right-click a bone in the Hierarchy > **RiryTools >
-Constraint Train**) to drive a real bone chain onto up to five physics chains
+Requires the VRChat Avatars SDK 3.7.0 or newer. **Tools > RiryTools >
+Constraint Tool** opens one window with a tab per subtool, **Train**,
+**Bezier** and **Insertable prop**; right-clicking a bone in the Hierarchy > **RiryTools > Constraint
+Tool > Train** or **Bezier** opens that tab with the selection as the chain.
+
+**Train** drives a real bone chain onto up to five physics chains
 with VRC Parent Constraints and a Motion Time clip. The tip leads a staggered
 "train" onto physics chain 1, then every bone blends from chain to chain along an
 editable curve. It can generate `Phys1_`..`Phys5_` and `Rest_` empty chains,
 with endpoints, without unpacking prefabs.
 See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/constraint-train.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/constraint-train.md).
+
+**Bezier** rigs a bone chain to one cubic Bezier curve with VRC constraints.
+**Generate rig** fits the curve to the chain at rest and adds `BezierRig_<start>`
+beside it: two anchors at the chain's ends, two handles, and a sample per bone
+held on the curve. Each bone aims along the curve, so no rotation changes at
+rest. Options:
+
+- **Handles follow anchors**: each handle moves and turns with its anchor, or
+  stays a separate object.
+- **Mode**: **Stretch** holds every bone on the curve; **Keep length** holds only
+  the first, and the rest aim along the curve at their own lengths.
+- **Constrain**: the **Deform bones**, or a **Mechanism chain** (`Bezier_` copy of
+  the chain) that carries the curve's constraints while each bone follows its copy
+  by a VRC Parent Constraint.
+- **Spacing**: each bone's place on the curve comes from the distances between
+  the bones, as they are (**Existing**) or evened out (**Even**).
+- **Twist from anchors**: rotating an anchor twists the chain, blended along it.
+
+Before generating, the window shows how far the bones are from the fitted curve
+and how many constraints the rig adds; once made, its constraint count and
+depth. **Generate rig** and **Remove rig** are one Undo step each, and nothing is
+unpacked.
+
+**Insertable prop** (needs SDK 3.10.6 or newer) builds a draw, drop and reinsert
+system for a prop and its socket, such as a dagger and sheath. Choose the avatar,
+the prop prefab (placed as an instance; the asset is never changed) and the
+socket, then **Generate**. Move the **Grip**, **Insertion tip**, **Socket opening**
+and **Seated pose** handles in the Scene view and Generate again to apply them.
+
+- The prop starts seated and follows the socket. The wearer or other players
+  (**Wearer can grab**, **Others can grab**) grab it through a PhysBone; it turns
+  with the holder's hand, read from their little finger by a contact receiver with
+  advanced parameters, or from the wearer's own hand bones.
+- Released with its tip inside the **Capture radius**, or while the hand reading is
+  too weak, it aims into the socket and slides in (**Insert smoothing**). Otherwise
+  it drops: on **PC** as a physics body joined to the hand by a ConfigurableJoint
+  (**Stiffness**), so it can be thrown; on **Android** onto what a raycast below it
+  hits.
+- **Append to controller:** and **Append to parameters:** choose where the layers,
+  parameters and synced state go (empty: the avatar's FX controller and Expression
+  Parameters), each with a **New** button. Clips are saved in
+  `Assets/RiryTools/InsertableProps`. Everything is named `IP_<avatar>_<prop>`, so
+  Generate updates the pair without duplicating anything, and **Remove** takes it
+  out.
 
 ## GUID Tools
 
@@ -125,11 +181,71 @@ templates in `Documents/RiryTools/GitTemplates`, and enables Git LFS.
 goes through Git's credential manager. AutoSync also blocks saving a scene or
 prefab that a script stopped from loading. See the [tutorial](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/tutorials/autosync.md) and [design notes](https://github.com/Rionquosue/riryunityworkflow/blob/main/docs/design/autosync.md).
 
+## Attach To
+
+Select objects in the Hierarchy, then right-click > **RiryTools > Attach To** (also
+**GameObject > RiryTools > Attach To**); it is the one tool not under **Tools >
+RiryTools**. The popup's **Target avatar** starts as the last avatar selected in the
+Hierarchy. Bones are found from the humanoid rig, else the Avatar's bone map, else
+by object name. Head, Chest, Hips, hands, feet and upper legs are listed;
+**Add bone** lists any other found bone, and **Remove** takes it off again. Clicking
+a bone snaps every selected object to its global position, leaving rotation and
+scale alone, then one **Move in hierarchy?** prompt offers to reparent them all to
+the bone, keeping their global position, rotation and scale. A prefab is only
+unpacked after the **Unpack prefabs?** warning, which can also skip those objects.
+Each attach is one Undo step.
+
+## Avatar Migration Assistant
+
+Open **Tools > RiryTools > Avatar Migration Assistant** to copy components and
+settings from an old avatar (source) to a new one (target) and retarget the new
+one's animations; the source and the original files are never changed. The objects
+of both avatars are matched automatically, and **Manual matching** lists the
+unmatched rows (or every row) to correct, re-matching below parents you set by
+hand. An up-front check lists the possible issues and asks every question before
+anything changes. Copying covers the component types in `types.yml`, re-points
+references into the target, corrects constraint rotation for bone roll and
+collision and constraint values for scale, drops duplicates, copies child prefabs
+whole without unpacking, can leave objects out with an ignore list, and can
+upgrade Unity constraints to VRC constraints. Each Copy is one Undo step and ends
+with a report. **Retarget animations** duplicates the target's controllers and
+clips into a migrated folder you pick, rewrites their paths through the object
+map, and repairs VRCFury in the child prefabs you include as scene overrides.
+Without the VRChat SDK it runs with the VRChat parts left out and shows a
+**VRC SDK not detected!** notice.
+
+## IconCap
+
+Open **Tools > RiryTools > IconCap** to capture square PNG icons from the Scene View,
+with a live preview. Capture every skinned mesh, only the selected objects, or one
+isolated item; set the camera's field of view, far clip and roll; use a colour,
+skybox, HDRI or alpha cutout background; and override or exclude scene, global and
+world lights, baked lighting, reflections and shadows. Every change to the scene is
+put back after the capture. Captures run through an effect stack (Overlay, Draw
+under, Mask, Inverse mask, Gray out, Corner badge, Custom material, Crop and zoom,
+Rotate and flip, Padding, Adjustments, Outline, Drop shadow, Colour overlay, Hue
+shift, Invert, Grayscale, Posterize, Sharpen) and are saved to an export folder.
+Captures can be saved as jobs and remade with **Run**, which moves replaced icons
+into `OLD_<n>` folders. Presets are kept in `Documents/RiryTools/iconcap presets`.
+**Icon Generator** assets run source textures through an effect stack and save the
+outputs beside the asset, renamed to follow renamed sources.
+
+## Menu Mockup
+
+Open **Tools > RiryTools > Menu Mockup** to lay out an example editor window from
+blocks. **Components** adds blocks by click or drag and has **New**, **Save Mockup**
+and **Load**; **Edit** is the mockup itself. Blocks hold blocks and lay out like
+flexbox: drag the handle on a side to resize, drag a block to move it,
+double-click to edit its text, and right-click for its layout, **Auto size** and
+**Delete**. Every change can be undone, and the aspect ratio is shown at the top.
+Mockups are saved as annotated `.yml` files in `Documents/RiryTools/Mockups`.
+
 ## Editing the UI
 
 Every menu entry (Tools dropdown, Project and Hierarchy right-click, Git menu)
-is in `Editor/UI/RiryMenus.cs`, except Constraint Train's, which are in
+is in `Editor/UI/RiryMenus.cs`, except Constraint Tool's, which are in
 `Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
 path or priority there to move an entry. Each window's drawing code is in
-`Editor/UI/` (Constraint Train's in `Editor/VRChat/ConstraintTrainWindow.UI.cs`),
+`Editor/UI/` (Constraint Tool's in `Editor/VRChat/`: `ConstraintToolWindow.cs`, and its
+tabs `ConstraintTrainWindow.UI.cs`, `ConstraintBezierWindow.UI.cs` and `InsertablePropWindow.UI.cs`),
 with a glossary of its fields and methods at the bottom of each file.
