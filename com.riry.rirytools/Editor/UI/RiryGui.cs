@@ -17,7 +17,8 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         internal static void ExitAfterModal()
         {
-            if (GUIUtility.guiDepth > 0) GUIUtility.ExitGUI();
+            // Event.current is only set while a GUI event is being handled (GUIUtility.guiDepth is internal).
+            if (Event.current != null) GUIUtility.ExitGUI();
         }
 
         /// <summary>
@@ -41,4 +42,4 @@ namespace Riry.RiryTools.Editor
 // RiryGui.Set(owner, name, current, edited)  A window setting's new value, after recording the owner for Undo when it
 //                           changed, so Ctrl+Z puts the setting back.
 // RiryGui.ExitAfterModal()  After a dialog or file panel opened from OnGUI: GUIUtility.ExitGUI when inside OnGUI
-//                           (GUIUtility.guiDepth > 0), so the draw restarts cleanly; nothing elsewhere.
+//                           (Event.current is set), so the draw restarts cleanly; nothing elsewhere.
