@@ -100,7 +100,8 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                // Named by its step; the run report lists it too, so this is the one with the stack.
+                Debug.LogError(AvatarMigrationAssistant.Title + ": " + name + " failed:\n" + exception);
                 report.Failures.Add(name + ": " + exception.Message);
             }
         }

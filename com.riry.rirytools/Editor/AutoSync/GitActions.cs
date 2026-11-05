@@ -49,8 +49,7 @@ namespace Riry.RiryTools.Editor
                 }
                 catch (InvalidOperationException exception)
                 {
-                    // Commits work without LFS; it only matters for large files on a remote.
-                    Debug.LogWarning("AutoSync: " + exception.Message);
+                    // Commits work without LFS; it only matters for large files on a remote. The dialog says it, so no log.
                     EditorUtility.DisplayDialog("Sync", exception.Message + "\n\nSync is on without Git LFS.", "OK");
                 }
                 AutoSync.Enabled = true;
@@ -97,7 +96,7 @@ namespace Riry.RiryTools.Editor
             if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
         }
 
-        /// <summary>Runs a menu action; a missing git or a failed step is shown, and logged as an exception.</summary>
+        /// <summary>Runs a menu action; a missing git is shown, a failed step shown and logged as an exception.</summary>
         internal static void Guard(Action action)
         {
             try
@@ -109,7 +108,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (GitNotInstalledException exception)
             {
-                Debug.LogException(exception);
+                // A setup state shown in the dialog; a stack trace would add nothing.
                 if (EditorUtility.DisplayDialog("Git Not Installed", exception.Message, "Download Git", "Close"))
                     Application.OpenURL(GitNotInstalledException.DownloadUrl);
             }

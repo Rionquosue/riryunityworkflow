@@ -174,7 +174,8 @@ namespace Riry.RiryTools.Editor
             {
                 if (!ImportPresetFolderRules.Apply(folders[i], picksByFolder[i], null, ref processed)) skipped.Add(folders[i]);
             }
-            Debug.Log("Import Presets: set " + (folders.Count - skipped.Count) + " folder(s); applied to " + processed + " file(s).");
+            Debug.Log("Import Presets: set " + (folders.Count - skipped.Count) + " folder(s); applied to " + processed + " file(s):\n" +
+                string.Join("\n", folders.FindAll(folder => !skipped.Contains(folder))));
             if (skipped.Count > 0)
                 EditorUtility.DisplayDialog("Set Folder Import Presets", "Left hand-edited ImportPreset.md unchanged in:\n" +
                     string.Join("\n", skipped), "OK");

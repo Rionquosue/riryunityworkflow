@@ -83,7 +83,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                Debug.LogError(AvatarMigrationAssistant.Title + ": " + name + " failed:\n" + exception);
                 report.Failures.Add(name + ": " + exception.Message);
             }
         }

@@ -191,7 +191,8 @@ namespace Riry.RiryTools.Editor
             if (shown.Contains(held.Url) || off.Contains(held.Url)) return;
             shown.Add(held.Url);
             SessionState.SetString(NoticeShownKey, string.Join("\n", shown));
-            Debug.LogWarning("AutoSync: not pushing to " + held.Remote + " while commits hold files over 100 MiB.");
+            Debug.LogWarning("AutoSync: not pushing to " + held.Remote + " (" + held.Url + ") while unpushed commits hold " +
+                held.Files.Count + " file(s) over 100 MiB:\n" + string.Join("\n", held.Files));
             int choice = EditorUtility.DisplayDialogComplex("Push Held",
                 held.Files.Count + " file(s) over 100 MiB are in commits not yet pushed to " + held.Remote + " (" + held.Url +
                 "). If the server is behind Cloudflare, the push will fail, so Sync commits without pushing until they are " +

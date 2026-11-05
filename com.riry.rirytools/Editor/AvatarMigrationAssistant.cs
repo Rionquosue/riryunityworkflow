@@ -516,6 +516,8 @@ namespace Riry.RiryTools.Editor
         private static readonly Dictionary<string, Type> Cache = new Dictionary<string, Type>(StringComparer.Ordinal);
         private static List<AvatarCopyType> all;
         private static DateTime loadedStamp;
+        // The last read problem: All runs on every draw, so one problem is logged once, not every repaint.
+        private static string lastProblem;
 
         internal static string FilePath
         {
@@ -534,10 +536,13 @@ namespace Riry.RiryTools.Editor
                     if (all != null && stamp == loadedStamp) return all;
                     loadedStamp = stamp;
                     all = Read(FilePath);
+                    lastProblem = null;
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogWarning(AvatarMigrationAssistant.Title + ": could not read " + FilePath + ": " + exception.Message);
+                    if (exception.Message != lastProblem)
+                        Debug.LogWarning(AvatarMigrationAssistant.Title + ": could not read " + FilePath + ": " + exception.Message);
+                    lastProblem = exception.Message;
                     if (all == null) all = new List<AvatarCopyType>();
                 }
                 return all;

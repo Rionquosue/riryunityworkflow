@@ -161,7 +161,7 @@ internal static class RegenerateGuid
             if (assetPaths.Count == 0)
             {
                 log.Write("Stopped: no valid assets were selected.");
-                Debug.LogError("Select one or more assets, or one or more folders under Assets.");
+                EditorUtility.DisplayDialog("Regenerate GUID", "Select one or more assets, or one or more folders under Assets.", "OK");
                 return;
             }
 
@@ -282,6 +282,8 @@ internal static class RegenerateGuid
                 "GUID regeneration completed.\n" +
                 "Assets changed: " + targets.Count.ToString("N0", CultureInfo.InvariantCulture) + "\n" +
                 "Reference files indexed: " + referenceFileCount.ToString("N0", CultureInfo.InvariantCulture) + "\n" +
+                "Old to new GUIDs recorded in: " + GuidRemapLedger.RelativePath + "\n" +
+                "Diagnostic log: " + LogDirectoryPath + "\n" +
                 "Cache: " + CacheDirectoryPath);
             log.Write("Completed successfully. Assets changed: " + targets.Count +
                       "; reference files indexed: " + referenceFileCount + ".");
@@ -482,10 +484,14 @@ internal static class RegenerateGuid
         return targets;
     }
 
+    // Unreadable caches found by the current LoadCaches, reported as one line.
+    private static int unreadableCaches;
+
     private static void LoadCaches(
         List<Target> targets,
         GuidToolLog log)
     {
+        unreadableCaches = 0;
         foreach (Target target in targets)
         {
             string cachePath = GetCachePath(target.AssetPath);
@@ -493,6 +499,10 @@ internal static class RegenerateGuid
             log.Write((target.Cache == null ? "Cache miss: " : "Cache hit: ") +
                       target.AssetPath + " | " + cachePath);
         }
+        // One line for the run: each unreadable cache is in the GUID Tools log, and is simply rebuilt.
+        if (unreadableCaches > 0)
+            Debug.LogWarning("GUID Tools: ignored " + unreadableCaches + " unreadable GUID cache file(s) in " + CacheDirectoryPath +
+                "; they are rebuilt. Each is listed in the GUID Tools log in " + LogDirectoryPath + ".");
     }
 
     private static ReferenceCache TryLoadCache(
@@ -575,7 +585,7 @@ internal static class RegenerateGuid
         catch (Exception exception)
         {
             log.Write("Cache read failure: " + cachePath + " | " + exception);
-            Debug.LogWarning("Ignoring an unreadable GUID cache:\n" + cachePath + "\n" + exception.Message);
+            unreadableCaches++;
             return null;
         }
     }

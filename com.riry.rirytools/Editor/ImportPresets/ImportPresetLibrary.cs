@@ -209,11 +209,14 @@ namespace Riry.RiryTools.Editor
             out string applied)
         {
             applied = null;
+            // Reported once per folder, naming the file and the ImportPreset.md that asked, so every folder to fix shows up.
+            string folder = ImportPresetMarker.ParentFolder(importer.assetPath) ?? "";
+            string askedBy = " (for " + importer.assetPath + ", set in " + ImportPresetMarker.PathIn(folder) + ")";
             string path = ConfigurationPath(configuration);
             if (path == null || !Directory.Exists(path))
             {
-                ReportOnce("missing:" + configuration, "Import preset configuration '" + configuration +
-                    "' was not found in " + RootPath + ".");
+                ReportOnce("missing:" + configuration + "@" + folder, "Import preset configuration '" + configuration +
+                    "' was not found in " + RootPath + askedBy + ".");
                 return false;
             }
             string extension = Path.GetExtension(importer.assetPath);
@@ -224,8 +227,8 @@ namespace Riry.RiryTools.Editor
                 string file = FindFile(files, presetName);
                 if (file == null)
                 {
-                    ReportOnce("missing:" + configuration + "/" + presetName, "Import preset '" + presetName +
-                        "' was not found in configuration '" + configuration + "'.");
+                    ReportOnce("missing:" + configuration + "/" + presetName + "@" + folder, "Import preset '" + presetName +
+                        "' was not found in configuration '" + configuration + "'" + askedBy + ".");
                     return false;
                 }
                 candidates = new List<Candidate> { new Candidate { File = file, FromRule = true } };

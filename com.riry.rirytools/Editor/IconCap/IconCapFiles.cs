@@ -85,7 +85,9 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("IconCap: could not read " + path + ": " + exception.Message);
+                // The files are read again on every focus and project change: one warning per file version and problem.
+                WarnOnce(path + "|" + File.GetLastWriteTimeUtc(path).Ticks + "|" + exception.Message,
+                    "IconCap: could not read " + path + ": " + exception.Message);
             }
             return new IconCapJobFile();
         }
@@ -102,6 +104,13 @@ namespace Riry.RiryTools.Editor
                 File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
         }
 
+        private static readonly HashSet<string> warned = new HashSet<string>(StringComparer.Ordinal);
+
+        private static void WarnOnce(string key, string message)
+        {
+            if (warned.Add(key)) Debug.LogWarning(message);
+        }
+
         /// <summary>Every folder with a .iconcap.json: those under Assets, and extra (the export folder).</summary>
         internal static List<string> JobFolders(string extraFullPath)
         {
@@ -113,7 +122,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("IconCap: could not search Assets for jobs: " + exception.Message);
+                WarnOnce("search|" + exception.Message, "IconCap: could not search Assets for jobs: " + exception.Message);
             }
             if (!string.IsNullOrEmpty(extraFullPath) && File.Exists(JobFilePath(extraFullPath)))
             {
@@ -258,7 +267,8 @@ namespace Riry.RiryTools.Editor
 //   WritePng(image, path)        PNG; inside Assets it is imported and pinged (highlighted) in the Project window.
 //   PngName(name)                A safe file name ending in .png.
 //   JobFileName (.iconcap.json)  One per export folder: IconCapJobFile (Editor/IconCap/IconCapData.cs); hidden on Windows.
-//   ReadJobs / WriteJobs / JobFolders(extra)  Read, write; every folder with one under Assets, plus extra.
+//   ReadJobs / WriteJobs / JobFolders(extra)  Read, write; every folder with one under Assets, plus extra. Read and search
+//                                problems are warned once each (WarnOnce; a read problem again once the file changes).
 //   Run(folder, job)             Renders every entry, moves the files being replaced into a new OLD_<n> (.meta files
 //                                stay, so the GUIDs stay at the original paths), writes the new PNGs, refreshes.
 //   NextOldFolder / OldFolderPrefix (OLD_)  The next free OLD_<n> in the export folder.

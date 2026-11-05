@@ -49,8 +49,8 @@ internal static class GuidReferenceCache
 
                 Directory.Delete(cachePath, true);
 
+                // The dialog reports it; the GUID Tools log keeps the record.
                 log.Write("Cache directory deleted successfully.");
-                Debug.Log("GUID reference cache deleted:\n" + cachePath);
                 EditorUtility.DisplayDialog(
                     "Delete GUID Reference Cache",
                     "The GUID reference cache was deleted.",

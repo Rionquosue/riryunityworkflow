@@ -398,7 +398,9 @@ namespace Riry.RiryTools.Editor
                         "\n\nRollback also failed: " + rollbackException.Message;
                 }
 
-                Debug.LogException(exception);
+                // The one log of this failure, with the clip to ping; callers report error without logging it again.
+                Debug.LogError(DisplayName + ": could not remove the curves of " + AssetDatabase.GetAssetPath(clip) + ":\n" +
+                    exception + rollbackMessage, clip);
                 error = "The curves could not be removed.\n\n" +
                         exception.Message + rollbackMessage;
                 return false;

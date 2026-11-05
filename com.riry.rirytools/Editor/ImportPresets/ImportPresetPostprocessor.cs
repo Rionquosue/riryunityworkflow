@@ -135,21 +135,24 @@ namespace Riry.RiryTools.Editor
                 string fbx = BetterFbxExporter.Export(source, force, out message);
                 if (fbx == null)
                 {
+                    // A lasting state (Blender missing, a kept FBX, bad options) is reported once per session, not per file
+                    // and save; the first file it stopped is named.
                     if (message != null && !message.EndsWith("is up to date.", StringComparison.Ordinal))
-                        Debug.LogWarning("Import Presets: " + message);
+                        ImportPresetLibrary.ReportOnce("better-fbx:" + message, message + " (" + source + ")");
                     return;
                 }
-                Debug.Log("Import Presets: " + message);
-
                 // A new FBX is handled by its first import. An updated one keeps
-                // its settings, so its clips are refreshed here when configured.
+                // its settings, so its clips are refreshed here when configured; one line for both.
                 var importer = AssetImporter.GetAtPath(fbx) as ModelImporter;
-                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx)) return;
-                List<string> skipped;
-                int written = ImportPresetAnimations.ExtractPreservingSettings(importer,
-                    AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, false, out skipped);
-                Debug.Log("Import Presets: refreshed " + written + " clip(s) from " + fbx +
-                    (skipped.Count > 0 ? "; kept " + skipped.Count + " clip(s) that were edited or extracted from another model." : "."));
+                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx))
+                {
+                    Debug.Log("Import Presets: " + message);
+                    return;
+                }
+                ImportPresetAnimations.Extraction result = ImportPresetAnimations.ExtractPreservingSettings(importer,
+                    AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, false);
+                result.Log("Import Presets: " + message.TrimEnd('.') + "; refreshed " + result.Written + " clip(s) in " + result.Folder +
+                    (result.Skipped.Count > 0 ? ", kept " + result.Skipped.Count + " clip(s) that were edited or extracted from another model" : ""));
             }
             catch (Exception exception)
             {

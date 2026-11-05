@@ -41,8 +41,8 @@ namespace Riry.RiryTools.Editor
             get { return EditorPrefs.GetBool(EnabledPref, true); }
             set
             {
+                // No log: the menu checkmark and the Tools tab toggle already show it.
                 EditorPrefs.SetBool(EnabledPref, value);
-                Debug.Log("[RiryTools] Stop Auto Game is now " + (value ? "on" : "off") + ".");
                 RefreshHook();
             }
         }

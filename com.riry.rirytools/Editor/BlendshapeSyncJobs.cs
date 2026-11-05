@@ -75,6 +75,24 @@ namespace Riry.RiryTools.Editor
             SaveAll();
         }
 
+        private const double SaveDelay = 1.0;
+        private static double saveAt = -1.0;
+
+        /// <summary>Saves once no edit has come for SaveDelay seconds: a drag or typing makes one write, not one per event.</summary>
+        internal static void SaveSoon()
+        {
+            if (saveAt < 0.0) EditorApplication.update += SaveWhenDue;
+            saveAt = EditorApplication.timeSinceStartup + SaveDelay;
+        }
+
+        private static void SaveWhenDue()
+        {
+            if (EditorApplication.timeSinceStartup < saveAt) return;
+            EditorApplication.update -= SaveWhenDue;
+            saveAt = -1.0;
+            SaveAll();
+        }
+
         /// <summary>Saves the jobs of every open scene.</summary>
         internal static void SaveAll()
         {
@@ -115,7 +133,9 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("Blendshape Sync: could not save the jobs of " + scene.path + ": " + exception.Message);
+                // Once per file and problem, however often saving is tried.
+                if (unsaved.Add(file + "\n" + exception.Message))
+                    Debug.LogWarning("Blendshape Sync: could not save the jobs of " + scene.path + " to " + file + ": " + exception.Message);
             }
         }
 
@@ -149,6 +169,7 @@ namespace Riry.RiryTools.Editor
         }
 
         private static readonly HashSet<string> unreadable = new HashSet<string>(StringComparer.Ordinal);
+        private static readonly HashSet<string> unsaved = new HashSet<string>(StringComparer.Ordinal);
 
         // The saved jobs in the file, or null when it is missing or unreadable (reported once per file and problem).
         private static SavedJobs Read(string file)

@@ -36,7 +36,7 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             RiryToolsMainMenu.Call(job, "OnGUI");
-            if (GUI.changed) BlendshapeSyncJobs.SaveAll();
+            if (GUI.changed) BlendshapeSyncJobs.SaveSoon();
         }
 
         private void OnInspectorUpdate()
@@ -118,6 +118,7 @@ namespace Riry.RiryTools.Editor
 //
 // BlendshapeSyncJobs (Editor/BlendshapeSyncJobs.cs)
 //   All() / Add() / Remove(job)  The jobs: Blendshape Sync windows kept running unseen (HideAndDontSave).
+//   SaveSoon()                   Popup edits: SaveAll once no edit came for SaveDelay (1 s), not on every GUI event.
 //   SaveAll() / Load(scene)      UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json, one file per scene;
 //                                loaded when the scene opens, saved when it is saved or closes, at a script
 //                                reload and on quit. A closing scene's jobs end with it.

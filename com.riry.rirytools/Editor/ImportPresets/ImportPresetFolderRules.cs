@@ -311,9 +311,8 @@ namespace Riry.RiryTools.Editor
                 var model = listed as ModelImporter;
                 if (model != null && ImportPresetAnimations.ShouldExtract(path))
                 {
-                    List<string> skipped;
                     ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
-                        ImportPresetOwnedFiles.IsUnchanged, false, out skipped);
+                        ImportPresetOwnedFiles.IsUnchanged, false);
                 }
                 AssetImporter importer = AssetImporter.GetAtPath(path);
                 string applied;

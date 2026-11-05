@@ -78,9 +78,8 @@ namespace Riry.RiryTools.Editor
 
             EnsureGeneric(importer);
             AnimationExtractSettings settings = AnimationExtractSettings.Load(assetPath);
-            List<string> skipped;
-            int written = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, false, out skipped);
-            ReportSkipped(assetPath, skipped);
+            Extraction result = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, false);
+            ReportSkipped(assetPath, result.Skipped);
 
             ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(assetPath);
             string applied = null;
@@ -91,8 +90,28 @@ namespace Riry.RiryTools.Editor
                     ImportPresetLibrary.TryApply(importer, target.Configuration, target.Preset, out applied))
                     importer.SaveAndReimport();
             }
-            Debug.Log("Import Presets: extracted " + written + " clip(s) from " + assetPath + " to " +
-                Destination(assetPath, settings) + (applied != null ? ", then applied " + applied + "." : "."));
+            result.Log("Import Presets: extracted " + result.Written + " clip(s) from " + assetPath + " to " + result.Folder +
+                (applied != null ? ", then applied " + applied : ""));
+        }
+
+        /// <summary>What one extraction did, so each model gets one Console line.</summary>
+        internal sealed class Extraction
+        {
+            public int Written;
+            public readonly List<string> Skipped = new List<string>();
+            /// <summary>The folder the clips went to (Destination, or Animations/ when it was not valid).</summary>
+            public string Folder;
+            /// <summary>The cleaning's summary, or null when the clips were not cleaned.</summary>
+            public string Cleaned;
+            public bool CleanFailed;
+
+            /// <summary>Logs the line with the cleaning appended: a warning when cleaning failed.</summary>
+            internal void Log(string line)
+            {
+                line += Cleaned != null ? "; " + Cleaned : ".";
+                if (CleanFailed) Debug.LogWarning(line);
+                else Debug.Log(line);
+            }
         }
 
         /// <summary>
@@ -101,15 +120,15 @@ namespace Riry.RiryTools.Editor
         /// <paramref name="undoable"/>: only the Extract button's run is recorded for Undo; automatic runs
         /// (first import, re-export, Folder Rules Apply) are not, so they never take the user's next Ctrl+Z.
         /// </summary>
-        internal static int ExtractPreservingSettings(ModelImporter importer, AnimationExtractSettings settings,
-            Func<string, bool> mayReplace, bool undoable, out List<string> skipped)
+        internal static Extraction ExtractPreservingSettings(ModelImporter importer, AnimationExtractSettings settings,
+            Func<string, bool> mayReplace, bool undoable)
         {
             Preset snapshot = new Preset(importer);
             bool changed = false;
             try
             {
                 changed = EnsureGeneric(importer);
-                return ExtractClips(importer.assetPath, settings, mayReplace, undoable, out skipped);
+                return ExtractClips(importer.assetPath, settings, mayReplace, undoable);
             }
             finally
             {
@@ -145,8 +164,7 @@ namespace Riry.RiryTools.Editor
         {
             if (settings == null || settings.Destination.Length == 0) return AnimationsFolder(modelPath);
             if (DestinationProblem(settings.Destination) == null) return settings.Destination;
-            Debug.LogWarning("Import Presets: " + settings.Destination + " is not a folder in Assets; extracting " +
-                modelPath + " to " + AnimationsFolder(modelPath) + ".");
+            // Reported once, by the extraction that uses it (ExtractClips).
             return AnimationsFolder(modelPath);
         }
 
@@ -214,14 +232,19 @@ namespace Riry.RiryTools.Editor
 
         internal const string UndoName = "Extract Animation";
 
-        private static int ExtractClips(string modelPath, AnimationExtractSettings settings, Func<string, bool> mayReplace,
-            bool undoable, out List<string> skipped)
+        private static Extraction ExtractClips(string modelPath, AnimationExtractSettings settings, Func<string, bool> mayReplace,
+            bool undoable)
         {
-            skipped = new List<string>();
-            List<AnimationClip> clips = Clips(modelPath);
-            if (clips.Count == 0) return 0;
-
+            var result = new Extraction();
+            List<string> skipped = result.Skipped;
             string folder = Destination(modelPath, settings);
+            result.Folder = folder;
+            List<AnimationClip> clips = Clips(modelPath);
+            if (clips.Count == 0) return result;
+
+            if (settings != null && settings.Destination.Length > 0 && DestinationProblem(settings.Destination) != null)
+                Debug.LogWarning("Import Presets: " + settings.Destination + " is not a folder in Assets; extracting " +
+                    modelPath + " to " + folder + ".");
             EnsureFolder(folder);
 
             string modelName = Path.GetFileNameWithoutExtension(modelPath);
@@ -268,7 +291,7 @@ namespace Riry.RiryTools.Editor
                     written.Add(path);
                 }
                 AssetDatabase.SaveAssets();
-                if (settings != null && settings.AutoClean && written.Count > 0) Clean(written, settings);
+                if (settings != null && settings.AutoClean && written.Count > 0) Clean(written, settings, result);
             }
             finally
             {
@@ -286,10 +309,12 @@ namespace Riry.RiryTools.Editor
             }
             // Recorded after cleaning, so a cleaned clip still counts as unchanged.
             foreach (string path in written) ImportPresetOwnedFiles.Record(path, modelGuid);
-            return written.Count;
+            result.Written = written.Count;
+            return result;
         }
 
-        private static void Clean(List<string> paths, AnimationExtractSettings settings)
+        // Cleans the clips; the summary goes into the model's line. A failed clip is logged by CleanAnimationKeys itself.
+        private static void Clean(List<string> paths, AnimationExtractSettings settings, Extraction result)
         {
             var clips = new List<AnimationClip>();
             foreach (string path in paths)
@@ -299,12 +324,13 @@ namespace Riry.RiryTools.Editor
             }
             try
             {
-                Debug.Log("Import Presets: " + CleanAnimationKeys.Clean(clips, settings.CleanOptions, settings.Whitelist));
+                result.Cleaned = CleanAnimationKeys.Clean(clips, settings.CleanOptions, settings.Whitelist);
                 AssetDatabase.SaveAssets();
             }
             catch (InvalidOperationException exception)
             {
-                Debug.LogWarning("Import Presets: cleaning keys failed: " + exception.Message);
+                result.Cleaned = "cleaning keys failed: " + exception.Message;
+                result.CleanFailed = true;
             }
         }
 
@@ -355,11 +381,10 @@ namespace Riry.RiryTools.Editor
             bool replaceAll = blocked > 0 && EditorUtility.DisplayDialog("Extract Animation",
                 blocked + " clip(s) in " + folder + " were edited or not created by this tool. Replace them too?",
                 "Replace", "Keep");
-            List<string> skipped;
-            int written = ExtractPreservingSettings(importer, settings,
-                path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), true, out skipped);
-            ReportSkipped(importer.assetPath, skipped);
-            Debug.Log("Import Presets: extracted " + written + " clip(s) from " + importer.assetPath + " to " + folder + ".");
+            Extraction result = ExtractPreservingSettings(importer, settings,
+                path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), true);
+            ReportSkipped(importer.assetPath, result.Skipped);
+            result.Log("Import Presets: extracted " + result.Written + " clip(s) from " + importer.assetPath + " to " + result.Folder);
         }
 
         /// <summary>The model selected in the Project window, or null.</summary>

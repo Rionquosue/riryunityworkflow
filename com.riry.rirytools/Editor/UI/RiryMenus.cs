@@ -232,18 +232,13 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConstraintBezierHierarchy, false, 21)]
         private static void ConstraintBezierHierarchyItem() { VrcSdkMissing("Constraint Tool"); }
 
-        /// <summary>Throws VrcSdkNotFoundException and shows it as the "VRCSDK not found" popup.</summary>
+        /// <summary>
+        /// Shows VrcSdkNotFoundException's message as the "VRCSDK not found" popup. A missing SDK is a setup state, not a
+        /// failure, so nothing is logged: the popup says it all.
+        /// </summary>
         private static void VrcSdkMissing(string tool)
         {
-            try
-            {
-                throw new VrcSdkNotFoundException(tool);
-            }
-            catch (VrcSdkNotFoundException exception)
-            {
-                UnityEngine.Debug.LogException(exception);
-                EditorUtility.DisplayDialog("VRCSDK not found", exception.Message, "OK");
-            }
+            EditorUtility.DisplayDialog("VRCSDK not found", new VrcSdkNotFoundException(tool).Message, "OK");
         }
 #endif
     }

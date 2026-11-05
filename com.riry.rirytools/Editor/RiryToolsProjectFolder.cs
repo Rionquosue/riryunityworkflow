@@ -30,7 +30,13 @@ namespace Riry.RiryTools.Editor
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogWarning("RiryTools could not unpack its files into " + AssetPath + ":\n" + exception.Message);
+                    // This runs after every script reload, so a lasting problem is reported once per editor session.
+                    string key = "RiryTools.UnpackProblem." + exception.Message;
+                    if (!SessionState.GetBool(key, false))
+                    {
+                        SessionState.SetBool(key, true);
+                        Debug.LogWarning("RiryTools could not unpack its files into " + AssetPath + ":\n" + exception.Message);
+                    }
                 }
             };
         }
@@ -62,11 +68,30 @@ namespace Riry.RiryTools.Editor
             {
                 string target = Path.Combine(destination, file.Substring(source.Length).TrimStart('/', '\\'));
                 if (File.Exists(target)) continue;
-                Directory.CreateDirectory(Path.GetDirectoryName(target));
-                File.Copy(file, target);
+                try
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(target));
+                    File.Copy(file, target);
+                }
+                catch (Exception exception)
+                {
+                    throw new IOException("Could not copy " + target + ": " + exception.Message, exception);
+                }
                 copied++;
             }
             return copied;
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: RiryTools project folder
+// ============================================================================
+//
+// RiryToolsProjectFolder (this file)
+//   AssetPath            "Assets/RiryTools": files the tools make or the package ships for the project.
+//   static constructor   After each script reload, copies the package's ProjectFolder~ files that are missing from
+//                        Assets/RiryTools (Unpack), then refreshes. A failure is warned once per editor session
+//                        (SessionState), naming the file that could not be copied.
+//   Ensure()             Creates Assets/RiryTools when needed; returns its path.
+//   Unpack(source, destination)  Copies missing files, .meta included; returns how many.
