@@ -44,7 +44,7 @@ namespace Riry.RiryTools.Editor
             {
                 foreach (string suggestion in Suggestions(search.Trim()))
                 {
-                    if (!GUILayout.Button(suggestion, EditorStyles.miniButton)) continue;
+                    if (!GUILayout.Button(new GUIContent(suggestion, suggestion), EditorStyles.miniButton, GUILayout.MinWidth(0f))) continue;
                     Load(suggestion);
                     search = suggestion;
                     GUI.FocusControl(null);

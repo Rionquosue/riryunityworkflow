@@ -456,7 +456,11 @@ namespace Riry.RiryTools.Editor
             }
             if (locked.Count > 0)
             {
-                status = string.Join(", ", locked) + " are saved in the prefab. Remove the rig in Prefab Mode.";
+                // A count and the first few names, so a long chain cannot grow the status box over the tab.
+                const int Shown = 5;
+                status = locked.Count + " part(s) of the rig are saved in the prefab (" +
+                    string.Join(", ", locked.GetRange(0, Math.Min(Shown, locked.Count))) +
+                    (locked.Count > Shown ? " and " + (locked.Count - Shown) + " more" : "") + "). Remove the rig in Prefab Mode.";
                 return;
             }
 

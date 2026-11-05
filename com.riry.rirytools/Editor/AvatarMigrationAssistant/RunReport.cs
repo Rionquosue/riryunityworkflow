@@ -65,6 +65,8 @@ namespace Riry.RiryTools.Editor
             window.report = report;
             Rect main = EditorGUIUtility.GetMainWindowPosition();
             window.position = new Rect(main.center.x - 320f, main.center.y - 240f, 640f, 480f);
+            // Small enough to move aside, never so small the summary and Close are cut off.
+            window.minSize = new Vector2(420f, 260f);
             window.ShowUtility();
         }
 
@@ -107,4 +109,4 @@ namespace Riry.RiryTools.Editor
 // AvatarRunReport            Counts (Copied, CreatedObjects, CopiedPrefabs, PrefabsAlreadyThere, SkippedIdentical) and lines:
 //                            PossibleIssues ("Possible issues with:", to investigate), NotCopied, ReferencesCleared,
 //                            Failures, FilesCreated (feature 15: files on disk are not covered by Undo). Summary / Text().
-// AvatarRunReportWindow      Show(report): logs the text, then a popup with the summary and each section; Close.
+// AvatarRunReportWindow      Show(report): logs the text, then a popup with the summary and each section; Close. minSize 420 x 260.

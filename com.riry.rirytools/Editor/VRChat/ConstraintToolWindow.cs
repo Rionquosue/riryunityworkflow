@@ -89,6 +89,8 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             wantsMouseMove = true;
+            // As in the Main Menu, so the strip's top outline is not hidden under the window's own tab.
+            GUILayout.Space(RiryToolsMainMenu.TopMargin);
             tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs);
             EditorGUILayout.Space(4f);
             RiryToolsMainMenu.Call(Current, "OnGUI");
@@ -129,7 +131,7 @@ namespace Riry.RiryTools.Editor
 // ConstraintToolWindow        The "Constraint Tool" window (Title); minSize 420 x 500.
 //   Tabs                      Train (TrainTab 0, ConstraintTrainWindow), Bezier (BezierTab 1, ConstraintBezierWindow) and
 //                             Insertable prop (InsertableTab 2, InsertablePropWindow),
-//                             drawn with RiryToolsMainMenu.TabStrip.
+//                             drawn with RiryToolsMainMenu.TabStrip below RiryToolsMainMenu.TopMargin.
 //   tab                       [SerializeField] The open tab.
 //   train / bezier / insertable  [SerializeField] The subtool windows, made on first use (Hidden) and never shown;
 //                             drawn by calling their OnGUI (RiryToolsMainMenu.Call). Destroyed with this window.

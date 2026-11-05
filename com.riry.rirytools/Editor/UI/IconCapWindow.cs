@@ -426,8 +426,11 @@ namespace Riry.RiryTools.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     GUILayout.Space(EditorGUI.indentLevel * 15f);
-                    if (GUILayout.Button(new GUIContent(entry.FileName + (entry.Exported ? "" : " (not exported)"),
-                            "Moves the Scene View camera back to this capture and reselects its objects."), EditorStyles.label))
+                    // MinWidth 0: a long name is cut off (full in the tooltip) instead of pushing Export and Remove out of view.
+                    string rowName = entry.FileName + (entry.Exported ? "" : " (not exported)");
+                    if (GUILayout.Button(new GUIContent(rowName,
+                            rowName + "\nMoves the Scene View camera back to this capture and reselects its objects."), EditorStyles.label,
+                            GUILayout.MinWidth(0f)))
                     {
                         RestoreCamera(entry);
                         Reselect(entry);
@@ -804,7 +807,7 @@ namespace Riry.RiryTools.Editor
                             EditorGUILayout.BeginHorizontal();
                             GUILayout.Space((EditorGUI.indentLevel + 1) * 15f);
                         }
-                        GUILayout.Label(folderName, EditorStyles.miniLabel);
+                        GUILayout.Label(new GUIContent(folderName, folderName), EditorStyles.miniLabel, GUILayout.MinWidth(0f));
                         GUILayout.Label(countText, EditorStyles.miniLabel);
                         string runFolder = folder;
                         IconCapJob runJob = job;
@@ -818,7 +821,7 @@ namespace Riry.RiryTools.Editor
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            EditorGUILayout.LabelField(entry.FileName);
+                            EditorGUILayout.LabelField(new GUIContent(entry.FileName, entry.FileName), GUILayout.MinWidth(0f));
                             if (GUILayout.Button("Restore camera", GUILayout.Width(110f))) RestoreCamera(entry);
                             if (GUILayout.Button("Reselect objects", GUILayout.Width(115f))) Reselect(entry);
                         }

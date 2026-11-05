@@ -162,7 +162,10 @@ namespace Riry.RiryTools.Editor
             foreach (KeyValuePair<string, Transform> handle in handles)
             {
                 Transform target = handle.Value;
-                Handles.Label(target.position, handle.Key, EditorStyles.boldLabel);
+                // Beside the handle, not on its pivot, so the text never covers its centre and axes.
+                Transform eye = view.camera.transform;
+                float size = HandleUtility.GetHandleSize(target.position);
+                Handles.Label(target.position + (eye.up + eye.right) * (0.3f * size), handle.Key, EditorStyles.boldLabel);
                 Vector3 position = target.position;
                 Quaternion rotation = target.rotation;
                 EditorGUI.BeginChangeCheck();
@@ -211,4 +214,6 @@ namespace Riry.RiryTools.Editor
 //   OnGUI                   Prop and socket, Options, Animator, Handles, Generate (Update pair once it exists) and Remove.
 //   OnSceneGUI              Grip, Seated pose and Socket opening: move and rotate handles; Insertion tip: move only. The
 //                           opening's capture radius is drawn, with an arrow along its forward axis (the insertion axis).
+//                           Labels sit up and right of each handle. A new Opening is made 2 capture radii out of the socket
+//                           (against its forward axis), so it never starts on the Seat.
 //   ButtonWidth (110)       Width of New controller, New parameters, Select and Remove.

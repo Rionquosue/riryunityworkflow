@@ -136,7 +136,13 @@ namespace Riry.RiryTools.Editor
 
             // The socket's handles and targets.
             rig.Seat = FindOnSocket(inputs.Socket, rig.Id, "Seat") ?? Create(RootPrefix + rig.Id + " Seat", inputs.Socket, layer, undoName);
-            rig.Opening = FindOnSocket(inputs.Socket, rig.Id, "Opening") ?? Create(RootPrefix + rig.Id + " Opening", inputs.Socket, layer, undoName);
+            rig.Opening = FindOnSocket(inputs.Socket, rig.Id, "Opening");
+            if (rig.Opening == null)
+            {
+                // Made just outside the socket, against its forward (insertion) axis, so its handle is not on the Seat's.
+                rig.Opening = Create(RootPrefix + rig.Id + " Opening", inputs.Socket, layer, undoName);
+                rig.Opening.localPosition = new Vector3(0f, 0f, -2f * Mathf.Max(settings.captureRadius, 0.01f));
+            }
             rig.Entry = FindOnSocket(inputs.Socket, rig.Id, "Entry") ?? Create(RootPrefix + rig.Id + " Entry", inputs.Socket, layer, undoName);
 
             // The grip and tip in the prop's own space; every target below uses them.

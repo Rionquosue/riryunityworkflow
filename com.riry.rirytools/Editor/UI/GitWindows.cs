@@ -144,7 +144,8 @@ namespace Riry.RiryTools.Editor
                 {
                     using (new EditorGUI.DisabledScope(AssetDatabase.LoadMainAssetAtPath(path) == null))
                     {
-                        if (GUILayout.Button(new GUIContent(path, path), EditorStyles.miniButtonLeft)) Ping(path);
+                        // MinWidth 0: a deep path is cut off (full in the tooltip) instead of pushing Add to ignore out of view.
+                        if (GUILayout.Button(new GUIContent(path, path), EditorStyles.miniButtonLeft, GUILayout.MinWidth(0f))) Ping(path);
                     }
                     bool marked = toIgnore.Contains(path);
                     if (GUILayout.Toggle(marked, "Add to ignore", EditorStyles.miniButtonRight, GUILayout.Width(100f)) != marked)

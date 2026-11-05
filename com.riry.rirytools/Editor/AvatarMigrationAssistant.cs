@@ -157,7 +157,9 @@ namespace Riry.RiryTools.Editor
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField(new GUIContent("Types: " + AvatarCopyTypes.FilePath, "Edit this file to change the list; it is read again when it changes."),
                 EditorStyles.wordWrappedMiniLabel);
-            Settings.ShowAll = GUILayout.Toolbar(Settings.ShowAll ? 1 : 0, ListNames) == 1;
+            // Indented like the controls around it (GUILayout.Toolbar ignores the indent level).
+            Rect toolbar = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
+            Settings.ShowAll = GUI.Toolbar(toolbar, Settings.ShowAll ? 1 : 0, ListNames) == 1;
             // Grouped by category (the file's kinds of type); each category folds.
             var categories = new List<string>();
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
@@ -289,7 +291,7 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField(new GUIContent("Migrated folder", "Every file the tool creates goes here, at its original path."),
-                    new GUIContent(Settings.MigratedFolder.Length > 0 ? Settings.MigratedFolder : "(asked for when needed)"));
+                    new GUIContent(Settings.MigratedFolder.Length > 0 ? Settings.MigratedFolder : "(asked for when needed)", Settings.MigratedFolder));
                 if (GUILayout.Button("Browse", GUILayout.Width(70f)))
                 {
                     string chosen = AvatarMigratedFolder.Choose(Settings.MigratedFolder);

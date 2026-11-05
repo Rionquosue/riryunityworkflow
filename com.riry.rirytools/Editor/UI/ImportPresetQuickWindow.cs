@@ -121,7 +121,8 @@ namespace Riry.RiryTools.Editor
         {
             int index = group.Configuration == null ? 0 : Math.Max(0,
                 configurations.FindIndex(name => string.Equals(name, group.Configuration, StringComparison.OrdinalIgnoreCase)) + 1);
-            int chosen = EditorGUILayout.Popup(title, index, configurationNames);
+            // The title is a folder path, cut at the label width; the tooltip shows it whole.
+            int chosen = EditorGUILayout.Popup(new GUIContent(title, title), index, Array.ConvertAll(configurationNames, name => new GUIContent(name)));
             if (chosen != index)
             {
                 group.Configuration = chosen == 0 ? null : configurations[chosen - 1];
