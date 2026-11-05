@@ -101,7 +101,10 @@ namespace Riry.RiryTools.Editor
             {
                 if (row.Match == null || row.Edited) continue;
                 AvatarMatchMethod method;
-                Transform found = map.AutoMatch(row.Match.Source, CurrentTarget(row.Match.Source.parent), out method);
+                Transform own = row.Match.Source;
+                // Taken: the current choice of any other row, as edited in this window.
+                Transform found = map.AutoMatch(own, CurrentTarget(own.parent), out method,
+                    target => rows.Exists(other => other.Match != null && other.Match.Source != own && CurrentTarget(other.Match.Source) == target));
                 row.Path = map.TargetPath(found);
                 row.Auto = method;
             }

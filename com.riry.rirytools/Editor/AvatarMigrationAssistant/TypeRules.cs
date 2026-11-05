@@ -226,8 +226,9 @@ namespace Riry.RiryTools.Editor
         /// <summary>
         /// The target's materials with the source's placed by slot name: each slot is named by the material its model
         /// gives it by default (SlotNames), so a mesh whose slots were reordered, added or removed still gets each
-        /// material on the right part. A slot with no name in common takes the source's material of the same slot
-        /// number, if that one is not placed yet; a source material with no place left is reported.
+        /// material on the right part (target slots sharing a name all take it). A slot with no name in common takes the
+        /// source's material of the same slot number, if that one is not placed yet; a source material with no place left
+        /// is reported.
         /// </summary>
         private Material[] PlaceMaterials(SkinnedMeshRenderer source, SkinnedMeshRenderer target)
         {
@@ -242,7 +243,8 @@ namespace Riry.RiryTools.Editor
                 int found = -1;
                 for (int i = 0; i < from.Length; i++)
                 {
-                    if (used[i] || sourceSlots[i] != targetSlots[j]) continue;
+                    // A source slot may fill several target slots of its name (one material on two parts).
+                    if (sourceSlots[i] != targetSlots[j]) continue;
                     // Two source slots of the same name: no name match, so the slot numbers decide.
                     if (found >= 0)
                     {
@@ -400,14 +402,14 @@ namespace Riry.RiryTools.Editor
 
         private void RemapEyelids(SerializedObject from, SerializedObject to)
         {
-            const string Mesh = "customEyeLookSettings.eyelidsSkinnedMesh", Shapes = "customEyeLookSettings.eyelidsBlendshapes";
-            SerializedProperty fromShapes = from.FindProperty(Shapes), toShapes = to.FindProperty(Shapes);
+            const string EyelidMesh = "customEyeLookSettings.eyelidsSkinnedMesh", EyelidShapes = "customEyeLookSettings.eyelidsBlendshapes";
+            SerializedProperty fromShapes = from.FindProperty(EyelidShapes), toShapes = to.FindProperty(EyelidShapes);
             if (fromShapes == null || toShapes == null || !fromShapes.isArray || !toShapes.isArray)
             {
-                MissingField("Avatar Descriptor", Shapes);
+                MissingField("Avatar Descriptor", EyelidShapes);
                 return;
             }
-            Mesh oldMesh = MeshOf(from.FindProperty(Mesh)), newMesh = MeshOf(to.FindProperty(Mesh));
+            Mesh oldMesh = MeshOf(from.FindProperty(EyelidMesh)), newMesh = MeshOf(to.FindProperty(EyelidMesh));
             if (oldMesh == null || newMesh == null || oldMesh == newMesh) return;
             var missing = new List<string>();
             toShapes.arraySize = fromShapes.arraySize;
@@ -432,14 +434,21 @@ namespace Riry.RiryTools.Editor
         {
             Mesh mesh = MeshOf(to.FindProperty("VisemeSkinnedMesh"));
             if (mesh == null) return;
+            // Only the names the Lip Sync mode uses (SDK LipSyncStyle): visemes for the viseme modes, the mouth-open
+            // shape for jaw flap; Default (auto detect) may use either.
+            SerializedProperty style = to.FindProperty("lipSync");
+            string mode = style != null && style.propertyType == SerializedPropertyType.Enum && style.enumValueIndex >= 0 &&
+                style.enumValueIndex < style.enumNames.Length ? style.enumNames[style.enumValueIndex] : "Default";
+            bool useVisemes = mode == "Default" || mode.StartsWith("VisemeBlendShape", StringComparison.Ordinal);
+            bool useMouth = mode == "Default" || mode == "JawFlapBlendShape";
             var names = new List<string>();
             SerializedProperty visemes = to.FindProperty("VisemeBlendShapes");
-            if (visemes != null && visemes.isArray)
+            if (useVisemes && visemes != null && visemes.isArray)
             {
                 for (int i = 0; i < visemes.arraySize; i++) names.Add(visemes.GetArrayElementAtIndex(i).stringValue);
             }
             SerializedProperty mouth = to.FindProperty("MouthOpenBlendShapeName");
-            if (mouth != null) names.Add(mouth.stringValue);
+            if (useMouth && mouth != null) names.Add(mouth.stringValue);
             var missing = new List<string>();
             foreach (string name in names)
             {
@@ -512,7 +521,7 @@ namespace Riry.RiryTools.Editor
 //                            colliders; CopyBlueprintId (PipelineManager blueprintId); avatar scale moves the viewpoint.
 //   FixDescriptorBlendshapes  After re-pointing: eyelid blendshapes (indices) looked up again by name on the new eyelid
 //                            mesh (RemapEyelids; missing ones set to none and reported); viseme and mouth-open names the
-//                            new viseme mesh lacks reported (CheckVisemes).
+//                            new viseme mesh lacks reported, those the Lip Sync mode uses (CheckVisemes).
 //   PlaceMaterials / SlotNames  Materials by slot name (the model's default material per slot), then by slot number
 //                            where no name matches; source materials left without a slot are reported.
 //   CopyBlendshapes          Values by exact name; set values the new mesh has no blendshape for are reported.

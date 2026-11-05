@@ -381,6 +381,12 @@ namespace Riry.RiryTools.Editor
             }
             AvatarRunReport report = AvatarCopyRun.Execute(map, Settings, answers, ignored);
             lastMap = map;
+            // Prefabs placed again from unpacked ones are the old avatar's own parts: their animations are retargeted too.
+            foreach (GameObject placed in report.RepackedRoots)
+            {
+                if (placed != null && !includedPrefabs.Contains(placed)) includedPrefabs.Add(placed);
+            }
+            targetPrefabs = null;
             Finish(report.Summary);
             AvatarRunReportWindow.Open(report);
         }

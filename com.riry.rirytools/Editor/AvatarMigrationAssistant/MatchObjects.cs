@@ -85,7 +85,10 @@ namespace Riry.RiryTools.Editor
         /// parent is unmatched, so the object is too): name path, then humanoid, then structure.
         /// Manual matching calls this again for the objects below a parent the user matched.
         /// </summary>
-        internal Transform AutoMatch(Transform source, Transform parentTarget, out AvatarMatchMethod method)
+        /// <param name="takenByOther">Whether a target object already belongs to another source object, for the mesh
+        /// match; null uses the map's matches (Manual matching passes its rows' current choices).</param>
+        internal Transform AutoMatch(Transform source, Transform parentTarget, out AvatarMatchMethod method,
+            Func<Transform, bool> takenByOther = null)
         {
             method = AvatarMatchMethod.None;
             if (source == null || parentTarget == null || TargetRoot == null) return null;
@@ -115,7 +118,7 @@ namespace Riry.RiryTools.Editor
             var renderer = source.GetComponent<SkinnedMeshRenderer>();
             if (renderer != null)
             {
-                found = ByMesh(renderer, parentTarget);
+                found = ByMesh(renderer, parentTarget, takenByOther ?? (child => Matches.Exists(match => match.Target == child && match.Source != source)));
                 if (found != null)
                 {
                     method = AvatarMatchMethod.Mesh;
@@ -223,21 +226,31 @@ namespace Riry.RiryTools.Editor
             return null;
         }
 
-        // Share of the source's names (bones or blendshapes) the target also has, at least this, to match by them.
+        // Shared names over all names of both (bones or blendshapes), at least this, to match by them.
         private const float MeshOverlap = 0.5f;
 
+        // The old avatar's body model (its Animator's Avatar asset), found on first use; "" when it has none.
+        [NonSerialized] private string sourceBody;
+
         /// <summary>
-        /// A renamed body mesh: among the children of the parent's match that have a SkinnedMeshRenderer and no source yet,
-        /// the one whose mesh has the same name (only one), else the one sharing the largest share of bone or blendshape
-        /// names (over MeshOverlap, no tie).
+        /// A renamed body mesh: only for a mesh from the old avatar's own body model (clothing shares the body's bones, so
+        /// it must never be matched to the body this way). Among the children of the parent's match that have a
+        /// SkinnedMeshRenderer, belong to no other source object (takenByOther) and are not the name-path match of another
+        /// source object: the one whose mesh has the same name (only one), else the one whose bone or blendshape names
+        /// overlap most, counted both ways (shared over all, over MeshOverlap, no tie).
         /// </summary>
-        private Transform ByMesh(SkinnedMeshRenderer source, Transform targetParent)
+        private Transform ByMesh(SkinnedMeshRenderer source, Transform targetParent, Func<Transform, bool> takenByOther)
         {
+            if (sourceBody == null) sourceBody = AvatarRepack.BodyModel(SourceRoot) ?? "";
+            if (source.sharedMesh == null || sourceBody.Length == 0 || AssetDatabase.GetAssetPath(source.sharedMesh) != sourceBody) return null;
             var candidates = new List<SkinnedMeshRenderer>();
             foreach (Transform child in targetParent)
             {
                 var renderer = child.GetComponent<SkinnedMeshRenderer>();
-                if (renderer != null && !Matches.Exists(match => match.Target == child)) candidates.Add(renderer);
+                if (renderer == null || takenByOther(child)) continue;
+                Transform namesake = SourceRoot.Find(AnimationUtility.CalculateTransformPath(child, TargetRoot));
+                if (namesake != null && namesake != source.transform) continue;
+                candidates.Add(renderer);
             }
             if (candidates.Count == 0) return null;
             string meshName = source.sharedMesh != null ? source.sharedMesh.name : null;
@@ -284,16 +297,16 @@ namespace Riry.RiryTools.Editor
             return names;
         }
 
-        // The share of the source's names the target has too; 0 when the source has none.
+        // Shared names over all names of both (so a subset, such as clothing's bones, scores low); 0 when either has none.
         private static float Overlap(HashSet<string> source, HashSet<string> target)
         {
-            if (source.Count == 0) return 0f;
+            if (source.Count == 0 || target.Count == 0) return 0f;
             int shared = 0;
             foreach (string name in source)
             {
                 if (target.Contains(name)) shared++;
             }
-            return shared / (float)source.Count;
+            return shared / (float)(source.Count + target.Count - shared);
         }
 
         // The child of the parent's match nearest the object's place in avatar-root space.
@@ -345,8 +358,9 @@ namespace Riry.RiryTools.Editor
 // AvatarMigrationMap (this file)
 //   Build(source, target, tolerance)  Every source Transform, parents first: name path, then humanoid slot plus the
 //                            names below it (both avatars humanoid), then for a SkinnedMeshRenderer object its mesh
-//                            (ByMesh: same mesh name, else over MeshOverlap (0.5) of its bone or blendshape names in
-//                            common, no tie, among unmatched renderers below the parent's match), then structure (same avatar-root-space position
+//                            (ByMesh, only for a mesh from the old avatar's body model: same mesh name, else bone or
+//                            blendshape names shared over all of both above MeshOverlap (0.5), no tie, among renderers
+//                            below the parent's match that no other source holds or name-path matches), then structure (same avatar-root-space position
 //                            among the children of the parent's match, within tolerance; none on a tie). An
 //                            unmatched parent leaves its children unmatched.
 //   AutoMatch(source, parentTarget, out method)  One object's automatic match given its parent's target; Build uses it,

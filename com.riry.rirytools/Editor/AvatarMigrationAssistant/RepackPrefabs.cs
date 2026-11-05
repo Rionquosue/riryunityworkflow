@@ -50,7 +50,7 @@ namespace Riry.RiryTools.Editor
                     continue;
                 }
                 Transform root = RootFor(renderer.transform, inModel, sourceRoot);
-                if (root == null)
+                if (root == null || Fit(model.transform, root) < LayoutFit)
                 {
                     problems.Add(where + ": its objects are no longer laid out as in " + path + " (" + inModel + "), so it can't be " +
                         "placed as a prefab again.");
@@ -75,13 +75,43 @@ namespace Riry.RiryTools.Editor
                 }
                 group.Renderers.Add(renderer);
             }
-            // A model placed inside another unpacked model goes with the outer one's objects; outermost first.
-            groups.RemoveAll(inner => groups.Exists(outer => outer != inner && inner.SourceRoot.IsChildOf(outer.SourceRoot)));
+            // Outermost first: a model placed inside another unpacked model is placed after it, inside the outer instance.
+            groups.Sort((left, right) => Depth(left.SourceRoot).CompareTo(Depth(right.SourceRoot)));
             return groups;
         }
 
+        /// <summary>Whether the object is inside another group's source objects than its own (an inner model).</summary>
+        internal static bool InOtherGroup(Transform source, Group own, List<Group> groups)
+        {
+            return groups.Exists(group => group != own && group.SourceRoot != own.SourceRoot &&
+                (source == group.SourceRoot || source.IsChildOf(group.SourceRoot)) && group.SourceRoot.IsChildOf(own.SourceRoot));
+        }
+
+        private static int Depth(Transform transform)
+        {
+            int depth = 0;
+            for (Transform current = transform; current != null; current = current.parent) depth++;
+            return depth;
+        }
+
+        // Share of the model's objects found at their name path under the root, at least this, for the layout to count.
+        private const float LayoutFit = 0.5f;
+
+        // The share of the model's objects that are under the root at the same name path (a few renamed or moved ones are fine).
+        private static float Fit(Transform model, Transform root)
+        {
+            Transform[] parts = model.GetComponentsInChildren<Transform>(true);
+            int found = 0;
+            foreach (Transform part in parts)
+            {
+                string path = AnimationUtility.CalculateTransformPath(part, model);
+                if (path.Length == 0 || root.Find(path) != null) found++;
+            }
+            return found / (float)parts.Length;
+        }
+
         // The model asset of the avatar's humanoid Avatar (its body), or null.
-        private static string BodyModel(Transform root)
+        internal static string BodyModel(Transform root)
         {
             foreach (Animator animator in root.GetComponentsInChildren<Animator>(true))
             {
@@ -101,21 +131,14 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>
-        /// The object as many levels above the renderer as its path in the model has parts, when the names on the way match
-        /// that path (the model's root may have been renamed); null when it would be the avatar root or above.
+        /// The object as many levels above the renderer as its path in the model has parts (names may differ: renamed
+        /// objects are the user's changes; Fit checks the layout); null when it would be the avatar root or above.
         /// </summary>
         private static Transform RootFor(Transform renderer, string inModel, Transform sourceRoot)
         {
             Transform current = renderer;
-            if (inModel.Length > 0)
-            {
-                string[] parts = inModel.Split('/');
-                for (int i = parts.Length - 1; i >= 0; i--)
-                {
-                    if (current == null || current.name != parts[i]) return null;
-                    current = current.parent;
-                }
-            }
+            int levels = inModel.Length == 0 ? 0 : inModel.Split('/').Length;
+            for (int i = 0; i < levels && current != null; i++) current = current.parent;
             return current != null && current != sourceRoot && current.IsChildOf(sourceRoot) ? current : null;
         }
     }
@@ -148,36 +171,28 @@ namespace Riry.RiryTools.Editor
                 var instance = (GameObject)PrefabUtility.InstantiatePrefab(group.Model, parent);
                 Undo.RegisterCreatedObjectUndo(instance, AvatarMigrationAssistant.Title);
                 instance.transform.SetSiblingIndex(Mathf.Min(group.SourceRoot.GetSiblingIndex(), parent.childCount - 1));
-                int removed = Pair(group.SourceRoot, instance.transform);
+                int removed = Pair(group, groups, instance.transform);
                 // Objects the user added inside it are added to the instance too (added-object overrides), so their
-                // components have somewhere to go; child prefabs inside it are placed by the Prefabs step.
+                // components have somewhere to go; child prefabs inside it are placed by the Prefabs step, inner unpacked
+                // models by their own group, after this one.
                 foreach (Transform added in group.SourceRoot.GetComponentsInChildren<Transform>(true))
                 {
-                    if (InScope(added) && map.TargetOf(added) == null) TargetFor(added, true);
+                    if (InScope(added) && map.TargetOf(added) == null && !AvatarRepack.InOtherGroup(added, group, groups)) TargetFor(added, true);
                 }
+                report.RepackedRoots.Add(instance);
                 report.Repacked.Add(where + ": " + group.ModelPath + " (" + group.Renderers.Count + " mesh" + (group.Renderers.Count == 1 ? "" : "es") +
                     (removed > 0 ? "; " + removed + " object(s) the old avatar no longer had removed from the instance" : "") + ")");
             }
         }
 
-        // Pairs the instance with its source objects by path; returns how many instance objects were removed.
-        private int Pair(Transform sourceGroup, Transform instance)
+        /// <summary>
+        /// Pairs the instance with the group's source objects level by level (PairTree); removes the instance objects the
+        /// source no longer has. Returns how many were removed.
+        /// </summary>
+        private int Pair(AvatarRepack.Group group, List<AvatarRepack.Group> groups, Transform instance)
         {
             var gone = new List<Transform>();
-            foreach (Transform part in instance.GetComponentsInChildren<Transform>(true))
-            {
-                string path = AnimationUtility.CalculateTransformPath(part, instance);
-                Transform source = path.Length == 0 ? sourceGroup : sourceGroup.Find(path);
-                if (source == null)
-                {
-                    if (!gone.Exists(outer => part.IsChildOf(outer))) gone.Add(part);
-                    continue;
-                }
-                if (gone.Exists(outer => part.IsChildOf(outer))) continue;
-                map.AddCreated(source, part);
-                CopyObjectState(source, part);
-                PairComponents(source, part);
-            }
+            PairTree(group, groups, group.SourceRoot, instance, gone);
             int removed = 0;
             foreach (Transform part in gone)
             {
@@ -196,6 +211,90 @@ namespace Riry.RiryTools.Editor
                 }
             }
             return removed;
+        }
+
+        /// <summary>
+        /// One object and its children: the instance child takes the source child of the same name, else (a renamed one)
+        /// the left-over source child of the same make (SameMake); an instance child with neither is gone. A source child
+        /// left out of copying (ignored), or in an inner group, leaves the instance child of its name untouched.
+        /// </summary>
+        private void PairTree(AvatarRepack.Group group, List<AvatarRepack.Group> groups, Transform source, Transform part, List<Transform> gone)
+        {
+            map.AddCreated(source, part);
+            CopyObjectState(source, part);
+            PairComponents(source, part);
+            var free = new List<Transform>();
+            var leftAlone = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Transform child in source)
+            {
+                if (InScope(child) && !AvatarRepack.InOtherGroup(child, group, groups)) free.Add(child);
+                else leftAlone.Add(child.name);
+            }
+            var children = new List<Transform>();
+            foreach (Transform child in part) children.Add(child);
+            var pairs = new List<KeyValuePair<Transform, Transform>>();
+            var unnamed = new List<Transform>();
+            // Names decide first, before any instance child is renamed.
+            foreach (Transform child in children)
+            {
+                Transform named = free.Find(candidate => candidate.name == child.name);
+                if (named != null)
+                {
+                    free.Remove(named);
+                    pairs.Add(new KeyValuePair<Transform, Transform>(named, child));
+                }
+                else if (!leftAlone.Contains(child.name)) unnamed.Add(child);
+            }
+            foreach (Transform child in unnamed)
+            {
+                Transform renamed = free.Find(candidate => SameMake(candidate, child));
+                if (renamed == null)
+                {
+                    gone.Add(child);
+                    continue;
+                }
+                free.Remove(renamed);
+                pairs.Add(new KeyValuePair<Transform, Transform>(renamed, child));
+            }
+            foreach (KeyValuePair<Transform, Transform> pair in pairs) PairTree(group, groups, pair.Key, pair.Value, gone);
+        }
+
+        /// <summary>
+        /// A renamed object: the source has every component the model gives it (it may have more, the user's own), with the
+        /// same mesh on a skinned renderer; an object with nothing but its Transform (a bone) also needs as many children.
+        /// </summary>
+        private static bool SameMake(Transform source, Transform part)
+        {
+            var theirs = new List<Component>(source.GetComponents<Component>());
+            bool plain = true;
+            foreach (Component component in part.GetComponents<Component>())
+            {
+                if (component == null || component is Transform) continue;
+                plain = false;
+                Component same = theirs.Find(candidate => candidate != null && candidate.GetType() == component.GetType());
+                if (same == null) return false;
+                theirs.Remove(same);
+                var renderer = component as SkinnedMeshRenderer;
+                if (renderer != null && renderer.sharedMesh != ((SkinnedMeshRenderer)same).sharedMesh) return false;
+            }
+            return !plain || source.childCount == part.childCount;
+        }
+
+        // A component on the object whose type requires this one (RequireComponent), so Unity won't remove it; or null.
+        private static Component RequiredBy(Component component)
+        {
+            foreach (Component other in component.GetComponents<Component>())
+            {
+                if (other == null || other == component) continue;
+                foreach (RequireComponent require in other.GetType().GetCustomAttributes(typeof(RequireComponent), true))
+                {
+                    foreach (Type needed in new[] { require.m_Type0, require.m_Type1, require.m_Type2 })
+                    {
+                        if (needed != null && needed.IsInstanceOfType(component)) return other;
+                    }
+                }
+            }
+            return null;
         }
 
         // Name, local pose, active state, tag and layer as on the source: overrides where they differ from the model.
@@ -235,15 +334,27 @@ namespace Riry.RiryTools.Editor
                 int index = Array.IndexOf(mine, component);
                 if (index < 0 || index >= theirs.Length)
                 {
+                    // Unity refuses to remove a component another one needs (logging its own error), so that is checked first.
+                    Component needs = RequiredBy(component);
+                    if (needs != null)
+                    {
+                        report.NotCopied.Add(Describe(component) + ": the old avatar removed it, but " + ObjectNames.NicifyVariableName(needs.GetType().Name) +
+                            " needs it, so it was kept on the placed prefab.");
+                        continue;
+                    }
+                    string described = Describe(component);
                     try
                     {
                         Undo.DestroyObjectImmediate(component);
                     }
                     catch (Exception exception)
                     {
-                        report.NotCopied.Add(Describe(component) + ": the old avatar removed it, but it could not be removed from the instance (" +
+                        report.NotCopied.Add(described + ": the old avatar removed it, but it could not be removed from the instance (" +
                             exception.Message + ").");
+                        continue;
                     }
+                    if (component != null)
+                        report.NotCopied.Add(described + ": the old avatar removed it, but Unity kept it on the placed prefab.");
                     continue;
                 }
                 Undo.RecordObject(component, AvatarMigrationAssistant.Title);
@@ -269,14 +380,19 @@ namespace Riry.RiryTools.Editor
 //                            model in the project other than either avatar's body model (BodyModel: the Animator's
 //                            Avatar asset): the source object as many levels up as the mesh's path in the model, the
 //                            names on the way matching (RootFor). Skipped, with why: mesh no longer in the model, layout
-//                            changed, an object already at that place on the target, meshes of two models in one place.
-//                            Models inside another planned model go with the outer one.
+//                            changed (Fit under LayoutFit, 0.5: share of the model's objects at their name path; the
+//                            root is found by depth, RootFor, so renames are fine), an object already at that place on
+//                            the target, meshes of two models in one place. Outermost first; inner models are placed
+//                            after, inside the outer instance (InOtherGroup).
 // AvatarCopyRun (this part)
 //   RepackPrefabs()          The run's first step when the up-front check's "Place them as child prefabs" is Yes:
 //                            InstantiatePrefab under the match of the source root's parent (made when missing), then Pair.
-//   Pair(sourceGroup, instance)  Every instance object to the source object at the same path (map.AddCreated), with
-//                            CopyObjectState and PairComponents; instance objects the source no longer has are removed
+//   Pair / PairTree          Level by level: an instance child takes the source child of its name, else a left-over one
+//                            of the same make (SameMake: a renamed object), with map.AddCreated, CopyObjectState and
+//                            PairComponents; ignored and inner-model children leave theirs alone; instance objects the source no longer has are removed
 //                            (deactivated when Unity can't). Objects the user added inside it are made on the instance
 //                            (TargetFor). Listed in the run report under Repacked.
 //   CopyObjectState / PairComponents  Name, local pose, active, tag, layer; the model's components take the source's
-//                            values (same type and index) or are removed; all recorded as prefab instance overrides.
+//                            values (same type and index) or are removed (kept and reported when another component needs
+//                            it, RequiredBy, or Unity keeps it); all recorded as prefab instance overrides. The placed
+//                            roots go in the report (RepackedRoots) and the window ticks them for Retarget animations.

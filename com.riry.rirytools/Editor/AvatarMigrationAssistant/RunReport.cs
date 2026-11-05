@@ -20,6 +20,8 @@ namespace Riry.RiryTools.Editor
         internal readonly List<string> Failures = new List<string>();
         // Unpacked prefabs placed again as child prefabs (RepackPrefabs.cs).
         internal readonly List<string> Repacked = new List<string>();
+        // Their instance roots, which the window ticks for Retarget animations.
+        internal readonly List<GameObject> RepackedRoots = new List<GameObject>();
         // Feature 15: files written to disk, which Undo does not cover.
         internal readonly List<string> FilesCreated = new List<string>();
 

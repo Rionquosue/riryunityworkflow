@@ -31,6 +31,13 @@ namespace Riry.RiryTools.Editor
             internal string Text;
             internal bool Answer;
             internal Action<AvatarUpFrontAnswers, bool> Apply;
+            // Shown and applied only while this returns true (a follow-up to another question); null: always.
+            internal Func<bool> Visible;
+
+            internal bool Shown
+            {
+                get { return Visible == null || Visible(); }
+            }
         }
 
         private readonly List<string> issues = new List<string>();
@@ -55,7 +62,7 @@ namespace Riry.RiryTools.Editor
             check.minSize = new Vector2(480f, 300f);
             check.ShowModalUtility();
             if (!check.accepted) return false;
-            foreach (Question question in check.questions) question.Apply(answers, question.Answer);
+            foreach (Question question in check.questions) question.Apply(answers, question.Shown && question.Answer);
             return true;
         }
 
@@ -142,14 +149,19 @@ namespace Riry.RiryTools.Editor
             }
 
             // Questions.
+            Question skinned = null;
             if (settings.RuleEnabled(AvatarCopyTypes.SkinnedMeshRenderersRule) && Count<SkinnedMeshRenderer>(source, inScope) > 0)
-                questions.Add(new Question
+            {
+                skinned = new Question
                 {
                     Text = "Copy SkinnedMeshRenderer settings, materials and bounds? (" + Count<SkinnedMeshRenderer>(source, inScope) +
                         " found. No copies only their blendshape values.)",
                     Apply = (answers, yes) => answers.CopySkinnedMeshRenderers = yes
-                });
-            if (settings.RuleEnabled(AvatarCopyTypes.SkinnedMeshRenderersRule) && settings.SkinnedBounds)
+                };
+                questions.Add(skinned);
+            }
+            // Bounds are only copied with the settings, so this follows that question's Yes.
+            if (skinned != null && settings.SkinnedBounds)
             {
                 int changed = 0;
                 foreach (SkinnedMeshRenderer renderer in source.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -163,6 +175,7 @@ namespace Riry.RiryTools.Editor
                     {
                         Text = changed + " SkinnedMeshRenderer(s) have a different mesh on the target. Copy their old bounds anyway? " +
                             "(No keeps the new mesh's own bounds.)",
+                        Visible = () => skinned.Answer,
                         Apply = (answers, yes) => answers.CopyChangedBounds = yes
                     });
             }
@@ -252,7 +265,9 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.Space(6f);
                 EditorGUILayout.LabelField("Questions", EditorStyles.boldLabel);
-                foreach (Question question in questions)
+                // Which follow-up questions show is fixed for this event, so an answer changed now shows them from the next
+                // one (the layout and the drawing then see the same controls).
+                foreach (Question question in questions.FindAll(item => item.Shown))
                 {
                     EditorGUILayout.LabelField(question.Text, EditorStyles.wordWrappedLabel);
                     question.Answer = GUILayout.Toolbar(question.Answer ? 0 : 1, new[] { "Yes", "No" }, GUILayout.Width(160f)) == 0;
@@ -285,5 +300,6 @@ namespace Riry.RiryTools.Editor
 //                              objects off; child prefabs with Prefabs off or a missing asset; humanoid bones out of rest
 //                              pose (RestPose) when constraints are copied; unpacked prefabs that can't be placed again.
 //                              Questions (Yes/No, default No): place unpacked prefabs as child prefabs (AvatarRepack.Plan;
-//                              default Yes), SkinnedMeshRenderer settings, old bounds for changed meshes, MeshRenderers,
+//                              default Yes), SkinnedMeshRenderer settings, old bounds for changed meshes (shown and applied
+//                              only while the settings question is Yes: Question.Visible / Shown), MeshRenderers,
 //                              "Upgrade to VRCConstraints on target?". Continue / Abort.
