@@ -83,7 +83,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogError(AvatarMigrationAssistant.Title + ": " + name + " failed:\n" + exception);
+                RiryLog.Exception(RiryLog.AvatarMigration, name + " failed", exception, map.TargetRoot.gameObject);
                 report.Failures.Add(name + ": " + exception.Message);
             }
         }
@@ -100,12 +100,23 @@ namespace Riry.RiryTools.Editor
                 foreach (string list in new[] { "baseAnimationLayers", "specialAnimationLayers" })
                 {
                     SerializedProperty layers = new SerializedObject(descriptor).FindProperty(list);
-                    if (layers == null || !layers.isArray) continue;
+                    if (layers == null || !layers.isArray)
+                    {
+                        report.NotCopied.Add("Avatar Descriptor field '" + list + "' was not found in this SDK, so its controllers were not retargeted.");
+                        continue;
+                    }
+                    bool reported = false;
                     for (int i = 0; i < layers.arraySize; i++)
                     {
                         SerializedProperty layer = layers.GetArrayElementAtIndex(i);
                         SerializedProperty isDefault = layer.FindPropertyRelative("isDefault");
                         SerializedProperty controller = layer.FindPropertyRelative("animatorController");
+                        if (controller == null && !reported)
+                        {
+                            reported = true;
+                            report.NotCopied.Add("Avatar Descriptor field '" + list + ".animatorController' was not found in this SDK, " +
+                                "so those controllers were not retargeted.");
+                        }
                         if (controller == null || (isDefault != null && isDefault.boolValue)) continue;
                         var used = controller.objectReferenceValue as RuntimeAnimatorController;
                         if (used == null) continue;

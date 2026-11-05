@@ -94,6 +94,8 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private bool ambiguous;
         [NonSerialized] private string lastAmbiguity;
         [NonSerialized] private string planError;
+        // The pause reason last logged, so a lasting one is logged once.
+        [NonSerialized] private string loggedPause;
         [NonSerialized] private string result = "Assign a master and at least one child.";
         [NonSerialized] private string pauseReason;
         [NonSerialized] private double nextTick;
@@ -544,8 +546,16 @@ namespace Riry.RiryTools.Editor
                 if ((!PlanIsCurrent() && !BuildPlan()) || planError != null)
                 {
                     result = "Sync paused until the configuration is corrected.";
+                    // Jobs run unseen, so the pause is logged, once per reason.
+                    if (planError != loggedPause)
+                    {
+                        loggedPause = planError;
+                        RiryLog.Warn(RiryLog.BlendshapeSync, "Job " + JobNumber + " (" + (master != null ? master.name : "no master") +
+                            ") paused: " + planError, master);
+                    }
                     return;
                 }
+                loggedPause = null;
                 CaptureOriginal(master);
                 float[] sourceWeights = new float[plannedMasterCount];
                 for (int i = 0; i < sourceWeights.Length; i++)
@@ -580,7 +590,7 @@ namespace Riry.RiryTools.Editor
                 runAutomatically = false;
                 planDirty = true;
                 result = "Sync stopped: " + exception.Message;
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.BlendshapeSync, "Job " + JobNumber + " sync stopped", exception, master);
             }
             finally
             {
@@ -679,7 +689,7 @@ namespace Riry.RiryTools.Editor
             catch (Exception exception)
             {
                 result = "Restore stopped: " + exception.Message;
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.BlendshapeSync, "Job " + JobNumber + " restore stopped", exception, master);
             }
             finally
             {

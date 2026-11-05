@@ -606,11 +606,11 @@ namespace Riry.RiryTools.Editor
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 MockupFile.Save(path, blocks, canvas.layout.width, canvas.layout.height);
                 savePath = path;
-                Debug.Log("Menu Mockup: saved " + path);
+                RiryLog.Info(RiryLog.MenuMockup, "Saved " + path);
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.MenuMockup, "Could not save " + path, exception);
                 EditorUtility.DisplayDialog("Save Mockup", "Could not save " + path + ":\n" + exception.Message, "OK");
             }
         }
@@ -735,7 +735,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.MenuMockup, "Could not load " + path, exception);
                 EditorUtility.DisplayDialog("Load", "Could not load " + path + ":\n" + exception.Message, "OK");
             }
         }

@@ -91,7 +91,7 @@ namespace Riry.RiryTools.Editor
             }
             using (new EditorGUI.DisabledScope(!canGenerate))
             {
-                if (GUILayout.Button("Generate all missing chains")) GenerateMissing(realBones);
+                if (GUILayout.Button("Generate all missing chains")) Act(() => GenerateMissing(realBones));
             }
             if (realBones.Count > 0 && !canGenerate)
                 EditorGUILayout.HelpBox(GenerationError(realBones), MessageType.Warning);
@@ -107,7 +107,7 @@ namespace Riry.RiryTools.Editor
                 {
                     if (GUILayout.Button(new GUIContent("Generate", "Create " + prefix + "* empties."),
                         GUILayout.Width(75)))
-                        start = Generate(realBones, prefix, endpoint);
+                        start = Act(() => Generate(realBones, prefix, endpoint));
                 }
             }
             return start;
@@ -170,13 +170,13 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.HelpBox("These bones are in an instance of " + source + ". Generated chains and constraints " +
                     "are overrides in this scene until saved to the prefab.", MessageType.Info);
-                if (GUILayout.Button("Save as Prefab Overrides")) { SaveToPrefab(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Save as Prefab Overrides")) { Act(SaveToPrefab); RiryGui.ExitAfterModal(); }
                 return;
             }
             EditorGUILayout.HelpBox(source + " is a model or read-only prefab and cannot hold overrides. Saving creates " +
                 ConstraintTrainPrefabs.RootPrefabPath(source) + " as a variant of it with these changes, and connects " +
                 "this object to it.", MessageType.Info);
-            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) { SaveToPrefab(); RiryGui.ExitAfterModal(); }
+            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) { Act(SaveToPrefab); RiryGui.ExitAfterModal(); }
         }
 
         private void DrawOutput()
@@ -187,8 +187,8 @@ namespace Riry.RiryTools.Editor
                 clip, typeof(AnimationClip), false));
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Set up constraints")) { SetUpConstraints(); RiryGui.ExitAfterModal(); }
-                if (GUILayout.Button("Build animation")) { BuildAnimation(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Set up constraints")) { Act(SetUpConstraints); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Build animation")) { Act(BuildAnimation); RiryGui.ExitAfterModal(); }
             }
             DrawPrefabSave();
         }
@@ -215,7 +215,8 @@ namespace Riry.RiryTools.Editor
 //   stepCurve       [S] AnimationCurve Shape of each move from one target to the next.
 //   blendCurve      [S] AnimationCurve Influence of the next chain across a blend.
 //   clip            [S] AnimationClip  Output clip; empty saves a new one.
-//   status              string         Message shown at the bottom of the window.
+//   status              string         Message shown at the bottom of the window. Act(action): the action buttons run
+//                                      through it, so each new status is also logged ([RiryTools/Constraint Tool] Train: ...).
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
 //

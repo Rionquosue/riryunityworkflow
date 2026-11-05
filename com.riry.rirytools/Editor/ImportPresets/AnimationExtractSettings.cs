@@ -56,7 +56,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("Extract Animation: could not read " + path + ": " + exception.Message);
+                RiryLog.Warn(RiryLog.ImportPresets, "Extract Animation could not read " + path + ": " + exception.Message);
                 return null;
             }
         }
@@ -102,6 +102,8 @@ namespace Riry.RiryTools.Editor
             Stage(path, false);
         }
 
+        private static bool gitMissingReported;
+
         // git add (forced, so an ignore rule does not stop it); with Sync on, Sync also commits it.
         private static void Stage(string path, bool deleted)
         {
@@ -114,11 +116,18 @@ namespace Riry.RiryTools.Editor
                 if (deleted && GitRunner.Run(project, environment, 10000, "ls-files", "--", path).Output.Trim().Length == 0)
                     return;
                 GitRunner.Result result = GitRunner.Run(project, environment, 30000, "add", "--force", "--all", "--", path);
-                if (!result.Succeeded) Debug.LogWarning("Extract Animation: " + result.Describe("Staging " + path));
+                if (!result.Succeeded) RiryLog.Warn(RiryLog.ImportPresets, "Extract Animation: " + result.Describe("Staging " + path));
                 if (!deleted) AutoSync.Track(path);
             }
             catch (GitNotInstalledException)
             {
+                // Said once per session: settings files then stay out of Git until it is installed.
+                if (!gitMissingReported)
+                {
+                    gitMissingReported = true;
+                    RiryLog.Warn(RiryLog.ImportPresets, "Git is not installed, so " + path + " (and any later extract settings file) " +
+                        "was not staged in Git.");
+                }
             }
         }
     }

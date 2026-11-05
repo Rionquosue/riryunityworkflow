@@ -16,6 +16,8 @@ namespace Riry.RiryTools.Editor
         private static readonly List<string> extractQueue = new List<string>();
         private static readonly List<string> exportQueue = new List<string>();
         private static bool scheduled;
+        // Presets applied on first import in this batch of imports, logged as one line when the batch ends.
+        private static readonly List<string> appliedThisBatch = new List<string>();
 
         private void OnPreprocessAsset()
         {
@@ -41,12 +43,19 @@ namespace Riry.RiryTools.Editor
             }
             if (target.Configuration == null) return;
             string applied;
-            ImportPresetLibrary.TryApply(assetImporter, target.Configuration, target.Preset, out applied);
+            if (ImportPresetLibrary.TryApply(assetImporter, target.Configuration, target.Preset, out applied))
+                appliedThisBatch.Add(path + " (" + target.Configuration + "/" + applied + ")");
         }
 
         private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved,
             string[] movedFrom)
         {
+            if (appliedThisBatch.Count > 0)
+            {
+                RiryLog.Info(RiryLog.ImportPresets, "Applied folder import presets to " + appliedThisBatch.Count + " new file(s):\n" +
+                    string.Join("\n", appliedThisBatch));
+                appliedThisBatch.Clear();
+            }
             foreach (string path in imported)
             {
                 if (ImportPresetAnimations.IsPending(path))
@@ -119,7 +128,8 @@ namespace Riry.RiryTools.Editor
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError("Import Presets: animation extraction failed for " + model + ":\n" + exception);
+                    RiryLog.Exception(RiryLog.ImportPresets, "Animation extraction failed for " + model, exception,
+                        AssetDatabase.LoadMainAssetAtPath(model));
                 }
             }
         }
@@ -146,17 +156,18 @@ namespace Riry.RiryTools.Editor
                 var importer = AssetImporter.GetAtPath(fbx) as ModelImporter;
                 if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx))
                 {
-                    Debug.Log("Import Presets: " + message);
+                    RiryLog.Info(RiryLog.ImportPresets, message, AssetDatabase.LoadMainAssetAtPath(fbx));
                     return;
                 }
                 ImportPresetAnimations.Extraction result = ImportPresetAnimations.ExtractPreservingSettings(importer,
                     AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, false);
-                result.Log("Import Presets: " + message.TrimEnd('.') + "; refreshed " + result.Written + " clip(s) in " + result.Folder +
+                result.Log(fbx, message.TrimEnd('.') + "; refreshed " + result.Written + " clip(s) in " + result.Folder +
                     (result.Skipped.Count > 0 ? ", kept " + result.Skipped.Count + " clip(s) that were edited or extracted from another model" : ""));
             }
             catch (Exception exception)
             {
-                Debug.LogError("Import Presets: Better FBX export failed for " + source + ":\n" + exception);
+                RiryLog.Exception(RiryLog.ImportPresets, "Better FBX export failed for " + source, exception,
+                    AssetDatabase.LoadMainAssetAtPath(source));
             }
         }
     }

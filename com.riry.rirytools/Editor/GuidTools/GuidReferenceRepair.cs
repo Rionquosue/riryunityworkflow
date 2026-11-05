@@ -132,6 +132,16 @@ namespace Riry.RiryTools.Editor
             "--no-ext-diff", "--no-renames", "--", ":(glob)**/*.meta"
         };
 
+        // Also in the Console, once per reason and session: without it, no Git backups or old paths are offered.
+        private static readonly HashSet<string> historyReported = new HashSet<string>(StringComparer.Ordinal);
+
+        private static void HistoryNotSearched(string reason)
+        {
+            if (historyReported.Add(reason))
+                RiryLog.Warn(RiryLog.GuidTools, "Broken References did not search the Git history, so no Git backups or old paths are " +
+                    "offered: " + reason);
+        }
+
         internal static void RepairSelected()
         {
             BrokenReferenceWindow.Open(SelectedFiles(), "Selected in the Project window.");
@@ -273,6 +283,7 @@ namespace Riry.RiryTools.Editor
             catch (GitNotInstalledException exception)
             {
                 log.Write("Git history not searched: " + exception.Message);
+                HistoryNotSearched(exception.Message);
                 history = new Dictionary<string, MetaHistoryParser.Hit>();
             }
             finally
@@ -527,7 +538,7 @@ namespace Riry.RiryTools.Editor
                     catch (Exception rollbackException)
                     {
                         log.Write("ROLLBACK FAILURE: " + rollbackException);
-                        Debug.LogError(Title + ": rollback was incomplete:\n" + rollbackException);
+                        RiryLog.Exception(RiryLog.GuidTools, Title + ": rollback was incomplete", rollbackException);
                     }
                 }
                 throw;
@@ -717,6 +728,7 @@ namespace Riry.RiryTools.Editor
                 catch (GitNotInstalledException exception)
                 {
                     log.Write("Git history not searched: " + exception.Message);
+                    HistoryNotSearched(exception.Message);
                 }
                 catch (OperationCanceledException)
                 {
@@ -738,6 +750,7 @@ namespace Riry.RiryTools.Editor
             if (!location.Succeeded)
             {
                 log.Write("Git history not searched: " + location.Describe("Locating the Git repository"));
+                HistoryNotSearched(location.Describe("Locating the Git repository"));
                 return new Dictionary<string, MetaHistoryParser.Hit>();
             }
 

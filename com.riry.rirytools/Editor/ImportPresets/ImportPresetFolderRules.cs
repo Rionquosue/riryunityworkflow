@@ -426,8 +426,11 @@ namespace Riry.RiryTools.Editor
             {
                 return File.Exists(path) ? File.ReadAllText(path) : null;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                // An unreadable marker is left alone like a hand-edited one; this says why.
+                ImportPresetLibrary.ReportOnce("read:" + path + "|" + exception.Message, "Could not read " + path +
+                    ", so it is treated as hand-edited and left unchanged: " + exception.Message);
                 return null;
             }
         }

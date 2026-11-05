@@ -164,7 +164,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.ImportPresets, "Extract Animation could not save " + AnimationExtractSettings.PathFor(path), exception);
                 EditorUtility.DisplayDialog("Extract Animation", "Could not save " + AnimationExtractSettings.PathFor(path) +
                     ":\n" + exception.Message, "OK");
                 RiryGui.ExitAfterModal();

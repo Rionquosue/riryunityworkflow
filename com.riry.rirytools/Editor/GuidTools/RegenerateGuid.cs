@@ -269,7 +269,7 @@ internal static class RegenerateGuid
             catch (Exception exception)
             {
                 log.Write("Ledger write failure: " + exception);
-                Debug.LogWarning("GUID Tools could not record the GUID changes in " +
+                RiryLog.Warn(RiryLog.GuidTools, "Could not record the GUID changes in " +
                     GuidRemapLedger.RelativePath + ":\n" + exception.Message);
             }
 
@@ -278,7 +278,7 @@ internal static class RegenerateGuid
             ReloadScenes(sceneSetup, log);
 
             int referenceFileCount = CountReferenceFiles(targets);
-            Debug.Log(
+            RiryLog.Info(RiryLog.GuidTools,
                 "GUID regeneration completed.\n" +
                 "Assets changed: " + targets.Count.ToString("N0", CultureInfo.InvariantCulture) + "\n" +
                 "Reference files indexed: " + referenceFileCount.ToString("N0", CultureInfo.InvariantCulture) + "\n" +
@@ -291,7 +291,7 @@ internal static class RegenerateGuid
         catch (OperationCanceledException)
         {
             log.Write("Cancelled during the preflight scan; no files were changed.");
-            Debug.Log("GUID regeneration cancelled before any files were changed.");
+            RiryLog.Info(RiryLog.GuidTools, "GUID regeneration cancelled before any files were changed.");
         }
         catch (Exception exception)
         {
@@ -307,12 +307,12 @@ internal static class RegenerateGuid
                 catch (Exception rollbackException)
                 {
                     log.Write("ROLLBACK FAILURE: " + rollbackException);
-                    Debug.LogError("GUID rollback was incomplete:\n" + rollbackException);
+                    RiryLog.Exception(RiryLog.GuidTools, "GUID rollback was incomplete", rollbackException);
                 }
             }
 
             log.Write("FAILURE: " + exception);
-            Debug.LogException(exception);
+            RiryLog.Exception(RiryLog.GuidTools, "GUID regeneration failed", exception);
             EditorUtility.DisplayDialog(
                 "GUID Regeneration Failed",
                 exception.Message + "\n\nCheck the Console for details.",
@@ -429,8 +429,8 @@ internal static class RegenerateGuid
         catch (Exception exception)
         {
             log.Write("Scene reload failure: " + exception);
-            Debug.LogWarning(
-                "GUID Tools could not reload the open scenes. Reopen them from disk " +
+            RiryLog.Warn(RiryLog.GuidTools,
+                "Could not reload the open scenes. Reopen them from disk " +
                 "without saving first:\n" + exception.Message);
         }
     }
@@ -501,7 +501,7 @@ internal static class RegenerateGuid
         }
         // One line for the run: each unreadable cache is in the GUID Tools log, and is simply rebuilt.
         if (unreadableCaches > 0)
-            Debug.LogWarning("GUID Tools: ignored " + unreadableCaches + " unreadable GUID cache file(s) in " + CacheDirectoryPath +
+            RiryLog.Warn(RiryLog.GuidTools, "Ignored " + unreadableCaches + " unreadable GUID cache file(s) in " + CacheDirectoryPath +
                 "; they are rebuilt. Each is listed in the GUID Tools log in " + LogDirectoryPath + ".");
     }
 
@@ -640,7 +640,7 @@ internal static class RegenerateGuid
                 if (File.Exists(renamed))
                 {
                     log.Write("Not renamed, the new name is taken: " + file);
-                    Debug.LogWarning("GUID Tools: " + MakeProjectRelative(projectRoot, file) + " was not renamed to " +
+                    RiryLog.Warn(RiryLog.GuidTools, MakeProjectRelative(projectRoot, file) + " was not renamed to " +
                         Path.GetFileName(renamed) + " because that file exists; both were kept.");
                     continue;
                 }
@@ -650,7 +650,7 @@ internal static class RegenerateGuid
             catch (Exception exception)
             {
                 log.Write("Rename failure: " + file + " | " + exception);
-                Debug.LogWarning("GUID Tools could not rename " + MakeProjectRelative(projectRoot, file) + " to " +
+                RiryLog.Warn(RiryLog.GuidTools, "Could not rename " + MakeProjectRelative(projectRoot, file) + " to " +
                     Path.GetFileName(renamed) + ":\n" + exception.Message);
             }
         }
@@ -1577,7 +1577,7 @@ internal sealed class GuidToolLog : IDisposable
         catch (Exception exception)
         {
             log.writer = null;
-            Debug.LogWarning("GUID Tools could not open its diagnostic log:\n" + exception);
+            RiryLog.Exception(RiryLog.GuidTools, "Could not open the diagnostic log", exception);
         }
 
         return log;
@@ -1626,7 +1626,7 @@ internal sealed class GuidToolLog : IDisposable
             if (!writeFailureReported)
             {
                 writeFailureReported = true;
-                Debug.LogWarning("GUID Tools diagnostic logging failed:\n" + exception);
+                RiryLog.Exception(RiryLog.GuidTools, "Diagnostic logging failed", exception);
             }
         }
     }
@@ -1644,7 +1644,7 @@ internal sealed class GuidToolLog : IDisposable
         catch (Exception exception)
         {
             if (!writeFailureReported)
-                Debug.LogWarning("GUID Tools could not close its diagnostic log:\n" + exception);
+                RiryLog.Exception(RiryLog.GuidTools, "Could not close the diagnostic log", exception);
         }
         finally
         {

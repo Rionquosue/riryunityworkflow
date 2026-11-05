@@ -101,6 +101,7 @@ namespace Riry.RiryTools.Editor
         {
             int removedCurves = 0, cleaned = 0, skipped = 0;
             var failures = new List<string>();
+            var skippedReasons = new List<string>();
             // A new group of its own, so the user's last action is never merged into the clean
             // (auto-clean runs from a delayed call, with no input event to start a group).
             Undo.IncrementCurrentGroup();
@@ -114,6 +115,7 @@ namespace Riry.RiryTools.Editor
                     if (!TryValidateEditableClip(clip, out error))
                     {
                         skipped++;
+                        skippedReasons.Add((clip != null ? AssetDatabase.GetAssetPath(clip) : "(missing clip)") + ": " + error);
                         continue;
                     }
                     var bindings = new List<EditorCurveBinding>();
@@ -131,6 +133,9 @@ namespace Riry.RiryTools.Editor
             {
                 Undo.CollapseUndoOperations(undoGroup);
             }
+            // The summary only counts them; each one's reason is here, in one line.
+            if (skippedReasons.Count > 0)
+                RiryLog.Warn(RiryLog.CleanKeys, "Skipped " + skippedReasons.Count + " animation(s):\n" + string.Join("\n", skippedReasons));
             RepaintAnimationWindows();
             EditorApplication.RepaintProjectWindow();
             string summary = "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
@@ -396,11 +401,12 @@ namespace Riry.RiryTools.Editor
                 {
                     rollbackMessage =
                         "\n\nRollback also failed: " + rollbackException.Message;
+                    RiryLog.Exception(RiryLog.CleanKeys, "Putting back the curves of " + AssetDatabase.GetAssetPath(clip) + " also failed",
+                        rollbackException, clip);
                 }
 
                 // The one log of this failure, with the clip to ping; callers report error without logging it again.
-                Debug.LogError(DisplayName + ": could not remove the curves of " + AssetDatabase.GetAssetPath(clip) + ":\n" +
-                    exception + rollbackMessage, clip);
+                RiryLog.Exception(RiryLog.CleanKeys, "Could not remove the curves of " + AssetDatabase.GetAssetPath(clip), exception, clip);
                 error = "The curves could not be removed.\n\n" +
                         exception.Message + rollbackMessage;
                 return false;

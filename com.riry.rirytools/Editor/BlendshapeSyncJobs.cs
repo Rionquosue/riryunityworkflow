@@ -135,7 +135,8 @@ namespace Riry.RiryTools.Editor
             {
                 // Once per file and problem, however often saving is tried.
                 if (unsaved.Add(file + "\n" + exception.Message))
-                    Debug.LogWarning("Blendshape Sync: could not save the jobs of " + scene.path + " to " + file + ": " + exception.Message);
+                    RiryLog.Warn(RiryLog.BlendshapeSync, "Could not save the jobs of " + scene.path + " to " + file + ": " + exception.Message,
+                        AssetDatabase.LoadMainAssetAtPath(scene.path));
             }
         }
 
@@ -163,9 +164,9 @@ namespace Riry.RiryTools.Editor
                 running.Add(created);
             }
             if (missingJobs + missingChildren > 0)
-                Debug.LogWarning("Blendshape Sync: in " + scene.path + ", " + missingJobs + " saved job(s) whose master and " +
+                RiryLog.Warn(RiryLog.BlendshapeSync, "In " + scene.path + ", " + missingJobs + " saved job(s) whose master and " +
                     missingChildren + " child renderer(s) were not found, so they were not restored. They stay saved in " + file +
-                    " and come back once the objects are found again.");
+                    " and come back once the objects are found again.", AssetDatabase.LoadMainAssetAtPath(scene.path));
         }
 
         private static readonly HashSet<string> unreadable = new HashSet<string>(StringComparer.Ordinal);
@@ -182,7 +183,7 @@ namespace Riry.RiryTools.Editor
             catch (Exception exception)
             {
                 if (unreadable.Add(file + "\n" + exception.Message))
-                    Debug.LogWarning("Blendshape Sync: could not read " + file + "; it is left as it is and not saved over: " + exception.Message);
+                    RiryLog.Warn(RiryLog.BlendshapeSync, "Could not read " + file + "; it is left as it is and not saved over: " + exception.Message);
                 return null;
             }
         }

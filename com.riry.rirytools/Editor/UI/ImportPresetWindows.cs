@@ -154,7 +154,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.ImportPresets, "Could not save " + ImportPresetPreferences.FilePath, exception);
                 message = "Could not save " + ImportPresetPreferences.FilePath + ": " + exception.Message;
             }
             Scan();

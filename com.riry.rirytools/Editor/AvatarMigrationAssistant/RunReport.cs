@@ -59,7 +59,7 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open(AvatarRunReport report)
         {
-            Debug.Log(AvatarMigrationAssistant.Title + ": " + report.Text());
+            RiryLog.Info(RiryLog.AvatarMigration, report.Text());
             var window = CreateInstance<AvatarRunReportWindow>();
             window.titleContent = new GUIContent(AvatarMigrationAssistant.Title + ": done");
             window.report = report;

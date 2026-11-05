@@ -26,7 +26,7 @@ namespace Riry.RiryTools.Editor
         // One save: the commit title and the saved files. Saves made in the same editor update are one save.
         private static readonly List<AutoSyncJob.Save> queue = new List<AutoSyncJob.Save>();
         private static AutoSyncJob.Save collecting;
-        private static Task<AutoSyncJob.Held> worker;
+        private static Task<AutoSyncJob.Outcome> worker;
         private static List<AutoSyncJob.Save> running;
         private static string reported;
 
@@ -109,11 +109,11 @@ namespace Riry.RiryTools.Editor
             // Commit locally only; a push could hold the editor open. The next push sends these commits too.
             try
             {
-                CreateJob(saves, false).Execute();
+                Describe(CreateJob(saves, false).Execute());
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("AutoSync: " + exception.Message);
+                RiryLog.Exception(RiryLog.AutoSync, "Committing the last saves on quit failed", exception);
             }
         }
 
@@ -135,7 +135,7 @@ namespace Riry.RiryTools.Editor
             List<AutoSyncJob.Save> saves = Unfinished();
             queue.Clear();
             collecting = null;
-            if (saves.Count > 0) CreateJob(saves, false).Execute();
+            if (saves.Count > 0) Describe(CreateJob(saves, false).Execute());
         }
 
         // A running pass has the index; give it a moment to finish.
@@ -166,18 +166,31 @@ namespace Riry.RiryTools.Editor
             };
         }
 
-        private static void Report(Task<AutoSyncJob.Held> finished)
+        private static void Report(Task<AutoSyncJob.Outcome> finished)
         {
             if (!finished.IsFaulted)
             {
                 reported = null;
-                if (finished.Result != null) LargeFileNotice(finished.Result);
+                Describe(finished.Result);
+                if (finished.Result.Held != null) LargeFileNotice(finished.Result.Held);
                 return;
             }
-            string message = finished.Exception.GetBaseException().Message;
-            // The same failure repeats on every save; the Console gets it once.
-            if (message != reported) Debug.LogWarning("AutoSync: " + message);
-            reported = message;
+            Exception cause = finished.Exception.GetBaseException();
+            // The same failure repeats on every save; the Console gets it once, with its stack.
+            if (cause.Message != reported) RiryLog.Exception(RiryLog.AutoSync, "Sync failed", cause);
+            reported = cause.Message;
+        }
+
+        // One line per pass that committed: what, and whether and where it was pushed.
+        private static void Describe(AutoSyncJob.Outcome outcome)
+        {
+            if (outcome == null || outcome.Committed.Count == 0) return;
+            string line = "Committed " + outcome.Committed.Count + " save(s) (" + string.Join(", ", outcome.Committed) + ")";
+            if (outcome.PushedTo != null) RiryLog.Info(RiryLog.AutoSync, line + " and pushed to " + outcome.PushedTo + ".");
+            else if (outcome.Detached)
+                RiryLog.Warn(RiryLog.AutoSync, line + " but did not push: HEAD is detached. Check out a branch to push them.");
+            else if (outcome.Held != null) RiryLog.Info(RiryLog.AutoSync, line + "; the push is held (files over 100 MiB).");
+            else RiryLog.Info(RiryLog.AutoSync, line + ".");
         }
 
         /// <summary>
@@ -191,7 +204,7 @@ namespace Riry.RiryTools.Editor
             if (shown.Contains(held.Url) || off.Contains(held.Url)) return;
             shown.Add(held.Url);
             SessionState.SetString(NoticeShownKey, string.Join("\n", shown));
-            Debug.LogWarning("AutoSync: not pushing to " + held.Remote + " (" + held.Url + ") while unpushed commits hold " +
+            RiryLog.Warn(RiryLog.AutoSync, "Not pushing to " + held.Remote + " (" + held.Url + ") while unpushed commits hold " +
                 held.Files.Count + " file(s) over 100 MiB:\n" + string.Join("\n", held.Files));
             int choice = EditorUtility.DisplayDialogComplex("Push Held",
                 held.Files.Count + " file(s) over 100 MiB are in commits not yet pushed to " + held.Remote + " (" + held.Url +

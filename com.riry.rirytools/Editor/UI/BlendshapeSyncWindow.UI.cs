@@ -188,6 +188,7 @@ namespace Riry.RiryTools.Editor
 //   GetPauseReason()           Why syncing is paused (Play Mode, animation preview, Animator editing).
 //   SyncNow()                  Copies the master's weights to every child (one Undo step).
 //   RestoreOriginals()         Restores every captured weight and stops automatic sync.
+//   loggedPause         The pause reason last logged: a job that pauses logs why once (RiryLog), since jobs run unseen.
 //   CrossJobError / Reaches / LoopError  Across jobs: a renderer may be a child in one job only, and no job may sync a
 //                              renderer that (through any jobs) syncs its master. Checked on assigning (CanAssign) and in
 //                              BuildPlan, which pauses the job with the reason.

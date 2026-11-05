@@ -148,6 +148,8 @@ namespace Riry.RiryTools.Editor
                         TimeoutMs, "hash-object", "-t", "commit", "-w", "--stdin"), "Rewriting " + commit).Trim();
                 }
                 Run(projectRoot, null, "update-ref", "-m", "RiryTools AutoSync: drop large files", branch, current, head);
+                RiryLog.Info(RiryLog.AutoSync, "Rewrote the unpushed history of " + branch + ": " + head + " -> " + (current ?? "(no commits)") +
+                    ", taking out " + string.Join(", ", paths) + ". The old commits stay in git reflog.");
             }
             finally
             {

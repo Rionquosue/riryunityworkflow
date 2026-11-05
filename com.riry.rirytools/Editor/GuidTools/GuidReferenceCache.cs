@@ -59,7 +59,7 @@ internal static class GuidReferenceCache
             catch (Exception exception)
             {
                 log.Write("FAILURE: " + exception);
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.GuidTools, "Could not delete the GUID reference cache", exception);
                 EditorUtility.DisplayDialog(
                     "Cache Deletion Failed",
                     exception.Message + "\n\nCheck the Console and GUID Tools log for details.",

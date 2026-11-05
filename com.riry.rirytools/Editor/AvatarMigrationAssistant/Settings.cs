@@ -85,7 +85,7 @@ namespace Riry.RiryTools.Editor
                 }
                 catch (ArgumentException exception)
                 {
-                    Debug.LogWarning("Avatar Migration Assistant: the saved settings could not be read and were reset: " + exception.Message);
+                    RiryLog.Warn(RiryLog.AvatarMigration, "The saved settings could not be read and were reset: " + exception.Message);
                 }
             }
             return new AvatarMigrationSettings();

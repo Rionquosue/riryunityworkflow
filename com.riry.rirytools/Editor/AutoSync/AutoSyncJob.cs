@@ -36,6 +36,17 @@ namespace Riry.RiryTools.Editor
             internal List<string> Files;
         }
 
+        /// <summary>What a pass did, for the Console line the main thread writes (AutoSync.Report).</summary>
+        internal sealed class Outcome
+        {
+            internal readonly List<string> Committed = new List<string>();
+            /// <summary>"remote/branch" when pushed, else null.</summary>
+            internal string PushedTo;
+            /// <summary>Committed on a detached HEAD, so not pushed.</summary>
+            internal bool Detached;
+            internal Held Held;
+        }
+
         internal string ProjectRoot;
         internal List<Save> Saves;
         internal bool Push;
@@ -44,13 +55,17 @@ namespace Riry.RiryTools.Editor
 
         private readonly Dictionary<string, string> environment = new Dictionary<string, string>();
 
-        /// <summary>Commits every save, then pushes when enabled. Returns a held push, or null. Throws on failure.</summary>
-        internal Held Execute()
+        /// <summary>Commits every save, then pushes when enabled. Returns what it did. Throws on failure.</summary>
+        internal Outcome Execute()
         {
             Open();
-            bool committed = false;
-            foreach (Save save in Saves) committed |= Commit(save);
-            return Push && committed && Remote != null ? PushBranch() : null;
+            var outcome = new Outcome();
+            foreach (Save save in Saves)
+            {
+                if (Commit(save)) outcome.Committed.Add(save.Title);
+            }
+            if (Push && outcome.Committed.Count > 0 && Remote != null) PushBranch(outcome);
+            return outcome;
         }
 
         private void Open()
@@ -110,22 +125,30 @@ namespace Riry.RiryTools.Editor
         /// are not pushed, since a Cloudflare proxy rejects them. On a detached HEAD
         /// nothing is pushed. Git asks its credential manager for any sign-in.
         /// </summary>
-        private Held PushBranch()
+        private void PushBranch(Outcome outcome)
         {
             string branch = Run("symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
-            if (branch.Length == 0) return null;
+            if (branch.Length == 0)
+            {
+                outcome.Detached = true;
+                return;
+            }
             string url = GitRemotes.Url(ProjectRoot, Remote);
             if (GitRemotes.IsHttps(url))
             {
                 List<string> large = GitLargeFiles.Unpushed(ProjectRoot, Remote);
-                if (large.Count > 0) return new Held { Remote = Remote, Url = url, Files = large };
+                if (large.Count > 0)
+                {
+                    outcome.Held = new Held { Remote = Remote, Url = url, Files = large };
+                    return;
+                }
             }
             var push = new List<string> { "push", "--quiet" };
             if (!Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded) push.Add("--set-upstream");
             push.Add(Remote);
             push.Add(branch);
             Check(GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()), "Pushing " + branch + " to " + Remote);
-            return null;
+            outcome.PushedTo = Remote + "/" + branch;
         }
 
         private GitRunner.Result Run(params string[] arguments)

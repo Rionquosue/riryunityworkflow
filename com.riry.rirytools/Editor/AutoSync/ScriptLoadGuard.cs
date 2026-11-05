@@ -92,6 +92,9 @@ namespace Riry.RiryTools.Editor
         {
             overridden.Add(path);
             SetGuarded(path, false);
+            // On record: a broken load may now be saved over the good file.
+            RiryLog.Warn(RiryLog.ScriptLoadGuard, "Saving " + path + " was allowed by the user although it did not load correctly; " +
+                "a save now replaces the file on disk.", AssetDatabase.LoadMainAssetAtPath(path));
         }
 
         private static void CheckScene(string path, double since)
@@ -130,8 +133,9 @@ namespace Riry.RiryTools.Editor
             }
             Current = failure;
             SetGuarded(path, true);
-            Debug.LogError("SCRIPT CAUSING FAILED LOAD: " + path + " has " + expected + " objects on disk but loaded " + loaded +
-                ". Saving it is blocked." + (failure.Suspects.Count > 0 ? " Suspected: " + string.Join(", ", failure.Suspects) : ""));
+            RiryLog.Error(RiryLog.ScriptLoadGuard, "SCRIPT CAUSING FAILED LOAD: " + path + " has " + expected + " objects on disk but loaded " + loaded +
+                ". Saving it is blocked." + (failure.Suspects.Count > 0 ? " Suspected: " + string.Join(", ", failure.Suspects) : ""),
+                AssetDatabase.LoadMainAssetAtPath(path));
             ScriptLoadFailureWindow.Open();
         }
 
@@ -189,8 +193,8 @@ namespace Riry.RiryTools.Editor
                     allowed.Add(path);
                     continue;
                 }
-                Debug.LogError("SCRIPT CAUSING FAILED LOAD: saving " + path +
-                    " was blocked because it did not load correctly; the file on disk was kept.");
+                RiryLog.Error(RiryLog.ScriptLoadGuard, "SCRIPT CAUSING FAILED LOAD: saving " + path +
+                    " was blocked because it did not load correctly; the file on disk was kept.", AssetDatabase.LoadMainAssetAtPath(path));
                 EditorApplication.delayCall += ScriptLoadFailureWindow.Open;
             }
             return allowed.ToArray();

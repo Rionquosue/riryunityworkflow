@@ -90,7 +90,7 @@ namespace Riry.RiryTools.Editor
                     ImportPresetLibrary.TryApply(importer, target.Configuration, target.Preset, out applied))
                     importer.SaveAndReimport();
             }
-            result.Log("Import Presets: extracted " + result.Written + " clip(s) from " + assetPath + " to " + result.Folder +
+            result.Log(assetPath, "extracted " + result.Written + " clip(s) from " + assetPath + " to " + result.Folder +
                 (applied != null ? ", then applied " + applied : ""));
         }
 
@@ -105,12 +105,13 @@ namespace Riry.RiryTools.Editor
             public string Cleaned;
             public bool CleanFailed;
 
-            /// <summary>Logs the line with the cleaning appended: a warning when cleaning failed.</summary>
-            internal void Log(string line)
+            /// <summary>Logs the line with the cleaning appended, pinging the model: a warning when cleaning failed.</summary>
+            internal void Log(string modelPath, string line)
             {
                 line += Cleaned != null ? "; " + Cleaned : ".";
-                if (CleanFailed) Debug.LogWarning(line);
-                else Debug.Log(line);
+                UnityEngine.Object model = AssetDatabase.LoadMainAssetAtPath(modelPath);
+                if (CleanFailed) RiryLog.Warn(RiryLog.ImportPresets, line, model);
+                else RiryLog.Info(RiryLog.ImportPresets, line, model);
             }
         }
 
@@ -132,7 +133,14 @@ namespace Riry.RiryTools.Editor
             }
             finally
             {
-                if (changed && snapshot.ApplyTo(importer)) importer.SaveAndReimport();
+                if (changed)
+                {
+                    if (snapshot.ApplyTo(importer)) importer.SaveAndReimport();
+                    else
+                        RiryLog.Error(RiryLog.ImportPresets, "Could not put back the import settings of " + importer.assetPath +
+                            " after extracting its clips, so it was left as Generic. Set its Rig (and the rest) again in the " +
+                            "Inspector, or reapply its preset.", AssetDatabase.LoadMainAssetAtPath(importer.assetPath));
+                }
                 UnityEngine.Object.DestroyImmediate(snapshot);
             }
         }
@@ -243,7 +251,7 @@ namespace Riry.RiryTools.Editor
             if (clips.Count == 0) return result;
 
             if (settings != null && settings.Destination.Length > 0 && DestinationProblem(settings.Destination) != null)
-                Debug.LogWarning("Import Presets: " + settings.Destination + " is not a folder in Assets; extracting " +
+                RiryLog.Warn(RiryLog.ImportPresets, settings.Destination + " is not a folder in Assets; extracting " +
                     modelPath + " to " + folder + ".");
             EnsureFolder(folder);
 
@@ -359,7 +367,7 @@ namespace Riry.RiryTools.Editor
         private static void ReportSkipped(string modelPath, List<string> skipped)
         {
             if (skipped.Count == 0) return;
-            Debug.LogWarning("Import Presets: kept " + skipped.Count + " clip(s) from " + modelPath +
+            RiryLog.Warn(RiryLog.ImportPresets, "Kept " + skipped.Count + " clip(s) from " + modelPath +
                 " that were edited, not created by this tool, or extracted from another model:\n" + string.Join("\n", skipped));
         }
 
@@ -384,7 +392,7 @@ namespace Riry.RiryTools.Editor
             Extraction result = ExtractPreservingSettings(importer, settings,
                 path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), true);
             ReportSkipped(importer.assetPath, result.Skipped);
-            result.Log("Import Presets: extracted " + result.Written + " clip(s) from " + importer.assetPath + " to " + result.Folder);
+            result.Log(importer.assetPath, "extracted " + result.Written + " clip(s) from " + importer.assetPath + " to " + result.Folder);
         }
 
         /// <summary>The model selected in the Project window, or null.</summary>

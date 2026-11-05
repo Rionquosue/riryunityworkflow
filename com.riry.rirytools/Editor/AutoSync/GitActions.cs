@@ -114,7 +114,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.AutoSync, "A Git action failed", exception);
                 EditorUtility.DisplayDialog("Git", exception.Message, "OK");
             }
         }

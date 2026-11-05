@@ -68,7 +68,27 @@ namespace Riry.RiryTools.Editor
         {
             if (typeof(ContactReceiver).GetField("advancedParameters") == null) return "advanced contact parameters";
             if (typeof(VRCConstraintBase).GetField("SmoothingFactor") == null) return "constraint smoothing";
-            if (Type.GetType(RaycastType) == null) return "VRCRaycast";
+            Type raycast = Type.GetType(RaycastType);
+            if (raycast == null) return "VRCRaycast";
+            // Every VRCRaycast field Build sets, so a renamed one is caught here instead of being skipped.
+            foreach (string field in RaycastFields)
+            {
+                if (FieldOf(raycast, field) == null) return "VRCRaycast." + field;
+            }
+            return null;
+        }
+
+        private static readonly string[] RaycastFields = { "version", "rootTransform", "raycastDirection", "distance", "collisionMode", "resultTransform" };
+
+        private static System.Reflection.FieldInfo FieldOf(Type type, string name)
+        {
+            const System.Reflection.BindingFlags Flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                System.Reflection.FieldInfo field = current.GetField(name, Flags);
+                if (field != null) return field;
+            }
             return null;
         }
 
@@ -520,14 +540,25 @@ namespace Riry.RiryTools.Editor
         private static void SetField(object target, string name, object value)
         {
             FieldInfo field = target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.Public);
-            if (field == null) return;
+            if (field == null)
+            {
+                RiryLog.Warn(RiryLog.ConstraintTool, "Insertable prop: " + target.GetType().Name + "." + name +
+                    " was not found in this SDK, so it was left at its default.", target as UnityEngine.Object);
+                return;
+            }
             field.SetValue(target, field.FieldType.IsEnum ? Enum.ToObject(field.FieldType, value) : value);
         }
 
         private static void SetProperty(SerializedObject serialized, string name, int value)
         {
             SerializedProperty property = serialized.FindProperty(name);
-            if (property == null) return;
+            if (property == null)
+            {
+                // MissingSdkFeature checks these; this only happens when the SDK serializes a field under another name.
+                RiryLog.Warn(RiryLog.ConstraintTool, "Insertable prop: " + serialized.targetObject.GetType().Name + "." + name +
+                    " was not found in this SDK, so it was left at its default.", serialized.targetObject);
+                return;
+            }
             if (property.propertyType == SerializedPropertyType.Enum) property.enumValueIndex = value;
             else property.intValue = value;
         }
@@ -613,6 +644,7 @@ namespace Riry.RiryTools.Editor
 //                                  Lying (InsertablePropMath.LyingPose), Grip.
 //   Socket children                IP_<id> Seat (+Grip), IP_<id> Opening (sheath receiver, captureRadius; forward = axis),
 //                                  IP_<id> Entry (InsertablePropMath.EntryPosition).
-//   MissingSdkFeature()            Null with SDK 3.10.6 or newer, else what's missing.
+//   MissingSdkFeature()            Null with SDK 3.10.6 or newer, else what's missing (VRCRaycast fields included,
+//                                  RaycastFields). SetField / SetProperty warn when a field is still not found.
 //   AvatarError(animator)          Needs a humanoid with hands and little and middle proximal fingers.
 //   Remove / Report                The pair's scene objects; counts for the window.

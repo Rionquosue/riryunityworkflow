@@ -52,6 +52,15 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private VRCExpressionParameters appendParameters;
 
         [NonSerialized] private string status;
+        // Runs an action button and puts the status it sets in the Console too: the window's status line is gone once it
+        // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
+        private void Act(Action action)
+        {
+            string before = status;
+            action();
+            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
+                RiryLog.Info(RiryLog.ConstraintTool, "Insertable prop: " + status);
+        }
         [NonSerialized] private double lastDrawn;
         private Vector2 scroll;
 
@@ -153,7 +162,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.ConstraintTool, "Insertable prop: Generate failed", exception, avatar);
                 status = "Generate failed: " + exception.Message;
             }
             finally

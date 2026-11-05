@@ -62,6 +62,7 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private IconCapEffectStackGUI generatorStack;
         [NonSerialized] private RenderTexture preview;
         [NonSerialized] private string previewProblem;
+        [NonSerialized] private readonly HashSet<string> loggedPreviewProblems = new HashSet<string>();
         [NonSerialized] private int previewRequest;
         [NonSerialized] private double previewTime;
         [NonSerialized] private Vector3 viewPosition;
@@ -261,6 +262,9 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
+                // The preview redraws constantly: each distinct problem is logged once, with its stack.
+                if (exception.Message != previewProblem && loggedPreviewProblems.Add(exception.Message))
+                    RiryLog.Exception(RiryLog.IconCap, "The preview could not be rendered", exception);
                 previewProblem = exception.Message;
             }
             finally
@@ -1075,7 +1079,11 @@ namespace Riry.RiryTools.Editor
                     "files' GUIDs, so materials and other assets that used those images show the new icons.", "Run", "Cancel"))
                 return;
             string problems = IconCapFiles.Run(folder, job);
-            if (problems.Length > 0) EditorUtility.DisplayDialog("IconCap", "Some icons were not remade:\n\n" + problems, "OK");
+            if (problems.Length > 0)
+            {
+                RiryLog.Warn(RiryLog.IconCap, "Job " + job.Name + " in " + folder + ": some icons were not remade:\n" + problems);
+                EditorUtility.DisplayDialog("IconCap", "Some icons were not remade:\n\n" + problems, "OK");
+            }
             ForgetFiles();
             Repaint();
         }
@@ -1130,7 +1138,12 @@ namespace Riry.RiryTools.Editor
         {
             if (generator == null) return;
             string problems = generator.Regenerate();
-            if (problems.Length > 0) EditorUtility.DisplayDialog("Icon Generator", problems, "OK");
+            if (problems.Length > 0)
+            {
+                RiryLog.Warn(RiryLog.IconCap, "Icon Generator " + generator.name + ":\n" + problems, generator);
+                EditorUtility.DisplayDialog("Icon Generator", problems, "OK");
+            }
+            else RiryLog.Info(RiryLog.IconCap, "Icon Generator " + generator.name + " remade its outputs.", generator);
         }
 
         // ---- Restore --------------------------------------------------------------
@@ -1254,6 +1267,8 @@ namespace Riry.RiryTools.Editor
 //   Kept / Keep() / OnUndoRedo()  Everything else (session, latest, last capture and save, export folder, generators,
 //                       job, preset name, folds, scroll), kept after each draw and action and put back after any
 //                       Undo/Redo, so Ctrl+Z of a setting never reverts captures or exports.
+//   Logging             Run and Regenerate problems go to the Console as well as the dialog; a preview error is logged
+//                       once per message (loggedPreviewProblems), with its stack.
 //   [SerializeField]    settings, onlySelected, slots, isolated, exportFolder, session, latest, lastSavedPath,
 //                       lastCapture, lastSave, throughGenerator, generator, largePreviews, jobChoice, presetName,
 //                       the fold states, scroll.

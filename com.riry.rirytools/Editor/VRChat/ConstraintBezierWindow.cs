@@ -43,6 +43,15 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private bool twist = true;
 
         [NonSerialized] private string status;
+        // Runs an action button and puts the status it sets in the Console too: the window's status line is gone once it
+        // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
+        private void Act(Action action)
+        {
+            string before = status;
+            action();
+            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
+                RiryLog.Info(RiryLog.ConstraintTool, "Bezier: " + status);
+        }
         private Vector2 scroll;
 
         /// <summary>The active object becomes the chain start; the deepest selected object below it the end.</summary>

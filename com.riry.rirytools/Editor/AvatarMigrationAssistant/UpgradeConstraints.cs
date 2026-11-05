@@ -79,7 +79,8 @@ namespace Riry.RiryTools.Editor
             if (convert == null)
             {
                 conversionFailed = true;
-                report.PossibleIssues.Add("The VRChat SDK's constraint converter was not found, so Unity constraints were copied without the upgrade.");
+                report.PossibleIssues.Add("The VRChat SDK's constraint converter (" + ConverterClass + "." + ConverterMethod + " with 3 parameters) " +
+                    "was not found, so Unity constraints were copied without the upgrade.");
                 return false;
             }
 
@@ -121,6 +122,8 @@ namespace Riry.RiryTools.Editor
                 conversionFailed = true;
                 Exception cause = exception is TargetInvocationException && exception.InnerException != null ? exception.InnerException : exception;
                 report.PossibleIssues.Add("Unity constraints could not be upgraded to VRC constraints (" + cause.Message + "); they were copied as Unity constraints.");
+                RiryLog.Exception(RiryLog.AvatarMigration, "The constraint upgrade (" + ConverterClass + "." + ConverterMethod + ") failed", cause,
+                    sourceRoot.gameObject);
                 return false;
             }
             return true;

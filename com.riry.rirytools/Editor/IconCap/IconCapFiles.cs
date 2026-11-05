@@ -87,7 +87,7 @@ namespace Riry.RiryTools.Editor
             {
                 // The files are read again on every focus and project change: one warning per file version and problem.
                 WarnOnce(path + "|" + File.GetLastWriteTimeUtc(path).Ticks + "|" + exception.Message,
-                    "IconCap: could not read " + path + ": " + exception.Message);
+                    "Could not read " + path + ": " + exception.Message);
             }
             return new IconCapJobFile();
         }
@@ -108,7 +108,7 @@ namespace Riry.RiryTools.Editor
 
         private static void WarnOnce(string key, string message)
         {
-            if (warned.Add(key)) Debug.LogWarning(message);
+            if (warned.Add(key)) RiryLog.Warn(RiryLog.IconCap, message);
         }
 
         /// <summary>Every folder with a .iconcap.json: those under Assets, and extra (the export folder).</summary>
@@ -122,7 +122,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                WarnOnce("search|" + exception.Message, "IconCap: could not search Assets for jobs: " + exception.Message);
+                WarnOnce("search|" + exception.Message, "Could not search Assets for jobs: " + exception.Message);
             }
             if (!string.IsNullOrEmpty(extraFullPath) && File.Exists(JobFilePath(extraFullPath)))
             {
@@ -170,6 +170,7 @@ namespace Riry.RiryTools.Editor
                 }
 
                 string oldFolder = null;
+                int moved = 0;
                 foreach (KeyValuePair<string, Texture2D> image in images)
                 {
                     string target = Path.Combine(folderFullPath, image.Key);
@@ -181,11 +182,14 @@ namespace Riry.RiryTools.Editor
                             Directory.CreateDirectory(oldFolder);
                         }
                         File.Move(target, Path.Combine(oldFolder, image.Key));
+                        moved++;
                     }
                     Directory.CreateDirectory(Path.GetDirectoryName(target));
                     File.WriteAllBytes(target, image.Value.EncodeToPNG());
                 }
                 if (AssetPath(folderFullPath) != null) AssetDatabase.Refresh();
+                RiryLog.Info(RiryLog.IconCap, "Ran job " + job.Name + ": wrote " + images.Count + " icon(s) to " + folderFullPath +
+                    (moved > 0 ? "; moved the " + moved + " it replaced to " + oldFolder + " (the new icons keep their GUIDs)." : "."));
             }
             finally
             {
@@ -245,7 +249,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogWarning("IconCap: could not read " + path + ": " + exception.Message);
+                RiryLog.Warn(RiryLog.IconCap, "Could not read the preset " + path + ": " + exception.Message);
                 return null;
             }
         }
@@ -269,7 +273,7 @@ namespace Riry.RiryTools.Editor
 //   JobFileName (.iconcap.json)  One per export folder: IconCapJobFile (Editor/IconCap/IconCapData.cs); hidden on Windows.
 //   ReadJobs / WriteJobs / JobFolders(extra)  Read, write; every folder with one under Assets, plus extra. Read and search
 //                                problems are warned once each (WarnOnce; a read problem again once the file changes).
-//   Run(folder, job)             Renders every entry, moves the files being replaced into a new OLD_<n> (.meta files
+//   Run(folder, job)             Renders every entry (logs what it wrote and moved), moves the files being replaced into a new OLD_<n> (.meta files
 //                                stay, so the GUIDs stay at the original paths), writes the new PNGs, refreshes.
 //   NextOldFolder / OldFolderPrefix (OLD_)  The next free OLD_<n> in the export folder.
 //   PresetFolder                 Documents/RiryTools/iconcap presets: <name>.json, an IconCapSettings each.

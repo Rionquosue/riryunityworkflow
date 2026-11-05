@@ -112,6 +112,7 @@ namespace Riry.RiryTools.Editor
                     catch (UnityException exception)
                     {
                         report.NotCopied.Add("Tag of " + target.name + ": " + exception.Message);
+                        RiryLog.Exception(RiryLog.AvatarMigration, "Could not copy the tag of " + target.name, exception, target.gameObject);
                     }
                 }
                 if (settings.TransformActive) target.gameObject.SetActive(source.gameObject.activeSelf);
@@ -176,6 +177,7 @@ namespace Riry.RiryTools.Editor
                         {
                             SerializedProperty property = from.FindProperty(name);
                             if (property != null) to.CopyFromSerializedProperty(property);
+                            else MissingField("SkinnedMeshRenderer", name);
                         }
                         to.ApplyModifiedProperties();
                     }
@@ -240,7 +242,11 @@ namespace Riry.RiryTools.Editor
         private void CopyAvatarDescriptor()
         {
             Type descriptorType = AvatarCopyTypes.Find(AvatarCopyTypes.DescriptorType);
-            if (descriptorType == null) return;
+            if (descriptorType == null)
+            {
+                report.NotCopied.Add("Avatar Descriptor: " + AvatarCopyTypes.DescriptorType + " was not found in this project, so it was not copied.");
+                return;
+            }
             Component source = sourceRoot.GetComponent(descriptorType);
             if (source == null) return;
             Component target = targetRoot.GetComponent(descriptorType);
@@ -264,6 +270,7 @@ namespace Riry.RiryTools.Editor
             {
                 SerializedProperty property = from.FindProperty(name);
                 if (property != null) to.CopyFromSerializedProperty(property);
+                else MissingField("Avatar Descriptor", name);
             }
             to.ApplyModifiedProperties();
             copied[source] = target;
@@ -284,10 +291,24 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // A serialized field this SDK or Unity version doesn't have (renamed, removed): listed once in the report, which is
+        // also logged, instead of the copy silently leaving it out.
+        private readonly HashSet<string> missingFields = new HashSet<string>(StringComparer.Ordinal);
+
+        private void MissingField(string component, string field)
+        {
+            if (missingFields.Add(component + "." + field))
+                report.NotCopied.Add(component + " field '" + field + "' was not found in this version, so it was not copied.");
+        }
+
         private void CopyBlueprintId()
         {
             Type pipelineType = AvatarCopyTypes.Find(AvatarCopyTypes.PipelineManager);
-            if (pipelineType == null) return;
+            if (pipelineType == null)
+            {
+                report.NotCopied.Add("Blueprint ID: " + AvatarCopyTypes.PipelineManager + " was not found in this project, so it was not copied.");
+                return;
+            }
             Component source = sourceRoot.GetComponent(pipelineType);
             if (source == null) return;
             Component target = targetRoot.GetComponent(pipelineType);
@@ -297,7 +318,11 @@ namespace Riry.RiryTools.Editor
                 made.Add(target);
             }
             SerializedProperty id = new SerializedObject(source).FindProperty("blueprintId");
-            if (id == null) return;
+            if (id == null)
+            {
+                MissingField("Pipeline Manager", "blueprintId");
+                return;
+            }
             var to = new SerializedObject(target);
             to.CopyFromSerializedProperty(id);
             to.ApplyModifiedProperties();
@@ -320,3 +345,5 @@ namespace Riry.RiryTools.Editor
 //                            said so; blendshape values by exact name (BlendshapeSyncWindow.TryBuildLinks).
 //   CopyAvatarDescriptor     Groups: viewpoint, lip sync and visemes (LipSyncNames), playable layers, eye look, expressions,
 //                            colliders; CopyBlueprintId (PipelineManager blueprintId); avatar scale moves the viewpoint.
+//   MissingField(component, field)  A field or type not found in this SDK or Unity version goes in the report's Not
+//                            copied, once each, instead of being left out silently.

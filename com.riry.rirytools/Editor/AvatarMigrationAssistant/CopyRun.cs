@@ -101,7 +101,7 @@ namespace Riry.RiryTools.Editor
             catch (Exception exception)
             {
                 // Named by its step; the run report lists it too, so this is the one with the stack.
-                Debug.LogError(AvatarMigrationAssistant.Title + ": " + name + " failed:\n" + exception);
+                RiryLog.Exception(RiryLog.AvatarMigration, name + " failed", exception, targetRoot.gameObject);
                 report.Failures.Add(name + ": " + exception.Message);
             }
         }
@@ -229,6 +229,7 @@ namespace Riry.RiryTools.Editor
                 catch (Exception exception)
                 {
                     report.NotCopied.Add(Describe(existing) + " on the target could not be removed for Replace: " + exception.Message);
+                    RiryLog.Exception(RiryLog.AvatarMigration, "Replace could not remove " + Describe(existing), exception, existing);
                 }
             }
         }

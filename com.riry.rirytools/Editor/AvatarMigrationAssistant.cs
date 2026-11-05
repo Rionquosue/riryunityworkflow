@@ -444,6 +444,7 @@ namespace Riry.RiryTools.Editor
         internal readonly List<string> TypeNames = new List<string>();
 
         private Type[] resolved;
+        private static readonly HashSet<string> ReportedUnknown = new HashSet<string>(StringComparer.Ordinal);
 
         /// <summary>The types found in this project; empty when none is.</summary>
         internal Type[] Types
@@ -452,13 +453,21 @@ namespace Riry.RiryTools.Editor
             {
                 if (resolved != null) return resolved;
                 var types = new List<Type>();
+                var unknown = new List<string>();
                 foreach (string name in TypeNames)
                 {
-                    foreach (Type type in AvatarCopyTypes.Resolve(name))
+                    List<Type> found = AvatarCopyTypes.Resolve(name);
+                    if (found.Count == 0) unknown.Add(name);
+                    foreach (Type type in found)
                     {
                         if (!types.Contains(type)) types.Add(type);
                     }
                 }
+                // Some names found and some not: likely a typo or a rename in types.yml, said once per entry. (None found is
+                // shown as "(not in project)": the package is simply not installed.)
+                if (types.Count > 0 && unknown.Count > 0 && ReportedUnknown.Add(Id + "|" + string.Join(",", unknown)))
+                    RiryLog.Warn(RiryLog.AvatarMigration, AvatarCopyTypes.FilePath + ", entry '" + Label + "': " + string.Join(", ", unknown) +
+                        " not found in this project (misspelled, renamed or not installed); the other types of the entry are used.");
                 resolved = types.ToArray();
                 return resolved;
             }
@@ -543,7 +552,7 @@ namespace Riry.RiryTools.Editor
                 catch (Exception exception)
                 {
                     if (exception.Message != lastProblem)
-                        Debug.LogWarning(AvatarMigrationAssistant.Title + ": could not read " + FilePath + ": " + exception.Message);
+                        RiryLog.Warn(RiryLog.AvatarMigration, "Could not read " + FilePath + ": " + exception.Message);
                     lastProblem = exception.Message;
                     if (all == null) all = new List<AvatarCopyType>();
                 }
