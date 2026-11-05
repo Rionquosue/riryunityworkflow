@@ -203,6 +203,7 @@ namespace Riry.RiryTools.Editor
             switch (row.Auto)
             {
                 case AvatarMatchMethod.NamePath: return "Name path";
+                case AvatarMatchMethod.Mesh: return "Mesh";
                 default: return row.Match.Method.ToString();
             }
         }

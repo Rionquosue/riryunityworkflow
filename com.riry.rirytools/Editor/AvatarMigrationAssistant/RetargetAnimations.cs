@@ -343,6 +343,23 @@ namespace Riry.RiryTools.Editor
             return copy;
         }
 
+        private const string BlendshapePrefix = "blendShape.";
+        // Clip, path and blendshape already reported.
+        private readonly HashSet<string> reportedCurves = new HashSet<string>(StringComparer.Ordinal);
+
+        // A blendshape curve whose name the mesh at its new path doesn't have animates nothing: reported once each.
+        private void CheckBlendshapeCurve(AnimationClip clip, EditorCurveBinding binding, string path, Transform targetRoot)
+        {
+            if (binding.type != typeof(SkinnedMeshRenderer) || !binding.propertyName.StartsWith(BlendshapePrefix, StringComparison.Ordinal)) return;
+            Transform at = path.Length == 0 ? targetRoot : targetRoot.Find(path);
+            var renderer = at != null ? at.GetComponent<SkinnedMeshRenderer>() : null;
+            if (renderer == null || renderer.sharedMesh == null) return;
+            string shape = binding.propertyName.Substring(BlendshapePrefix.Length);
+            if (renderer.sharedMesh.GetBlendShapeIndex(shape) >= 0 || !reportedCurves.Add(clip.name + "|" + path + "|" + shape)) return;
+            report.PossibleIssues.Add("Animation " + clip.name + " animates blendshape " + shape + " on " + path + ", which the new mesh (" +
+                renderer.sharedMesh.name + ") doesn't have.");
+        }
+
         /// <summary>Rewrites the clip's binding paths for the target; old bindings are removed, new ones written.</summary>
         internal void Repath(AnimationClip clip, Transform sourceRoot, Transform targetRoot)
         {
@@ -358,6 +375,7 @@ namespace Riry.RiryTools.Editor
                     report.NotCopied.Add("Animation path " + binding.path + " in " + clip.name + " has no target; it was left as it is.");
                     continue;
                 }
+                CheckBlendshapeCurve(clip, binding, rebuilt, targetRoot);
                 if (rebuilt == binding.path) continue;
                 EditorCurveBinding moved = binding;
                 moved.path = rebuilt;
@@ -408,5 +426,6 @@ namespace Riry.RiryTools.Editor
 //                        relinked, so the source's trees are never changed.
 //   DuplicateClip        Once per clip: a .anim copied, a clip inside a model saved as a new .anim; then Repath.
 //   Repath(clip, ...)    GetCurveBindings / GetObjectReferenceCurveBindings rewritten: old removed, new written.
+//   CheckBlendshapeCurve A blendShape.<name> curve whose mesh at the new path lacks that blendshape is reported, once each.
 //   duplicates           Original controller, clip or blend tree to its duplicate (each duplicate also maps to itself, so
 //                        a tree reached twice is not duplicated again); the target is pointed at duplicates with Undo.

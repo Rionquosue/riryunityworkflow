@@ -219,7 +219,18 @@ references into the target, corrects constraint rotation for bone roll and
 collision and constraint values for scale, drops duplicates, copies child prefabs
 whole without unpacking, can leave objects out with an ignore list, and can
 upgrade Unity constraints to VRC constraints. Each Copy is one Undo step and ends
-with a report. **Retarget animations** duplicates the target's controllers and
+with a report.
+
+When the old avatar's prefab was unpacked, its meshes still lead back to their
+models: a renamed body mesh is matched by its mesh name, or by the bone and
+blendshape names it shares; and a mesh the new avatar doesn't have, from a model
+in the project, is placed again as a child prefab of that model, with the old
+avatar's changes (names, transforms, components, materials, removed objects) kept
+as overrides (the up-front check asks first). Materials go to slots by name, so a
+model with reordered material slots still gets them right; eyelid blendshapes are
+looked up again by name; blendshape values, visemes, eyelids and animation curves
+the new mesh has no blendshape for are listed in the report; and old bounds are
+copied onto a changed mesh only when you say so. **Retarget animations** duplicates the target's controllers and
 clips into a migrated folder you pick, rewrites their paths through the object
 map, and repairs VRCFury in the child prefabs you include as scene overrides.
 Without the VRChat SDK it runs with the VRChat parts left out and shows a

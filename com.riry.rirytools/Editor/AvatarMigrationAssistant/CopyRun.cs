@@ -66,6 +66,8 @@ namespace Riry.RiryTools.Editor
             Undo.RegisterFullObjectHierarchyUndo(targetRoot.gameObject, AvatarMigrationAssistant.Title);
             try
             {
+                // First, so the placed prefabs' objects are in the map for every step after.
+                if (answers.RepackPrefabs) Step("Placing unpacked prefabs as child prefabs", RepackPrefabs);
                 foreach (AvatarCopyType type in AvatarCopyTypes.All)
                 {
                     AvatarTypeSettings typeSettings = settings.Type(type);
@@ -75,6 +77,7 @@ namespace Riry.RiryTools.Editor
                     if (type.Rule == AvatarCopyTypes.CamerasRule) Step("Active state, tag and layer", CopyActiveTagLayer);
                 }
                 Step("Re-pointing references", RepointReferences);
+                Step("Checking blendshape names", FixDescriptorBlendshapes);
                 Step("Correcting rotation", CorrectRotation);
                 Step("Correcting scale", CorrectScale);
                 Step("Removing duplicates", RemoveDuplicates);

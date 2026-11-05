@@ -18,6 +18,8 @@ namespace Riry.RiryTools.Editor
         internal readonly List<string> NotCopied = new List<string>();
         internal readonly List<string> ReferencesCleared = new List<string>();
         internal readonly List<string> Failures = new List<string>();
+        // Unpacked prefabs placed again as child prefabs (RepackPrefabs.cs).
+        internal readonly List<string> Repacked = new List<string>();
         // Feature 15: files written to disk, which Undo does not cover.
         internal readonly List<string> FilesCreated = new List<string>();
 
@@ -35,6 +37,7 @@ namespace Riry.RiryTools.Editor
         internal string Text()
         {
             var text = new StringBuilder(Summary);
+            Section(text, "Unpacked prefabs placed as child prefabs (changes kept as overrides):", Repacked);
             Section(text, "Possible issues with:", PossibleIssues);
             Section(text, "Not copied:", NotCopied);
             Section(text, "References set to none:", ReferencesCleared);

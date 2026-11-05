@@ -14,7 +14,9 @@ namespace Riry.RiryTools.Editor
         Structure,
         Manual,
         // Made on the target by the run (feature 4), or part of a copied prefab (feature 11).
-        Created
+        Created,
+        // A SkinnedMeshRenderer object matched by its mesh: the mesh name, then shared bone or blendshape names.
+        Mesh
     }
 
     /// <summary>One source object and its counterpart on the target (null when unmatched).</summary>
@@ -34,8 +36,10 @@ namespace Riry.RiryTools.Editor
     /// Parents come before children. Each object takes the first method that finds it:
     /// its name path from the root; then, when both avatars are humanoid, the same
     /// HumanBodyBones slot as its nearest humanoid bone followed by the names below it;
-    /// then, when its parent is matched, the child of the parent's match at the same
-    /// place in avatar-root space (within Tolerance; the closest, none on a tie). An object
+    /// then, for a SkinnedMeshRenderer object, the renderer among the children of its parent's
+    /// match with the same mesh name, else the most bone or blendshape names in common (over
+    /// half, no tie); then, when its parent is matched, the child of the parent's match at the
+    /// same place in avatar-root space (within Tolerance; the closest, none on a tie). An object
     /// whose parent is unmatched stays unmatched.
     /// </summary>
     [Serializable]
@@ -105,6 +109,16 @@ namespace Riry.RiryTools.Editor
                 if (found != null)
                 {
                     method = AvatarMatchMethod.Humanoid;
+                    return found;
+                }
+            }
+            var renderer = source.GetComponent<SkinnedMeshRenderer>();
+            if (renderer != null)
+            {
+                found = ByMesh(renderer, parentTarget);
+                if (found != null)
+                {
+                    method = AvatarMatchMethod.Mesh;
                     return found;
                 }
             }
@@ -209,6 +223,79 @@ namespace Riry.RiryTools.Editor
             return null;
         }
 
+        // Share of the source's names (bones or blendshapes) the target also has, at least this, to match by them.
+        private const float MeshOverlap = 0.5f;
+
+        /// <summary>
+        /// A renamed body mesh: among the children of the parent's match that have a SkinnedMeshRenderer and no source yet,
+        /// the one whose mesh has the same name (only one), else the one sharing the largest share of bone or blendshape
+        /// names (over MeshOverlap, no tie).
+        /// </summary>
+        private Transform ByMesh(SkinnedMeshRenderer source, Transform targetParent)
+        {
+            var candidates = new List<SkinnedMeshRenderer>();
+            foreach (Transform child in targetParent)
+            {
+                var renderer = child.GetComponent<SkinnedMeshRenderer>();
+                if (renderer != null && !Matches.Exists(match => match.Target == child)) candidates.Add(renderer);
+            }
+            if (candidates.Count == 0) return null;
+            string meshName = source.sharedMesh != null ? source.sharedMesh.name : null;
+            if (meshName != null)
+            {
+                List<SkinnedMeshRenderer> named = candidates.FindAll(candidate => candidate.sharedMesh != null &&
+                    string.Equals(candidate.sharedMesh.name, meshName, StringComparison.OrdinalIgnoreCase));
+                if (named.Count == 1) return named[0].transform;
+            }
+            HashSet<string> bones = BoneNames(source), shapes = ShapeNames(source.sharedMesh);
+            Transform best = null;
+            float bestScore = MeshOverlap;
+            bool tie = false;
+            foreach (SkinnedMeshRenderer candidate in candidates)
+            {
+                float score = Mathf.Max(Overlap(bones, BoneNames(candidate)), Overlap(shapes, ShapeNames(candidate.sharedMesh)));
+                if (score < MeshOverlap) continue;
+                if (best != null && Mathf.Abs(score - bestScore) <= TieEpsilon) tie = true;
+                else if (score > bestScore || best == null)
+                {
+                    best = candidate.transform;
+                    bestScore = score;
+                    tie = false;
+                }
+            }
+            return tie ? null : best;
+        }
+
+        private static HashSet<string> BoneNames(SkinnedMeshRenderer renderer)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Transform bone in renderer.bones)
+            {
+                if (bone != null) names.Add(bone.name);
+            }
+            return names;
+        }
+
+        private static HashSet<string> ShapeNames(Mesh mesh)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            if (mesh == null) return names;
+            for (int i = 0; i < mesh.blendShapeCount; i++) names.Add(mesh.GetBlendShapeName(i));
+            return names;
+        }
+
+        // The share of the source's names the target has too; 0 when the source has none.
+        private static float Overlap(HashSet<string> source, HashSet<string> target)
+        {
+            if (source.Count == 0) return 0f;
+            int shared = 0;
+            foreach (string name in source)
+            {
+                if (target.Contains(name)) shared++;
+            }
+            return shared / (float)source.Count;
+        }
+
         // The child of the parent's match nearest the object's place in avatar-root space.
         private static Transform ByStructure(Transform source, Transform sourceRoot, Transform targetParent, Transform targetRoot, float tolerance)
         {
@@ -253,11 +340,13 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Avatar Migration Assistant object map (MatchObjects.cs, part of Editor/AvatarMigrationAssistant.cs)
 // ============================================================================
 //
-// AvatarMatchMethod        None, NamePath, Humanoid, Structure, Manual, Created: how a source object found its target.
+// AvatarMatchMethod        None, NamePath, Humanoid, Structure, Manual, Created, Mesh: how a source object found its target.
 // AvatarMatch              Source, Target (null when unmatched), Method, SourcePath (from the avatar root).
 // AvatarMigrationMap (this file)
 //   Build(source, target, tolerance)  Every source Transform, parents first: name path, then humanoid slot plus the
-//                            names below it (both avatars humanoid), then structure (same avatar-root-space position
+//                            names below it (both avatars humanoid), then for a SkinnedMeshRenderer object its mesh
+//                            (ByMesh: same mesh name, else over MeshOverlap (0.5) of its bone or blendshape names in
+//                            common, no tie, among unmatched renderers below the parent's match), then structure (same avatar-root-space position
 //                            among the children of the parent's match, within tolerance; none on a tie). An
 //                            unmatched parent leaves its children unmatched.
 //   AutoMatch(source, parentTarget, out method)  One object's automatic match given its parent's target; Build uses it,

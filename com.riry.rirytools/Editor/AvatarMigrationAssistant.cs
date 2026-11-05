@@ -838,6 +838,7 @@ namespace Riry.RiryTools.Editor
 //   Settings.cs (EditorPrefs),
 //   UpFrontCheck.cs (everything up front), CopyRun.cs (the run, 4 and 15), TypeRules.cs, CopyPrefabs.cs (11),
 //   UpgradeConstraints.cs, RepointReferences.cs (5 and 12), CorrectRotation.cs (7), CorrectScale.cs (6), IgnoreList.cs (13),
+//   RepackPrefabs.cs (unpacked prefabs placed again as child prefabs),
 //   RunReport.cs, RetargetAnimations.cs (8), VrcFuryPrefabs.cs (9), MigratedFolder.cs (10),
 //   SdkNotice.cs (the VRC SDK not detected popup).
 // ============================================================================

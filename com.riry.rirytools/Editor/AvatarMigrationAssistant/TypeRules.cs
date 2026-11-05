@@ -181,8 +181,10 @@ namespace Riry.RiryTools.Editor
                         }
                         to.ApplyModifiedProperties();
                     }
-                    if (settings.SkinnedMaterials) target.sharedMaterials = source.sharedMaterials;
-                    if (settings.SkinnedBounds) target.localBounds = source.localBounds;
+                    if (settings.SkinnedMaterials) target.sharedMaterials = PlaceMaterials(source, target);
+                    // The old bounds only fit the old mesh: for a changed mesh, only when the up-front check said so.
+                    if (settings.SkinnedBounds && (source.sharedMesh == target.sharedMesh || answers.CopyChangedBounds))
+                        target.localBounds = source.localBounds;
                     copied[source] = target;
                 }
                 if (settings.SkinnedBlendshapes) CopyBlendshapes(source, target);
@@ -203,8 +205,94 @@ namespace Riry.RiryTools.Editor
                 report.NotCopied.Add("Blendshapes of " + Describe(source) + ": " + error);
                 return;
             }
+            var linked = new HashSet<int>();
             foreach (BlendshapeSyncWindow.IndexLink link in links)
+            {
                 target.SetBlendShapeWeight(link.Destination, source.GetBlendShapeWeight(link.Source));
+                linked.Add(link.Source);
+            }
+            // A set value whose blendshape the new mesh doesn't have is lost: listed, with its value.
+            var missing = new List<string>();
+            for (int i = 0; i < sourceNames.Length; i++)
+            {
+                float weight = source.GetBlendShapeWeight(i);
+                if (!linked.Contains(i) && weight != 0f) missing.Add(sourceNames[i] + " (" + weight + ")");
+            }
+            if (missing.Count > 0)
+                report.PossibleIssues.Add("Blendshapes of " + Describe(source) + " that the new mesh doesn't have, so their values were not copied: " +
+                    string.Join(", ", missing) + ".");
+        }
+
+        /// <summary>
+        /// The target's materials with the source's placed by slot name: each slot is named by the material its model
+        /// gives it by default (SlotNames), so a mesh whose slots were reordered, added or removed still gets each
+        /// material on the right part. A slot with no name in common takes the source's material of the same slot
+        /// number, if that one is not placed yet; a source material with no place left is reported.
+        /// </summary>
+        private Material[] PlaceMaterials(SkinnedMeshRenderer source, SkinnedMeshRenderer target)
+        {
+            Material[] from = source.sharedMaterials;
+            var placed = (Material[])target.sharedMaterials.Clone();
+            string[] sourceSlots = SlotNames(source), targetSlots = SlotNames(target);
+            var used = new bool[from.Length];
+            var filled = new bool[placed.Length];
+            for (int j = 0; j < placed.Length; j++)
+            {
+                if (targetSlots[j] == null) continue;
+                int found = -1;
+                for (int i = 0; i < from.Length; i++)
+                {
+                    if (used[i] || sourceSlots[i] != targetSlots[j]) continue;
+                    // Two source slots of the same name: no name match, so the slot numbers decide.
+                    if (found >= 0)
+                    {
+                        found = -2;
+                        break;
+                    }
+                    found = i;
+                }
+                if (found < 0) continue;
+                placed[j] = from[found];
+                used[found] = filled[j] = true;
+            }
+            for (int j = 0; j < placed.Length; j++)
+            {
+                if (filled[j] || j >= from.Length || used[j]) continue;
+                placed[j] = from[j];
+                used[j] = filled[j] = true;
+            }
+            var left = new List<string>();
+            for (int i = 0; i < from.Length; i++)
+            {
+                if (!used[i] && from[i] != null) left.Add(from[i].name + " (slot " + i + (sourceSlots[i] != null ? ", " + sourceSlots[i] : "") + ")");
+            }
+            if (left.Count > 0)
+                report.NotCopied.Add("Materials of " + Describe(source) + " with no slot on the new mesh: " + string.Join(", ", left) + ".");
+            return placed;
+        }
+
+        /// <summary>
+        /// Each material slot's name: the material its model gives that slot by default (the model's renderer with the
+        /// same mesh), else the material on it now; null for an empty slot.
+        /// </summary>
+        private static string[] SlotNames(SkinnedMeshRenderer renderer)
+        {
+            Material[] materials = renderer.sharedMaterials;
+            Mesh mesh = renderer.sharedMesh;
+            string path = mesh != null ? AssetDatabase.GetAssetPath(mesh) : null;
+            var model = !string.IsNullOrEmpty(path) ? AssetDatabase.LoadMainAssetAtPath(path) as GameObject : null;
+            if (model != null)
+            {
+                foreach (SkinnedMeshRenderer original in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                {
+                    if (original.sharedMesh != mesh) continue;
+                    materials = original.sharedMaterials;
+                    break;
+                }
+            }
+            var names = new string[renderer.sharedMaterials.Length];
+            for (int i = 0; i < names.Length; i++) names[i] = i < materials.Length && materials[i] != null ? materials[i].name : null;
+            return names;
         }
 
         private static string[] BlendshapeNames(Mesh mesh)
@@ -274,6 +362,8 @@ namespace Riry.RiryTools.Editor
             }
             to.ApplyModifiedProperties();
             copied[source] = target;
+            descriptorSource = source;
+            descriptorTarget = target;
 
             if (settings.DescriptorBlueprintId) CopyBlueprintId();
             if (settings.DescriptorAvatarScale)
@@ -289,6 +379,81 @@ namespace Riry.RiryTools.Editor
                     to.ApplyModifiedProperties();
                 }
             }
+        }
+
+        private Component descriptorSource, descriptorTarget;
+
+        /// <summary>
+        /// After references are re-pointed (the descriptor's meshes are the target's now): the eyelid blendshapes, which
+        /// the descriptor keeps as positions in the eyelid mesh's list, are looked up again by name on the new eyelid
+        /// mesh, and the viseme and mouth-open names the new viseme mesh doesn't have are reported.
+        /// </summary>
+        private void FixDescriptorBlendshapes()
+        {
+            if (descriptorSource == null || descriptorTarget == null) return;
+            var from = new SerializedObject(descriptorSource);
+            var to = new SerializedObject(descriptorTarget);
+            if (settings.DescriptorEyeLook) RemapEyelids(from, to);
+            if (settings.DescriptorLipSync) CheckVisemes(to);
+            to.ApplyModifiedProperties();
+        }
+
+        private void RemapEyelids(SerializedObject from, SerializedObject to)
+        {
+            const string Mesh = "customEyeLookSettings.eyelidsSkinnedMesh", Shapes = "customEyeLookSettings.eyelidsBlendshapes";
+            SerializedProperty fromShapes = from.FindProperty(Shapes), toShapes = to.FindProperty(Shapes);
+            if (fromShapes == null || toShapes == null || !fromShapes.isArray || !toShapes.isArray)
+            {
+                MissingField("Avatar Descriptor", Shapes);
+                return;
+            }
+            Mesh oldMesh = MeshOf(from.FindProperty(Mesh)), newMesh = MeshOf(to.FindProperty(Mesh));
+            if (oldMesh == null || newMesh == null || oldMesh == newMesh) return;
+            var missing = new List<string>();
+            toShapes.arraySize = fromShapes.arraySize;
+            for (int i = 0; i < fromShapes.arraySize; i++)
+            {
+                int index = fromShapes.GetArrayElementAtIndex(i).intValue;
+                int now = -1;
+                if (index >= 0 && index < oldMesh.blendShapeCount)
+                {
+                    string name = oldMesh.GetBlendShapeName(index);
+                    now = newMesh.GetBlendShapeIndex(name);
+                    if (now < 0) missing.Add(name);
+                }
+                toShapes.GetArrayElementAtIndex(i).intValue = now;
+            }
+            if (missing.Count > 0)
+                report.PossibleIssues.Add("Eyelid blendshapes the new eyelid mesh (" + newMesh.name + ") doesn't have, set to none: " +
+                    string.Join(", ", missing) + ".");
+        }
+
+        private void CheckVisemes(SerializedObject to)
+        {
+            Mesh mesh = MeshOf(to.FindProperty("VisemeSkinnedMesh"));
+            if (mesh == null) return;
+            var names = new List<string>();
+            SerializedProperty visemes = to.FindProperty("VisemeBlendShapes");
+            if (visemes != null && visemes.isArray)
+            {
+                for (int i = 0; i < visemes.arraySize; i++) names.Add(visemes.GetArrayElementAtIndex(i).stringValue);
+            }
+            SerializedProperty mouth = to.FindProperty("MouthOpenBlendShapeName");
+            if (mouth != null) names.Add(mouth.stringValue);
+            var missing = new List<string>();
+            foreach (string name in names)
+            {
+                if (!string.IsNullOrEmpty(name) && mesh.GetBlendShapeIndex(name) < 0 && !missing.Contains(name)) missing.Add(name);
+            }
+            if (missing.Count > 0)
+                report.PossibleIssues.Add("Viseme and mouth-open blendshapes the new viseme mesh (" + mesh.name + ") doesn't have: " +
+                    string.Join(", ", missing) + ". Set them again in the Avatar Descriptor's Lip Sync.");
+        }
+
+        private static Mesh MeshOf(SerializedProperty property)
+        {
+            var renderer = property != null ? property.objectReferenceValue as SkinnedMeshRenderer : null;
+            return renderer != null ? renderer.sharedMesh : null;
         }
 
         // A serialized field this SDK or Unity version doesn't have (renamed, removed): listed once in the report, which is
@@ -345,5 +510,11 @@ namespace Riry.RiryTools.Editor
 //                            said so; blendshape values by exact name (BlendshapeSyncWindow.TryBuildLinks).
 //   CopyAvatarDescriptor     Groups: viewpoint, lip sync and visemes (LipSyncNames), playable layers, eye look, expressions,
 //                            colliders; CopyBlueprintId (PipelineManager blueprintId); avatar scale moves the viewpoint.
+//   FixDescriptorBlendshapes  After re-pointing: eyelid blendshapes (indices) looked up again by name on the new eyelid
+//                            mesh (RemapEyelids; missing ones set to none and reported); viseme and mouth-open names the
+//                            new viseme mesh lacks reported (CheckVisemes).
+//   PlaceMaterials / SlotNames  Materials by slot name (the model's default material per slot), then by slot number
+//                            where no name matches; source materials left without a slot are reported.
+//   CopyBlendshapes          Values by exact name; set values the new mesh has no blendshape for are reported.
 //   MissingField(component, field)  A field or type not found in this SDK or Unity version goes in the report's Not
 //                            copied, once each, instead of being left out silently.
