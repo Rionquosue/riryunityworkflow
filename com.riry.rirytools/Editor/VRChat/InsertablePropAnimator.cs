@@ -14,8 +14,10 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// The animator side of one insertable prop pair: its parameters and four layers, appended to a
     /// controller, its synced state appended to an Expression Parameters asset, and its clips saved
-    /// in Assets/RiryTools/InsertableProps/&lt;id&gt;. Everything is named IP_&lt;id&gt;, so Generate
-    /// replaces this pair's layers, parameters and clips and touches nothing else.
+    /// in Assets/RiryTools/InsertableProps/IP_&lt;id&gt;_&lt;controller&gt; (one folder per pair and controller, so
+    /// avatars of the same name with their own controllers never share clips). Everything is named
+    /// IP_&lt;id&gt;, so Generate replaces this pair's layers, parameters and clips and touches nothing else;
+    /// the window asks first when the controller has the pair's layers but the avatar has no rig for them.
     ///   Decide (wearer only, IsLocal): Seated, Held, Inserting, Dropped, written to the synced State.
     ///   Pose (everyone): which source the prop, the PhysBone and the bodies follow, from IsGrabbed and State.
     ///   Hand (everyone): which hand frame is used, from the grip receiver.
@@ -29,6 +31,8 @@ namespace Riry.RiryTools.Editor
         internal const string OneName = "One";
         internal const string IsLocal = "IsLocal";
         internal const string ClipFolder = "InsertableProps";
+        // Undo name of the sub-assets made inside the controller; the window's group gives the step its name.
+        private const string CreatedUndo = "Insertable prop";
         // Below this separation (meters) the grip reading is too weak; PointSeparation is -1 with no finger.
         internal const float WeakSeparation = 0.01f;
         // Above this sheath proximity the tip is inside the capture radius.
@@ -95,7 +99,7 @@ namespace Riry.RiryTools.Editor
             EnsureParameter(controller, IsLocal, AnimatorControllerParameterType.Bool);
             SetDefault(controller, Parameter(id, OneName), 1f);
             bool writeDefaults = WritesDefaults(controller);
-            string folder = ClipFolderFor(id);
+            string folder = ClipFolderFor(id, controller);
 
             var clips = new Clips(rig, folder);
             BuildDecide(controller, rig, clips, writeDefaults);
@@ -157,14 +161,38 @@ namespace Riry.RiryTools.Editor
             return cost;
         }
 
-        internal static string ClipFolderFor(string id)
+        /// <summary>
+        /// The pair's clip folder for that controller, not created: IP_&lt;id&gt;_ and the first 8 characters of the
+        /// controller's GUID, so two avatars of the same name with their own controllers never share clips.
+        /// </summary>
+        internal static string ClipFolderPath(string id, AnimatorController controller)
+        {
+            string guid = controller != null ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(controller)) : "";
+            return RiryToolsProjectFolder.AssetPath + "/" + ClipFolder + "/" + FolderName(id, guid);
+        }
+
+        private static string FolderName(string id, string controllerGuid)
+        {
+            return InsertablePropRig.RootPrefix + id + "_" + (controllerGuid.Length >= 8 ? controllerGuid.Substring(0, 8) : "unsaved");
+        }
+
+        internal static string ClipFolderFor(string id, AnimatorController controller)
         {
             string root = RiryToolsProjectFolder.Ensure();
             string props = root + "/" + ClipFolder;
             if (!AssetDatabase.IsValidFolder(props)) AssetDatabase.CreateFolder(root, ClipFolder);
-            string folder = props + "/" + InsertablePropRig.RootPrefix + id;
-            if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder(props, InsertablePropRig.RootPrefix + id);
+            string folder = ClipFolderPath(id, controller);
+            if (!AssetDatabase.IsValidFolder(folder))
+                AssetDatabase.CreateFolder(props, folder.Substring(props.Length + 1));
             return folder;
+        }
+
+        /// <summary>Whether the controller already has any of the pair's layers.</summary>
+        internal static bool HasLayers(AnimatorController controller, string id)
+        {
+            if (controller == null) return false;
+            var names = new HashSet<string>(Layers.Select(layer => LayerName(id, layer)));
+            return controller.layers.Any(layer => names.Contains(layer.name));
         }
 
         private static void RemoveLayers(AnimatorController controller, string id)
@@ -211,6 +239,8 @@ namespace Riry.RiryTools.Editor
         {
             var machine = new AnimatorStateMachine { name = name, hideFlags = HideFlags.HideInHierarchy };
             AssetDatabase.AddObjectToAsset(machine, controller);
+            // Registered, so Ctrl+Z removes it from the controller file instead of leaving a hidden orphan.
+            Undo.RegisterCreatedObjectUndo(machine, CreatedUndo);
             controller.AddLayer(new AnimatorControllerLayer { name = name, defaultWeight = 1f, stateMachine = machine });
             return machine;
         }
@@ -348,6 +378,7 @@ namespace Riry.RiryTools.Editor
             AnimatorStateMachine machine = AddLayer(controller, LayerName(id, "Blend"));
             var direct = new BlendTree { name = LayerName(id, "Blend"), blendType = BlendTreeType.Direct, hideFlags = HideFlags.HideInHierarchy };
             AssetDatabase.AddObjectToAsset(direct, controller);
+            Undo.RegisterCreatedObjectUndo(direct, CreatedUndo);
             float r = InsertablePropRig.GripReceiverRadius;
             var children = new List<ChildMotion>();
             for (int axis = 0; axis < 3; axis++)
@@ -365,6 +396,7 @@ namespace Riry.RiryTools.Editor
         {
             var tree = new BlendTree { name = parameter, blendType = BlendTreeType.Simple1D, blendParameter = parameter, useAutomaticThresholds = false, hideFlags = HideFlags.HideInHierarchy };
             AssetDatabase.AddObjectToAsset(tree, controller);
+            Undo.RegisterCreatedObjectUndo(tree, CreatedUndo);
             tree.children = new[]
             {
                 new ChildMotion { motion = lowMotion, threshold = low, timeScale = 1f },
@@ -525,6 +557,11 @@ namespace Riry.RiryTools.Editor
 //     Blend                        Everyone: Direct tree (weights IP_<id>_One) placing the marker from SenderLocalPosition
 //                                  (±GripReceiverRadius) and blending the hand to the sheath aim by sheath proximity.
 //   WritesDefaults                 Generated states copy what most of the controller's states use.
-//   Clips                          Saved in Assets/RiryTools/InsertableProps/IP_<id>/ ("IP_<id> <name>.anim"); replaced in place.
+//   Clips                          Saved in ClipFolderPath: Assets/RiryTools/InsertableProps/IP_<id>_<first 8 of the controller
+//                                  GUID>/ ("IP_<id> <name>.anim"); replaced in place. One folder per pair and controller.
+//   CreatedUndo                    Each layer's state machine and every blend tree are registered as created (after
+//                                  AddObjectToAsset), so Ctrl+Z takes them out of the controller file; clip files stay.
+//   HasLayers(controller, id)      The controller has some of the pair's layers (the window asks before replacing them when
+//                                  this avatar has no rig for the pair: another avatar of the same name uses them).
 //   Remove(...)                    Removes the layers, parameters and synced State; the clips folder is the window's call.
 //   SyncedCost(expressions)        The SDK's CalcTotalCost when present, else 8 per synced Int/Float and 1 per Bool.

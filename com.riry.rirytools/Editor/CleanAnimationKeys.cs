@@ -93,11 +93,15 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// Cleans every editable clip as one Undo step. Imported and read-only clips
-        /// are skipped. Returns the summary line; throws when curves cannot be removed.
+        /// are skipped. A clip whose curves cannot be removed is put back and the rest
+        /// are still cleaned; then it throws with the summary and each failed clip.
+        /// Returns the summary line.
         /// </summary>
         internal static string Clean(IList<AnimationClip> clips, Options options, ICollection<string> whitelist)
         {
             int removedCurves = 0, cleaned = 0, skipped = 0;
+            var failures = new List<string>();
+            var skippedReasons = new List<string>();
             // A new group of its own, so the user's last action is never merged into the clean
             // (auto-clean runs from a delayed call, with no input event to start a group).
             Undo.IncrementCurrentGroup();
@@ -111,11 +115,16 @@ namespace Riry.RiryTools.Editor
                     if (!TryValidateEditableClip(clip, out error))
                     {
                         skipped++;
+                        skippedReasons.Add((clip != null ? AssetDatabase.GetAssetPath(clip) : "(missing clip)") + ": " + error);
                         continue;
                     }
                     var bindings = new List<EditorCurveBinding>();
                     foreach (Group group in Removable(clip, options, whitelist)) bindings.AddRange(group.Bindings);
-                    if (!TryRemoveBindings(clip, bindings, DisplayName, out error)) throw new InvalidOperationException(error);
+                    if (!TryRemoveBindings(clip, bindings, DisplayName, out error))
+                    {
+                        failures.Add(AssetDatabase.GetAssetPath(clip) + ": " + error);
+                        continue;
+                    }
                     removedCurves += bindings.Count;
                     cleaned++;
                 }
@@ -124,10 +133,17 @@ namespace Riry.RiryTools.Editor
             {
                 Undo.CollapseUndoOperations(undoGroup);
             }
+            // The summary only counts them; each one's reason is here, in one line.
+            if (skippedReasons.Count > 0)
+                RiryLog.Warn(RiryLog.CleanKeys, "Skipped " + skippedReasons.Count + " animation(s):\n" + string.Join("\n", skippedReasons));
             RepaintAnimationWindows();
             EditorApplication.RepaintProjectWindow();
-            return "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
+            string summary = "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
                 (skipped > 0 ? " Skipped " + skipped + " imported or read-only " + (skipped == 1 ? "animation." : "animations.") : "");
+            if (failures.Count > 0)
+                throw new InvalidOperationException(summary + "\n\nCould not clean " + failures.Count + " animation(s); they were left as they were:\n" +
+                    string.Join("\n", failures));
+            return summary;
         }
 
         // A curve that cannot be read, or holds NaN or Infinity, was never checked, so it is always kept.
@@ -385,9 +401,12 @@ namespace Riry.RiryTools.Editor
                 {
                     rollbackMessage =
                         "\n\nRollback also failed: " + rollbackException.Message;
+                    RiryLog.Exception(RiryLog.CleanKeys, "Putting back the curves of " + AssetDatabase.GetAssetPath(clip) + " also failed",
+                        rollbackException, clip);
                 }
 
-                Debug.LogException(exception);
+                // The one log of this failure, with the clip to ping; callers report error without logging it again.
+                RiryLog.Exception(RiryLog.CleanKeys, "Could not remove the curves of " + AssetDatabase.GetAssetPath(clip), exception, clip);
                 error = "The curves could not be removed.\n\n" +
                         exception.Message + rollbackMessage;
                 return false;

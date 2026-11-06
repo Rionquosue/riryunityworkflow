@@ -105,6 +105,7 @@ namespace Riry.RiryTools.Editor
                     catch (Exception exception)
                     {
                         report.NotCopied.Add(label + ": the target's copy could not be removed for Replace (" + exception.Message + ").");
+                        RiryLog.Exception(RiryLog.AvatarMigration, label + ": Replace could not remove the target's copy", exception, existing.gameObject);
                         continue;
                     }
                 }

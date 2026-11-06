@@ -65,13 +65,23 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// Remakes every output beside the asset. An output whose name no longer matches its
-        /// source (the source was renamed) is renamed first, so it keeps its GUID.
+        /// source (the source was renamed) is renamed first, so it keeps its GUID. Only this
+        /// source's own output is ever written: a target that is any source texture, that two
+        /// sources share, or that another file already holds is skipped and reported, and a
+        /// failed rename skips the source. The Output links are recorded for Undo; the files are not.
         /// Returns the problems, one per line.
         /// </summary>
         internal string Regenerate()
         {
             string folder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this)).Replace('\\', '/');
             var problems = new List<string>();
+            var sourcePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Source source in Sources)
+            {
+                if (source != null && source.Texture != null) sourcePaths.Add(AssetDatabase.GetAssetPath(source.Texture));
+            }
+            var claimed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Undo.RecordObject(this, "Regenerate icons");
             try
             {
                 for (int i = 0; i < Sources.Count; i++)
@@ -80,16 +90,33 @@ namespace Riry.RiryTools.Editor
                     if (source == null || source.Texture == null) continue;
                     EditorUtility.DisplayProgressBar("Icon Generator", source.Texture.name, i / (float)Math.Max(1, Sources.Count));
                     string target = folder + "/" + OutputName(source.Texture);
-                    if (target == AssetDatabase.GetAssetPath(source.Texture))
+                    if (sourcePaths.Contains(target))
                     {
-                        problems.Add(source.Texture.name + ": the output would replace its source; set a prefix or suffix.");
+                        problems.Add(source.Texture.name + ": the output " + target + " would replace a source texture; set a prefix or suffix.");
+                        continue;
+                    }
+                    if (!claimed.Add(target))
+                    {
+                        problems.Add(source.Texture.name + ": another source's output is also " + target + "; rename one of the sources.");
                         continue;
                     }
                     string current = AssetDatabase.GUIDToAssetPath(source.Output);
-                    if (!string.IsNullOrEmpty(current) && File.Exists(current) && current != target)
+                    bool ownOutput = !string.IsNullOrEmpty(current) && File.Exists(current);
+                    string held = AssetDatabase.AssetPathToGUID(target);
+                    bool targetTaken = File.Exists(target) && (!ownOutput || held != source.Output);
+                    if (targetTaken)
+                    {
+                        problems.Add(source.Texture.name + ": " + target + " is another file, so it was not replaced.");
+                        continue;
+                    }
+                    if (ownOutput && current != target)
                     {
                         string error = AssetDatabase.MoveAsset(current, target);
-                        if (!string.IsNullOrEmpty(error)) problems.Add(source.Texture.name + ": could not rename " + current + ": " + error);
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            problems.Add(source.Texture.name + ": could not rename " + current + ", so it was not remade: " + error);
+                            continue;
+                        }
                     }
                     RenderTexture image = Generate(source.Texture, i);
                     Texture2D read = IconCapEffects.Read(image);
@@ -121,4 +148,7 @@ namespace Riry.RiryTools.Editor
 //   Template           Another generator whose effect stack is used instead of Effects.
 //   Effects / Stack    Its own effect stack / the one used (Template's, followed to the end).
 //   Generate(source, index, size)  A source through the stack (temporary image); index cycles texture layers.
-//   Regenerate()       Remakes every output; renames an output by its GUID when its source was renamed.
+//   Regenerate()       Remakes every output; renames an output by its GUID when its source was renamed. Writes only a
+//                      source's own output: skips (and reports) a target that is a source texture, that two sources
+//                      share, or that another file holds, and a source whose rename failed. Output is recorded for Undo
+//                      ("Regenerate icons"); the PNG files are not undoable.

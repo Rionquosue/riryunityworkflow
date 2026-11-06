@@ -109,11 +109,11 @@ namespace Riry.RiryTools.Editor
             {
                 using (new EditorGUI.DisabledScope(rigged))
                 {
-                    if (GUILayout.Button("Generate rig")) { Generate(bones); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Generate rig")) { Act(() => Generate(bones)); RiryGui.ExitAfterModal(); }
                 }
                 using (new EditorGUI.DisabledScope(!rigged))
                 {
-                    if (GUILayout.Button("Remove rig")) { RemoveRig(bones); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Remove rig")) { Act(() => RemoveRig(bones)); RiryGui.ExitAfterModal(); }
                 }
             }
         }
@@ -153,7 +153,8 @@ namespace Riry.RiryTools.Editor
 //                                         each bone gets a VRC Parent Constraint to its copy).
 //   spacing                [S] Spacing    Existing (each node at its distance along the chain) or Even.
 //   twist                  [S] bool       Twist from anchors: per-node Twist helpers are the aims' world up.
-//   status                     string     Message at the bottom.  scroll: Vector2, the tab's scroll position.
+//   status                     string     Message at the bottom, also logged by Act(action) after Generate rig and
+//                                         Remove rig.  scroll: Vector2, the tab's scroll position.
 //   UndoName "Bezier rig"; SettingsUndo "Bezier settings" (RiryGui.Set on every field).
 //   RigPrefix "BezierRig_", MechanismPrefix "Bezier_"; MinAimDistance 1e-5: shorter cannot be aimed along.
 //
@@ -179,6 +180,6 @@ namespace Riry.RiryTools.Editor
 //   RigConstraints(bones) / Report(bones)  Constraint report: count and Depth of the rig in the scene.
 //   Depth(...)                      Longest run of constraints waiting on each other (sources, world up, parents).
 //   RemoveRig(bones)                Removes BezierRig_, Bezier_ and the bones' rig constraints as one Undo step;
-//                                   refuses objects saved in the prefab itself.
+//                                   refuses objects saved in the prefab itself; asks first, listing what goes.
 //   OnGUI / DrawChain / DrawOptions / DrawRig / DrawRestFit (this file)  Bone chain, Options, Rig (rest fit or
 //                                   report, Generate rig, Remove rig), status.

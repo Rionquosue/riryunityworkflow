@@ -36,7 +36,7 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             RiryToolsMainMenu.Call(job, "OnGUI");
-            if (GUI.changed) BlendshapeSyncJobs.SaveAll();
+            if (GUI.changed) BlendshapeSyncJobs.SaveSoon();
         }
 
         private void OnInspectorUpdate()
@@ -96,7 +96,11 @@ namespace Riry.RiryTools.Editor
                     }
                     if (GUILayout.Button("Remove", GUILayout.Width(65f)))
                     {
-                        BlendshapeSyncJobs.Remove(job);
+                        // Ctrl+Z can't bring a job back, and its original weights go with it.
+                        if (EditorUtility.DisplayDialog("Blendshape Sync", "Remove job " + job.JobNumber + " (" + name + ")?" +
+                                (job.HasOriginals ? "\n\nIts original weights (Set All to Original) are lost with it." : "") +
+                                "\n\nCtrl+Z can't bring the job back. The renderers' current weights stay.", "Remove", "Cancel"))
+                            BlendshapeSyncJobs.Remove(job);
                         GUIUtility.ExitGUI();
                     }
                 }
@@ -114,12 +118,16 @@ namespace Riry.RiryTools.Editor
 //
 // BlendshapeSyncJobs (Editor/BlendshapeSyncJobs.cs)
 //   All() / Add() / Remove(job)  The jobs: Blendshape Sync windows kept running unseen (HideAndDontSave).
+//   SaveSoon()                   Popup edits: SaveAll once no edit came for SaveDelay (1 s), not on every GUI event.
 //   SaveAll() / Load(scene)      UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json, one file per scene;
 //                                loaded when the scene opens, saved when it is saved or closes, at a script
 //                                reload and on quit. A closing scene's jobs end with it.
 // BlendshapeSyncWindow, job part (Editor/BlendshapeSyncJob.cs)
 //   JobNumber, Master, ChildCount, Auto, HasOriginals, Problem, RunSync(), RunRestore().
 //   SavedJob / SavedChild / Save() / Load(saved, master) / Find(id)  Renderers saved as GlobalObjectId strings.
+//   missingChildren     [S] Saved children not found on Load; saved again with the job, so they are never dropped.
+//   Save(scene) keeps saved jobs whose master is not found (Read), and never replaces a file it cannot read. Load warns
+//   once about jobs and children it could not restore.
 // BlendshapeSyncJobWindow (this file): the job popup; draws the job's own window; closing keeps the job.
 // BlendshapeSyncJobList (this file): the Main Menu tab: one row per job (master > children, Auto, Sync Now,
-//   Edit, Set All to Original, Remove), then Add Job. Below WideRow (570) window width the buttons go on a second line.
+//   Edit, Set All to Original, Remove (asks first: not undoable, its originals go with it)), then Add Job. Below WideRow (570) window width the buttons go on a second line.

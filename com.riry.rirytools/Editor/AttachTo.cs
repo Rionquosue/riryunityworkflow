@@ -137,7 +137,11 @@ namespace Riry.RiryTools.Editor
                 foreach (Transform target in targets)
                 {
                     // Undo.SetTransformParent keeps the global position, rotation and scale.
-                    if (target.parent != bone && !NeedsUnpack(target)) Undo.SetTransformParent(target, bone, UndoName);
+                    if (target.parent == bone) continue;
+                    if (!NeedsUnpack(target)) Undo.SetTransformParent(target, bone, UndoName);
+                    else
+                        RiryLog.Warn(RiryLog.AttachTo, target.name + " was snapped to " + bone.name + " but not moved under it: its prefab " +
+                            "instance could not be unpacked (for example a variant's base in Prefab Mode).", target);
                 }
             }
             Undo.CollapseUndoOperations(group);

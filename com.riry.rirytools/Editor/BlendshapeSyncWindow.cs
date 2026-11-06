@@ -79,6 +79,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private bool caseSensitive;
         // Window serialization keeps the baseline over assembly reloads.
         [SerializeField] private List<OriginalState> originals = new List<OriginalState>();
+        // The live snapshots: Undo records this window, so after any Undo or Redo they are put back (OnUndoRedo) and an
+        // undone setting never wipes snapshots taken after it.
+        [NonSerialized] private List<OriginalState> keptOriginals;
 
         [NonSerialized] private List<ChildPlan> plans;
         [NonSerialized] private List<WeightChange> changes;
@@ -91,6 +94,8 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private bool ambiguous;
         [NonSerialized] private string lastAmbiguity;
         [NonSerialized] private string planError;
+        // The pause reason last logged, so a lasting one is logged once.
+        [NonSerialized] private string loggedPause;
         [NonSerialized] private string result = "Assign a master and at least one child.";
         [NonSerialized] private string pauseReason;
         [NonSerialized] private double nextTick;
@@ -103,6 +108,7 @@ namespace Riry.RiryTools.Editor
             changes = new List<WeightChange>();
             if (children == null) children = new List<ChildEntry>();
             if (originals == null) originals = new List<OriginalState>();
+            keptOriginals = originals;
             EnsureChildRow();
             planDirty = true;
             nextTick = EditorApplication.timeSinceStartup + Interval;
@@ -142,6 +148,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnUndoRedo(in UndoRedoInfo undo)
         {
+            if (keptOriginals != null) originals = keptOriginals;
             InvalidatePlan();
             // A job edit put back by Undo or Redo is saved like the edit was.
             if (undo.undoName == SettingsUndo) BlendshapeSyncJobs.SaveAll();
@@ -197,10 +204,58 @@ namespace Riry.RiryTools.Editor
                     if (i != childIndex && children[i].Renderer == renderer)
                         error = "This renderer is already assigned as a child.";
                 }
+                if (error == null && childIndex >= 0 && master != null) error = CrossJobError(master, renderer);
+                for (int i = 0; i < children.Count && error == null && childIndex < 0; i++)
+                {
+                    if (children[i].Renderer != null && Reaches(children[i].Renderer, renderer))
+                        error = LoopError(renderer, children[i].Renderer);
+                }
             }
             if (error == null) return true;
             ShowNotification(new GUIContent(error));
             result = error;
+            return false;
+        }
+
+        /// <summary>
+        /// Why this job may not write from <paramref name="from"/> to <paramref name="to"/> across jobs, or null: another
+        /// job already writes to it, or the link would close a loop of jobs syncing each other.
+        /// </summary>
+        private string CrossJobError(SkinnedMeshRenderer from, SkinnedMeshRenderer to)
+        {
+            foreach (BlendshapeSyncWindow other in BlendshapeSyncJobs.All())
+            {
+                if (other != this && other.children.Exists(child => child.Renderer == to))
+                    return to.name + " is already a child in job " + other.JobNumber + "; two jobs would overwrite each other.";
+            }
+            return Reaches(to, from) ? LoopError(from, to) : null;
+        }
+
+        private static string LoopError(SkinnedMeshRenderer from, SkinnedMeshRenderer to)
+        {
+            return "Syncing " + to.name + " from " + from.name + " would make jobs sync each other in a loop.";
+        }
+
+        /// <summary>Whether <paramref name="goal"/> is synced from <paramref name="start"/> through any job (master to children).</summary>
+        private static bool Reaches(SkinnedMeshRenderer start, SkinnedMeshRenderer goal)
+        {
+            List<BlendshapeSyncWindow> jobs = BlendshapeSyncJobs.All();
+            var seen = new HashSet<SkinnedMeshRenderer> { start };
+            var queue = new Queue<SkinnedMeshRenderer>();
+            queue.Enqueue(start);
+            while (queue.Count > 0)
+            {
+                SkinnedMeshRenderer current = queue.Dequeue();
+                if (current == goal) return true;
+                foreach (BlendshapeSyncWindow job in jobs)
+                {
+                    if (job.master != current) continue;
+                    foreach (ChildEntry child in job.children)
+                    {
+                        if (child.Renderer != null && seen.Add(child.Renderer)) queue.Enqueue(child.Renderer);
+                    }
+                }
+            }
             return false;
         }
 
@@ -313,6 +368,16 @@ namespace Riry.RiryTools.Editor
                 error = RendererError(plan.Renderer);
                 if (error == null && (plan.Renderer == master || !assigned.Add(plan.Renderer)))
                     error = "A renderer may only be assigned once, and cannot sync to itself.";
+                // Jobs saved before this check, or loaded together, may still clash.
+                if (error == null)
+                {
+                    foreach (BlendshapeSyncWindow other in BlendshapeSyncJobs.All())
+                    {
+                        if (other != this && other.children.Exists(entry => entry.Renderer == plan.Renderer))
+                            error = "It is also a child in job " + other.JobNumber + "; two jobs would overwrite each other.";
+                    }
+                }
+                if (error == null && Reaches(plan.Renderer, master)) error = LoopError(master, plan.Renderer);
                 if (error != null)
                 {
                     planError = "Child " + plan.Renderer.name + ": " + error;
@@ -481,8 +546,16 @@ namespace Riry.RiryTools.Editor
                 if ((!PlanIsCurrent() && !BuildPlan()) || planError != null)
                 {
                     result = "Sync paused until the configuration is corrected.";
+                    // Jobs run unseen, so the pause is logged, once per reason.
+                    if (planError != loggedPause)
+                    {
+                        loggedPause = planError;
+                        RiryLog.Warn(RiryLog.BlendshapeSync, "Job " + JobNumber + " (" + (master != null ? master.name : "no master") +
+                            ") paused: " + planError, master);
+                    }
                     return;
                 }
+                loggedPause = null;
                 CaptureOriginal(master);
                 float[] sourceWeights = new float[plannedMasterCount];
                 for (int i = 0; i < sourceWeights.Length; i++)
@@ -517,7 +590,7 @@ namespace Riry.RiryTools.Editor
                 runAutomatically = false;
                 planDirty = true;
                 result = "Sync stopped: " + exception.Message;
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.BlendshapeSync, "Job " + JobNumber + " sync stopped", exception, master);
             }
             finally
             {
@@ -616,7 +689,7 @@ namespace Riry.RiryTools.Editor
             catch (Exception exception)
             {
                 result = "Restore stopped: " + exception.Message;
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.BlendshapeSync, "Job " + JobNumber + " restore stopped", exception, master);
             }
             finally
             {

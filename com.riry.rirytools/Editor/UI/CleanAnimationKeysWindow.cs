@@ -286,6 +286,20 @@ namespace Riry.RiryTools.Editor
 
         private void Clean()
         {
+            int curves = 0, clips = 0;
+            foreach (AnimationClip clip in animations)
+            {
+                if (clip == null) continue;
+                int count = 0;
+                foreach (CleanAnimationKeys.Group group in CleanAnimationKeys.Removable(clip, options, whitelist)) count += group.Bindings.Count;
+                curves += count;
+                if (count > 0) clips++;
+            }
+            // The clips are edited in place, and other controllers may share them.
+            if (!EditorUtility.DisplayDialog(CleanAnimationKeys.DisplayName, "Remove " + curves + " curve(s) from " + clips +
+                    " animation(s)?\n\nThe animations are changed in place, so every controller that uses them changes too. " +
+                    "Ctrl+Z undoes it.", "Clean", "Cancel"))
+                return;
             try
             {
                 summary = CleanAnimationKeys.Clean(animations, options, whitelist);
@@ -474,7 +488,8 @@ namespace Riry.RiryTools.Editor
 //   DrawWhitelist()          Search field with Add, fuzzy suggestions, entries with x.
 //   Suggestions(typed)       Ranks names with FuzzyMatch.Score (Editor/FuzzyMatch.cs): starts with, contains, letters in order.
 //   AddToWhitelist(names)    Adds names (from Add, a suggestion, or APPLY).
-//   Clean()                  CleanAnimationKeys.Clean, then shows the summary.
+//   Clean()                  Asks first (curve and animation counts; clips are edited in place, shared ones included),
+//                            then CleanAnimationKeys.Clean, then shows the summary.
 //   outerScroll              Everything above the summary and Clean scrolls, so Clean always stays in view.
 //   SettingsUndo / SettingsOwner  "Clean Animation Keys settings": Undo of the animation list (this window) and the
 //                            whitelist and options (Extract Animation in Configure, else this window); OnUndoRedo
@@ -497,6 +512,7 @@ namespace Riry.RiryTools.Editor
 //   Options                  The keep rules; curves that cannot be read or hold NaN/Infinity are always kept.
 //   Group                    One shapekey, or one bone's translation, rotation or scale; Name is what the whitelist matches.
 //   Groups(clip) / Removable(clip, options, whitelist)  Every group; the ones Clean would remove.
-//   Clean(clips, options, whitelist)  Removes them from every editable clip as one Undo step; returns the summary.
+//   Clean(clips, options, whitelist)  Removes them from every editable clip as one Undo step; returns the summary. A clip
+//                            that fails is put back and the rest still cleaned; then it throws listing each failed clip.
 //   TryRemoveBindings(...)   Removes curves, rolling back on failure.
 //   RepaintAnimationWindows()  Refreshes open Animation windows after a change.

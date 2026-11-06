@@ -93,14 +93,14 @@ namespace Riry.RiryTools.Editor
                 appendController = RiryGui.Set(this, SettingsUndo, appendController, (AnimatorController)EditorGUILayout.ObjectField(
                     new GUIContent("Append to controller:", "The layers and parameters go here. Empty: the avatar's FX controller."),
                     appendController, typeof(AnimatorController), false));
-                if (GUILayout.Button("New controller", GUILayout.Width(ButtonWidth))) { NewController(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("New controller", GUILayout.Width(ButtonWidth))) { Act(NewController); RiryGui.ExitAfterModal(); }
             }
             using (new EditorGUILayout.HorizontalScope())
             {
                 appendParameters = RiryGui.Set(this, SettingsUndo, appendParameters, (VRCExpressionParameters)EditorGUILayout.ObjectField(
                     new GUIContent("Append to parameters:", "The synced state goes here. Empty: the avatar's Expression Parameters."),
                     appendParameters, typeof(VRCExpressionParameters), false));
-                if (GUILayout.Button("New parameters", GUILayout.Width(ButtonWidth))) { NewParameters(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("New parameters", GUILayout.Width(ButtonWidth))) { Act(NewParameters); RiryGui.ExitAfterModal(); }
             }
             if (avatar != null)
             {
@@ -145,11 +145,11 @@ namespace Riry.RiryTools.Editor
             {
                 using (new EditorGUI.DisabledScope(error != null))
                 {
-                    if (GUILayout.Button(exists ? "Update pair" : "Generate")) { Generate(); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button(exists ? "Update pair" : "Generate")) { Act(Generate); RiryGui.ExitAfterModal(); }
                 }
                 using (new EditorGUI.DisabledScope(!exists))
                 {
-                    if (GUILayout.Button("Remove", GUILayout.Width(ButtonWidth))) { RemovePair(); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Remove", GUILayout.Width(ButtonWidth))) { Act(RemovePair); RiryGui.ExitAfterModal(); }
                 }
             }
         }
@@ -162,7 +162,10 @@ namespace Riry.RiryTools.Editor
             foreach (KeyValuePair<string, Transform> handle in handles)
             {
                 Transform target = handle.Value;
-                Handles.Label(target.position, handle.Key, EditorStyles.boldLabel);
+                // Beside the handle, not on its pivot, so the text never covers its centre and axes.
+                Transform eye = view.camera.transform;
+                float size = HandleUtility.GetHandleSize(target.position);
+                Handles.Label(target.position + (eye.up + eye.right) * (0.3f * size), handle.Key, EditorStyles.boldLabel);
                 Vector3 position = target.position;
                 Quaternion rotation = target.rotation;
                 EditorGUI.BeginChangeCheck();
@@ -204,11 +207,14 @@ namespace Riry.RiryTools.Editor
 //                           insertSmoothing (0.15 s), stiffness (1500, PC joint).
 //   appendController [S]    "Append to controller:"; empty uses the avatar's FX controller. New controller beside it.
 //   appendParameters [S]    "Append to parameters:"; empty uses the avatar's Expression Parameters. New parameters beside it.
-//   status, lastDrawn, scroll   Message; when the tab last drew (scene handles show for 2 s after); scroll position.
+//   status, lastDrawn, scroll   Message (also logged by Act(action) after New controller, New parameters, Generate and
+//                           Remove); when the tab last drew (scene handles show for 2 s after); scroll position.
 //   UndoName "Insertable prop"; SettingsUndo "Insertable prop settings" (RiryGui.Set on every field).
 //
 // UI (this file)
 //   OnGUI                   Prop and socket, Options, Animator, Handles, Generate (Update pair once it exists) and Remove.
 //   OnSceneGUI              Grip, Seated pose and Socket opening: move and rotate handles; Insertion tip: move only. The
 //                           opening's capture radius is drawn, with an arrow along its forward axis (the insertion axis).
+//                           Labels sit up and right of each handle. A new Opening is made 2 capture radii out of the socket
+//                           (against its forward axis), so it never starts on the Seat.
 //   ButtonWidth (110)       Width of New controller, New parameters, Select and Remove.

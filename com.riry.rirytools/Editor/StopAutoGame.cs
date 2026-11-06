@@ -41,8 +41,8 @@ namespace Riry.RiryTools.Editor
             get { return EditorPrefs.GetBool(EnabledPref, true); }
             set
             {
+                // No log: the menu checkmark and the Tools tab toggle already show it.
                 EditorPrefs.SetBool(EnabledPref, value);
-                Debug.Log("[RiryTools] Stop Auto Game is now " + (value ? "on" : "off") + ".");
                 RefreshHook();
             }
         }
@@ -68,13 +68,14 @@ namespace Riry.RiryTools.Editor
                     break;
                 case PlayModeStateChange.EnteredEditMode:
                     SessionState.EraseString(FocusedWindowsKey);
-                    if (!SessionState.GetBool(GameViewWasOpenKey, true))
+                    if (GameViewType != null && !SessionState.GetBool(GameViewWasOpenKey, true))
                     {
                         var gameViews = (EditorWindow[])Resources.FindObjectsOfTypeAll(GameViewType);
                         EditorWindow[] focused = previouslyFocused ?? new EditorWindow[0];
                         if (gameViews.Any() && !gameViews.Any(window => focused.Contains(window)))
                         {
                             foreach (EditorWindow window in gameViews) window.Close();
+                            RiryLog.Info(RiryLog.StopAutoGame, "Closed the Game view that Play Mode opened (the layout had none).");
                         }
                     }
                     previouslyFocused = null;
@@ -82,8 +83,19 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // A reflection lookup this Unity version lacks: the part of the feature it serves is off, said once per session.
+        private static void Missing(string what, string effect)
+        {
+            string key = "RiryTools.StopAutoGame.Missing." + what;
+            if (SessionState.GetBool(key, false)) return;
+            SessionState.SetBool(key, true);
+            RiryLog.Warn(RiryLog.StopAutoGame, what + " was not found in this Unity version, so " + effect + ".");
+        }
+
         private static void RememberWindows()
         {
+            if (HasFocus == null) Missing("EditorWindow.hasFocus", "focus is not given back after Play Mode starts");
+            if (GameViewType == null) Missing("UnityEditor.GameView", "a Game view Play Mode opens is not closed afterwards");
             if (HasFocus != null)
             {
                 SessionState.SetString(FocusedWindowsKey, string.Join(",", Resources.FindObjectsOfTypeAll<EditorWindow>()
@@ -104,12 +116,33 @@ namespace Riry.RiryTools.Editor
             {
                 return;
             }
-            string ids = SessionState.GetString(FocusedWindowsKey, string.Empty);
-            if (string.IsNullOrWhiteSpace(ids)) return;
-            previouslyFocused = ids.Split(',').Select(int.Parse)
-                .Select(EditorUtility.InstanceIDToObject)
-                .OfType<EditorWindow>().Where(window => window != null).ToArray();
-            foreach (EditorWindow window in previouslyFocused) window.Focus();
+            // Fire-and-forget: anything that goes wrong is logged here, or it would be lost with the task.
+            try
+            {
+                string ids = SessionState.GetString(FocusedWindowsKey, string.Empty);
+                if (string.IsNullOrWhiteSpace(ids)) return;
+                previouslyFocused = ids.Split(',').Select(int.Parse)
+                    .Select(EditorUtility.InstanceIDToObject)
+                    .OfType<EditorWindow>().Where(window => window != null).ToArray();
+                foreach (EditorWindow window in previouslyFocused) window.Focus();
+            }
+            catch (Exception exception)
+            {
+                RiryLog.Exception(RiryLog.StopAutoGame, "Could not give focus back after Play Mode started", exception);
+            }
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Stop Auto Game
+// The menu toggle is in Editor/UI/RiryMenus.cs; the Main Menu's Tools tab has the same toggle.
+// ============================================================================
+//
+// StopAutoGame (this file)
+//   Enabled             EditorPrefs RiryTools.StopAutoGame.Enabled (on by default); setting it re-hooks Play Mode.
+//   PlayModeChanged     Exiting Edit Mode: RememberWindows (focused windows, whether a Game view was open). Entered Play
+//                       Mode: RestoreFocus after HandleDelayMs (100 ms; errors logged). Entered Edit Mode: closes a Game
+//                       view Play Mode opened, unless it was focused before, and logs that.
+//   Missing(what, effect)  EditorWindow.hasFocus or UnityEditor.GameView not found: that part is off, warned once per
+//                       session.

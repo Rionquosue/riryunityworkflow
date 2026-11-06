@@ -71,14 +71,21 @@ namespace Riry.RiryTools.Editor
             // Unity has no public API for the folder shown in the Project window.
             MethodInfo method = typeof(ProjectWindowUtil).GetMethod("GetActiveFolderPath",
                 BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            if (method == null) return null;
+            if (method == null)
+            {
+                ImportPresetLibrary.ReportOnce("active-folder", "This Unity version has no ProjectWindowUtil.GetActiveFolderPath, so the " +
+                    "folder open in the Project window can't be used; select the folder instead.");
+                return null;
+            }
             try
             {
                 string path = method.Invoke(null, null) as string;
                 return !string.IsNullOrEmpty(path) && AssetDatabase.IsValidFolder(path) ? path : null;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                ImportPresetLibrary.ReportOnce("active-folder:" + exception.GetType().Name, "Could not read the folder open in the Project " +
+                    "window (" + (exception.InnerException ?? exception).Message + "); select the folder instead.");
                 return null;
             }
         }

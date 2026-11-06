@@ -83,7 +83,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.AvatarMigration, name + " failed", exception, map.TargetRoot.gameObject);
                 report.Failures.Add(name + ": " + exception.Message);
             }
         }
@@ -100,12 +100,23 @@ namespace Riry.RiryTools.Editor
                 foreach (string list in new[] { "baseAnimationLayers", "specialAnimationLayers" })
                 {
                     SerializedProperty layers = new SerializedObject(descriptor).FindProperty(list);
-                    if (layers == null || !layers.isArray) continue;
+                    if (layers == null || !layers.isArray)
+                    {
+                        report.NotCopied.Add("Avatar Descriptor field '" + list + "' was not found in this SDK, so its controllers were not retargeted.");
+                        continue;
+                    }
+                    bool reported = false;
                     for (int i = 0; i < layers.arraySize; i++)
                     {
                         SerializedProperty layer = layers.GetArrayElementAtIndex(i);
                         SerializedProperty isDefault = layer.FindPropertyRelative("isDefault");
                         SerializedProperty controller = layer.FindPropertyRelative("animatorController");
+                        if (controller == null && !reported)
+                        {
+                            reported = true;
+                            report.NotCopied.Add("Avatar Descriptor field '" + list + ".animatorController' was not found in this SDK, " +
+                                "so those controllers were not retargeted.");
+                        }
                         if (controller == null || (isDefault != null && isDefault.boolValue)) continue;
                         var used = controller.objectReferenceValue as RuntimeAnimatorController;
                         if (used == null) continue;
@@ -263,12 +274,29 @@ namespace Riry.RiryTools.Editor
             foreach (ChildAnimatorStateMachine child in machine.stateMachines) Relink(child.stateMachine, sourceRoot, targetRoot, controllerPath);
         }
 
+        /// <summary>
+        /// The motion pointed at duplicates. A blend tree inside the duplicated controller (controllerPath) is relinked in
+        /// place, once; one stored anywhere else (a standalone asset, another controller) is never changed: it is copied into
+        /// the duplicated controller and the copy is relinked.
+        /// </summary>
         private Motion RelinkMotion(Motion motion, Transform sourceRoot, Transform targetRoot, string controllerPath)
         {
             var clip = motion as AnimationClip;
             if (clip != null) return DuplicateClip(clip, sourceRoot, targetRoot, controllerPath);
-            var tree = motion as BlendTree;
-            if (tree == null) return motion;
+            var original = motion as BlendTree;
+            if (original == null) return motion;
+            Object done;
+            if (duplicates.TryGetValue(original, out done)) return done as BlendTree;
+            BlendTree tree = original;
+            if (AssetDatabase.GetAssetPath(original) != controllerPath)
+            {
+                tree = Object.Instantiate(original);
+                tree.name = original.name;
+                tree.hideFlags = original.hideFlags;
+                AssetDatabase.AddObjectToAsset(tree, controllerPath);
+                duplicates[original] = tree;
+            }
+            duplicates[tree] = tree;
             ChildMotion[] children = tree.children;
             for (int i = 0; i < children.Length; i++) children[i].motion = RelinkMotion(children[i].motion, sourceRoot, targetRoot, controllerPath);
             tree.children = children;
@@ -309,8 +337,27 @@ namespace Riry.RiryTools.Editor
             }
             report.FilesCreated.Add(destination);
             duplicates[original] = copy;
+            // A tree reached twice meets its duplicated clips again; they are already the duplicates.
+            duplicates[copy] = copy;
             Repath(copy, sourceRoot, targetRoot);
             return copy;
+        }
+
+        private const string BlendshapePrefix = "blendShape.";
+        // Clip, path and blendshape already reported.
+        private readonly HashSet<string> reportedCurves = new HashSet<string>(StringComparer.Ordinal);
+
+        // A blendshape curve whose name the mesh at its new path doesn't have animates nothing: reported once each.
+        private void CheckBlendshapeCurve(AnimationClip clip, EditorCurveBinding binding, string path, Transform targetRoot)
+        {
+            if (binding.type != typeof(SkinnedMeshRenderer) || !binding.propertyName.StartsWith(BlendshapePrefix, StringComparison.Ordinal)) return;
+            Transform at = path.Length == 0 ? targetRoot : targetRoot.Find(path);
+            var renderer = at != null ? at.GetComponent<SkinnedMeshRenderer>() : null;
+            if (renderer == null || renderer.sharedMesh == null) return;
+            string shape = binding.propertyName.Substring(BlendshapePrefix.Length);
+            if (renderer.sharedMesh.GetBlendShapeIndex(shape) >= 0 || !reportedCurves.Add(clip.name + "|" + path + "|" + shape)) return;
+            report.PossibleIssues.Add("Animation " + clip.name + " animates blendshape " + shape + " on " + path + ", which the new mesh (" +
+                renderer.sharedMesh.name + ") doesn't have.");
         }
 
         /// <summary>Rewrites the clip's binding paths for the target; old bindings are removed, new ones written.</summary>
@@ -328,6 +375,7 @@ namespace Riry.RiryTools.Editor
                     report.NotCopied.Add("Animation path " + binding.path + " in " + clip.name + " has no target; it was left as it is.");
                     continue;
                 }
+                CheckBlendshapeCurve(clip, binding, rebuilt, targetRoot);
                 if (rebuilt == binding.path) continue;
                 EditorCurveBinding moved = binding;
                 moved.path = rebuilt;
@@ -373,6 +421,11 @@ namespace Riry.RiryTools.Editor
 //   DuplicateController  AssetDatabase.CopyAsset into the migrated folder once; embedded clips repathed in place; states and
 //                        blend tree children relinked (Relink, RelinkMotion); override controllers get a duplicated base
 //                        and duplicated clips (ApplyOverrides).
+//   RelinkMotion         A blend tree in the duplicated controller is relinked in place, once; one stored elsewhere (a
+//                        standalone asset, another controller) is copied into the duplicated controller and the copy
+//                        relinked, so the source's trees are never changed.
 //   DuplicateClip        Once per clip: a .anim copied, a clip inside a model saved as a new .anim; then Repath.
 //   Repath(clip, ...)    GetCurveBindings / GetObjectReferenceCurveBindings rewritten: old removed, new written.
-//   duplicates           Original controller or clip to its duplicate; the target is pointed at duplicates with Undo.
+//   CheckBlendshapeCurve A blendShape.<name> curve whose mesh at the new path lacks that blendshape is reported, once each.
+//   duplicates           Original controller, clip or blend tree to its duplicate (each duplicate also maps to itself, so
+//                        a tree reached twice is not duplicated again); the target is pointed at duplicates with Undo.

@@ -121,7 +121,8 @@ namespace Riry.RiryTools.Editor
         {
             int index = group.Configuration == null ? 0 : Math.Max(0,
                 configurations.FindIndex(name => string.Equals(name, group.Configuration, StringComparison.OrdinalIgnoreCase)) + 1);
-            int chosen = EditorGUILayout.Popup(title, index, configurationNames);
+            // The title is a folder path, cut at the label width; the tooltip shows it whole.
+            int chosen = EditorGUILayout.Popup(new GUIContent(title, title), index, Array.ConvertAll(configurationNames, name => new GUIContent(name)));
             if (chosen != index)
             {
                 group.Configuration = chosen == 0 ? null : configurations[chosen - 1];
@@ -157,16 +158,25 @@ namespace Riry.RiryTools.Editor
         /// <summary>Writes each folder's presets for the file types in it, then applies the changed ones.</summary>
         private void Apply()
         {
-            int processed = 0;
-            var skipped = new List<string>();
+            var picksByFolder = new List<List<ImportPresetFolderRules.Pick>>();
+            int changing = 0;
             for (int i = 0; i < folders.Count; i++)
             {
                 Group group = applyToAll ? all : each[i];
                 var picks = new List<ImportPresetFolderRules.Pick>();
                 foreach (string label in ImportPresetFolderRules.InFolder(folders[i]).Keys) picks.Add(PickFor(group, label));
-                if (!ImportPresetFolderRules.Apply(folders[i], picks, null, ref processed)) skipped.Add(folders[i]);
+                picksByFolder.Add(picks);
+                changing += ImportPresetFolderRules.WouldChange(folders[i], picks, null);
             }
-            Debug.Log("Import Presets: set " + (folders.Count - skipped.Count) + " folder(s); applied to " + processed + " file(s).");
+            if (!ImportPresetFolderRules.ConfirmApply(changing, folders.Count == 1 ? folders[0] : folders.Count + " folders")) return;
+            int processed = 0;
+            var skipped = new List<string>();
+            for (int i = 0; i < folders.Count; i++)
+            {
+                if (!ImportPresetFolderRules.Apply(folders[i], picksByFolder[i], null, ref processed)) skipped.Add(folders[i]);
+            }
+            RiryLog.Info(RiryLog.ImportPresets, "Set " + (folders.Count - skipped.Count) + " folder(s); applied to " + processed + " file(s):\n" +
+                string.Join("\n", folders.FindAll(folder => !skipped.Contains(folder))));
             if (skipped.Count > 0)
                 EditorUtility.DisplayDialog("Set Folder Import Presets", "Left hand-edited ImportPreset.md unchanged in:\n" +
                     string.Join("\n", skipped), "OK");
@@ -188,4 +198,5 @@ namespace Riry.RiryTools.Editor
 //   Open(folders)            Opens the popup, starting from the folders' ImportPreset.md.
 //   OnEnable() / OnProjectChange()  Find the file types again (after a domain reload or an import); the choices stay.
 //   DrawGroup(group, title, types)  Configuration dropdown (sets every type to its preset), then the File types foldout.
-//   Apply()                  ImportPresetFolderRules.Apply for each folder with the picks for the types in it.
+//   Apply()                  Counts the files it would reimport (WouldChange) and asks (ConfirmApply: Undo can't revert
+//                            it), then ImportPresetFolderRules.Apply for each folder with the picks for the types in it.

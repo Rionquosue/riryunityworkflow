@@ -62,6 +62,7 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private IconCapEffectStackGUI generatorStack;
         [NonSerialized] private RenderTexture preview;
         [NonSerialized] private string previewProblem;
+        [NonSerialized] private readonly HashSet<string> loggedPreviewProblems = new HashSet<string>();
         [NonSerialized] private int previewRequest;
         [NonSerialized] private double previewTime;
         [NonSerialized] private Vector3 viewPosition;
@@ -91,17 +92,81 @@ namespace Riry.RiryTools.Editor
 
         private const string SettingsUndo = "IconCap settings";
 
+        /// <summary>
+        /// The window's state that is not a capture setting. Undo records the whole window, so after any Undo or Redo
+        /// these are put back as they were (OnUndoRedo): Ctrl+Z of a setting never brings back old captures, exports,
+        /// the export folder, the generator or the other fields.
+        /// </summary>
+        private sealed class Kept
+        {
+            public List<IconCapEntry> Session;
+            public int Latest, JobChoice;
+            public string LastSavedPath, ExportFolder, PresetName;
+            public IconCapEntry LastCapture, LastSave;
+            public IconGenerator ThroughGenerator, Generator;
+            public bool LargePreviews, FoldEffects, FoldSession, FoldObjects, FoldCamera, FoldBackground, FoldOptions, FoldRestore,
+                FoldGenerator, FoldGeneratorStack, FoldJobs;
+            public Vector2 Scroll;
+        }
+
+        [NonSerialized] private Kept kept;
+
+        // Called after every draw and every action that changes that state.
+        private void Keep()
+        {
+            kept = new Kept
+            {
+                Session = session, Latest = latest, JobChoice = jobChoice, LastSavedPath = lastSavedPath, ExportFolder = exportFolder,
+                PresetName = presetName, LastCapture = lastCapture, LastSave = lastSave, ThroughGenerator = throughGenerator,
+                Generator = generator, LargePreviews = largePreviews, FoldEffects = foldEffects, FoldSession = foldSession,
+                FoldObjects = foldObjects, FoldCamera = foldCamera, FoldBackground = foldBackground, FoldOptions = foldOptions,
+                FoldRestore = foldRestore, FoldGenerator = foldGenerator, FoldGeneratorStack = foldGeneratorStack, FoldJobs = foldJobs,
+                Scroll = scroll
+            };
+        }
+
+        private void OnUndoRedo()
+        {
+            if (kept != null)
+            {
+                session = kept.Session;
+                latest = kept.Latest;
+                jobChoice = kept.JobChoice;
+                lastSavedPath = kept.LastSavedPath;
+                exportFolder = kept.ExportFolder;
+                presetName = kept.PresetName;
+                lastCapture = kept.LastCapture;
+                lastSave = kept.LastSave;
+                throughGenerator = kept.ThroughGenerator;
+                generator = kept.Generator;
+                largePreviews = kept.LargePreviews;
+                foldEffects = kept.FoldEffects;
+                foldSession = kept.FoldSession;
+                foldObjects = kept.FoldObjects;
+                foldCamera = kept.FoldCamera;
+                foldBackground = kept.FoldBackground;
+                foldOptions = kept.FoldOptions;
+                foldRestore = kept.FoldRestore;
+                foldGenerator = kept.FoldGenerator;
+                foldGeneratorStack = kept.FoldGeneratorStack;
+                foldJobs = kept.FoldJobs;
+                scroll = kept.Scroll;
+            }
+            Repaint();
+        }
+
         private void OnEnable()
         {
-            Undo.undoRedoPerformed -= Repaint;
-            Undo.undoRedoPerformed += Repaint;
+            Undo.undoRedoPerformed -= OnUndoRedo;
+            Undo.undoRedoPerformed += OnUndoRedo;
+            Keep();
             EditorApplication.update += Watch;
             if (slots.TrueForAll(slot => slot == null)) SnapToSelection();
         }
 
         private void OnDisable()
         {
-            Undo.undoRedoPerformed -= Repaint;
+            Undo.undoRedoPerformed -= OnUndoRedo;
             EditorApplication.update -= Watch;
             ReleasePreviews();
         }
@@ -197,6 +262,9 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
+                // The preview redraws constantly: each distinct problem is logged once, with its stack.
+                if (exception.Message != previewProblem && loggedPreviewProblems.Add(exception.Message))
+                    RiryLog.Exception(RiryLog.IconCap, "The preview could not be rendered", exception);
                 previewProblem = exception.Message;
             }
             finally
@@ -239,6 +307,7 @@ namespace Riry.RiryTools.Editor
                     Undo.RecordObject(this, SettingsUndo);
                     JsonUtility.FromJsonOverwrite(settingsAfter, settings);
                 }
+                Keep();
             }
         }
 
@@ -361,8 +430,11 @@ namespace Riry.RiryTools.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     GUILayout.Space(EditorGUI.indentLevel * 15f);
-                    if (GUILayout.Button(new GUIContent(entry.FileName + (entry.Exported ? "" : " (not exported)"),
-                            "Moves the Scene View camera back to this capture and reselects its objects."), EditorStyles.label))
+                    // MinWidth 0: a long name is cut off (full in the tooltip) instead of pushing Export and Remove out of view.
+                    string rowName = entry.FileName + (entry.Exported ? "" : " (not exported)");
+                    if (GUILayout.Button(new GUIContent(rowName,
+                            rowName + "\nMoves the Scene View camera back to this capture and reselects its objects."), EditorStyles.label,
+                            GUILayout.MinWidth(0f)))
                     {
                         RestoreCamera(entry);
                         Reselect(entry);
@@ -574,7 +646,8 @@ namespace Riry.RiryTools.Editor
                     EditorApplication.delayCall += NewGenerator;
                 using (new EditorGUI.DisabledScope(generator == null))
                 {
-                    if (GUILayout.Button(new GUIContent("Regenerate", "Remakes every output beside the asset."), GUILayout.Width(85f)))
+                    if (GUILayout.Button(new GUIContent("Regenerate", "Remakes every output beside the asset. Never replaces a file it did not make. " +
+                        "Undo can't revert the PNG files."), GUILayout.Width(85f)))
                         EditorApplication.delayCall += Regenerate;
                 }
             }
@@ -738,7 +811,7 @@ namespace Riry.RiryTools.Editor
                             EditorGUILayout.BeginHorizontal();
                             GUILayout.Space((EditorGUI.indentLevel + 1) * 15f);
                         }
-                        GUILayout.Label(folderName, EditorStyles.miniLabel);
+                        GUILayout.Label(new GUIContent(folderName, folderName), EditorStyles.miniLabel, GUILayout.MinWidth(0f));
                         GUILayout.Label(countText, EditorStyles.miniLabel);
                         string runFolder = folder;
                         IconCapJob runJob = job;
@@ -752,7 +825,7 @@ namespace Riry.RiryTools.Editor
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            EditorGUILayout.LabelField(entry.FileName);
+                            EditorGUILayout.LabelField(new GUIContent(entry.FileName, entry.FileName), GUILayout.MinWidth(0f));
                             if (GUILayout.Button("Restore camera", GUILayout.Width(110f))) RestoreCamera(entry);
                             if (GUILayout.Button("Reselect objects", GUILayout.Width(115f))) Reselect(entry);
                         }
@@ -854,6 +927,7 @@ namespace Riry.RiryTools.Editor
             session.Add(entry);
             latest = session.Count - 1;
             lastCapture = IconCapAssets.Copy(entry);
+            Keep();
             Repaint();
         }
 
@@ -918,6 +992,7 @@ namespace Riry.RiryTools.Editor
             lastSavedPath = path;
             lastSave = IconCapAssets.Copy(entry);
             jobFiles.Clear();
+            Keep();
             Repaint();
         }
 
@@ -928,6 +1003,7 @@ namespace Riry.RiryTools.Editor
             session.RemoveAt(index);
             if (latest == index) latest = session.Count - 1;
             else if (latest > index) latest--;
+            Keep();
         }
 
         private static bool SamePath(string left, string right)
@@ -987,14 +1063,27 @@ namespace Riry.RiryTools.Editor
             file.Jobs.Add(new IconCapJob { Name = name, Entries = SavedHere(folder) });
             IconCapFiles.WriteJobs(folder, file);
             jobChoice = file.Jobs.Count - 1;
+            Keep();
             ForgetFiles();
             Repaint();
         }
 
         private void Run(string folder, IconCapJob job)
         {
+            // Replaced images move to OLD_<n>, but the new ones take over their GUIDs, so whatever used them shows the new icon.
+            List<string> replaced = IconCapFiles.ExistingIcons(folder, job);
+            if (replaced.Count > 0 && !EditorUtility.DisplayDialog("IconCap", "Run replaces " + replaced.Count + " existing image(s):\n" +
+                    string.Join("\n", replaced.GetRange(0, Math.Min(10, replaced.Count))) +
+                    (replaced.Count > 10 ? "\n... and " + (replaced.Count - 10) + " more" : "") +
+                    "\n\nThe old images move into a new " + IconCapFiles.OldFolderPrefix + "<n> folder. The new icons keep the old " +
+                    "files' GUIDs, so materials and other assets that used those images show the new icons.", "Run", "Cancel"))
+                return;
             string problems = IconCapFiles.Run(folder, job);
-            if (problems.Length > 0) EditorUtility.DisplayDialog("IconCap", "Some icons were not remade:\n\n" + problems, "OK");
+            if (problems.Length > 0)
+            {
+                RiryLog.Warn(RiryLog.IconCap, "Job " + job.Name + " in " + folder + ": some icons were not remade:\n" + problems);
+                EditorUtility.DisplayDialog("IconCap", "Some icons were not remade:\n\n" + problems, "OK");
+            }
             ForgetFiles();
             Repaint();
         }
@@ -1003,9 +1092,14 @@ namespace Riry.RiryTools.Editor
         {
             string name = IconCapNamePrompt.Ask("Save a preset", "Preset name", presetName);
             if (name == null) return;
+            string existing = IconCapFiles.ExistingPreset(name);
+            if (existing != null && !EditorUtility.DisplayDialog("IconCap", "The preset " + existing + " already exists" +
+                    (existing != name.Trim() ? " (\"" + name + "\" saves to the same file)" : "") + ". Replace it?", "Replace", "Cancel"))
+                return;
             IconCapFiles.SavePreset(name, IconCapAssets.Copy(settings));
             presetName = name;
             presetNames = null;
+            Keep();
             Repaint();
         }
 
@@ -1036,6 +1130,7 @@ namespace Riry.RiryTools.Editor
             AssetDatabase.CreateAsset(created, path);
             AssetDatabase.SaveAssets();
             generator = created;
+            Keep();
             Repaint();
         }
 
@@ -1043,7 +1138,12 @@ namespace Riry.RiryTools.Editor
         {
             if (generator == null) return;
             string problems = generator.Regenerate();
-            if (problems.Length > 0) EditorUtility.DisplayDialog("Icon Generator", problems, "OK");
+            if (problems.Length > 0)
+            {
+                RiryLog.Warn(RiryLog.IconCap, "Icon Generator " + generator.name + ":\n" + problems, generator);
+                EditorUtility.DisplayDialog("Icon Generator", problems, "OK");
+            }
+            else RiryLog.Info(RiryLog.IconCap, "Icon Generator " + generator.name + " remade its outputs.", generator);
         }
 
         // ---- Restore --------------------------------------------------------------
@@ -1164,6 +1264,11 @@ namespace Riry.RiryTools.Editor
 //                       a change is put back, recorded and set again, so Ctrl+Z undoes Size, a loaded preset, the
 //                       effect stack, camera, background and options. Capture only selected, the object slots and
 //                       Isolated item record the same way (RiryGui.Set). Repaints on Undo/Redo.
+//   Kept / Keep() / OnUndoRedo()  Everything else (session, latest, last capture and save, export folder, generators,
+//                       job, preset name, folds, scroll), kept after each draw and action and put back after any
+//                       Undo/Redo, so Ctrl+Z of a setting never reverts captures or exports.
+//   Logging             Run and Regenerate problems go to the Console as well as the dialog; a preview error is logged
+//                       once per message (loggedPreviewProblems), with its stack.
 //   [SerializeField]    settings, onlySelected, slots, isolated, exportFolder, session, latest, lastSavedPath,
 //                       lastCapture, lastSave, throughGenerator, generator, largePreviews, jobChoice, presetName,
 //                       the fold states, scroll.

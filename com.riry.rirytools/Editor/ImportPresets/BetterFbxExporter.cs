@@ -173,6 +173,8 @@ namespace Riry.RiryTools.Editor
         /// Runs the export when needed. Returns the FBX path when it was written,
         /// or null with a message.
         /// </summary>
+        private static readonly HashSet<string> runFailures = new HashSet<string>(StringComparer.Ordinal);
+
         internal static string Export(string blendPath, bool force, out string message)
         {
             bool upToDate;
@@ -222,7 +224,11 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                message = "Could not run Blender (" + blender + "): " + exception.Message;
+                // Logged here with its stack, once per problem (it repeats on every save); no message, so it isn't logged twice.
+                if (runFailures.Add(blender + "|" + exception.Message))
+                    RiryLog.Exception(RiryLog.ImportPresets, "Could not run Blender (" + blender + ") for " + blendPath, exception,
+                        AssetDatabase.LoadMainAssetAtPath(blendPath));
+                message = null;
                 return null;
             }
             finally

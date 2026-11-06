@@ -87,7 +87,7 @@ namespace Riry.RiryTools.Editor
             {
                 plan = null;
                 UpdateExitPrompt();
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.GuidTools, GuidReferenceRepair.Title + ": the scan failed", exception);
                 EditorUtility.DisplayDialog(GuidReferenceRepair.Title, exception.Message, "OK");
             }
             finally
@@ -220,13 +220,14 @@ namespace Riry.RiryTools.Editor
             try
             {
                 int changed = GuidReferenceRepair.Apply(plan, Redirects(), restores, restoredFiles, log);
-                Debug.Log(GuidReferenceRepair.Title + ": repaired references in " + changed + " file(s).");
+                RiryLog.Info(RiryLog.GuidTools, GuidReferenceRepair.Title + ": repaired references in " + changed + " file(s)" +
+                    (restoredFiles.Count > 0 ? ", restoring " + string.Join(", ", restoredFiles) : "") + ".");
                 applied = true;
             }
             catch (Exception exception)
             {
                 log.Write("FAILURE: " + exception);
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.GuidTools, GuidReferenceRepair.Title + ": the repair failed", exception);
                 EditorUtility.DisplayDialog(GuidReferenceRepair.Title + " Failed", exception.Message, "OK");
             }
             finally
@@ -381,8 +382,8 @@ namespace Riry.RiryTools.Editor
                 List<BrokenReference> broken = FindBroken(path);
                 if (broken.Count > 0 && !BrokenSaveWindow.Confirm(path, Describe(broken)))
                 {
-                    Debug.LogWarning(GuidReferenceRepair.Title + ": saving " + path + " was aborted; it has " + broken.Count +
-                        " broken asset reference(s). Repair them with Tools > RiryTools > GUID Tools.");
+                    RiryLog.Warn(RiryLog.GuidTools, GuidReferenceRepair.Title + ": saving " + path + " was aborted; it has " + broken.Count +
+                        " broken asset reference(s). Repair them with Tools > RiryTools > GUID Tools.", AssetDatabase.LoadMainAssetAtPath(path));
                     continue;
                 }
                 allowed.Add(path);

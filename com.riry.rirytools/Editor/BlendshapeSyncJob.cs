@@ -30,6 +30,8 @@ namespace Riry.RiryTools.Editor
 
         // Order in the job list.
         [SerializeField] private int jobNumber;
+        // Saved children whose renderer was not found on load; written back on save, so they are never lost.
+        [SerializeField] private List<SavedChild> missingChildren = new List<SavedChild>();
 
         internal int JobNumber
         {
@@ -92,19 +94,29 @@ namespace Riry.RiryTools.Editor
                 }
                 saved.Children.Add(new SavedChild { Renderer = Id(child.Renderer), Links = links });
             }
+            saved.Children.AddRange(missingChildren);
             return saved;
         }
 
-        /// <summary>Sets the job from a saved one; children that are gone are left out.</summary>
-        internal void Load(SavedJob saved, SkinnedMeshRenderer savedMaster)
+        /// <summary>
+        /// Sets the job from a saved one. Children that are not found are kept aside (missingChildren) and saved again,
+        /// so they come back once they resolve. Returns how many were not found.
+        /// </summary>
+        internal int Load(SavedJob saved, SkinnedMeshRenderer savedMaster)
         {
             master = savedMaster;
             CaptureOriginal(master);
             children.Clear();
+            missingChildren.Clear();
             foreach (SavedChild child in saved.Children ?? new List<SavedChild>())
             {
                 SkinnedMeshRenderer renderer = Find(child.Renderer);
-                if (renderer == null) continue;
+                if (renderer == null)
+                {
+                    missingChildren.Add(child);
+                    continue;
+                }
+                if (children.Exists(entry => entry.Renderer == renderer)) continue;
                 children.Add(new ChildEntry { Renderer = renderer, Links = child.Links ?? new List<ManualLink>() });
                 CaptureOriginal(renderer);
             }
@@ -113,6 +125,7 @@ namespace Riry.RiryTools.Editor
             runAutomatically = saved.Auto;
             nextTick = EditorApplication.timeSinceStartup + Interval;
             InvalidatePlan();
+            return missingChildren.Count;
         }
 
         private static string Id(UnityEngine.Object target)

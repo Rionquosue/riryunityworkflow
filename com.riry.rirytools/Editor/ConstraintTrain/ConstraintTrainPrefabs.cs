@@ -39,8 +39,12 @@ namespace Riry.RiryTools.Editor
         /// The Constraint Train changes stored as overrides on the prefab instance
         /// that holds <paramref name="bone"/>, or null when the bone is not in a
         /// prefab instance in a scene. In Prefab Mode changes save with the prefab.
+        /// Only this train's are collected: chains added beside the real chain start,
+        /// and constraints on the real chain (<paramref name="bone"/> to
+        /// <paramref name="end"/>) or inside those chains. Other overrides on the
+        /// avatar are never applied.
         /// </summary>
-        internal static Changes Collect(Transform bone, Func<Component, bool> isConstraint)
+        internal static Changes Collect(Transform bone, Transform end, Func<Component, bool> isConstraint)
         {
             if (bone == null || EditorUtility.IsPersistent(bone) || !PrefabUtility.IsPartOfPrefabInstance(bone) ||
                 PrefabStageUtility.GetPrefabStage(bone.gameObject) != null)
@@ -52,20 +56,52 @@ namespace Riry.RiryTools.Editor
                 AssetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(root),
                 Immutable = PrefabUtility.IsPartOfImmutablePrefab(root)
             };
+            Transform holder = bone.parent;
+            HashSet<Transform> scope = TrainScope(bone, end, holder);
             foreach (AddedGameObject added in PrefabUtility.GetAddedGameObjects(root))
             {
-                if (IsGeneratedChain(added.instanceGameObject.name)) changes.AddedChains.Add(added.instanceGameObject);
+                GameObject chain = added.instanceGameObject;
+                if (chain.transform.parent == holder && IsGeneratedChain(chain.name)) changes.AddedChains.Add(chain);
             }
             foreach (AddedComponent added in PrefabUtility.GetAddedComponents(root))
             {
-                if (isConstraint(added.instanceComponent)) changes.AddedConstraints.Add(added.instanceComponent);
+                Component component = added.instanceComponent;
+                if (isConstraint(component) && scope.Contains(component.transform)) changes.AddedConstraints.Add(component);
             }
             foreach (ObjectOverride changed in PrefabUtility.GetObjectOverrides(root))
             {
                 var component = changed.instanceObject as Component;
-                if (component != null && isConstraint(component)) changes.ChangedConstraints.Add(component);
+                if (component != null && isConstraint(component) && scope.Contains(component.transform)) changes.ChangedConstraints.Add(component);
             }
             return changes;
+        }
+
+        // The real chain and every object of the generated chains beside its start.
+        private static HashSet<Transform> TrainScope(Transform bone, Transform end, Transform holder)
+        {
+            var scope = new HashSet<Transform> { bone };
+            var real = new List<Transform>();
+            string error;
+            if (end != null && ConstraintTrainChains.TryCollectChain(bone, end, real, out error)) scope.UnionWith(real);
+            if (holder == null) return scope;
+            foreach (Transform child in holder)
+            {
+                if (IsGeneratedChain(child.name)) scope.UnionWith(child.GetComponentsInChildren<Transform>(true));
+            }
+            return scope;
+        }
+
+        /// <summary>The objects the changes are on, for the confirmation: at most <paramref name="max"/> names, then a count.</summary>
+        internal static string Describe(Changes changes, int max = 12)
+        {
+            var names = new List<string>();
+            foreach (GameObject chain in changes.AddedChains) names.Add(chain.name + " (chain)");
+            var bones = new HashSet<string>();
+            foreach (Component constraint in changes.AddedConstraints) bones.Add(constraint.name);
+            foreach (Object constraint in changes.ChangedConstraints) bones.Add(((Component)constraint).name);
+            names.AddRange(bones);
+            if (names.Count <= max) return string.Join(", ", names);
+            return string.Join(", ", names.GetRange(0, max)) + " and " + (names.Count - max) + " more";
         }
 
         internal static bool IsGeneratedChain(string name)
@@ -88,13 +124,20 @@ namespace Riry.RiryTools.Editor
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(undoName);
-            if (changes.AddedChains.Count > 0)
-                PrefabUtility.ApplyAddedGameObjects(changes.AddedChains.ToArray(), changes.AssetPath, InteractionMode.UserAction);
-            foreach (Component constraint in changes.AddedConstraints)
-                PrefabUtility.ApplyAddedComponent(constraint, changes.AssetPath, InteractionMode.UserAction);
-            foreach (Object constraint in changes.ChangedConstraints)
-                PrefabUtility.ApplyObjectOverride(constraint, changes.AssetPath, InteractionMode.UserAction);
-            Undo.CollapseUndoOperations(group);
+            // Collapsed even when an apply throws, so a partial apply is still one Ctrl+Z.
+            try
+            {
+                if (changes.AddedChains.Count > 0)
+                    PrefabUtility.ApplyAddedGameObjects(changes.AddedChains.ToArray(), changes.AssetPath, InteractionMode.UserAction);
+                foreach (Component constraint in changes.AddedConstraints)
+                    PrefabUtility.ApplyAddedComponent(constraint, changes.AssetPath, InteractionMode.UserAction);
+                foreach (Object constraint in changes.ChangedConstraints)
+                    PrefabUtility.ApplyObjectOverride(constraint, changes.AssetPath, InteractionMode.UserAction);
+            }
+            finally
+            {
+                Undo.CollapseUndoOperations(group);
+            }
         }
 
         /// <summary>"&lt;folder&gt;/&lt;model name&gt;_ROOT.prefab" beside the source; in Assets/RiryTools when the source is read-only.</summary>

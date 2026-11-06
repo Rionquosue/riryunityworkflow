@@ -157,7 +157,9 @@ namespace Riry.RiryTools.Editor
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField(new GUIContent("Types: " + AvatarCopyTypes.FilePath, "Edit this file to change the list; it is read again when it changes."),
                 EditorStyles.wordWrappedMiniLabel);
-            Settings.ShowAll = GUILayout.Toolbar(Settings.ShowAll ? 1 : 0, ListNames) == 1;
+            // Indented like the controls around it (GUILayout.Toolbar ignores the indent level).
+            Rect toolbar = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
+            Settings.ShowAll = GUI.Toolbar(toolbar, Settings.ShowAll ? 1 : 0, ListNames) == 1;
             // Grouped by category (the file's kinds of type); each category folds.
             var categories = new List<string>();
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
@@ -217,7 +219,8 @@ namespace Riry.RiryTools.Editor
                     "Make target objects for source objects that are still unmatched, under the nearest matched parent."), typeSettings.CreateMissing);
             if (replaces)
                 typeSettings.Replace = EditorGUILayout.Popup(new GUIContent("Existing on target",
-                    "Add: alongside the target's own, skipping any that is identical. Replace: remove the target's first."),
+                    "Add: alongside the target's own, skipping any that is identical. Replace: remove the target's first, on the objects " +
+                    "the source copies into (not on ignored objects, objects only the target has, or child prefabs)."),
                     typeSettings.Replace ? 1 : 0, ToContents(AddReplace)) == 1;
             switch (type.Rule)
             {
@@ -288,7 +291,7 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField(new GUIContent("Migrated folder", "Every file the tool creates goes here, at its original path."),
-                    new GUIContent(Settings.MigratedFolder.Length > 0 ? Settings.MigratedFolder : "(asked for when needed)"));
+                    new GUIContent(Settings.MigratedFolder.Length > 0 ? Settings.MigratedFolder : "(asked for when needed)", Settings.MigratedFolder));
                 if (GUILayout.Button("Browse", GUILayout.Width(70f)))
                 {
                     string chosen = AvatarMigratedFolder.Choose(Settings.MigratedFolder);
@@ -378,6 +381,12 @@ namespace Riry.RiryTools.Editor
             }
             AvatarRunReport report = AvatarCopyRun.Execute(map, Settings, answers, ignored);
             lastMap = map;
+            // Prefabs placed again from unpacked ones are the old avatar's own parts: their animations are retargeted too.
+            foreach (GameObject placed in report.RepackedRoots)
+            {
+                if (placed != null && !includedPrefabs.Contains(placed)) includedPrefabs.Add(placed);
+            }
+            targetPrefabs = null;
             Finish(report.Summary);
             AvatarRunReportWindow.Open(report);
         }
@@ -441,6 +450,7 @@ namespace Riry.RiryTools.Editor
         internal readonly List<string> TypeNames = new List<string>();
 
         private Type[] resolved;
+        private static readonly HashSet<string> ReportedUnknown = new HashSet<string>(StringComparer.Ordinal);
 
         /// <summary>The types found in this project; empty when none is.</summary>
         internal Type[] Types
@@ -449,13 +459,21 @@ namespace Riry.RiryTools.Editor
             {
                 if (resolved != null) return resolved;
                 var types = new List<Type>();
+                var unknown = new List<string>();
                 foreach (string name in TypeNames)
                 {
-                    foreach (Type type in AvatarCopyTypes.Resolve(name))
+                    List<Type> found = AvatarCopyTypes.Resolve(name);
+                    if (found.Count == 0) unknown.Add(name);
+                    foreach (Type type in found)
                     {
                         if (!types.Contains(type)) types.Add(type);
                     }
                 }
+                // Some names found and some not: likely a typo or a rename in types.yml, said once per entry. (None found is
+                // shown as "(not in project)": the package is simply not installed.)
+                if (types.Count > 0 && unknown.Count > 0 && ReportedUnknown.Add(Id + "|" + string.Join(",", unknown)))
+                    RiryLog.Warn(RiryLog.AvatarMigration, AvatarCopyTypes.FilePath + ", entry '" + Label + "': " + string.Join(", ", unknown) +
+                        " not found in this project (misspelled, renamed or not installed); the other types of the entry are used.");
                 resolved = types.ToArray();
                 return resolved;
             }
@@ -515,6 +533,8 @@ namespace Riry.RiryTools.Editor
         private static readonly Dictionary<string, Type> Cache = new Dictionary<string, Type>(StringComparer.Ordinal);
         private static List<AvatarCopyType> all;
         private static DateTime loadedStamp;
+        // The last read problem: All runs on every draw, so one problem is logged once, not every repaint.
+        private static string lastProblem;
 
         internal static string FilePath
         {
@@ -533,10 +553,13 @@ namespace Riry.RiryTools.Editor
                     if (all != null && stamp == loadedStamp) return all;
                     loadedStamp = stamp;
                     all = Read(FilePath);
+                    lastProblem = null;
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogWarning(AvatarMigrationAssistant.Title + ": could not read " + FilePath + ": " + exception.Message);
+                    if (exception.Message != lastProblem)
+                        RiryLog.Warn(RiryLog.AvatarMigration, "Could not read " + FilePath + ": " + exception.Message);
+                    lastProblem = exception.Message;
                     if (all == null) all = new List<AvatarCopyType>();
                 }
                 return all;
@@ -821,6 +844,7 @@ namespace Riry.RiryTools.Editor
 //   Settings.cs (EditorPrefs),
 //   UpFrontCheck.cs (everything up front), CopyRun.cs (the run, 4 and 15), TypeRules.cs, CopyPrefabs.cs (11),
 //   UpgradeConstraints.cs, RepointReferences.cs (5 and 12), CorrectRotation.cs (7), CorrectScale.cs (6), IgnoreList.cs (13),
+//   RepackPrefabs.cs (unpacked prefabs placed again as child prefabs),
 //   RunReport.cs, RetargetAnimations.cs (8), VrcFuryPrefabs.cs (9), MigratedFolder.cs (10),
 //   SdkNotice.cs (the VRC SDK not detected popup).
 // ============================================================================

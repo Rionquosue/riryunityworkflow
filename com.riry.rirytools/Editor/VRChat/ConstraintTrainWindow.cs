@@ -42,6 +42,22 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private AnimationClip clip;
 
         [NonSerialized] private string status;
+        // Runs an action button and puts the status it sets in the Console too: the window's status line is gone once it
+        // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
+        private void Act(Action action)
+        {
+            string before = status;
+            action();
+            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
+                RiryLog.Info(RiryLog.ConstraintTool, "Train: " + status);
+        }
+
+        private T Act<T>(Func<T> action)
+        {
+            T result = default(T);
+            Act(() => { result = action(); });
+            return result;
+        }
         private Vector2 scroll;
 
         /// <summary>
@@ -56,6 +72,8 @@ namespace Riry.RiryTools.Editor
                 if (candidate != active && candidate.IsChildOf(active) && (end == null || candidate.IsChildOf(end)))
                     end = candidate;
             }
+            // One Undo step, so a later Ctrl+Z of another setting does not bring back the old chain fields.
+            Undo.RecordObject(this, SettingsUndo);
             if (active != realStart)
             {
                 // Chains and the avatar root found for the previous start do not apply to a new one.
@@ -99,7 +117,7 @@ namespace Riry.RiryTools.Editor
 
         private void SaveToPrefab()
         {
-            ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, component => component is VRCParentConstraint);
+            ConstraintTrainPrefabs.Changes changes = ConstraintTrainPrefabs.Collect(realStart, realEnd, component => component is VRCParentConstraint);
             if (changes == null) return;
             try
             {
@@ -112,7 +130,8 @@ namespace Riry.RiryTools.Editor
                     }
                     if (!EditorUtility.DisplayDialog("Constraint Train", "Apply " + changes.AddedChains.Count + " chain(s), " +
                             changes.AddedConstraints.Count + " new constraint(s) and " + changes.ChangedConstraints.Count +
-                            " changed constraint(s) to " + changes.AssetPath + "?\n\nEvery instance of that prefab gets them.",
+                            " changed constraint(s) to " + changes.AssetPath + "?\n\nOn: " + ConstraintTrainPrefabs.Describe(changes) +
+                            "\n\nEvery instance of that prefab gets them. Other overrides on the avatar are left as they are.",
                             "Apply", "Cancel"))
                         return;
                     ConstraintTrainPrefabs.ApplyToSource(changes, UndoName);
@@ -133,7 +152,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.ConstraintTool, "Train: saving to the prefab failed", exception, realStart);
                 status = "Saving to the prefab failed: " + exception.Message;
             }
         }
@@ -392,6 +411,7 @@ namespace Riry.RiryTools.Editor
                 var created = new AnimationClip { frameRate = 60 };
                 WriteCurves(created, plan);
                 AssetDatabase.CreateAsset(created, path);
+                Undo.RecordObject(this, SettingsUndo);
                 clip = created;
             }
             else

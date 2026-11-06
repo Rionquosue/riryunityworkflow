@@ -10,6 +10,10 @@ namespace Riry.RiryTools.Editor
     internal sealed class AvatarUpFrontAnswers
     {
         internal bool CopySkinnedMeshRenderers;
+        // Bounds of renderers whose mesh is a different one on the target.
+        internal bool CopyChangedBounds;
+        // Unpacked prefabs placed again as child prefabs of their models (RepackPrefabs.cs).
+        internal bool RepackPrefabs;
         internal bool CopyMeshRenderers;
         internal bool UpgradeConstraints;
     }
@@ -27,6 +31,13 @@ namespace Riry.RiryTools.Editor
             internal string Text;
             internal bool Answer;
             internal Action<AvatarUpFrontAnswers, bool> Apply;
+            // Shown and applied only while this returns true (a follow-up to another question); null: always.
+            internal Func<bool> Visible;
+
+            internal bool Shown
+            {
+                get { return Visible == null || Visible(); }
+            }
         }
 
         private readonly List<string> issues = new List<string>();
@@ -51,7 +62,7 @@ namespace Riry.RiryTools.Editor
             check.minSize = new Vector2(480f, 300f);
             check.ShowModalUtility();
             if (!check.accepted) return false;
-            foreach (Question question in check.questions) question.Apply(answers, question.Answer);
+            foreach (Question question in check.questions) question.Apply(answers, question.Shown && question.Answer);
             return true;
         }
 
@@ -73,6 +84,28 @@ namespace Riry.RiryTools.Editor
                     issues.Add("VRC SDK not detected: " + string.Join(", ", skipped) + " will be skipped. Install the VRChat Avatars SDK to copy them.");
             }
 
+            // Unpacked prefabs, found through their skinned meshes.
+            var repackProblems = new List<string>();
+            List<AvatarRepack.Group> repack = AvatarRepack.Plan(map, inScope, repackProblems);
+            foreach (string problem in repackProblems) issues.Add(problem);
+            if (repack.Count > 0)
+            {
+                var models = new List<string>();
+                foreach (AvatarRepack.Group group in repack)
+                    models.Add(AnimationUtility.CalculateTransformPath(group.SourceRoot, source) + " (" + System.IO.Path.GetFileName(group.ModelPath) + ")");
+                questions.Add(new Question
+                {
+                    Text = repack.Count + " unpacked prefab(s) on the old avatar have no counterpart on the new one: " + string.Join(", ", models) +
+                        ". Place each model as a child prefab on the new avatar, with the old avatar's changes as overrides? (No: they " +
+                        "and the components on them are not copied.)",
+                    Answer = true,
+                    Apply = (answers, yes) => answers.RepackPrefabs = yes
+                });
+            }
+
+            // Objects of unpacked prefabs get their match when the prefab is placed again, so they don't count as unmatched.
+            Func<Transform, bool> repacked = t => repack.Exists(group => t == group.SourceRoot || t.IsChildOf(group.SourceRoot));
+
             // Components on objects that have no match and will not be created.
             foreach (AvatarCopyType type in AvatarCopyTypes.All)
             {
@@ -84,7 +117,7 @@ namespace Riry.RiryTools.Editor
                 {
                     foreach (Component component in source.GetComponentsInChildren(componentType, true))
                     {
-                        if (inScope(component.transform) && map.TargetOf(component.transform) == null) count++;
+                        if (inScope(component.transform) && map.TargetOf(component.transform) == null && !repacked(component.transform)) count++;
                     }
                 }
                 if (count > 0)
@@ -116,13 +149,36 @@ namespace Riry.RiryTools.Editor
             }
 
             // Questions.
+            Question skinned = null;
             if (settings.RuleEnabled(AvatarCopyTypes.SkinnedMeshRenderersRule) && Count<SkinnedMeshRenderer>(source, inScope) > 0)
-                questions.Add(new Question
+            {
+                skinned = new Question
                 {
                     Text = "Copy SkinnedMeshRenderer settings, materials and bounds? (" + Count<SkinnedMeshRenderer>(source, inScope) +
                         " found. No copies only their blendshape values.)",
                     Apply = (answers, yes) => answers.CopySkinnedMeshRenderers = yes
-                });
+                };
+                questions.Add(skinned);
+            }
+            // Bounds are only copied with the settings, so this follows that question's Yes.
+            if (skinned != null && settings.SkinnedBounds)
+            {
+                int changed = 0;
+                foreach (SkinnedMeshRenderer renderer in source.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                {
+                    Transform match = inScope(renderer.transform) ? map.TargetOf(renderer.transform) : null;
+                    var other = match != null ? match.GetComponent<SkinnedMeshRenderer>() : null;
+                    if (other != null && other.sharedMesh != renderer.sharedMesh) changed++;
+                }
+                if (changed > 0)
+                    questions.Add(new Question
+                    {
+                        Text = changed + " SkinnedMeshRenderer(s) have a different mesh on the target. Copy their old bounds anyway? " +
+                            "(No keeps the new mesh's own bounds.)",
+                        Visible = () => skinned.Answer,
+                        Apply = (answers, yes) => answers.CopyChangedBounds = yes
+                    });
+            }
             int meshCount = 0;
             foreach (MeshRenderer renderer in source.GetComponentsInChildren<MeshRenderer>(true))
             {
@@ -209,7 +265,9 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.Space(6f);
                 EditorGUILayout.LabelField("Questions", EditorStyles.boldLabel);
-                foreach (Question question in questions)
+                // Which follow-up questions show is fixed for this event, so an answer changed now shows them from the next
+                // one (the layout and the drawing then see the same controls).
+                foreach (Question question in questions.FindAll(item => item.Shown))
                 {
                     EditorGUILayout.LabelField(question.Text, EditorStyles.wordWrappedLabel);
                     question.Answer = GUILayout.Toolbar(question.Answer ? 0 : 1, new[] { "Yes", "No" }, GUILayout.Width(160f)) == 0;
@@ -235,10 +293,13 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Avatar Migration Assistant up-front check (UpFrontCheck.cs, part of Editor/AvatarMigrationAssistant.cs)
 // ============================================================================
 //
-// AvatarUpFrontAnswers       CopySkinnedMeshRenderers, CopyMeshRenderers, UpgradeConstraints.
+// AvatarUpFrontAnswers       CopySkinnedMeshRenderers, CopyChangedBounds, RepackPrefabs, CopyMeshRenderers, UpgradeConstraints.
 // AvatarUpFrontCheck (this file)
 //   Run(map, settings, ignored, out answers)  Modal; skipped when there is nothing to say. Possible issues (each with what
 //                              to do): VRChat types without the SDK; components on unmatched objects with Create missing
 //                              objects off; child prefabs with Prefabs off or a missing asset; humanoid bones out of rest
-//                              pose (RestPose) when constraints are copied. Questions (Yes/No, default No): SkinnedMeshRenderer
-//                              settings, MeshRenderers, "Upgrade to VRCConstraints on target?". Continue / Abort.
+//                              pose (RestPose) when constraints are copied; unpacked prefabs that can't be placed again.
+//                              Questions (Yes/No, default No): place unpacked prefabs as child prefabs (AvatarRepack.Plan;
+//                              default Yes), SkinnedMeshRenderer settings, old bounds for changed meshes (shown and applied
+//                              only while the settings question is Yes: Question.Visible / Shown), MeshRenderers,
+//                              "Upgrade to VRCConstraints on target?". Continue / Abort.

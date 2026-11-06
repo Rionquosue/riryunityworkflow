@@ -44,7 +44,7 @@ namespace Riry.RiryTools.Editor
             {
                 foreach (string suggestion in Suggestions(search.Trim()))
                 {
-                    if (!GUILayout.Button(suggestion, EditorStyles.miniButton)) continue;
+                    if (!GUILayout.Button(new GUIContent(suggestion, suggestion), EditorStyles.miniButton, GUILayout.MinWidth(0f))) continue;
                     Load(suggestion);
                     search = suggestion;
                     GUI.FocusControl(null);
@@ -96,7 +96,7 @@ namespace Riry.RiryTools.Editor
                 using (new EditorGUI.DisabledScope(!Usable(folder) || handEdited ||
                     (hasBlend && betterFbx && BetterFbxExporter.OptionsError(BetterFbxExporter.Options) != null)))
                 {
-                    if (GUILayout.Button("Apply", GUILayout.Width(80))) Apply();
+                    if (GUILayout.Button("Apply", GUILayout.Width(80))) { Apply(); RiryGui.ExitAfterModal(); }
                 }
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
@@ -154,7 +154,7 @@ namespace Riry.RiryTools.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.ImportPresets, "Could not save " + ImportPresetPreferences.FilePath, exception);
                 message = "Could not save " + ImportPresetPreferences.FilePath + ": " + exception.Message;
             }
             Scan();
@@ -296,7 +296,8 @@ namespace Riry.RiryTools.Editor
 //     Load(folder)          Shows a folder with the picks from its ImportPreset.md.
 //     Scan()                Finds the file types, .blend files and a hand-edited marker.
 //     Suggestions(typed)    Up to 8 folders, ranked by FuzzyMatch.Score on name or path.
-//     Apply()               ImportPresetFolderRules.Apply for the folder.
+//     Apply()               Asks first when files would be reimported (WouldChange, ConfirmApply: Undo can't revert
+//                           it), then ImportPresetFolderRules.Apply for the folder.
 //
 // ImportPresetPreferences (Editor/ImportPresets/ImportPresetPreferences.cs): Documents/RiryTools/ImportPresets/preferences.yml
 //   Tags() (created with DefaultTags, the Substance Painter PBR map names), SaveTags(tags), ValidateTag(tag).

@@ -52,6 +52,15 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private VRCExpressionParameters appendParameters;
 
         [NonSerialized] private string status;
+        // Runs an action button and puts the status it sets in the Console too: the window's status line is gone once it
+        // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
+        private void Act(Action action)
+        {
+            string before = status;
+            action();
+            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
+                RiryLog.Info(RiryLog.ConstraintTool, "Insertable prop: " + status);
+        }
         [NonSerialized] private double lastDrawn;
         private Vector2 scroll;
 
@@ -125,6 +134,17 @@ namespace Riry.RiryTools.Editor
                 status = "The controller or parameters asset is read-only.";
                 return;
             }
+            // The layers are named by the pair ID only, so another avatar of the same name may own them.
+            string id = Id;
+            if (InsertablePropRig.FindRoot(avatar.transform, id) == null && InsertablePropAnimator.HasLayers(controller, id) &&
+                !EditorUtility.DisplayDialog(UndoName, controller.name + " already has the layers of " + InsertablePropRig.RootPrefix + id +
+                    ", but " + avatar.name + " has no rig for them. Another avatar with the same name may use them, and Generate " +
+                    "would replace them for this avatar.\n\nRename this avatar, or choose another controller under Append to " +
+                    "controller, to keep both.", "Replace them", "Cancel"))
+            {
+                status = "Generate cancelled; " + controller.name + " was not changed.";
+                return;
+            }
 
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
@@ -136,12 +156,13 @@ namespace Riry.RiryTools.Editor
                 int cost = InsertablePropAnimator.SyncedCost(expressions);
                 status = "Generated " + InsertablePropRig.RootPrefix + rig.Id + " into " + controller.name + " and " + expressions.name + ": " +
                     InsertablePropRig.Report(avatar.transform, socket, rig.Id) + ". Synced parameters use " + cost + " of 256 bits." +
-                    " Move the handles in the Scene view, then Generate again to apply them.";
+                    " Move the handles in the Scene view, then Generate again to apply them. Ctrl+Z undoes the objects, layers and " +
+                    "parameters; new clip files in " + InsertablePropAnimator.ClipFolderPath(rig.Id, controller) + " stay.";
                 if (cost > 256) status += " That is over VRChat's limit, so the avatar can't be uploaded until some are removed.";
             }
             catch (Exception exception)
             {
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.ConstraintTool, "Insertable prop: Generate failed", exception, avatar);
                 status = "Generate failed: " + exception.Message;
             }
             finally
@@ -160,10 +181,12 @@ namespace Riry.RiryTools.Editor
             }
             AnimatorController controller = InsertablePropAnimator.TargetController(appendController, avatar);
             VRCExpressionParameters expressions = InsertablePropAnimator.TargetParameters(appendParameters, avatar);
-            string folder = "Assets/RiryTools/" + InsertablePropAnimator.ClipFolder + "/" + InsertablePropRig.RootPrefix + id;
+            string folder = InsertablePropAnimator.ClipFolderPath(id, controller);
             int choice = EditorUtility.DisplayDialogComplex(UndoName, "Remove " + InsertablePropRig.RootPrefix + id + " from the avatar" +
                 (controller != null ? ", " + controller.name : "") + (expressions != null ? " and " + expressions.name : "") + "?\n\n" +
-                "Its clips are in " + folder + ". Undo can't bring back deleted files.", "Remove, keep clips", "Cancel", "Remove and delete clips");
+                "Its clips are in " + folder + ". Undo can't bring back deleted files: after Ctrl+Z of \"Remove and delete clips\", " +
+                "the layers come back with their clips missing (Generate again to remake them).", "Remove, keep clips", "Cancel",
+                "Remove and delete clips");
             if (choice == 1) return;
 
             Undo.IncrementCurrentGroup();

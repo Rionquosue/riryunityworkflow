@@ -77,7 +77,10 @@ namespace Riry.RiryTools.Editor
 //
 // Called from the window
 //   RegenerateGuid.HasValidSelection()       Any asset or folder under Assets is selected.
-//   RegenerateGuid.RegenerateSelectedGuids() New GUIDs for the selection, references updated.
+//   RegenerateGuid.RegenerateSelectedGuids() New GUIDs for the selection, references updated (Assets, ProjectSettings,
+//                                            Packages, UserSettings/RiryTools). ConfirmUnusualFiles lists non-reference
+//                                            and Packages files before writing; RenameGuidNamedFiles renames
+//                                            UserSettings/RiryTools files named by an old GUID afterwards.
 //   GuidReferenceRepair.RepairSelected()          Broken References window for the selection.
 //   GuidReferenceCache.DeleteWithConfirmation()  Deletes Library/RiryTools/GuidReferenceCache.
 //

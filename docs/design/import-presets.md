@@ -91,7 +91,9 @@ choosing one sets each file type to that configuration's preset for it. Its
 enabled only for a model with embedded animations.
 
 **Apply**, in both, writes the folder's `ImportPreset.md` and applies each changed
-preset to the files of that type already in the folder, without Undo. A type set
+preset to the files of that type already in the folder, without Undo. When it
+would reimport any file, it first says how many and that Ctrl+Z can't revert
+them, with **Apply** and **Cancel**. A type set
 to **None**, or left unchanged, keeps its files' settings and nothing is
 reimported. Presets of file types not in the folder stay in `ImportPreset.md`.
 
@@ -149,7 +151,9 @@ FBX is reimported. There is one FBX, not a copy.
   Git repository it is staged with `git add --force`, and Sync commits it when on.
 - A clip the tool wrote is refreshed automatically only while unchanged. One you
   edited, or one it did not write, is kept and listed in the Console; **Extract**
-  asks before replacing those.
+  asks before replacing those. A clip extracted from another model (two models
+  with the same file name and Destination) is never replaced, and is listed with
+  that model; set another Destination for one of them.
 - Pending extractions are stored in `Library/RiryTools/ImportPresets`, so they resume
   after a script reload.
 

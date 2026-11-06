@@ -43,6 +43,15 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private bool twist = true;
 
         [NonSerialized] private string status;
+        // Runs an action button and puts the status it sets in the Console too: the window's status line is gone once it
+        // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
+        private void Act(Action action)
+        {
+            string before = status;
+            action();
+            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
+                RiryLog.Info(RiryLog.ConstraintTool, "Bezier: " + status);
+        }
         private Vector2 scroll;
 
         /// <summary>The active object becomes the chain start; the deepest selected object below it the end.</summary>
@@ -456,7 +465,22 @@ namespace Riry.RiryTools.Editor
             }
             if (locked.Count > 0)
             {
-                status = string.Join(", ", locked) + " are saved in the prefab. Remove the rig in Prefab Mode.";
+                // A count and the first few names, so a long chain cannot grow the status box over the tab.
+                const int Shown = 5;
+                status = locked.Count + " part(s) of the rig are saved in the prefab (" +
+                    string.Join(", ", locked.GetRange(0, Math.Min(Shown, locked.Count))) +
+                    (locked.Count > Shown ? " and " + (locked.Count - Shown) + " more" : "") + "). Remove the rig in Prefab Mode.";
+                return;
+            }
+
+            // The rig is found by name, so the user sees what will go before anything is deleted.
+            var names = new List<string>();
+            foreach (Transform root in roots) names.Add(root.name + " (with " + (root.GetComponentsInChildren<Transform>(true).Length - 1) + " child object(s))");
+            if (!EditorUtility.DisplayDialog("Remove Bezier rig", "Remove these objects beside " + bones[0].name + ":\n" +
+                    string.Join("\n", names) + "\n\nand " + onBones.Count + " constraint(s) on the bones whose sources are all inside them?" +
+                    "\n\nThey are found by name. Ctrl+Z brings everything back.", "Remove", "Cancel"))
+            {
+                status = "Remove cancelled; nothing was changed.";
                 return;
             }
 
@@ -485,5 +509,6 @@ namespace Riry.RiryTools.Editor
 //
 //   Mode / Target / Spacing   Stretch or KeepLength; DeformBones or MechanismChain; Existing or Even.
 //   Generate(bones)           Fits the curve (ConstraintBezierCurve.FitTo) and builds BezierRig_<start>, as one Undo step.
-//   RemoveRig(bones)          Removes it, Bezier_<start> and the bones' rig constraints, as one Undo step.
+//   RemoveRig(bones)          After a confirmation listing them (they are found by name), removes it, Bezier_<start> and
+//                             the bones' rig constraints, as one Undo step.
 //   Report(bones) / Depth     Constraint report: count and depth of the rig in the scene.

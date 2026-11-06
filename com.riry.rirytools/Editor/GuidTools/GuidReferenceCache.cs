@@ -49,8 +49,8 @@ internal static class GuidReferenceCache
 
                 Directory.Delete(cachePath, true);
 
+                // The dialog reports it; the GUID Tools log keeps the record.
                 log.Write("Cache directory deleted successfully.");
-                Debug.Log("GUID reference cache deleted:\n" + cachePath);
                 EditorUtility.DisplayDialog(
                     "Delete GUID Reference Cache",
                     "The GUID reference cache was deleted.",
@@ -59,7 +59,7 @@ internal static class GuidReferenceCache
             catch (Exception exception)
             {
                 log.Write("FAILURE: " + exception);
-                Debug.LogException(exception);
+                RiryLog.Exception(RiryLog.GuidTools, "Could not delete the GUID reference cache", exception);
                 EditorUtility.DisplayDialog(
                     "Cache Deletion Failed",
                     exception.Message + "\n\nCheck the Console and GUID Tools log for details.",

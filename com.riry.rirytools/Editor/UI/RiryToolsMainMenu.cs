@@ -55,7 +55,7 @@ namespace Riry.RiryTools.Editor
         // Space above the sub-tab strips (Constraint Tool, Import Presets), under the main tabs.
         private const float SubTabGap = 8f;
         // Space above the main tabs, so their top outline isn't hidden under the window's own tab.
-        private const float TopMargin = 2f;
+        internal const float TopMargin = 2f;
         private const float HoverTint = 0.1f;
         private static GUIStyle tabLabel;
         private static GUIStyle activeTabLabel;
@@ -219,6 +219,10 @@ namespace Riry.RiryTools.Editor
             Rect area = GUILayoutUtility.GetRect(available, rows * height, GUILayout.ExpandWidth(true));
             bool dark = EditorGUIUtility.isProSkin;
             Event current = Event.current;
+            // The rows and height are worked out from the window (the same in every event); the cells then fill the rect
+            // the layout gave, so the strip has equal margins and the sub-tabs line up with the main tabs. In Layout the
+            // rect is a placeholder, and nothing is drawn.
+            if (current.type != EventType.Layout) width = area.width / perRow;
             for (int i = 0; i < names.Length; i++)
             {
                 // Edges rounded to whole pixels: at fractional positions the outlines drew faintly or not at all.
@@ -363,7 +367,10 @@ namespace Riry.RiryTools.Editor
 //                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
 //                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip. Every tab has a TabBorder (2 px) outline
-//                            in TabSeparator, on edges rounded to whole pixels.
-//   TopMargin / SubTabGap    2 px above the main tabs; 8 px between them and a tab's sub-tabs (Constraint Tool, Import Presets).
+//                            in TabSeparator, on edges rounded to whole pixels. The rows come from the window width less
+//                            inset; the cells then fill the rect the layout gives, so the margins are equal and the sub-tabs
+//                            line up with the main tabs.
+//   TopMargin / SubTabGap    2 px above the main tabs (and Constraint Tool window's); 8 px between them and a tab's sub-tabs
+//                            (Constraint Tool, Import Presets).
 //   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.

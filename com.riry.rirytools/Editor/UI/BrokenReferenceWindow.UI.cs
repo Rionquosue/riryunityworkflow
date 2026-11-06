@@ -12,12 +12,16 @@ namespace Riry.RiryTools.Editor
         private static readonly Color Unresolved = new Color(1f, 0.35f, 0.35f);
         private static readonly Color BreakColor = new Color(1f, 0.6f, 0.1f);
         private static readonly Color RecursiveColor = new Color(1f, 0.2f, 0.2f);
+        private static GUIStyle wrappedBold;
         private const string RecursiveNote = "* Broken references are inevitable. Please run tool again after applying.";
 
         private void OnGUI()
         {
             EditorGUILayout.LabelField(reason, EditorStyles.wordWrappedLabel);
-            EditorGUILayout.LabelField("Files: " + string.Join(", ", files), EditorStyles.wordWrappedMiniLabel);
+            // Capped, so a selected folder of thousands of files cannot push Apply off the window.
+            const int ShownFiles = 10;
+            EditorGUILayout.LabelField("Files (" + files.Count + "): " + string.Join(", ", files.GetRange(0, Math.Min(ShownFiles, files.Count))) +
+                (files.Count > ShownFiles ? " and " + (files.Count - ShownFiles) + " more" : ""), EditorStyles.wordWrappedMiniLabel);
             if (GUILayout.Button("Rescan")) { Rescan(); RiryGui.ExitAfterModal(); }
             if (plan == null) return;
             if (plan.Missing.Count == 0)
@@ -39,8 +43,9 @@ namespace Riry.RiryTools.Editor
                     GUI.backgroundColor = previous;
                     string lastPath;
                     plan.LastKnownPaths.TryGetValue(missing, out lastPath);
-                    EditorGUILayout.LabelField("Missing " + missing + (lastPath != null ? " (was " + lastPath + ")" : ""),
-                        EditorStyles.boldLabel);
+                    // Wrapped, so a long last-known path is never cut off.
+                    if (wrappedBold == null) wrappedBold = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
+                    EditorGUILayout.LabelField("Missing " + missing + (lastPath != null ? " (was " + lastPath + ")" : ""), wrappedBold);
                     EditorGUILayout.LabelField("Used in " + string.Join(", ", plan.Missing[missing]), EditorStyles.wordWrappedMiniLabel);
                     if (candidates.Count == 0)
                         EditorGUILayout.LabelField("No match found. Pick the asset this reference should use.", EditorStyles.miniLabel);
@@ -65,7 +70,8 @@ namespace Riry.RiryTools.Editor
             string label = candidate.IsRestore
                 ? "Restore " + candidate.Path + " from Git (" + candidate.Commit.Substring(0, Math.Min(8, candidate.Commit.Length)) + ")"
                 : candidate.Path;
-            if (GUILayout.Toggle(on, label, EditorStyles.radioButton) && !on)
+            // MinWidth 0: a long path is cut off (full in the tooltip) instead of widening the window.
+            if (GUILayout.Toggle(on, new GUIContent(label, label), EditorStyles.radioButton, GUILayout.MinWidth(0f)) && !on)
             {
                 // A chosen restore draws its breaks, so start a fresh layout pass.
                 choices[missing] = index;
@@ -75,7 +81,12 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.LabelField(string.Join("; ", candidate.Sources), EditorStyles.wordWrappedMiniLabel);
                 if (!candidate.IsRestore || !on) return;
-                if (candidate.MissingReferences.Count == 0 && !candidate.PathTaken && candidate.GuidInUseBy == null) return;
+                // A taken path is not a break: the restore goes beside it, and its references follow it by GUID.
+                if (candidate.PathTaken)
+                    EditorGUILayout.LabelField(candidate.Path + " is taken by another file, so it is restored as " +
+                        System.IO.Path.GetFileName(candidate.Destination) + " beside it. Nothing is overwritten; references follow " +
+                        "the restored file by its GUID.", EditorStyles.wordWrappedMiniLabel);
+                if (candidate.MissingReferences.Count == 0 && candidate.GuidInUseBy == null) return;
                 // Past the second level of fixes, what this restore breaks stays broken until the next run.
                 bool recursive = plan.DepthOf(missing) >= RepairPlan.MaxFixDepth;
                 Color previous = GUI.backgroundColor;
@@ -104,11 +115,6 @@ namespace Riry.RiryTools.Editor
                             Repaint();
                         },
                         decision => candidate.MissingDecision = decision);
-                if (candidate.PathTaken)
-                    DrawBreak(candidate.Path + " is taken by another file, which restoring would overwrite.",
-                        "Restore as " + System.IO.Path.GetFileName(AssetDatabase.GenerateUniqueAssetPath(candidate.Path)),
-                        candidate.PathDecision, () => candidate.PathDecision = BreakDecision.Fix,
-                        decision => candidate.PathDecision = decision);
                 if (candidate.GuidInUseBy != null)
                     DrawBreak(candidate.GuidInUseBy + " uses this GUID now; Unity would give one of them a new GUID.",
                         null, candidate.GuidDecision, null, decision => candidate.GuidDecision = decision);
@@ -199,7 +205,9 @@ namespace Riry.RiryTools.Editor
 // RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidReferenceRepair.cs)
 //   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.
 //   RepairCandidate: TargetGuid or a restore (Commit, RepoPath), Path, Sources, and the restore's
-//     breaks: MissingReferences, PathTaken, GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept).
+//     breaks: MissingReferences and GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept). PathTaken is not
+//     a break: Destination is a free name beside the taken path (GuidReferenceRepair.FreePath), so nothing is
+//     overwritten and the references follow the restored file by its GUID; Restore refuses a destination that exists.
 // RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): levels shown per pass; a restore at the third
 //   level that breaks something is a recursive break, and its references come in the next pass.
 // RepairCache: Candidates and LastKnownPaths searched so far.

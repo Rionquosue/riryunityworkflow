@@ -22,8 +22,14 @@ namespace Riry.RiryTools.Editor
 
         private void RetargetVrcFury()
         {
+            if (includedPrefabs.Count == 0) return;
             Type type = AvatarCopyTypes.Find(VrcFuryType);
-            if (type == null || includedPrefabs.Count == 0) return;
+            if (type == null)
+            {
+                report.PossibleIssues.Add("VRCFury in the included child prefabs: " + VrcFuryType + " was not found (VRCFury is not " +
+                    "installed or was renamed), so it was not checked.");
+                return;
+            }
             Transform targetRoot = map.TargetRoot;
             foreach (Transform prefab in includedPrefabs)
             {
@@ -62,11 +68,36 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // Whether the rewrite rules have the from and to fields Repair writes (checked on a temporary element).
+        private static bool HasRuleFields(SerializedObject serialized)
+        {
+            SerializedProperty property = serialized.GetIterator();
+            while (property.Next(true))
+            {
+                if (property.name != RewriteList || !property.isArray) continue;
+                property.InsertArrayElementAtIndex(property.arraySize);
+                SerializedProperty rule = property.GetArrayElementAtIndex(property.arraySize - 1);
+                bool has = rule.FindPropertyRelative("from") != null && rule.FindPropertyRelative("to") != null;
+                property.DeleteArrayElementAtIndex(property.arraySize - 1);
+                return has;
+            }
+            return false;
+        }
+
         private void Repair(Component original, Type type, Dictionary<string, string> broken, bool fullController)
         {
             Component copy = Undo.AddComponent(original.gameObject, type);
             EditorUtility.CopySerialized(original, copy);
             var serialized = new SerializedObject(copy);
+            string where = AnimationUtility.CalculateTransformPath(original.transform, map.TargetRoot);
+            if (fullController && !HasRuleFields(serialized))
+            {
+                // Without from/to the rules would be empty: the original stays as it was, and the report says so.
+                Undo.DestroyObjectImmediate(copy);
+                report.NotCopied.Add("VRCFury on " + where + ": this VRCFury version's Path Rewrite Rules have no from/to fields, " +
+                    "so its " + broken.Count + " broken path(s) were not repaired; it was left as it was.");
+                return;
+            }
             if (fullController)
             {
                 SerializedProperty property = serialized.GetIterator();
@@ -122,6 +153,8 @@ namespace Riry.RiryTools.Editor
 // AvatarAnimationRetarget (this part)
 //   RetargetVrcFury()   In each child prefab the user included: each VF.Model.VRCFury whose clips (its own, and its
 //                       controllers') have paths not on the new avatar that the map can rebuild.
+//   HasRuleFields       Whether the rewrite rules have from/to; without them Repair removes its copy, keeps the original
+//                       and lists it under Not copied. A missing VRCFury type with child prefabs included is a Possible issue.
 //   Repair(...)         Adds a copy (CopySerialized), repairs it, removes the original (a removed-component override; the
 //                       prefab is not unpacked). Full Controller (rewriteBindings): a from/to Path Rewrite Rule per broken
 //                       path, longest first. Other features: clips and controllers duplicated and repathed.
