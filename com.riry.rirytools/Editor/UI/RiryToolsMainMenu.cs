@@ -7,6 +7,15 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
+    /// A tool window that draws parts of itself outside IMGUI (Menu Tool's radial preview): hosted in a tab, it is told
+    /// the window it is actually drawn in.
+    /// </summary>
+    internal interface IRiryHostedTool
+    {
+        EditorWindow Surface { set; }
+    }
+
+    /// <summary>
     /// Main Menu: one dockable RiryTools window with a tab per tool, in menu order.
     /// Each tab draws the tool's own window, hosted unseen, so the tools work there as
     /// they do on their own; their own menu entries are unchanged. Documentation is a
@@ -19,10 +28,11 @@ namespace Riry.RiryTools.Editor
         internal static Func<EditorWindow> CreateConstraintTrain;
         internal static Func<EditorWindow> CreateConstraintBezier;
         internal static Func<EditorWindow> CreateConstraintInsertable;
+        internal static Func<EditorWindow> CreateMenuTool;
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Tools"
+            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools"
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
@@ -43,20 +53,21 @@ namespace Riry.RiryTools.Editor
 
         // The tab strip: flat cells of equal width with no gaps, the active one lighter and bold, a
         // hover tint, wrapping onto more rows when the window is narrow (like YGDR Animator Editor's).
-        private const float TabMinWidth = 110f;
-        private const float TabMinHeight = 24f;
-        private static readonly Color DarkTab = new Color32(56, 56, 56, 255);
-        private static readonly Color DarkActiveTab = new Color32(90, 90, 90, 255);
-        private static readonly Color LightTab = new Color32(200, 200, 200, 255);
-        private static readonly Color LightActiveTab = new Color32(160, 160, 160, 255);
-        private static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.5f);
+        // Internal so other tab strips (Menu Mockup's Tabs block) look the same.
+        internal const float TabMinWidth = 110f;
+        internal const float TabMinHeight = 24f;
+        internal static readonly Color DarkTab = new Color32(56, 56, 56, 255);
+        internal static readonly Color DarkActiveTab = new Color32(90, 90, 90, 255);
+        internal static readonly Color LightTab = new Color32(200, 200, 200, 255);
+        internal static readonly Color LightActiveTab = new Color32(160, 160, 160, 255);
+        internal static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.5f);
         // Outline around every tab, in whole pixels so it draws crisply.
-        private const float TabBorder = 2f;
+        internal const float TabBorder = 2f;
         // Space above the sub-tab strips (Constraint Tool, Import Presets), under the main tabs.
-        private const float SubTabGap = 8f;
+        internal const float SubTabGap = 8f;
         // Space above the main tabs, so their top outline isn't hidden under the window's own tab.
         internal const float TopMargin = 2f;
-        private const float HoverTint = 0.1f;
+        internal const float HoverTint = 0.1f;
         private static GUIStyle tabLabel;
         private static GUIStyle activeTabLabel;
 
@@ -83,11 +94,19 @@ namespace Riry.RiryTools.Editor
             if (chosen != tab) tabScroll = Vector2.zero;
             tab = chosen;
             EditorGUILayout.Space(4f);
-            // A scroll view, so a tool taller or wider than the window stays usable.
-            using (var scroll = new EditorGUILayout.ScrollViewScope(tabScroll, GUILayout.ExpandHeight(true)))
+            // Menu Tool scrolls its own parts: its radial preview is placed over the window and cannot follow a scroll view.
+            if (Current == "Menu Tool")
             {
-                tabScroll = scroll.scrollPosition;
-                DrawTab();
+                using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true))) DrawTab();
+            }
+            else
+            {
+                // A scroll view, so a tool taller or wider than the window stays usable.
+                using (var scroll = new EditorGUILayout.ScrollViewScope(tabScroll, GUILayout.ExpandHeight(true)))
+                {
+                    tabScroll = scroll.scrollPosition;
+                    DrawTab();
+                }
             }
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -125,6 +144,14 @@ namespace Riry.RiryTools.Editor
                     EditorGUILayout.Space(SubTabGap);
                     constraintTab = TabStrip(this, constraintTab, ConstraintTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
+                    Draw(Active());
+                    break;
+                case "Menu Tool":
+                    if (CreateMenuTool == null)
+                    {
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Menu Tool").Message, MessageType.Info);
+                        break;
+                    }
                     Draw(Active());
                     break;
                 case "Import Presets":
@@ -171,6 +198,7 @@ namespace Riry.RiryTools.Editor
                     if (constraintTab == 2) return Host("Insertable prop", CreateConstraintInsertable, null);
                     return constraintTab == 1 ? Host("Bezier", CreateConstraintBezier, null) : Host("Train", CreateConstraintTrain, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
+                case "Menu Tool": return CreateMenuTool == null ? null : Host("Menu Tool", CreateMenuTool, null);
                 case "Import Presets":
                     switch (importTab)
                     {
@@ -269,9 +297,12 @@ namespace Riry.RiryTools.Editor
             return entry.Window;
         }
 
-        private static void Draw(EditorWindow window)
+        private void Draw(EditorWindow window)
         {
-            if (window != null) Call(window, "OnGUI");
+            if (window == null) return;
+            // Set every draw: hosted windows outlive a script reload, this reference does not.
+            if (window is IRiryHostedTool tool) tool.Surface = this;
+            Call(window, "OnGUI");
         }
 
         // Calls one of the hosted window's own message methods, when it has it.
@@ -346,8 +377,12 @@ namespace Riry.RiryTools.Editor
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
 //   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, Import Presets,
-//                            Tools (not Menu Mockup or Documentation). Current is the selected tab's
+//                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
+//   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK) makes the
+//                            hosted MenuToolWindow. It is drawn outside the tab scroll view (its radial preview is placed over
+//                            the window and cannot follow a scroll view).
+//   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
 //                            the tool in its own floating window (OpenPopup), not inside this one; then Reload domain
 //                            (RiryMenus.ReloadDomain) and the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked).
@@ -363,6 +398,8 @@ namespace Riry.RiryTools.Editor
 //                            OnHierarchyChange, so it behaves as when shown.
 //   OnGUI()                  The tabs, the current tool in a scroll view (tabScroll, [SerializeField], reset on a tab
 //                            change), and the Documentation link at the bottom right.
+//   Tab constants            TabMinWidth, TabMinHeight, DarkTab, DarkActiveTab, LightTab, LightActiveTab, TabSeparator,
+//                            TabBorder, HoverTint: internal, so Menu Mockup's Tabs block draws the same strip.
 //   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
 //                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
 //                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint

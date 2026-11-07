@@ -193,21 +193,36 @@ namespace Riry.RiryTools.Editor
             Color border = new Color(0.5f, 0.5f, 0.5f, 0.6f);
             element.style.borderLeftColor = element.style.borderRightColor = element.style.borderTopColor = element.style.borderBottomColor = border;
 
-            VisualElement preview = MenuMockupPreview.Create(block);
+            bool tabs = block.Type == MockupTypes.Tabs;
+            // A Tabs block's strip stays clickable: a tab shows its blocks.
+            VisualElement preview = tabs ? MenuMockupPreview.TabStrip(block, tab => ShowTab(block, tab)) : MenuMockupPreview.Create(block);
             if (preview != null)
             {
                 preview.name = MenuMockupPreview.Name;
                 preview.style.flexShrink = 0;
-                IgnorePointer(preview);
+                if (!tabs) IgnorePointer(preview);
                 element.Add(preview);
             }
-            foreach (MockupBlock child in MockupModel.Children(blocks, block.Id)) element.Add(Build(child));
+            foreach (MockupBlock child in MockupModel.Children(blocks, block.Id))
+            {
+                // In a Tabs block, only the blocks on its shown tab.
+                if (tabs && MockupTypes.TabOf(block, child) != Mathf.Clamp(block.ActiveTab, 0, MockupTypes.TabNames(block).Count - 1)) continue;
+                element.Add(Build(child));
+            }
             for (int side = 0; side < 4; side++) element.Add(Handle(element, block, side));
 
             element.RegisterCallback<PointerDownEvent>(evt => OnBlockDown(evt, element, block));
             element.RegisterCallback<GeometryChangedEvent>(evt => Slide(element, evt));
             element.AddManipulator(new ContextualMenuManipulator(evt => Menu(evt, block)));
             return element;
+        }
+
+        private void ShowTab(MockupBlock block, int tab)
+        {
+            if (block.ActiveTab == tab) return;
+            Record("Show tab");
+            block.ActiveTab = tab;
+            Rebuild();
         }
 
         private static void Style(VisualElement element, MockupBlock block)
@@ -351,7 +366,7 @@ namespace Riry.RiryTools.Editor
             {
                 Target target = TargetAt(evt.position) ?? placed;
                 Record("Move");
-                MockupModel.Place(blocks, draggedBlock, ((MockupBlock)target.Parent.userData).Id, target.Index);
+                MockupModel.PlaceShown(blocks, draggedBlock, ((MockupBlock)target.Parent.userData).Id, target.Index);
                 EndDrag();
                 Rebuild();
             }
@@ -524,7 +539,7 @@ namespace Riry.RiryTools.Editor
             Target target = TargetAt(evt.mousePosition) ?? placed ?? new Target(canvas, BlockChildren(canvas).Count);
             Record("Add " + type);
             MockupBlock block = MockupModel.Create(blocks, type);
-            MockupModel.Place(blocks, block, ((MockupBlock)target.Parent.userData).Id, target.Index);
+            MockupModel.PlaceShown(blocks, block, ((MockupBlock)target.Parent.userData).Id, target.Index);
             EndDrag();
             Rebuild();
         }
@@ -568,6 +583,23 @@ namespace Riry.RiryTools.Editor
                 block.Height = -1;
                 Rebuild();
             }, action => block.Width >= 0 || block.Height >= 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            // A block inside a Tabs block can go to another of its tabs.
+            MockupBlock owner = MockupModel.Find(blocks, block.Parent);
+            if (block.Id != 0 && owner != null && owner.Type == MockupTypes.Tabs)
+            {
+                List<string> names = MockupTypes.TabNames(owner);
+                int on = MockupTypes.TabOf(owner, block);
+                for (int i = 0; i < names.Count; i++)
+                {
+                    int tab = i;
+                    evt.menu.AppendAction("Tab/" + names[i].Replace("/", "\u2215"), action =>
+                    {
+                        Record("Move to tab");
+                        block.Tab = tab;
+                        Rebuild();
+                    }, action => tab == on ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
+                }
+            }
             // The window itself cannot be deleted.
             if (block.Id == 0) return;
             evt.menu.AppendAction("Delete", action =>
@@ -886,6 +918,60 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        /// <summary>
+        /// A Tabs block's strip, drawn like the Main Menu's tab strip (RiryToolsMainMenu.TabStrip): flat cells of equal
+        /// width, at least TabMinWidth, wrapping onto more rows, the shown tab lighter and bold, a hover tint, a TabBorder
+        /// outline. Clicking a tab calls select.
+        /// </summary>
+        internal static VisualElement TabStrip(MockupBlock block, Action<int> select)
+        {
+            bool dark = EditorGUIUtility.isProSkin;
+            List<string> names = MockupTypes.TabNames(block);
+            int active = Mathf.Clamp(block.ActiveTab, 0, names.Count - 1);
+            var strip = new VisualElement();
+            strip.style.flexDirection = FlexDirection.Row;
+            strip.style.flexWrap = Wrap.Wrap;
+            strip.style.borderLeftWidth = strip.style.borderTopWidth = RiryToolsMainMenu.TabBorder;
+            strip.style.borderLeftColor = strip.style.borderTopColor = RiryToolsMainMenu.TabSeparator;
+            strip.style.marginBottom = 4;
+            for (int i = 0; i < names.Count; i++)
+            {
+                int tab = i;
+                bool on = i == active;
+                Color color = on ? (dark ? RiryToolsMainMenu.DarkActiveTab : RiryToolsMainMenu.LightActiveTab)
+                    : (dark ? RiryToolsMainMenu.DarkTab : RiryToolsMainMenu.LightTab);
+                Color hover = dark ? color + new Color(RiryToolsMainMenu.HoverTint, RiryToolsMainMenu.HoverTint, RiryToolsMainMenu.HoverTint, 0f)
+                    : color - new Color(RiryToolsMainMenu.HoverTint / 2f, RiryToolsMainMenu.HoverTint / 2f, RiryToolsMainMenu.HoverTint / 2f, 0f);
+                var cell = new Label(names[i]);
+                cell.style.flexGrow = 1;
+                cell.style.flexBasis = RiryToolsMainMenu.TabMinWidth;
+                cell.style.minHeight = RiryToolsMainMenu.TabMinHeight;
+                cell.style.unityTextAlign = TextAnchor.MiddleCenter;
+                cell.style.whiteSpace = WhiteSpace.Normal;
+                cell.style.fontSize = 12;
+                cell.style.unityFontStyleAndWeight = on ? FontStyle.Bold : FontStyle.Normal;
+                cell.style.paddingLeft = cell.style.paddingRight = 4;
+                cell.style.paddingTop = cell.style.paddingBottom = 3;
+                cell.style.backgroundColor = color;
+                cell.style.borderRightWidth = cell.style.borderBottomWidth = RiryToolsMainMenu.TabBorder;
+                cell.style.borderRightColor = cell.style.borderBottomColor = RiryToolsMainMenu.TabSeparator;
+                if (!on)
+                {
+                    cell.RegisterCallback<PointerEnterEvent>(evt => cell.style.backgroundColor = hover);
+                    cell.RegisterCallback<PointerLeaveEvent>(evt => cell.style.backgroundColor = color);
+                }
+                cell.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    if (evt.button != 0) return;
+                    // A tab click is not the start of a block drag.
+                    evt.StopPropagation();
+                    select(tab);
+                });
+                strip.Add(cell);
+            }
+            return strip;
+        }
+
         private static List<string> Split(string text)
         {
             var parts = new List<string>();
@@ -976,7 +1062,11 @@ namespace Riry.RiryTools.Editor
 //   TargetAt(at)             Before / after a block at its edges, inside it in its middle, or in the window.
 //   OnDragUpdated / OnDragPerform  A component dragged in from Components.
 //   Append(type)             A component clicked in Components: added as the window's last block.
-//   Menu(evt, block)         Right-click: Direction, Justify, Align, Grow, Padding, Auto size, Delete (not the window).
+//   Menu(evt, block)         Right-click: Direction, Justify, Align, Grow, Padding, Auto size, Tab (a block inside a Tabs
+//                           block: the tab it is on), Delete (not the window).
+//   Tabs block               Build draws its strip (MenuMockupPreview.TabStrip, clickable) and only the blocks on its shown
+//                           tab (ActiveTab); ShowTab switches it (undoable). Drops use MockupModel.PlaceShown, so a block
+//                           dropped into a Tabs block joins its shown tab.
 //   Record(action) / OnUndoRedo()  Undo.RecordObject before each change; Undo and Redo draw the blocks again.
 //   Save(path) / Load(path, blocks, width, height) / New()  Through MockupFile; New empties the mockup and its name.
 //
@@ -984,4 +1074,5 @@ namespace Riry.RiryTools.Editor
 //                           click to add it at the bottom of Edit, or drag it into place.
 // MenuMockupTextWindow ("Edit Text"): the block's Label and Content, named per type (MockupTypes.Kind).
 // MenuMockupNameWindow ("Save Mockup"): asks for the name of a new mockup; a name problem shows after Save.
-// MenuMockupPreview        The Unity control each block type stands for.
+// MenuMockupPreview        The Unity control each block type stands for; TabStrip(block, select) a Tabs block's strip,
+//                           styled from RiryToolsMainMenu's tab constants so it matches the Main Menu.

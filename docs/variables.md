@@ -18,8 +18,8 @@ name.
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
 - **Tool names:** Attach To, AutoSync, Avatar Migration Assistant, Blendshape Sync, Clean
-  Animation Keys, Constraint Tool (subtools Train, Bezier and Insertable prop), GUID Tools, IconCap, Import Presets, Stop
-  Auto Game. Class, file, folder and
+  Animation Keys, Constraint Tool (subtools Train, Bezier and Insertable prop), GUID Tools, IconCap, Import Presets, Menu
+  Mockup, Menu Tool (tabs Parameter budget and Menu manager), Stop Auto Game. Class, file, folder and
   document names follow them; Constraint Tool's subtools are `ConstraintTrain*`, `ConstraintBezier*` and `InsertableProp*`.
 
 ## Stored settings
@@ -81,6 +81,7 @@ In the project:
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
 | `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
+| `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets other places also use, made by **Apply** before a native move; Ctrl+Z does not delete them | `MenuToolApply.Owned` |
 
 In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
 a OneDrive redirect; `~/Documents` elsewhere):
@@ -91,6 +92,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
+| `UserSettings/RiryTools/MenuTool/<MD5 of the avatar's GlobalObjectId>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`From`, `To`, `Index`, `Choice`); deleted when empty or after **Apply** | `MenuPlan.FileFor` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |
@@ -123,8 +125,12 @@ Environment variables set for Git commands:
 |---|---|---|
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
-| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll` | Constraint Tool window (Train, Bezier and Insertable prop tabs) and menu |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll` | Constraint Tool window (Train, Bezier and Insertable prop tabs), Menu Tool, and their menus |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
+| `RIRYTOOLS_GESTURE_MANAGER` | defined when `vrchat.blackstartx.gesture-manager` is 3.9.0 or newer | Compiles `Riry.RiryTools.Editor.GestureManager` (Menu Tool's radial preview); without it the Menu manager says to install Gesture Manager |
+| Assembly `Riry.RiryTools.Editor.GestureManager` | `VRChat/MenuTool/GestureManager/`; Editor only, references Gesture Manager's assemblies, `VRCSDK3A.dll` and `VRCSDKBase.dll`; needs `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_GESTURE_MANAGER` | `GestureManagerRadial`, built against Gesture Manager 3.9.9 |
+| `InternalsVisibleTo("Riry.RiryTools.Editor.GestureManager")` | `VRChat/AssemblyInfo.cs` | Lets the bridge implement `IMenuToolRadial` |
+| Type names read by Menu Tool | `VF.Model.VRCFury` (features `Toggle`, `Puppet`, `FullController`, `MoveMenuItem`, `ReorderMenuItem`, `SetIcon`, `UnlimitedParameters`), `nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller`, `...MenuItem`, `...MenuGroup`, `...MenuInstallTarget`, `...Parameters`, `...MergeAnimator`, `VRC.SDKBase.Editor.BuildPipeline.VRCBuildPipelineCallbacks` | `MenuToolScanner`, `MenuToolBudget`, `MenuToolApply`: by name, so neither VRCFury nor Modular Avatar is needed to compile |
 | `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
@@ -199,7 +205,7 @@ Other tools:
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px | Tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs |
 | `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
 | `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of the Extract button's extraction (replaced clips are recorded; new files are not removed by Undo). Automatic extractions (first import, re-export, Folder Rules Apply) leave no Undo step |
-| `RiryLog.Format` | `[RiryTools/<tool>] <message>` | Every Console line (`Editor/RiryLog.cs`); tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, IconCap, Import Presets, Menu Mockup, Project Folder, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it |
+| `RiryLog.Format` | `[RiryTools/<tool>] <message>` | Every Console line (`Editor/RiryLog.cs`); tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, IconCap, Import Presets, Menu Mockup, Menu Tool, Project Folder, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it |
 | Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
@@ -255,15 +261,20 @@ IconCap:
 | `IconCapWindow.PreviewMaxSide` / `PreviewMaxPixels` | `512` / `1024` | Largest preview on screen / in pixels |
 | `IconCapWindow.PreviewInterval` | `0.1` s | Shortest time between live preview renders |
 | `IconCapWindow.SmallThumbnail` / `LargeThumbnail` | `64` / `128` | Icon Generator source and result size (**Large previews**) |
+| `MenuToolScanner.MaxControls` | `8` | Controls per menu (VRChat's limit); more are paged by VRCFury, otherwise flagged |
+| `BudgetCount.MaxBits` / `MaxParameters` | `256` / `8192` | VRChat's synced bits and custom expression parameters |
+| `MenuToolBudget.TransportBits` | `16` | VRCFury Parameter Compressor's shared transport, in the estimate |
+| `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760` | Menu Tool's own window; the Menu manager asks for this width in the Main Menu too |
+| `MenuToolWindow.WriteLog` | `8` | Parameter writes listed under the radial |
 
 ## Menu paths
 
-Defined in `UI/RiryMenus.cs`. Constraint Tool's entries are in
+Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
 `VRChat/RiryVRChatMenus.cs` and use `RiryMenus.ConstraintTool`,
-`RiryMenus.ConstraintTrainHierarchy` and `RiryMenus.ConstraintBezierHierarchy`. The number is the priority.
+`RiryMenus.ConstraintTrainHierarchy`, `RiryMenus.ConstraintBezierHierarchy` and `RiryMenus.MenuTool`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
-  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Reload domain and the Stop Auto Game toggle (Documentation link at its bottom right; no Menu Mockup tab)
+  - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Reload domain and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
   - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
@@ -279,6 +290,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's entries are in
   - `Tools/RiryTools/Reload domain` (2058), menu key R: `EditorUtility.RequestScriptReload` (also a button on the Main Menu's Tools tab)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
   - `Tools/RiryTools/Menu Mockup` (2065): opens the Edit and Components windows
+  - `Tools/RiryTools/Menu Tool` (2066), written `M&enu Tool` so its menu key is E: the Menu Tool window (also the Main Menu's Menu Tool tab); without the VRChat SDK, the **VRCSDK not found** popup
   - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)

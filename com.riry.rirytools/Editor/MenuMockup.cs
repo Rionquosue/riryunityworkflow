@@ -83,6 +83,10 @@ namespace Riry.RiryTools.Editor
         // Set by the side handles; -1 is automatic.
         public float Width = -1;
         public float Height = -1;
+        // In a Tabs block: the tab (0 is the first) this block is on.
+        public int Tab;
+        // A Tabs block: the tab shown.
+        public int ActiveTab;
     }
 
     /// <summary>The component types, and what Label and Content mean for each (null when unused).</summary>
@@ -90,6 +94,7 @@ namespace Riry.RiryTools.Editor
     {
         internal const string Window = "Window";
         internal const string Block = "Block";
+        internal const string Tabs = "Tabs";
 
         internal sealed class Kind
         {
@@ -117,11 +122,30 @@ namespace Riry.RiryTools.Editor
             new Kind { Name = "Help Box", LabelName = "Kind (Info/Warning/Error)", ContentName = "Message", Default = "Message" },
             new Kind { Name = "Progress Bar", ContentName = "Title", Default = "Progress" },
             new Kind { Name = "Toolbar", ContentName = "Buttons (comma separated)", Default = "One, Two" },
+            new Kind { Name = Tabs, ContentName = "Tabs (comma separated)", Default = "Tab 1, Tab 2" },
             new Kind { Name = "Scroll View", LabelName = "Name" },
             new Kind { Name = "Image", ContentName = "Caption", Default = "Image" },
             new Kind { Name = "Separator" },
             new Kind { Name = "Space" }
         };
+
+        /// <summary>A Tabs block's tab names (at least one).</summary>
+        internal static List<string> TabNames(MockupBlock block)
+        {
+            var names = new List<string>();
+            foreach (string part in block.Content.Split(','))
+            {
+                if (part.Trim().Length > 0) names.Add(part.Trim());
+            }
+            if (names.Count == 0) names.Add("Tab 1");
+            return names;
+        }
+
+        /// <summary>The tab a block inside a Tabs block shows on: its Tab, kept within the tabs there are.</summary>
+        internal static int TabOf(MockupBlock tabs, MockupBlock child)
+        {
+            return Math.Max(0, Math.Min(child.Tab, TabNames(tabs).Count - 1));
+        }
 
         internal static Kind Find(string name)
         {
@@ -147,7 +171,8 @@ namespace Riry.RiryTools.Editor
             text.Append("# One block per UI element; \"blocks\" lists the blocks inside it, in order.\n");
             text.Append("# Layout follows flexbox: direction (row/column), justify, align, grow (share of\n");
             text.Append("# the free space), padding (pixels), width/height (pixels; left out = automatic).\n");
-            text.Append("# label and content are the element's texts; their meaning depends on the type.\n\n");
+            text.Append("# label and content are the element's texts; their meaning depends on the type.\n");
+            text.Append("# In a Tabs block, tab is the tab (0 is the first) a block is on; activeTab is the tab shown.\n\n");
             text.Append("name: ").Append(Quote(Path.GetFileNameWithoutExtension(path))).Append('\n');
             text.Append("width: ").Append(Number(width)).Append('\n');
             text.Append("height: ").Append(Number(height)).Append("    # aspect ")
@@ -173,6 +198,8 @@ namespace Riry.RiryTools.Editor
             if (block.Padding != 0) lines.Add("padding: " + Number(block.Padding));
             if (block.Width >= 0) lines.Add("width: " + Number(block.Width));
             if (block.Height >= 0) lines.Add("height: " + Number(block.Height));
+            if (block.Tab != 0) lines.Add("tab: " + block.Tab);
+            if (block.ActiveTab != 0) lines.Add("activeTab: " + block.ActiveTab);
             List<MockupBlock> children = MockupModel.Children(blocks, block.Id);
             if (children.Count > 0) lines.Add("blocks:");
             if (lines.Count == 0) lines.Add("type: " + block.Type);
@@ -197,6 +224,8 @@ namespace Riry.RiryTools.Editor
             if (block.Content.Length > 0) parts.Add(OneLine(block.Content));
             int count = MockupModel.Children(blocks, block.Id).Count;
             if (count > 0) parts.Add(block.Direction + " of " + count + (count == 1 ? " block" : " blocks"));
+            MockupBlock parent = MockupModel.Find(blocks, block.Parent);
+            if (parent != null && parent.Type == MockupTypes.Tabs) parts.Add("on tab \"" + MockupTypes.TabNames(parent)[MockupTypes.TabOf(parent, block)] + "\"");
             return string.Join(", ", parts);
         }
 
@@ -295,6 +324,8 @@ namespace Riry.RiryTools.Editor
                 case "padding": block.Padding = ParseFloat(value, 0); break;
                 case "width": block.Width = ParseFloat(value, -1); break;
                 case "height": block.Height = ParseFloat(value, -1); break;
+                case "tab": block.Tab = (int)ParseFloat(value, 0); break;
+                case "activeTab": block.ActiveTab = (int)ParseFloat(value, 0); break;
             }
         }
 
@@ -371,6 +402,31 @@ namespace Riry.RiryTools.Editor
             else blocks.Add(block);
         }
 
+        /// <summary>
+        /// Place for a drop in Edit, where index counts only the blocks shown: in a Tabs block those on its shown tab.
+        /// The block joins that tab; elsewhere its tab is cleared.
+        /// </summary>
+        internal static void PlaceShown(List<MockupBlock> blocks, MockupBlock block, int parent, int index)
+        {
+            MockupBlock owner = Find(blocks, parent);
+            if (owner == null || owner.Type != MockupTypes.Tabs)
+            {
+                block.Tab = 0;
+                Place(blocks, block, parent, index);
+                return;
+            }
+            int tab = Math.Max(0, Math.Min(owner.ActiveTab, MockupTypes.TabNames(owner).Count - 1));
+            List<MockupBlock> siblings = Children(blocks, parent);
+            siblings.Remove(block);
+            List<MockupBlock> shown = siblings.FindAll(child => MockupTypes.TabOf(owner, child) == tab);
+            block.Tab = tab;
+            int at;
+            if (index >= 0 && index < shown.Count) at = siblings.IndexOf(shown[index]);
+            else if (shown.Count > 0) at = siblings.IndexOf(shown[shown.Count - 1]) + 1;
+            else at = siblings.Count;
+            Place(blocks, block, parent, at);
+        }
+
         /// <summary>Removes a block and every block inside it.</summary>
         internal static void Delete(List<MockupBlock> blocks, MockupBlock block)
         {
@@ -396,8 +452,11 @@ namespace Riry.RiryTools.Editor
 // MenuMockup                Open() opens Edit and Components; Folder (Documents/RiryTools/Mockups);
 //                           AspectRatio(width, height): "16:9" when the reduced terms are 32 or less, else "1.6:1".
 // MockupBlock               One block: Id, Parent (0 = the window), Type, Label, Content, Direction, Justify,
-//                           Align, Grow, Padding, Width/Height (-1 = automatic).
-// MockupTypes               The component types (Kind: Name, LabelName, ContentName, Default).
+//                           Align, Grow, Padding, Width/Height (-1 = automatic), Tab (the tab it is on inside a Tabs
+//                           block), ActiveTab (a Tabs block's shown tab).
+// MockupTypes               The component types (Kind: Name, LabelName, ContentName, Default). Tabs: Content is the
+//                           comma-separated tab names (TabNames); TabOf keeps a block's tab within them.
 // MockupFile                Save(path, blocks, width, height) writes the annotated .yml (defaults left out);
 //                           Load(path, out width, out height) reads it back.
-// MockupModel               Children, Find, Place (move or insert at an index), Delete (with its blocks), Create.
+// MockupModel               Children, Find, Place (move or insert at an index), PlaceShown (an index among the shown
+//                           blocks: in a Tabs block, those on its shown tab, which the block joins), Delete, Create.

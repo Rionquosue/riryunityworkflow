@@ -17,6 +17,7 @@ First release of RiryTools (`com.riry.rirytools`), editor-only tools for Unity 2
 - **IconCap**: captures square PNG icons from the Scene View through an effect stack, with jobs, presets and Icon Generator assets.
 - **Import Presets**: per-folder import presets, animation extraction (with an Extract Animation window that can clean keys and extract a model automatically) and Better FBX export.
 - **Main Menu**: one dockable window with a tab per tool.
-- **Menu Mockup**: lays out an example editor window from blocks and saves it as `.yml`.
+- **Menu Mockup**: lays out an example editor window from blocks, including working tab strips (Tabs block), and saves it as `.yml`.
+- **Menu Tool** (VRChat Avatars SDK 3.7.0 or newer): traces expression menu controls to their source (descriptor, Modular Avatar, VRCFury), compares the parameter budget with VRCFury's Parameter Compressor off and on, previews the menu in Gesture Manager's radial in Edit Mode, and moves controls through the system that owns them, as one undo step.
 - **Reload domain**: reloads the script domain on demand, from the Tools menu or the Main Menu's Tools tab.
 - **Stop Auto Game**: keeps focus off the Game view when Play Mode starts.

@@ -66,6 +66,8 @@ namespace Riry.RiryTools.Editor
         internal const string ConstraintTool = "Tools/RiryTools/Constraint\u00A0&Tool";
         internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Tool/Train";
         internal const string ConstraintBezierHierarchy = "GameObject/RiryTools/Constraint Tool/Bezier";
+        // "&e" makes E its menu key (M is Main Menu's and Menu Mockup's).
+        internal const string MenuTool = "Tools/RiryTools/M&enu Tool";
 
         // =====================================================================
         // Tools dropdown
@@ -232,6 +234,9 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConstraintBezierHierarchy, false, 21)]
         private static void ConstraintBezierHierarchyItem() { VrcSdkMissing("Constraint Tool"); }
 
+        [MenuItem(MenuTool, false, 2066)]
+        private static void MenuToolItem() { VrcSdkMissing("Menu Tool"); }
+
         /// <summary>
         /// Shows VrcSdkNotFoundException's message as the "VRCSDK not found" popup. A missing SDK is a setup state, not a
         /// failure, so nothing is logged: the popup says it all.
@@ -270,6 +275,9 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Reload domain (2058)            -> ReloadDomain: EditorUtility.RequestScriptReload (also the Main Menu's Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
+//   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/MenuTool/MenuToolWindow.cs, entry in
+//                                                      Editor/VRChat/RiryVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
+//                                                      found" popup (this file)
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
 //
 // PROJECT WINDOW RIGHT-CLICK

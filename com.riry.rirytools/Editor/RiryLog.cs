@@ -21,6 +21,7 @@ namespace Riry.RiryTools.Editor
         internal const string IconCap = "IconCap";
         internal const string ImportPresets = "Import Presets";
         internal const string MenuMockup = "Menu Mockup";
+        internal const string MenuTool = "Menu Tool";
         internal const string ProjectFolder = "Project Folder";
         internal const string ScriptLoadGuard = "Script Load Guard";
         internal const string StopAutoGame = "Stop Auto Game";
@@ -75,6 +76,6 @@ namespace Riry.RiryTools.Editor
 //   Exception(tool, what, exception, context)  Debug.LogException of a RiryToolsException whose message is the prefixed
 //                                "<what>: <message>" and whose inner exception is the original, stack included.
 //   Tool constants               AttachTo, AutoSync, AvatarMigration, BlendshapeSync, CleanKeys, ConstraintTool,
-//                                GuidTools, IconCap, ImportPresets, MenuMockup, ProjectFolder, ScriptLoadGuard,
+//                                GuidTools, IconCap, ImportPresets, MenuMockup, MenuTool, ProjectFolder, ScriptLoadGuard,
 //                                StopAutoGame: the tool names every line uses.
 // RiryToolsException             The wrapper above; never thrown.

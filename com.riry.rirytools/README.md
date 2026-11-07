@@ -26,8 +26,9 @@ entry's first letter.
 
 **Tools > RiryTools > Main Menu** opens one dockable window with a tab per tool
 (AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools,
-Import Presets and Tools). Each tab draws the tool's own window, so
-it works there as it does on its own, and scrolls when the window is small. The
+Import Presets, Menu Tool and Tools). Each tab draws the tool's own window, so
+it works there as it does on its own, and scrolls when the window is small
+(Menu Tool scrolls its own lists). The
 **Tools** tab opens IconCap and Avatar Migration Assistant in their own windows, and
 has **Reload domain** and the **Stop Auto Game** toggle.
 Documentation is a link at the bottom right.
@@ -262,12 +263,75 @@ double-click to edit its text, and right-click for its layout, **Auto size** and
 **Delete**. Every change can be undone, and the aspect ratio is shown at the top.
 Mockups are saved as annotated `.yml` files in `Documents/RiryTools/Mockups`.
 
+A **Tabs** block is a tab strip drawn like the Main Menu's: its text is the tab
+names, separated by commas. Click a tab to show the blocks on it; a block dropped
+into the Tabs block goes on the tab shown, and right-click a block inside it to
+move it to another tab (**Tab**). The tab of each block and the tab shown are
+saved in the `.yml` (`tab`, `activeTab`).
+
+## Menu Tool
+
+Needs the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > RiryTools > Menu
+Tool** for its own window, or use the Main Menu's **Menu Tool** tab. Pick an
+avatar, a prefab asset, an object in Prefab Mode or one in the Hierarchy (**Use
+selection** takes the selected one). Inside an avatar, the whole avatar is
+assembled and the chosen object filters the budget; a prefab with no avatar
+descriptor shows only its own contributions, whose placement and cost depend on
+the avatar it is added to.
+
+The scan reads the descriptor's menu and parameters, Modular Avatar menu
+installers, items, groups, install targets and parameters, and VRCFury Toggles,
+Puppets and Full Controllers, then applies VRCFury's Move Menu Item, Reorder
+Menu Item and Set Icon rules as a build would. Inactive objects are included,
+EditorOnly ones are not. VRCFury renames most parameters at build, so they are
+shown as `VF_<name>` and marked **estimated**. SPS and other generators the scan
+does not model, missing menu assets, and other scripts that only reference menu
+or parameter assets are listed under **Notes**.
+
+**Parameter budget** compares VRCFury's Parameter Compressor off and on: custom
+parameters, synced, local, synced bits (of 256) and what is left (of 8,192
+parameters). Without **Compare exactly** it is an estimate: synced menu-controlled
+Ints and Floats share a 16-bit transport (Bools with **Include Bools**; two- and
+four-axis puppet parameters only with **Include Puppets**; the avatar's own
+compressor settings when it has one). **Compare exactly** builds two isolated
+copies of the avatar through the VRChat SDK's build callbacks, one without and
+one with the compressor, compares their parameters and deletes both; the avatar
+itself is not changed. The tree lists every submenu and control with its synced
+bits, darker red the more synced Floats it holds, then an **Animator only** block:
+synced parameters no menu uses, under the controllers and layers that use them.
+Double-click a row to select its source. **Shared parameters** are counted once
+(different types are shown in red), and **Content blocks** lists each control of
+the base avatar and each installed prefab or feature with its path and
+parameters, with **Select**.
+
+**Menu manager** lists the assembled menu, searchable, with each item's folder
+and the VRCFury or Modular Avatar icon of its source. Drag an item by its handle
+(≡) or right-click it for **Move to…**; moves are only written to a plan file
+(`UserSettings/RiryTools/MenuTool/`) until **Apply**. Each planned move shows its
+path before and after, the edit it needs and the sources it changes, and is
+checked for a missing source or destination, a submenu moved into itself, a menu
+over 8 controls (VRCFury pages the rest into **Next**), and an item of the same
+name. **Apply** makes every move through the system that owns it: native
+controls move between menu assets (a menu other places also use is copied to
+`Assets/RiryTools/MenuTool/` first), VRCFury items get an avatar-level Move Menu
+Item rule, Modular Avatar items are moved or their installer retargeted. When
+more than one fits, choose it in the move's list. One Ctrl+Z undoes the whole
+Apply; copied menu files stay.
+
+With Gesture Manager 3.9 or newer installed, the planned menu is shown below the
+list in Gesture Manager's radial menu, in Edit Mode and without playing any
+animation. Click through submenus, toggles, buttons and puppets; the list, the
+breadcrumbs and the radial follow each other. Under it are the parameters of the
+last control used, with their type, synced bits and current value, and the last
+parameter writes. Values stay in memory only.
+
 ## Editing the UI
 
 Every menu entry (Tools dropdown, Project and Hierarchy right-click, Git menu)
-is in `Editor/UI/RiryMenus.cs`, except Constraint Tool's, which are in
+is in `Editor/UI/RiryMenus.cs`, except Constraint Tool's and Menu Tool's, which are in
 `Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
 path or priority there to move an entry. Each window's drawing code is in
 `Editor/UI/` (Constraint Tool's in `Editor/VRChat/`: `ConstraintToolWindow.cs`, and its
-tabs `ConstraintTrainWindow.UI.cs`, `ConstraintBezierWindow.UI.cs` and `InsertablePropWindow.UI.cs`),
+tabs `ConstraintTrainWindow.UI.cs`, `ConstraintBezierWindow.UI.cs` and `InsertablePropWindow.UI.cs`;
+Menu Tool's in `Editor/VRChat/MenuTool/`),
 with a glossary of its fields and methods at the bottom of each file.
