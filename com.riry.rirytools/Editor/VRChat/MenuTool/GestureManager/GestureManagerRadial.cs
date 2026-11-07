@@ -158,6 +158,12 @@ namespace Riry.RiryTools.Editor
         public void Draw(Rect rect, EditorWindow surface)
         {
             if (radial == null || surface == null) return;
+            if (Unsupported != null)
+            {
+                Hide();
+                EditorGUI.HelpBox(new Rect(rect.x, rect.y, rect.width, 40f), Unsupported, MessageType.Warning);
+                return;
+            }
             // Mouse handling works in the OnGUI's coordinates (Rect); the element is placed in the window's root element.
             radial.Rect = rect;
             Rect screen = GUIUtility.GUIToScreenRect(rect);
@@ -212,5 +218,5 @@ namespace Riry.RiryTools.Editor
 //   Navigate / Path          RadialMenu._menuPath cleared and OpenMenu called per menu; Path reads each RadialPage._menu.
 //   Draw(rect, surface)      Rect (mouse maths) in GUI coordinates; Render places the element in the shown window's
 //                            rootVisualElement at the same spot; a watch takes it off when not drawn for 0.5 s.
-//   Unsupported              A Gesture Manager without these members: the window says so.
+//   Unsupported              A Gesture Manager without these members: Draw shows that message instead of the radial.
 //   Dispose                  Removes the element, destroys the stand-in avatar and the key object.
