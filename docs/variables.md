@@ -54,6 +54,7 @@ SessionState: until the editor quits; survives script reloads.
 | `RiryTools.StopAutoGame.GameViewWasOpen` | bool | `StopAutoGame`: a Game view existed before Play Mode |
 | `RiryTools.ScriptLoadGuard.Guarded` | newline-separated asset paths | `ScriptLoadGuard` |
 | `RiryTools.AttachTo.LastAvatar` | instance ID | `AttachToAvatarTracker`: the last avatar selected in the Hierarchy (VRCAvatarDescriptor, else humanoid Animator); fills **Target avatar** |
+| `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines | `MenuToolAvatarKeys`: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved |
 
 Window fields marked `[SerializeField]` survive script reloads while the window
 is open. Each window file lists them in its glossary.
@@ -81,7 +82,7 @@ In the project:
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
 | `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
-| `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets other places also use, made by **Apply** before a native move; Ctrl+Z does not delete them | `MenuToolApply.Owned` |
+| `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets anything else uses (another slot of the avatar, Modular Avatar or VRCFury, a package, or any other file in the project), made by **Apply** before a native move and linked into that one slot; Ctrl+Z does not delete them | `MenuToolApply.Owned` |
 
 In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
 a OneDrive redirect; `~/Documents` elsewhere):
@@ -92,7 +93,8 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
-| `UserSettings/RiryTools/MenuTool/<MD5 of the avatar's GlobalObjectId>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`From`, `To`, `Index`, `Choice`); deleted when empty or after **Apply** | `MenuPlan.FileFor` |
+| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`); deleted when empty | `MenuPlan` |
+| `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar | `MenuToolAvatarKeys` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |

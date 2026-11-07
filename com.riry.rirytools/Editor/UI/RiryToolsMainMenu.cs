@@ -13,6 +13,9 @@ namespace Riry.RiryTools.Editor
     internal interface IRiryHostedTool
     {
         EditorWindow Surface { set; }
+
+        /// <summary>Another tab is shown: take anything drawn outside IMGUI off the window.</summary>
+        void NotDrawn();
     }
 
     /// <summary>
@@ -77,6 +80,8 @@ namespace Riry.RiryTools.Editor
         // The current tab's scroll position; back to the top when the tab changes.
         [SerializeField] private Vector2 tabScroll;
         [SerializeField] private List<Hosted> hosted = new List<Hosted>();
+        // The hosted tool drawn in this GUI pass, so the others hear they were not (IRiryHostedTool.NotDrawn).
+        [NonSerialized] private EditorWindow drawn;
 
         internal static void Open()
         {
@@ -94,6 +99,7 @@ namespace Riry.RiryTools.Editor
             if (chosen != tab) tabScroll = Vector2.zero;
             tab = chosen;
             EditorGUILayout.Space(4f);
+            drawn = null;
             // Menu Tool scrolls its own parts: its radial preview is placed over the window and cannot follow a scroll view.
             if (Current == "Menu Tool")
             {
@@ -107,6 +113,10 @@ namespace Riry.RiryTools.Editor
                     tabScroll = scroll.scrollPosition;
                     DrawTab();
                 }
+            }
+            foreach (Hosted entry in hosted)
+            {
+                if (entry.Window != null && entry.Window != drawn && entry.Window is IRiryHostedTool tool) tool.NotDrawn();
             }
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -302,6 +312,7 @@ namespace Riry.RiryTools.Editor
             if (window == null) return;
             // Set every draw: hosted windows outlive a script reload, this reference does not.
             if (window is IRiryHostedTool tool) tool.Surface = this;
+            drawn = window;
             Call(window, "OnGUI");
         }
 
@@ -382,7 +393,8 @@ namespace Riry.RiryTools.Editor
 //   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK) makes the
 //                            hosted MenuToolWindow. It is drawn outside the tab scroll view (its radial preview is placed over
 //                            the window and cannot follow a scroll view).
-//   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw.
+//   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw, and NotDrawn() in a GUI
+//                            pass that drew another tab (drawn: the one drawn), so Menu Tool's radial leaves at once.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
 //                            the tool in its own floating window (OpenPopup), not inside this one; then Reload domain
 //                            (RiryMenus.ReloadDomain) and the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked).

@@ -64,6 +64,11 @@ namespace Riry.RiryTools.Editor
             internal bool Header;
         }
 
+        private const float BitsWidth = 70f;
+        private const float NoteWidth = 80f;
+        // The narrowest the name gets before a column gives way.
+        private const float MinName = 80f;
+
         private MenuScan scan;
         private int maxFloats = 1;
 
@@ -159,15 +164,23 @@ namespace Riry.RiryTools.Editor
                 EditorGUI.DrawRect(rect, Color.Lerp(new Color(0.85f, 0.35f, 0.35f, 0.25f), new Color(0.45f, 0f, 0f, 0.75f), t));
             }
             float indent = GetContentIndent(row);
-            var label = new Rect(rect.x + indent, rect.y, rect.width - indent - 150f, rect.height);
+            // The columns give way when the row is narrow or deeply nested, so the name never runs under them.
+            float free = rect.width - indent;
+            bool showNote = row.Note.Length > 0 && free > NoteWidth + BitsWidth + MinName;
+            bool showBits = row.Bits >= 0 && free > BitsWidth + MinName;
+            float columns = (showNote ? NoteWidth : 0f) + (showBits ? BitsWidth : 0f);
+            var label = new Rect(rect.x + indent, rect.y, Mathf.Max(0f, free - columns), rect.height);
             string name = row.displayName;
             if (row.Entry != null && row.Entry.Estimated) name += "  (estimated)";
             if (row.Param != null && row.Param.TypeConflict) name += "  (types differ)";
-            EditorGUI.LabelField(label, new GUIContent(name, row.Entry != null ? row.Entry.Path : null), row.Header ? EditorStyles.boldLabel : EditorStyles.label);
-            if (row.Bits >= 0)
-                EditorGUI.LabelField(new Rect(rect.xMax - 150f, rect.y, 70f, rect.height), row.Bits + (row.Bits == 1 ? " bit" : " bits"), EditorStyles.miniLabel);
-            if (row.Note.Length > 0)
-                EditorGUI.LabelField(new Rect(rect.xMax - 80f, rect.y, 80f, rect.height), new GUIContent(row.Note, row.Note), EditorStyles.miniLabel);
+            string tip = row.Entry != null ? row.Entry.Path : row.displayName;
+            if (!showBits && row.Bits >= 0) tip += "\n" + row.Bits + (row.Bits == 1 ? " bit" : " bits");
+            if (!showNote && row.Note.Length > 0) tip += "\n" + row.Note;
+            EditorGUI.LabelField(label, new GUIContent(name, tip), row.Header ? EditorStyles.boldLabel : EditorStyles.label);
+            if (showBits)
+                EditorGUI.LabelField(new Rect(rect.xMax - columns, rect.y, BitsWidth, rect.height), row.Bits + (row.Bits == 1 ? " bit" : " bits"), EditorStyles.miniLabel);
+            if (showNote)
+                EditorGUI.LabelField(new Rect(rect.xMax - NoteWidth, rect.y, NoteWidth, rect.height), new GUIContent(row.Note, row.Note), EditorStyles.miniLabel);
         }
 
         protected override void DoubleClickedItem(int id)
@@ -280,10 +293,13 @@ namespace Riry.RiryTools.Editor
             string tip = MenuToolIcons.TypeName(row.Entry.Type) + " from " + row.Entry.Origin + (row.Entry.Estimated ? " (estimated)" : "") +
                 (row.Entry.Parameters().Any() ? "\nParameters: " + string.Join(", ", row.Entry.Parameters()) : "");
             string folder = row.Entry.Parent != null && row.Entry.Parent.Parent != null ? row.Entry.Parent.Path : "Root";
-            float folderWidth = Mathf.Min(220f, rect.width * 0.35f);
-            EditorGUI.LabelField(new Rect(x, rect.y, rect.xMax - x - folderWidth - 4f, rect.height),
+            // The folder column gives way when the row is narrow or deeply nested, so the name never runs under it.
+            float free = rect.xMax - x;
+            float folderWidth = free > 260f ? Mathf.Min(220f, rect.width * 0.35f) : 0f;
+            if (folderWidth == 0f) tip += "\nIn: " + folder;
+            EditorGUI.LabelField(new Rect(x, rect.y, Mathf.Max(0f, free - folderWidth - 4f), rect.height),
                 new GUIContent(row.Entry.Name + (row.Entry.IsSubMenu ? "  ▸" : ""), tip), row.Entry.IsSubMenu ? EditorStyles.boldLabel : EditorStyles.label);
-            EditorGUI.LabelField(new Rect(rect.xMax - folderWidth, rect.y, folderWidth, rect.height), new GUIContent(folder, folder), EditorStyles.miniLabel);
+            if (folderWidth > 0f) EditorGUI.LabelField(new Rect(rect.xMax - folderWidth, rect.y, folderWidth, rect.height), new GUIContent(folder, folder), EditorStyles.miniLabel);
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)
@@ -360,11 +376,12 @@ namespace Riry.RiryTools.Editor
 // MenuToolIcons              Origin(entry): the contributing VRCFury or Modular Avatar component's own icon (the installed
 //                            package's, looked up per type); TypeName(control type).
 // BudgetTree (this file)     Parameter budget tab. Main Menu: every submenu and control with its synced bits (each parameter
-//                            once, MenuToolBudget.Bits), parameters as the note, shaded red by synced Floats (darker = more,
+//                            once, MenuToolBudget.Bits), parameters as the note (both columns give way to the name below
+//                            MinName, their values then in the tooltip), shaded red by synced Floats (darker = more,
 //                            relative to maxFloats); entries outside the target are hidden (InFilter). Animator only: per
 //                            controller and layer, synced parameters no menu uses, then those no layer uses. Double-click
 //                            selects and pings the source.
 // ManagerTree                Menu manager tab: the planned layout. Rows: drag handle (≡, only it starts a drag; none while
 //                            searching), the source's component icon, the control's icon, name, and the folder (submenu) it is
-//                            in. Search matches path and parameters. Drag onto a submenu (into it), onto a control (before it)
+//                            in (left out, and put in the tooltip, when the row is narrow). Search matches path and parameters. Drag onto a submenu (into it), onto a control (before it)
 //                            or between rows: Move(from, to, index). Right-click: ContextMove (Move to...). Selection: Clicked.

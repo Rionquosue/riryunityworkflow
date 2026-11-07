@@ -203,11 +203,20 @@ namespace Riry.RiryTools.Editor
                 if (!tabs) IgnorePointer(preview);
                 element.Add(preview);
             }
+            // A Tabs block keeps its strip on top and lays its blocks out in a content area below it, in its own direction.
+            VisualElement holder = element;
+            if (tabs)
+            {
+                holder = new VisualElement { name = TabsContentName, userData = new TabsContent(block) };
+                holder.style.flexGrow = 1;
+                StyleContent(holder, block);
+                element.Add(holder);
+            }
             foreach (MockupBlock child in MockupModel.Children(blocks, block.Id))
             {
                 // In a Tabs block, only the blocks on its shown tab.
                 if (tabs && MockupTypes.TabOf(block, child) != Mathf.Clamp(block.ActiveTab, 0, MockupTypes.TabNames(block).Count - 1)) continue;
-                element.Add(Build(child));
+                holder.Add(Build(child));
             }
             for (int side = 0; side < 4; side++) element.Add(Handle(element, block, side));
 
@@ -225,15 +234,44 @@ namespace Riry.RiryTools.Editor
             Rebuild();
         }
 
+        // Marks a Tabs block's content area: drops there go into the Tabs block, on its shown tab.
+        private sealed class TabsContent
+        {
+            internal readonly MockupBlock Block;
+
+            internal TabsContent(MockupBlock block)
+            {
+                Block = block;
+            }
+        }
+
+        private const string TabsContentName = "mockup-tabs-content";
+
+        // The block a container element holds blocks for: a block, the window, or a Tabs block's content area.
+        private static MockupBlock BlockOf(VisualElement container)
+        {
+            var content = container.userData as TabsContent;
+            return content != null ? content.Block : (MockupBlock)container.userData;
+        }
+
         private static void Style(VisualElement element, MockupBlock block)
         {
-            element.style.flexDirection = block.Direction == "row" ? FlexDirection.Row : FlexDirection.Column;
-            element.style.justifyContent = JustifyOf(block.Justify);
-            element.style.alignItems = AlignOf(block.Align);
+            // A Tabs block itself is always a column (strip, then content); its direction is its content area's.
+            bool tabs = block.Type == MockupTypes.Tabs && element.userData is MockupBlock && block.Id != 0;
+            element.style.flexDirection = tabs || block.Direction != "row" ? FlexDirection.Column : FlexDirection.Row;
+            element.style.justifyContent = tabs ? Justify.FlexStart : JustifyOf(block.Justify);
+            element.style.alignItems = tabs ? Align.Stretch : AlignOf(block.Align);
             element.style.flexGrow = block.Grow;
             element.style.paddingLeft = element.style.paddingRight = element.style.paddingTop = element.style.paddingBottom = block.Padding;
             element.style.width = block.Width >= 0 ? new StyleLength(block.Width) : new StyleLength(StyleKeyword.Auto);
             element.style.height = block.Height >= 0 ? new StyleLength(block.Height) : new StyleLength(StyleKeyword.Auto);
+        }
+
+        private static void StyleContent(VisualElement content, MockupBlock block)
+        {
+            content.style.flexDirection = block.Direction == "row" ? FlexDirection.Row : FlexDirection.Column;
+            content.style.justifyContent = JustifyOf(block.Justify);
+            content.style.alignItems = AlignOf(block.Align);
         }
 
         private static Justify JustifyOf(string value)
@@ -366,7 +404,7 @@ namespace Riry.RiryTools.Editor
             {
                 Target target = TargetAt(evt.position) ?? placed;
                 Record("Move");
-                MockupModel.PlaceShown(blocks, draggedBlock, ((MockupBlock)target.Parent.userData).Id, target.Index);
+                MockupModel.PlaceShown(blocks, draggedBlock, BlockOf(target.Parent).Id, target.Index);
                 EndDrag();
                 Rebuild();
             }
@@ -449,9 +487,10 @@ namespace Riry.RiryTools.Editor
             if (picked == null) return null;
             if (placeholder != null && (picked == placeholder || placeholder.Contains(picked))) return placed;
             VisualElement element = picked;
-            while (element != null && element != canvas && !(element.userData is MockupBlock)) element = element.parent;
+            while (element != null && element != canvas && !(element.userData is MockupBlock) && !(element.userData is TabsContent)) element = element.parent;
             if (element == null) return null;
             if (element == canvas) return new Target(canvas, IndexAt(canvas, at));
+            if (element.userData is TabsContent) return new Target(element, IndexAt(element, at));
 
             VisualElement parent = element.parent;
             Rect bounds = element.worldBound;
@@ -460,7 +499,9 @@ namespace Riry.RiryTools.Editor
             int index = BlockChildren(parent).IndexOf(element);
             if (along < 0.25f) return new Target(parent, index);
             if (along > 0.75f) return new Target(parent, index + 1);
-            return new Target(element, IndexAt(element, at));
+            // The middle of a Tabs block: its content area.
+            VisualElement inside = ((MockupBlock)element.userData).Type == MockupTypes.Tabs ? element.Q<VisualElement>(TabsContentName) ?? element : element;
+            return new Target(inside, IndexAt(inside, at));
         }
 
         private static int IndexAt(VisualElement container, Vector2 at)
@@ -539,7 +580,7 @@ namespace Riry.RiryTools.Editor
             Target target = TargetAt(evt.mousePosition) ?? placed ?? new Target(canvas, BlockChildren(canvas).Count);
             Record("Add " + type);
             MockupBlock block = MockupModel.Create(blocks, type);
-            MockupModel.PlaceShown(blocks, block, ((MockupBlock)target.Parent.userData).Id, target.Index);
+            MockupModel.PlaceShown(blocks, block, BlockOf(target.Parent).Id, target.Index);
             EndDrag();
             Rebuild();
         }
@@ -602,12 +643,22 @@ namespace Riry.RiryTools.Editor
             }
             // The window itself cannot be deleted.
             if (block.Id == 0) return;
-            evt.menu.AppendAction("Delete", action =>
+            // A Tabs block holds blocks on tabs not shown: the entry says how many go with it.
+            int inside = Descendants(block.Id);
+            string delete = block.Type == MockupTypes.Tabs && inside > 0 ? "Delete (with the " + inside + (inside == 1 ? " block" : " blocks") + " on its tabs)" : "Delete";
+            evt.menu.AppendAction(delete, action =>
             {
                 Record("Delete");
                 MockupModel.Delete(blocks, block);
                 Rebuild();
             });
+        }
+
+        private int Descendants(int id)
+        {
+            int count = 0;
+            foreach (MockupBlock child in MockupModel.Children(blocks, id)) count += 1 + Descendants(child.Id);
+            return count;
         }
 
         private void Choices(DropdownMenu menu, string path, string[] names, string[] values, string current, Action<string> set)
@@ -969,6 +1020,16 @@ namespace Riry.RiryTools.Editor
                 });
                 strip.Add(cell);
             }
+            // Every tab as tall as the tallest, as in the Main Menu's strip.
+            strip.RegisterCallback<GeometryChangedEvent>(evt =>
+            {
+                float tallest = 0f;
+                foreach (VisualElement cell in strip.Children()) tallest = Mathf.Max(tallest, cell.resolvedStyle.height);
+                foreach (VisualElement cell in strip.Children())
+                {
+                    if (Mathf.Abs(cell.resolvedStyle.minHeight.value - tallest) > 0.5f) cell.style.minHeight = tallest;
+                }
+            });
             return strip;
         }
 
@@ -1064,9 +1125,12 @@ namespace Riry.RiryTools.Editor
 //   Append(type)             A component clicked in Components: added as the window's last block.
 //   Menu(evt, block)         Right-click: Direction, Justify, Align, Grow, Padding, Auto size, Tab (a block inside a Tabs
 //                           block: the tab it is on), Delete (not the window).
-//   Tabs block               Build draws its strip (MenuMockupPreview.TabStrip, clickable) and only the blocks on its shown
-//                           tab (ActiveTab); ShowTab switches it (undoable). Drops use MockupModel.PlaceShown, so a block
-//                           dropped into a Tabs block joins its shown tab.
+//   Tabs block               Build draws its strip (MenuMockupPreview.TabStrip, clickable) on top and, below it, a content area
+//                           (TabsContentName, userData TabsContent; StyleContent gives it the block's direction, justify and
+//                           align, the block itself staying a column) with only the blocks on its shown tab (ActiveTab);
+//                           ShowTab switches it (undoable). TargetAt drops into the content area; BlockOf reads the block of
+//                           any container; MockupModel.PlaceShown puts a dropped block on the shown tab. Delete says how many
+//                           blocks a Tabs block holds on its tabs (Descendants).
 //   Record(action) / OnUndoRedo()  Undo.RecordObject before each change; Undo and Redo draw the blocks again.
 //   Save(path) / Load(path, blocks, width, height) / New()  Through MockupFile; New empties the mockup and its name.
 //
@@ -1075,4 +1139,5 @@ namespace Riry.RiryTools.Editor
 // MenuMockupTextWindow ("Edit Text"): the block's Label and Content, named per type (MockupTypes.Kind).
 // MenuMockupNameWindow ("Save Mockup"): asks for the name of a new mockup; a name problem shows after Save.
 // MenuMockupPreview        The Unity control each block type stands for; TabStrip(block, select) a Tabs block's strip,
-//                           styled from RiryToolsMainMenu's tab constants so it matches the Main Menu.
+//                           styled from RiryToolsMainMenu's tab constants so it matches the Main Menu, every tab as tall as
+//                           the tallest.

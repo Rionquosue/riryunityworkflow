@@ -39,16 +39,19 @@ namespace Riry.RiryTools.Editor
             internal string[] Parameters;
         }
 
-        internal static Report Apply(GameObject target, MenuPlan plan)
+        /// <summary>Applies every move of the plan; insideUndoStep runs last, inside the same undo step (the window clears its plan there).</summary>
+        internal static Report Apply(GameObject target, MenuPlan plan, Action insideUndoStep)
         {
             var report = new Report();
             var expected = new List<Expected>();
+            int total = plan.Moves.Count;
+            ReferenceIndex references = null;
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(UndoName);
             try
             {
-                foreach (PlannedMove move in plan.Moves)
+                foreach (PlannedMove move in plan.Moves.ToList())
                 {
                     MenuScan scan = MenuToolScanner.Scan(target);
                     var single = new MenuPlan { Moves = new List<PlannedMove> { move } };
@@ -65,13 +68,20 @@ namespace Riry.RiryTools.Editor
                     expected.Add(new Expected { Path = check.After, Type = entry.Type, Icon = entry.Icon, Parameters = entry.Parameters().ToArray() });
                     switch (check.Edit)
                     {
-                        case MoveEdit.NativeAssets: MoveNative(scan, entry, destination, move.Index, report); break;
+                        case MoveEdit.NativeAssets:
+                            // The project search, once per Apply, for every native menu of the avatar.
+                            if (references == null) references = new ReferenceIndex(new[] { scan.Root }.Concat(scan.Root.Descendants())
+                                .Where(e => e.Origin == MenuOrigin.Native).SelectMany(e => new[] { e.OwnerMenu, e.SubMenuAsset })
+                                .Concat(new[] { scan.Avatar.expressionsMenu }).Where(m => m != null).Select(m => AssetDatabase.GetAssetPath(m)));
+                            MoveNative(scan, entry, destination, move.Index, references, report);
+                            break;
                         case MoveEdit.VrcfuryRule: AddRule(scan, check.Before, check.After, move.Index, entry.Parent == destination); break;
                         case MoveEdit.MaReparent: Reparent(entry, destination, move.Index); break;
                         case MoveEdit.MaRetarget: Retarget(scan, entry, destination); break;
                     }
                     report.Applied++;
                 }
+                if (insideUndoStep != null) insideUndoStep();
             }
             finally
             {
@@ -86,7 +96,7 @@ namespace Riry.RiryTools.Editor
                 else if (found.Type != item.Type || found.Icon != item.Icon || !found.Parameters().SequenceEqual(item.Parameters))
                     report.Problems.Add(item.Path + " changed type, icon or parameters while moving.");
             }
-            RiryLog.Info(RiryLog.MenuTool, "Applied " + report.Applied + " of " + plan.Moves.Count + " menu moves to " + target.name + " (one undo step)" +
+            RiryLog.Info(RiryLog.MenuTool, "Applied " + report.Applied + " of " + total + " menu moves to " + target.name + " (one undo step)" +
                 (report.CopiedAssets.Count > 0 ? "; copied shared menus to " + string.Join(", ", report.CopiedAssets) : "") + ".", target);
             foreach (string problem in report.Problems) RiryLog.Warn(RiryLog.MenuTool, problem, target);
             return report;
@@ -94,68 +104,191 @@ namespace Riry.RiryTools.Editor
 
         // ---- Native ----------------------------------------------------------------
 
-        private static void MoveNative(MenuScan scan, MenuEntry entry, MenuEntry destination, int index, Report report)
+        private static void MoveNative(MenuScan scan, MenuEntry entry, MenuEntry destination, int at, ReferenceIndex index, Report report)
         {
-            VRCExpressionsMenu from = Owned(scan, entry.OwnerMenu, report);
-            VRCExpressionsMenu to = Owned(scan, destination.Parent == null ? scan.Avatar.expressionsMenu : destination.SubMenuAsset, report);
+            var uses = new MenuUses(scan, index);
+            // Each menu through the slot on the moved entry's path (its submenu, or the root), so a menu shown twice only
+            // changes in that one place.
+            VRCExpressionsMenu from = Owned(scan, uses, entry.Parent, report);
+            VRCExpressionsMenu to = Owned(scan, uses, destination, report);
             // Owning may have copied the source menu: find the control in the menu now used.
             VRCExpressionsMenu.Control control = from.controls[entry.OwnerIndex];
             Undo.RecordObject(from, UndoName);
             if (to != from) Undo.RecordObject(to, UndoName);
             from.controls.RemoveAt(entry.OwnerIndex);
-            if (index > to.controls.Count) index = -1;
-            if (to == from && index > entry.OwnerIndex) index--;
-            if (index < 0) to.controls.Add(control);
-            else to.controls.Insert(index, control);
+            if (at > to.controls.Count) at = -1;
+            if (to == from && at > entry.OwnerIndex) at--;
+            if (at < 0) to.controls.Add(control);
+            else to.controls.Insert(at, control);
             EditorUtility.SetDirty(from);
             EditorUtility.SetDirty(to);
         }
 
         /// <summary>
-        /// The menu this avatar can change: the menu itself, or (when other places use it too, or it is inside a package) a
-        /// copy, with every reference to it in this avatar's menu tree relinked to the copy (copying shared parents too).
+        /// The menu a native slot shows (slot: a submenu entry, or the root), made safe to change: the menu itself, or a
+        /// copy when anything else uses it (MenuUses.Shared), relinked in that slot only (its holding menu made safe the
+        /// same way first).
         /// </summary>
-        private static VRCExpressionsMenu Owned(MenuScan scan, VRCExpressionsMenu menu, Report report)
+        private static VRCExpressionsMenu Owned(MenuScan scan, MenuUses uses, MenuEntry slot, Report report)
         {
-            if (!Shared(scan, menu)) return menu;
+            VRCExpressionsMenu menu = slot.Parent == null ? scan.Avatar.expressionsMenu : slot.SubMenuAsset;
+            if (!uses.Shared(menu, slot)) return menu;
             string folder = "Assets/RiryTools/MenuTool/" + Safe(scan.Avatar.name);
             EnsureFolder(folder);
             string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + Safe(menu.name) + ".asset");
             if (!AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(menu), path)) throw new IOException("Could not copy " + menu.name + " to " + path);
             var copy = AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(path);
             report.CopiedAssets.Add(path);
-            if (scan.Avatar.expressionsMenu == menu)
+            if (slot.Parent == null)
             {
                 Undo.RecordObject(scan.Avatar, UndoName);
                 scan.Avatar.expressionsMenu = copy;
                 EditorUtility.SetDirty(scan.Avatar);
+                scan.Root.SubMenuAsset = copy;
             }
-            foreach (MenuEntry parent in scan.Root.Descendants().Where(e => e.Origin == MenuOrigin.Native && e.IsSubMenu && e.SubMenuAsset == menu && e.OwnerMenu != null).ToList())
+            else
             {
-                VRCExpressionsMenu holder = Owned(scan, parent.OwnerMenu, report);
+                VRCExpressionsMenu holder = Owned(scan, uses, slot.Parent, report);
                 Undo.RecordObject(holder, UndoName);
-                holder.controls[parent.OwnerIndex].subMenu = copy;
+                holder.controls[slot.OwnerIndex].subMenu = copy;
                 EditorUtility.SetDirty(holder);
-                parent.SubMenuAsset = copy;
+                slot.SubMenuAsset = copy;
+                slot.OwnerMenu = holder;
             }
-            foreach (MenuEntry child in scan.Root.Descendants().Where(e => e.OwnerMenu == menu)) child.OwnerMenu = copy;
-            if (scan.Root.SubMenuAsset == menu) scan.Root.SubMenuAsset = copy;
+            // The controls of this slot now live in the copy; the same menu shown elsewhere keeps the original.
+            foreach (MenuEntry child in slot.Children.Where(e => e.OwnerMenu == menu)) child.OwnerMenu = copy;
+            uses.Copied(menu, copy, slot);
             return copy;
         }
 
-        // Used by more than one menu slot of this avatar, by another avatar in an open scene, or inside a package (read-only).
-        private static bool Shared(MenuScan scan, VRCExpressionsMenu menu)
+        /// <summary>
+        /// Which project files reference each of a set of menu assets, read once per Apply: a text search for each GUID in
+        /// every .asset, .prefab and .unity file (AssetDatabase.GetDependencies for a binary-serialized one). Apply only ever
+        /// relinks to its own copies (Made), so an index taken at the start can only over-report a use, never miss one.
+        /// </summary>
+        internal sealed class ReferenceIndex
         {
-            string path = AssetDatabase.GetAssetPath(menu);
-            if (path.StartsWith("Packages/", StringComparison.Ordinal)) return true;
-            int uses = scan.Root.Descendants().Count(e => e.IsSubMenu && e.SubMenuAsset == menu) + (scan.Avatar != null && scan.Avatar.expressionsMenu == menu ? 1 : 0);
-            if (uses > 1) return true;
-            foreach (VRCAvatarDescriptor other in Object.FindObjectsOfType<VRCAvatarDescriptor>(true))
+            private readonly Dictionary<string, List<string>> byMenu = new Dictionary<string, List<string>>();
+            internal readonly HashSet<string> Made = new HashSet<string>();
+
+            internal ReferenceIndex(IEnumerable<string> menuPaths)
             {
-                if (other == scan.Avatar || other.expressionsMenu == null) continue;
-                if (Reaches(other.expressionsMenu, menu, new HashSet<VRCExpressionsMenu>())) return true;
+                Dictionary<string, string> guids = menuPaths.Where(p => !string.IsNullOrEmpty(p)).Distinct()
+                    .ToDictionary(p => p, p => AssetDatabase.AssetPathToGUID(p));
+                foreach (string path in guids.Keys) byMenu[path] = new List<string>();
+                if (guids.Count == 0) return;
+                string[] files = AssetDatabase.GetAllAssetPaths().Where(f => f.EndsWith(".asset", StringComparison.OrdinalIgnoreCase) ||
+                    f.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".unity", StringComparison.OrdinalIgnoreCase)).ToArray();
+                try
+                {
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        if (i % 200 == 0) EditorUtility.DisplayProgressBar("Menu Tool", "Looking for other uses of the menus", (float)i / files.Length);
+                        string text = Text(files[i]);
+                        string[] dependencies = text == null ? AssetDatabase.GetDependencies(files[i], false) : null;
+                        foreach (KeyValuePair<string, string> menu in guids)
+                        {
+                            if (files[i] == menu.Key) continue;
+                            if (text != null ? text.Contains(menu.Value) : dependencies.Contains(menu.Key)) byMenu[menu.Key].Add(files[i]);
+                        }
+                    }
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
             }
-            return false;
+
+            internal List<string> Referencing(string menuPath)
+            {
+                List<string> files;
+                // A menu not in the index (made during this Apply): only its own references, which are ours.
+                return byMenu.TryGetValue(menuPath, out files) ? files : new List<string>();
+            }
+
+            // The file's text when it is a text-serialized asset, else null.
+            private static string Text(string file)
+            {
+                try
+                {
+                    // Files of packages in Unity's package cache are not under the project folder: those use the fallback.
+                    string physical = Path.GetFullPath(file);
+                    if (!File.Exists(physical)) return null;
+                    using (var reader = new StreamReader(physical))
+                    {
+                        var head = new char[5];
+                        if (reader.Read(head, 0, 5) != 5 || new string(head) != "%YAML") return null;
+                        return reader.ReadToEnd();
+                    }
+                }
+                catch (IOException)
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Who else uses a menu asset: another slot of this avatar's menu, a Modular Avatar or VRCFury contribution, a
+        /// package (read-only), or any other asset, prefab or scene file in the project (a text search for its GUID, falling
+        /// back to the asset database for binary files), apart from the file holding this avatar and this avatar's own
+        /// native menus. Built once per move.
+        /// </summary>
+        private sealed class MenuUses
+        {
+            private readonly MenuScan scan;
+            private readonly HashSet<string> own = new HashSet<string>();
+            private readonly ReferenceIndex index;
+            private readonly HashSet<MenuEntry> copiedSlots = new HashSet<MenuEntry>();
+
+            internal MenuUses(MenuScan scan, ReferenceIndex index)
+            {
+                this.scan = scan;
+                this.index = index;
+                string holder = HolderFile(scan.Avatar);
+                if (holder.Length > 0) own.Add(holder);
+                foreach (MenuEntry entry in new[] { scan.Root }.Concat(scan.Root.Descendants()).Where(e => e.Origin == MenuOrigin.Native))
+                {
+                    if (entry.OwnerMenu != null) own.Add(AssetDatabase.GetAssetPath(entry.OwnerMenu));
+                    if (entry.SubMenuAsset != null) own.Add(AssetDatabase.GetAssetPath(entry.SubMenuAsset));
+                }
+                if (scan.Avatar.expressionsMenu != null) own.Add(AssetDatabase.GetAssetPath(scan.Avatar.expressionsMenu));
+            }
+
+            internal bool Shared(VRCExpressionsMenu menu, MenuEntry slot)
+            {
+                string path = AssetDatabase.GetAssetPath(menu);
+                if (path.StartsWith("Packages/", StringComparison.Ordinal)) return true;
+                // Another slot of this avatar shows the same menu (and was not given its own copy yet).
+                MenuEntry[] slots = new[] { scan.Root }.Concat(scan.Root.Descendants())
+                    .Where(e => e.IsSubMenu && (e.Parent == null ? scan.Avatar.expressionsMenu == menu : e.SubMenuAsset == menu) && !copiedSlots.Contains(e)).ToArray();
+                if (slots.Any(e => e != slot)) return true;
+                // A Modular Avatar or VRCFury contribution uses it (an installer's menu, an item's submenu, a Full Controller menu).
+                if (scan.Root.Descendants().Any(e => e.Origin != MenuOrigin.Native && (e.OwnerMenu == menu || e.SubMenuAsset == menu))) return true;
+                // Another avatar in an open scene reaches it.
+                foreach (VRCAvatarDescriptor other in Object.FindObjectsOfType<VRCAvatarDescriptor>(true))
+                {
+                    if (other == scan.Avatar || other.expressionsMenu == null) continue;
+                    if (Reaches(other.expressionsMenu, menu, new HashSet<VRCExpressionsMenu>())) return true;
+                }
+                // Any other file in the project: other prefabs, variants, scenes, menus.
+                return index.Referencing(path).Any(file => !own.Contains(file) && !index.Made.Contains(file));
+            }
+
+            internal void Copied(VRCExpressionsMenu menu, VRCExpressionsMenu copy, MenuEntry slot)
+            {
+                copiedSlots.Add(slot);
+                index.Made.Add(AssetDatabase.GetAssetPath(copy));
+            }
+
+            // The scene or prefab file the avatar is saved in ("" for an unsaved scene).
+            private static string HolderFile(VRCAvatarDescriptor avatar)
+            {
+                if (EditorUtility.IsPersistent(avatar)) return AssetDatabase.GetAssetPath(avatar);
+                UnityEditor.SceneManagement.PrefabStage stage = UnityEditor.SceneManagement.PrefabStageUtility.GetPrefabStage(avatar.gameObject);
+                if (stage != null) return stage.assetPath;
+                return avatar.gameObject.scene.path ?? "";
+            }
         }
 
         private static bool Reaches(VRCExpressionsMenu from, VRCExpressionsMenu menu, HashSet<VRCExpressionsMenu> seen)
@@ -262,9 +395,15 @@ namespace Riry.RiryTools.Editor
 //                            the move checked alone (MenuToolPlanner), then its edit; afterwards a scan verifies each moved entry's
 //                            path, type, icon and parameters (Report.Problems). Logged under Menu Tool.
 //   MoveNative               Removes the control from its menu asset and inserts it in the destination's (RecordObject both).
-//   Owned / Shared           A menu other slots of this avatar, another open avatar or a package also use is copied to
-//                            Assets/RiryTools/MenuTool/<avatar>/ (Report.CopiedAssets) and this avatar relinked (descriptor,
-//                            parent controls, copying shared parents too). Copies are files: Ctrl+Z leaves them.
+//   Owned(scan, uses, slot)  The menu one slot shows (the moved entry's submenu or the destination; the root's is the
+//                            descriptor's), copied to Assets/RiryTools/MenuTool/<avatar>/ (Report.CopiedAssets) when anything else
+//                            uses it, and relinked in that slot only (the holding menu made safe first). Copies are files:
+//                            Ctrl+Z leaves them.
+//   MenuUses.Shared          Anything else using the menu: another slot of this avatar, a Modular Avatar or VRCFury contribution,
+//                            a package, another avatar in an open scene, or any other .asset / .prefab / .unity file in the project
+//                            (ReferenceIndex, built once per Apply for every native menu of the avatar: a text search for each
+//                            GUID, AssetDatabase.GetDependencies for binary files; copies made by this Apply are Made), apart
+//                            from the file holding this avatar (HolderFile) and this avatar's own native menus.
 //   AddRule / NewRule        VRCFury on the avatar object: updates a Move Menu Item whose toPath is the entry's path, else adds
 //                            one (content set through SerializedObject); a set index adds a Reorder Menu Item.
 //   Reparent                 Undo.SetTransformParent into the destination's MA children object, then the sibling index.

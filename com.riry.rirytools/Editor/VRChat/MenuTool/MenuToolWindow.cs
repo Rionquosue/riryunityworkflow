@@ -30,6 +30,7 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private int tab;
         [SerializeField] private Vector2 budgetScroll;
         [SerializeField] private Vector2 planScroll;
+        [SerializeField] private Vector2 managerScroll;
         [SerializeField] private bool includeBools;
         [SerializeField] private bool includePuppets;
         [SerializeField] private bool showShared = true;
@@ -40,7 +41,10 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private TreeViewState managerState = new TreeViewState();
 
         [NonSerialized] private MenuScan scan;
-        [NonSerialized] private MenuPlan plan;
+        // Serialized so Ctrl+Z puts a plan change back (ChangePlan records it); savedPlan is the file's content as last read
+        // or written, so an undo only writes the file when it changed the plan.
+        [SerializeField] private MenuPlan plan = new MenuPlan();
+        [NonSerialized] private string savedPlan = "";
         [NonSerialized] private MenuEntry planned;
         [NonSerialized] private List<MoveCheck> checks = new List<MoveCheck>();
         [NonSerialized] private MenuToolBudget.Result exact;
@@ -57,6 +61,8 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private IMenuToolRadial radial;
         [NonSerialized] private MenuToolPreviewMenus preview;
         [NonSerialized] private string shownPath = "";
+        // The Menu manager's scroll view on screen, from the last Repaint: the radial is only drawn while wholly inside it.
+        [NonSerialized] private Rect managerView;
         [NonSerialized] private MenuEntry lastClicked;
         [NonSerialized] private readonly List<string> writes = new List<string>();
         // The window it is drawn in: the Main Menu when hosted there, else itself.
@@ -89,13 +95,30 @@ namespace Riry.RiryTools.Editor
 
         private void OnEnable()
         {
-            Undo.undoRedoPerformed += MarkStale;
+            Undo.undoRedoPerformed += OnUndoRedo;
         }
 
         private void OnDisable()
         {
-            Undo.undoRedoPerformed -= MarkStale;
+            Undo.undoRedoPerformed -= OnUndoRedo;
             DisposePreview();
+        }
+
+        // An undone or redone plan change (or Apply) is written back to its avatar's plan file.
+        private void OnUndoRedo()
+        {
+            if (plan != null && !string.IsNullOrEmpty(plan.Key) && plan.Json != savedPlan)
+            {
+                plan.Save();
+                savedPlan = plan.Json;
+            }
+            MarkStale();
+        }
+
+        // Hosted in the Main Menu and another tab is shown: take the radial off the window.
+        public void NotDrawn()
+        {
+            if (radial != null) radial.Hide();
         }
 
         private void OnHierarchyChange() { MarkStale(); }
@@ -148,6 +171,7 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             plan = MenuPlan.Load(PlanRoot);
+            savedPlan = plan.Json;
             budgetTree.Set(scan);
             Replan();
         }
@@ -173,10 +197,27 @@ namespace Riry.RiryTools.Editor
 
         private void AddMove(string from, string to, int index)
         {
-            plan.Moves.Add(new PlannedMove { From = from, To = to ?? "", Index = index });
-            plan.Save(PlanRoot);
+            ChangePlan("Plan a move", moves => moves.Add(new PlannedMove { From = from, To = to ?? "", Index = index }));
+        }
+
+        /// <summary>
+        /// Every plan change: the plan file is read again first (another Menu Tool view may have changed it), the window is
+        /// recorded for Undo, the change made and the file written; the layout is rebuilt on the next Layout pass.
+        /// </summary>
+        private void ChangePlan(string undoName, Action<List<PlannedMove>> change)
+        {
+            plan = MenuPlan.Load(PlanRoot);
+            Undo.RecordObject(this, "Menu Tool: " + undoName);
+            change(plan.Moves);
+            plan.Save();
+            savedPlan = plan.Json;
             replan = true;
             Shown.Repaint();
+        }
+
+        private static bool Same(PlannedMove a, PlannedMove b)
+        {
+            return a.From == b.From && a.To == b.To && a.Index == b.Index;
         }
 
         private void MoveToMenu(MenuEntry entry)
@@ -301,7 +342,7 @@ namespace Riry.RiryTools.Editor
                     }
                 }
                 GUILayout.FlexibleSpace();
-                using (new EditorGUI.DisabledScope(scan.Avatar == null || !scan.VrcfuryInstalled))
+                using (new EditorGUI.DisabledScope(scan.Avatar == null || !scan.VrcfuryInstalled || EditorApplication.isPlayingOrWillChangePlaymode))
                 {
                     if (GUILayout.Button(new GUIContent("Compare exactly", "Builds two isolated copies of the avatar, without and with the Parameter Compressor, " +
                         "through the VRChat SDK's build callbacks, compares their parameters, then deletes both. The avatar is not changed."), GUILayout.Width(130f)))
@@ -419,10 +460,14 @@ namespace Riry.RiryTools.Editor
             float treeHeight = Mathf.Clamp(Shown.position.height * 0.28f, 140f, 420f);
             managerTree.OnGUI(GUILayoutUtility.GetRect(0f, 100000f, treeHeight, treeHeight));
             EditorGUILayout.LabelField("Drag a row by its ≡ handle, or right-click it for Move to…. Changes are planned until Apply.", EditorStyles.centeredGreyMiniLabel);
+            // The rest scrolls, so a short window (the Main Menu) still reaches the radial and the last clicked control.
+            managerScroll = EditorGUILayout.BeginScrollView(managerScroll);
             DrawPlan();
             DrawBreadcrumbs();
             DrawRadial();
             DrawBits();
+            EditorGUILayout.EndScrollView();
+            if (Event.current.type == EventType.Repaint) managerView = GUIUtility.GUIToScreenRect(GUILayoutUtility.GetLastRect());
         }
 
         private void DrawPlan()
@@ -431,7 +476,7 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Planned moves (" + plan.Moves.Count + ")", EditorStyles.boldLabel);
             float height = Mathf.Min(160f, 44f * checks.Count);
             planScroll = EditorGUILayout.BeginScrollView(planScroll, GUILayout.Height(height));
-            int remove = -1;
+            PlannedMove remove = null;
             for (int i = 0; i < checks.Count; i++)
             {
                 MoveCheck check = checks[i];
@@ -450,24 +495,30 @@ namespace Riry.RiryTools.Editor
                         int picked = EditorGUILayout.Popup(current, options.ToArray(), GUILayout.Width(200f));
                         if (picked != current && !(unchosen && picked == 0))
                         {
-                            check.Move.Choice = check.Candidates[unchosen ? picked - 1 : picked].ToString();
-                            plan.Save(PlanRoot);
-                            replan = true;
+                            string choice = check.Candidates[unchosen ? picked - 1 : picked].ToString();
+                            PlannedMove chosen = check.Move;
+                            ChangePlan("Choose a source", moves =>
+                            {
+                                PlannedMove move = moves.FirstOrDefault(m => Same(m, chosen));
+                                if (move != null) move.Choice = choice;
+                            });
                         }
                     }
                     else EditorGUILayout.LabelField(MenuToolPlanner.Describe(check.Edit), EditorStyles.miniLabel, GUILayout.Width(200f));
-                    if (GUILayout.Button(new GUIContent("✕", "Remove this move from the plan."), GUILayout.Width(24f))) remove = i;
+                    if (GUILayout.Button(new GUIContent("✕", "Remove this move from the plan."), GUILayout.Width(24f))) remove = check.Move;
                 }
                 foreach (string error in check.Errors) EditorGUILayout.LabelField("    " + error, ErrorStyle);
                 foreach (string warning in check.Warnings) EditorGUILayout.LabelField("    " + warning, EditorStyles.wordWrappedMiniLabel);
             }
             EditorGUILayout.EndScrollView();
-            if (remove >= 0)
+            if (remove != null)
             {
-                plan.Moves.RemoveAt(remove);
-                plan.Save(PlanRoot);
-                replan = true;
-                Shown.Repaint();
+                PlannedMove removed = remove;
+                ChangePlan("Remove a planned move", moves =>
+                {
+                    int at = moves.FindIndex(m => Same(m, removed));
+                    if (at >= 0) moves.RemoveAt(at);
+                });
             }
         }
 
@@ -518,6 +569,21 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             if (radial == null) return;
+            // The radial floats over the window and cannot be clipped: shown only when it fits and is wholly in view.
+            Rect onScreen = GUIUtility.GUIToScreenRect(square);
+            bool fits = area.width >= RadialSize;
+            bool inView = managerView.width > 0f && onScreen.xMin >= managerView.xMin - 0.5f && onScreen.xMax <= managerView.xMax + 0.5f &&
+                onScreen.yMin >= managerView.yMin - 0.5f && onScreen.yMax <= managerView.yMax + 0.5f;
+            if (Event.current.type != EventType.Layout && (!fits || !inView))
+            {
+                radial.Hide();
+                if (Event.current.type == EventType.Repaint)
+                {
+                    EditorGUI.DrawRect(area, new Color(0f, 0f, 0f, 0.12f));
+                    GUI.Label(area, fits ? "Scroll to show the whole radial menu." : "Widen the window to show the radial menu.", EditorStyles.centeredGreyMiniLabel);
+                }
+                return;
+            }
             // Placed and fed mouse events in every event but Layout, whose rects are placeholders.
             if (Event.current.type != EventType.Layout) radial.Draw(square, Shown);
             // Follow the radial: a submenu opened there is selected in the list and the breadcrumbs.
@@ -598,14 +664,13 @@ namespace Riry.RiryTools.Editor
 
         private void Discard()
         {
-            if (!EditorUtility.DisplayDialog(Title, "Discard the " + plan.Moves.Count + " planned moves? Nothing has been applied yet.", "Discard", "Cancel"))
+            if (!EditorUtility.DisplayDialog(Title, "Discard the " + plan.Moves.Count + " planned moves? Nothing has been applied yet; Ctrl+Z brings them back.",
+                "Discard", "Cancel"))
             {
                 RiryGui.ExitAfterModal();
                 return;
             }
-            plan.Moves.Clear();
-            plan.Save(PlanRoot);
-            replan = true;
+            ChangePlan("Discard plan", moves => moves.Clear());
             RiryGui.ExitAfterModal();
         }
 
@@ -619,9 +684,14 @@ namespace Riry.RiryTools.Editor
                 RiryGui.ExitAfterModal();
                 return;
             }
-            MenuToolApply.Report report = MenuToolApply.Apply(target, plan);
-            plan.Moves.Clear();
-            plan.Save(PlanRoot);
+            // The plan is cleared inside Apply's undo step, so undoing Apply brings the plan back too.
+            MenuToolApply.Report report = MenuToolApply.Apply(target, plan, () =>
+            {
+                Undo.RecordObject(this, "Apply menu layout");
+                plan.Moves.Clear();
+            });
+            plan.Save();
+            savedPlan = plan.Json;
             MarkStale();
             if (report.Problems.Count > 0)
                 EditorUtility.DisplayDialog(Title, "Applied " + report.Applied + " moves. Check these:\n\n" + string.Join("\n", report.Problems.Take(12)), "OK");
@@ -649,11 +719,19 @@ namespace Riry.RiryTools.Editor
 //                            compressor's when it has one); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
 //                            parameters (types differ in red); Content blocks (each control's path, bindings, Select);
 //                            Notes.
-//   Menu manager tab         Search, Discard plan, Apply (disabled until every move checks out); ManagerTree; DrawPlan
+//   Menu manager tab         Search, Discard plan, Apply (disabled until every move checks out); ManagerTree; then, in a scroll
+//                            view (managerScroll; managerView its screen rect), DrawPlan
 //                            (before -> after, edit, choice popup when several sources fit, errors, warnings, remove);
-//                            DrawBreadcrumbs; DrawRadial (Gesture Manager, or how to get it); DrawBits (last clicked control's
+//                            DrawBreadcrumbs; DrawRadial (Gesture Manager, or how to get it; only when it fits and is wholly in
+//                            view, else a grey box saying to scroll or widen); DrawBits (last clicked control's
 //                            parameters: type, sync, bits, live value; the last WriteLog writes).
-//   AddMove / MoveToMenu     A planned move from drag and drop or the Move to... context menu, saved to the plan JSON.
+//   plan / savedPlan         The plan ([SerializeField], so Ctrl+Z restores it) and the file's content as last read or written;
+//                            OnUndoRedo writes the plan back to its avatar's file when an undo or redo changed it.
+//   ChangePlan(name, change) Every plan change (plan a move, choose a source, remove one, Discard): reloads the file (another
+//                            view may have changed it), records the window for Undo, changes, saves.
+//   NotDrawn()               IRiryHostedTool: the Main Menu shows another tab; the radial is taken off.
+//   AddMove / MoveToMenu     A planned move from drag and drop or the Move to... context menu (ChangePlan).
 //   Clicked / Navigate / OnWritten  List selection opens that submenu in the radial; the radial's submenu selects the list
 //                            row; a write marks the control that made it as last clicked.
-//   ApplyPlan / Discard      Confirmed; Apply runs MenuToolApply (one undo step) and clears the plan; problems are shown.
+//   ApplyPlan / Discard      Confirmed. Apply runs MenuToolApply (one undo step, the plan cleared inside it, so undoing Apply
+//                            restores the plan); problems are shown. Discard can be undone.

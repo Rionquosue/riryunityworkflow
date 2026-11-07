@@ -266,7 +266,8 @@ Mockups are saved as annotated `.yml` files in `Documents/RiryTools/Mockups`.
 A **Tabs** block is a tab strip drawn like the Main Menu's: its text is the tab
 names, separated by commas. Click a tab to show the blocks on it; a block dropped
 into the Tabs block goes on the tab shown, and right-click a block inside it to
-move it to another tab (**Tab**). The tab of each block and the tab shown are
+move it to another tab (**Tab**). The strip stays on top whatever the block's
+direction, and **Delete** says how many blocks its tabs hold. The tab of each block and the tab shown are
 saved in the `.yml` (`tab`, `activeTab`).
 
 ## Menu Tool
@@ -295,8 +296,9 @@ Ints and Floats share a 16-bit transport (Bools with **Include Bools**; two- and
 four-axis puppet parameters only with **Include Puppets**; the avatar's own
 compressor settings when it has one). **Compare exactly** builds two isolated
 copies of the avatar through the VRChat SDK's build callbacks, one without and
-one with the compressor, compares their parameters and deletes both; the avatar
-itself is not changed. The tree lists every submenu and control with its synced
+one with the compressor, compares their parameters and deletes both, in a
+temporary scene that is closed unsaved; the avatar itself is not changed. It is
+not available in Play Mode. The tree lists every submenu and control with its synced
 bits, darker red the more synced Floats it holds, then an **Animator only** block:
 synced parameters no menu uses, under the controllers and layers that use them.
 Double-click a row to select its source. **Shared parameters** are counted once
@@ -307,21 +309,26 @@ parameters, with **Select**.
 **Menu manager** lists the assembled menu, searchable, with each item's folder
 and the VRCFury or Modular Avatar icon of its source. Drag an item by its handle
 (≡) or right-click it for **Move to…**; moves are only written to a plan file
-(`UserSettings/RiryTools/MenuTool/`) until **Apply**. Each planned move shows its
+(`UserSettings/RiryTools/MenuTool/`, one per avatar) until **Apply**. Every plan
+change, **Discard plan** included, can be undone with Ctrl+Z. Each planned move shows its
 path before and after, the edit it needs and the sources it changes, and is
 checked for a missing source or destination, a submenu moved into itself, a menu
 over 8 controls (VRCFury pages the rest into **Next**), and an item of the same
 name. **Apply** makes every move through the system that owns it: native
-controls move between menu assets (a menu other places also use is copied to
-`Assets/RiryTools/MenuTool/` first), VRCFury items get an avatar-level Move Menu
-Item rule, Modular Avatar items are moved or their installer retargeted. When
-more than one fits, choose it in the move's list. One Ctrl+Z undoes the whole
-Apply; copied menu files stay.
+controls move between menu assets, VRCFury items get an avatar-level Move Menu
+Item rule, Modular Avatar items are moved or their installer retargeted. A menu
+asset anything else uses (another place in the avatar's menu, Modular Avatar or
+VRCFury, a package, or any other prefab, scene or asset in the project: Apply
+searches the project once) is copied to `Assets/RiryTools/MenuTool/` first and
+the copy is linked into that one place. When more than one edit fits, choose it
+in the move's list. One Ctrl+Z undoes the whole Apply and brings the plan back;
+copied menu files stay.
 
 With Gesture Manager 3.9 or newer installed, the planned menu is shown below the
 list in Gesture Manager's radial menu, in Edit Mode and without playing any
 animation. Click through submenus, toggles, buttons and puppets; the list, the
-breadcrumbs and the radial follow each other. Under it are the parameters of the
+breadcrumbs and the radial follow each other. The part below the list scrolls;
+the radial shows while it is wholly in view and the window is wide enough. Under it are the parameters of the
 last control used, with their type, synced bits and current value, and the last
 parameter writes. Values stay in memory only.
 

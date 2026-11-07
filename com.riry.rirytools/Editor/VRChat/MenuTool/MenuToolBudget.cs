@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
@@ -120,19 +122,30 @@ namespace Riry.RiryTools.Editor
             Type compressor = MenuToolScanner.TypeNamed(CompressorType);
             Type callbacks = MenuToolScanner.TypeNamed(CallbacksType);
             MethodInfo preprocess = callbacks != null ? callbacks.GetMethod("OnPreprocessAvatar", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(GameObject) }, null) : null;
-            if (avatar == null) result.Unavailable = "No avatar descriptor.";
+            if (EditorApplication.isPlayingOrWillChangePlaymode) result.Unavailable = "Not available in Play Mode.";
+            else if (avatar == null) result.Unavailable = "No avatar descriptor.";
             else if (vrcfury == null || compressor == null) result.Unavailable = "VRCFury is not installed.";
             else if (preprocess == null) result.Unavailable = "The VRChat SDK's build callbacks were not found.";
             if (result.Unavailable.Length > 0) return result;
 
             GameObject placed = null;
             GameObject source = avatar.gameObject;
+            Scene active = SceneManager.GetActiveScene();
+            Scene temporary = default;
             try
             {
+                // The copies are built in a temporary scene, closed unsaved afterwards, so no open scene is marked changed.
+                // Unity makes no additive untitled scene while another untitled one is open: then the active scene is used.
+                bool untitledOpen = Enumerable.Range(0, SceneManager.sceneCount).Any(i => string.IsNullOrEmpty(SceneManager.GetSceneAt(i).path));
+                if (!untitledOpen)
+                {
+                    temporary = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                    SceneManager.SetActiveScene(temporary);
+                }
                 if (EditorUtility.IsPersistent(source))
                 {
-                    // A prefab asset: build from a temporary scene instance.
-                    placed = (GameObject)PrefabUtility.InstantiatePrefab(source);
+                    // A prefab asset: build from a temporary instance.
+                    placed = (GameObject)PrefabUtility.InstantiatePrefab(source, SceneManager.GetActiveScene());
                     source = placed;
                 }
                 EditorUtility.DisplayProgressBar("Menu Tool", "Building " + avatar.name + " without the Parameter Compressor", 0.2f);
@@ -161,8 +174,30 @@ namespace Riry.RiryTools.Editor
             }
             finally
             {
-                if (placed != null) Object.DestroyImmediate(placed);
+                if (placed != null)
+                {
+                    ForgetUndo(placed);
+                    Object.DestroyImmediate(placed);
+                }
+                if (temporary.IsValid())
+                {
+                    if (active.IsValid()) SceneManager.SetActiveScene(active);
+                    EditorSceneManager.CloseScene(temporary, true);
+                }
                 EditorUtility.ClearProgressBar();
+            }
+        }
+
+        // Build tools may record undo steps on a copy; they would point at deleted objects, so they are cleared first.
+        private static void ForgetUndo(GameObject root)
+        {
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+            {
+                foreach (Component component in transform.GetComponents<Component>())
+                {
+                    if (component != null) Undo.ClearUndo(component);
+                }
+                Undo.ClearUndo(transform.gameObject);
             }
         }
 
@@ -208,7 +243,11 @@ namespace Riry.RiryTools.Editor
             }
             finally
             {
-                if (clone != null) Object.DestroyImmediate(clone);
+                if (clone != null)
+                {
+                    ForgetUndo(clone);
+                    Object.DestroyImmediate(clone);
+                }
             }
         }
 
@@ -251,7 +290,9 @@ namespace Riry.RiryTools.Editor
 //                            parameters only with Include Puppets.
 //   Exact(avatar, ...)       Two isolated copies (Build): compressor removed / added (VRCFury UnlimitedParameters set through
 //                            SerializedObject), built by VRCBuildPipelineCallbacks.OnPreprocessAvatar (by reflection), parameters
-//                            read, copies deleted. Compressed: synced without the compressor, not synced with it.
+//                            read, copies deleted (their undo records cleared first, ForgetUndo), all in a temporary additive
+//                            scene closed unsaved (the active scene when an untitled scene is open). Not in Play Mode.
+//                            Compressed: synced without the compressor, not synced with it.
 //                            Unavailable says why it could not run. A prefab asset is placed in the scene for it, then removed.
 //   Bits / SyncedFloats      Per menu entry (its subtree), each parameter once.
 //   AnimatorOnly             Synced parameters no menu control uses.
