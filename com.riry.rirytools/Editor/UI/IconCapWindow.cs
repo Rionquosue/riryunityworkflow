@@ -47,11 +47,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private int jobChoice;
         [SerializeField] private string presetName = "";
         [SerializeField] private bool foldEffects = true;
-        [SerializeField] private bool foldSession = true;
         [SerializeField] private bool foldObjects = true;
         [SerializeField] private bool foldCamera;
         [SerializeField] private bool foldBackground;
-        [SerializeField] private bool foldOptions = true;
         [SerializeField] private bool foldRestore;
         [SerializeField] private bool foldGenerator;
         [SerializeField] private bool foldGeneratorStack;
@@ -104,7 +102,7 @@ namespace Riry.RiryTools.Editor
             public string LastSavedPath, ExportFolder, PresetName;
             public IconCapEntry LastCapture, LastSave;
             public IconGenerator ThroughGenerator, Generator;
-            public bool LargePreviews, FoldEffects, FoldSession, FoldObjects, FoldCamera, FoldBackground, FoldOptions, FoldRestore,
+            public bool LargePreviews, FoldEffects, FoldObjects, FoldCamera, FoldBackground, FoldRestore,
                 FoldGenerator, FoldGeneratorStack, FoldJobs;
             public Vector2 Scroll;
         }
@@ -118,8 +116,8 @@ namespace Riry.RiryTools.Editor
             {
                 Session = session, Latest = latest, JobChoice = jobChoice, LastSavedPath = lastSavedPath, ExportFolder = exportFolder,
                 PresetName = presetName, LastCapture = lastCapture, LastSave = lastSave, ThroughGenerator = throughGenerator,
-                Generator = generator, LargePreviews = largePreviews, FoldEffects = foldEffects, FoldSession = foldSession,
-                FoldObjects = foldObjects, FoldCamera = foldCamera, FoldBackground = foldBackground, FoldOptions = foldOptions,
+                Generator = generator, LargePreviews = largePreviews, FoldEffects = foldEffects,
+                FoldObjects = foldObjects, FoldCamera = foldCamera, FoldBackground = foldBackground,
                 FoldRestore = foldRestore, FoldGenerator = foldGenerator, FoldGeneratorStack = foldGeneratorStack, FoldJobs = foldJobs,
                 Scroll = scroll
             };
@@ -141,11 +139,9 @@ namespace Riry.RiryTools.Editor
                 generator = kept.Generator;
                 largePreviews = kept.LargePreviews;
                 foldEffects = kept.FoldEffects;
-                foldSession = kept.FoldSession;
                 foldObjects = kept.FoldObjects;
                 foldCamera = kept.FoldCamera;
                 foldBackground = kept.FoldBackground;
-                foldOptions = kept.FoldOptions;
                 foldRestore = kept.FoldRestore;
                 foldGenerator = kept.FoldGenerator;
                 foldGeneratorStack = kept.FoldGeneratorStack;
@@ -339,7 +335,6 @@ namespace Riry.RiryTools.Editor
             DrawObjects();
             DrawCamera();
             DrawBackground();
-            DrawOptions();
             DrawRestore();
             DrawGenerator();
             DrawJobs();
@@ -415,82 +410,6 @@ namespace Riry.RiryTools.Editor
                         EditorApplication.delayCall += SaveAgain;
                 }
             }
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                foldSession = EditorGUILayout.Foldout(foldSession, "This session", true);
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(session.Count + (session.Count == 1 ? " icon" : " icons"), EditorStyles.miniLabel);
-            }
-            if (!foldSession) return;
-            EditorGUI.indentLevel++;
-            for (int i = 0; i < session.Count; i++)
-            {
-                IconCapEntry entry = session[i];
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    GUILayout.Space(EditorGUI.indentLevel * 15f);
-                    // MinWidth 0: a long name is cut off (full in the tooltip) instead of pushing Export and Remove out of view.
-                    string rowName = entry.FileName + (entry.Exported ? "" : " (not exported)");
-                    if (GUILayout.Button(new GUIContent(rowName,
-                            rowName + "\nMoves the Scene View camera back to this capture and reselects its objects."), EditorStyles.label,
-                            GUILayout.MinWidth(0f)))
-                    {
-                        RestoreCamera(entry);
-                        Reselect(entry);
-                    }
-                    GUILayout.FlexibleSpace();
-                    int index = i;
-                    if (GUILayout.Button(new GUIContent("Export", "Saves this image to the export folder."), EditorStyles.miniButton, GUILayout.Width(55f)))
-                        EditorApplication.delayCall += () => Export(index);
-                    using (new EditorGUI.DisabledScope(entry.Exported))
-                    {
-                        if (GUILayout.Button("Remove", EditorStyles.miniButton, GUILayout.Width(60f)))
-                        {
-                            RemoveAt(index);
-                            GUIUtility.ExitGUI();
-                        }
-                    }
-                }
-            }
-            DrawJobButtons();
-            EditorGUI.indentLevel--;
-        }
-
-        private void DrawJobButtons()
-        {
-            string folder = IconCapFiles.FullPath(exportFolder);
-            IconCapJobFile jobs = Jobs(folder);
-            bool any = SavedHere(folder).Count > 0;
-            var tip = any ? "" : "Save icons into the export folder first.";
-            // The Popup's label is already indented by indentLevel, so no extra space before it.
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (jobs.Jobs.Count > 0)
-                {
-                    var names = new string[jobs.Jobs.Count];
-                    for (int i = 0; i < names.Length; i++) names[i] = jobs.Jobs[i].Name;
-                    jobChoice = Mathf.Clamp(jobChoice, 0, names.Length - 1);
-                    jobChoice = EditorGUILayout.Popup("Job", jobChoice, names);
-                    if (EditorGUIUtility.currentViewWidth < JobRow)
-                    {
-                        // Narrow: the buttons on their own line.
-                        EditorGUILayout.EndHorizontal();
-                        EditorGUILayout.BeginHorizontal();
-                        GUILayout.FlexibleSpace();
-                    }
-                    using (new EditorGUI.DisabledScope(!any))
-                    {
-                        if (GUILayout.Button(new GUIContent("Add to job", tip), GUILayout.Width(80f)))
-                            AddToJob(folder, jobs, jobs.Jobs[jobChoice]);
-                    }
-                }
-                else GUILayout.FlexibleSpace();
-                using (new EditorGUI.DisabledScope(!any))
-                {
-                    if (GUILayout.Button(new GUIContent("Save job", tip), GUILayout.Width(80f))) EditorApplication.delayCall += () => SaveJob(folder);
-                }
-            }
         }
 
         private void DrawObjects()
@@ -555,6 +474,7 @@ namespace Riry.RiryTools.Editor
                 camera.Roll = EditorGUILayout.Slider("Camera roll", camera.Roll, -180f, 180f);
                 if (GUILayout.Button("Reset", GUILayout.Width(50f))) camera.Roll = 0f;
             }
+            DrawCaptureOptions();
             EditorGUI.indentLevel--;
         }
 
@@ -572,12 +492,10 @@ namespace Riry.RiryTools.Editor
             EditorGUI.indentLevel--;
         }
 
-        private void DrawOptions()
+        // The capture options, drawn in Camera.
+        private void DrawCaptureOptions()
         {
-            foldOptions = EditorGUILayout.Foldout(foldOptions, "Capture options", true);
-            if (!foldOptions) return;
             IconCapOptions options = settings.Options;
-            EditorGUI.indentLevel++;
             options.AlphaCutout = EditorGUILayout.Toggle(new GUIContent("Alpha cutout",
                 "Materials with alpha clipping are cut by their own cutoff in the alpha. Materials without it are solid."), options.AlphaCutout);
             options.Lighting = (IconCapLighting)EditorGUILayout.Popup(new GUIContent("Lighting",
@@ -600,7 +518,6 @@ namespace Riry.RiryTools.Editor
                 options.ExcludeShadows = EditorGUILayout.ToggleLeft("Shadows", options.ExcludeShadows);
                 EditorGUI.indentLevel--;
             }
-            EditorGUI.indentLevel--;
         }
 
         private void DrawRestore()
@@ -785,7 +702,107 @@ namespace Riry.RiryTools.Editor
             if (!foldJobs) return;
             if (jobFolders == null) jobFolders = IconCapFiles.JobFolders(IconCapFiles.FullPath(exportFolder));
             EditorGUI.indentLevel++;
-            if (jobFolders.Count == 0) EditorGUILayout.LabelField("No jobs yet.", EditorStyles.miniLabel);
+            DrawCurrentJob();
+            // Saved jobs: blank when there are none.
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                BlockTitle("Saved jobs:");
+                EditorGUI.indentLevel++;
+                DrawSavedJobs();
+                EditorGUI.indentLevel--;
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        private static void BlockTitle(string title)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(EditorGUI.indentLevel * 15f);
+                GUILayout.Label(title, EditorStyles.boldLabel);
+            }
+        }
+
+        // Jobs > Current job: this session's captures (click: Restore camera and Reselect objects), Save job on the title row,
+        // then the Job popup and Add to job when the folder has jobs.
+        private void DrawCurrentJob()
+        {
+            string folder = IconCapFiles.FullPath(exportFolder);
+            IconCapJobFile jobs = Jobs(folder);
+            bool any = SavedHere(folder).Count > 0;
+            var tip = any ? "" : "Save icons into the export folder first.";
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Space(EditorGUI.indentLevel * 15f);
+                    GUILayout.Label("Current job:", EditorStyles.boldLabel);
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label(session.Count + (session.Count == 1 ? " icon" : " icons"), EditorStyles.miniLabel);
+                    using (new EditorGUI.DisabledScope(!any))
+                    {
+                        if (GUILayout.Button(new GUIContent("Save job", tip), GUILayout.Width(80f))) EditorApplication.delayCall += () => SaveJob(folder);
+                    }
+                }
+                EditorGUI.indentLevel++;
+                for (int i = 0; i < session.Count; i++)
+                {
+                    IconCapEntry entry = session[i];
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        GUILayout.Space(EditorGUI.indentLevel * 15f);
+                        // MinWidth 0: a long name is cut off (full in the tooltip) instead of pushing Export and Remove out of view.
+                        string rowName = entry.FileName + (entry.Exported ? "" : " (not exported)");
+                        if (GUILayout.Button(new GUIContent(rowName,
+                                rowName + "\nMoves the Scene View camera back to this capture and reselects its objects."), EditorStyles.label,
+                                GUILayout.MinWidth(0f)))
+                        {
+                            RestoreCamera(entry);
+                            Reselect(entry);
+                        }
+                        GUILayout.FlexibleSpace();
+                        int index = i;
+                        if (GUILayout.Button(new GUIContent("Export", "Saves this image to the export folder."), EditorStyles.miniButton, GUILayout.Width(55f)))
+                            EditorApplication.delayCall += () => Export(index);
+                        using (new EditorGUI.DisabledScope(entry.Exported))
+                        {
+                            if (GUILayout.Button("Remove", EditorStyles.miniButton, GUILayout.Width(60f)))
+                            {
+                                RemoveAt(index);
+                                GUIUtility.ExitGUI();
+                            }
+                        }
+                    }
+                }
+                if (jobs.Jobs.Count > 0)
+                {
+                    // The Popup's label is already indented by indentLevel, so no extra space before it.
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        var names = new string[jobs.Jobs.Count];
+                        for (int i = 0; i < names.Length; i++) names[i] = jobs.Jobs[i].Name;
+                        jobChoice = Mathf.Clamp(jobChoice, 0, names.Length - 1);
+                        jobChoice = EditorGUILayout.Popup("Job", jobChoice, names);
+                        if (EditorGUIUtility.currentViewWidth < JobRow)
+                        {
+                            // Narrow: the button on its own line.
+                            EditorGUILayout.EndHorizontal();
+                            EditorGUILayout.BeginHorizontal();
+                            GUILayout.FlexibleSpace();
+                        }
+                        using (new EditorGUI.DisabledScope(!any))
+                        {
+                            if (GUILayout.Button(new GUIContent("Add to job", tip), GUILayout.Width(80f)))
+                                AddToJob(folder, jobs, jobs.Jobs[jobChoice]);
+                        }
+                    }
+                }
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        private void DrawSavedJobs()
+        {
             foreach (string folder in jobFolders)
             {
                 IconCapJobFile file = Jobs(folder);
@@ -833,7 +850,6 @@ namespace Riry.RiryTools.Editor
                     EditorGUI.indentLevel--;
                 }
             }
-            EditorGUI.indentLevel--;
         }
 
         // ---- Capturing and saving -------------------------------------------------
@@ -1244,19 +1260,23 @@ namespace Riry.RiryTools.Editor
 //                       up to PreviewMaxPixels); Through generator adds an Icon Generator's stack. Effect stack beside
 //                       it when the window is at least WideWidth wide, else below.
 //   Export              Folder (Browse), Save as PNG (a save panel in the folder), Save again (overwrites the last
-//                       file saved). This session: each capture (click: Restore camera and Reselect objects), Export,
-//                       Remove (not once exported); Job, Add to job, Save job (the captures saved in the folder).
+//                       file saved).
 //   Objects             Capture only selected objects with its object slots (SnapToSelection: the selected item while
 //                       at most one slot is filled); Isolated item and Clear.
-//   Camera              Field of view (Scene View, Custom, 35mm, 50mm, 85mm), Far clip (0.01 to 1,000,000), Camera roll, Reset.
+//   Camera              Field of view (Scene View, Custom, 35mm, 50mm, 85mm), Far clip (0.01 to 1,000,000), Camera roll, Reset,
+//                       then the capture options (DrawCaptureOptions): Alpha cutout, Lighting (Scene, HDRI, Flat), HDRI
+//                       cubemap, Exclude (six switches).
 //   Background          Mode (Transparent, Opaque, Transparent with background), Skybox (Opaque), Colour.
-//   Capture options     Alpha cutout, Lighting (Scene, HDRI, Flat), HDRI cubemap, Exclude (six switches).
 //   Restore             Last capture, Last save: Restore camera, Reselect objects.
 //   Icon Generator      Asset, New, Regenerate, Large previews, sources beside their results, Prefix, Suffix,
 //                       Template, Generator effect stack.
-//   Jobs                Every job in Assets and in the export folder: name, folder, icon count, Run, and its icons.
+//   Jobs                Two boxed blocks. Current job (DrawCurrentJob): this session's captures (click: Restore camera and
+//                       Reselect objects), Export, Remove (not once exported); Save job on the title row (the captures
+//                       saved in the folder); Job popup and Add to job when the folder has jobs. Saved jobs (DrawSavedJobs,
+//                       blank when there are none): every job in Assets and in the export folder: name, folder, icon
+//                       count, Run, and its icons.
 //   Narrow rows         Below PrefixSuffixRow (460), JobRow (440) and RestoreRow (420) window width, Prefix/Suffix,
-//                       the Job row's buttons and Restore's buttons go on a second line. A job's foldout is as wide as
+//                       the Job row's Add to job and Restore's buttons go on a second line. A job's foldout is as wide as
 //                       its name; when the row passes the window width less RowMargin (40), its folder, count and Run
 //                       go on a second line.
 //   Open() / OpenPopup() The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window).

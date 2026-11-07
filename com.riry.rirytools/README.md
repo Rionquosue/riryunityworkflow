@@ -249,8 +249,11 @@ put back after the capture. Captures run through an effect stack (Overlay, Draw
 under, Mask, Inverse mask, Gray out, Corner badge, Custom material, Crop and zoom,
 Rotate and flip, Padding, Adjustments, Outline, Drop shadow, Colour overlay, Hue
 shift, Invert, Grayscale, Posterize, Sharpen) and are saved to an export folder.
-Captures can be saved as jobs and remade with **Run**, which lists the icons it
-replaces and asks first, then moves them into `OLD_<n>` folders. Presets are kept in `Documents/RiryTools/iconcap presets`.
+The capture options (alpha cutout, lighting, exclusions) are under **Camera**.
+**Jobs** has two blocks: **Current job**, this session's captures with **Save
+job** on its title row (and **Add to job** for an existing job), and **Saved
+jobs**, empty until a job is saved. A saved job is remade with **Run**, which
+lists the icons it replaces and asks first, then moves them into `OLD_<n>` folders. Presets are kept in `Documents/RiryTools/iconcap presets`.
 **Icon Generator** assets run source textures through an effect stack and save the
 outputs beside the asset, renamed to follow renamed sources.
 

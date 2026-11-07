@@ -260,7 +260,7 @@ IconCap:
 | `IconCapRenderer.MaxSize` | `4096` | Largest capture size |
 | `IconCapRenderer.SensorHeight` | `24` mm | Full-frame sensor for the 35, 50 and 85mm lenses |
 | `IconCapWindow.WideWidth` | `640` | Window width from which the effect stack sits beside the preview |
-| `IconCapWindow.PrefixSuffixRow` / `JobRow` / `RestoreRow` | `460` / `440` / `420` | Window widths below which Prefix/Suffix, the Job row's buttons and Restore's buttons go on a second line |
+| `IconCapWindow.PrefixSuffixRow` / `JobRow` / `RestoreRow` | `460` / `440` / `420` | Window widths below which Prefix/Suffix, the Job row's Add to job (Jobs > Current job) and Restore's buttons go on a second line |
 | `IconCapWindow.RowMargin` | `40` | Scroll bar and margins left out of a job row's width; a longer row puts its folder, count and Run on a second line |
 | `IconCapWindow.PreviewMaxSide` / `PreviewMaxPixels` | `512` / `1024` | Largest preview on screen / in pixels |
 | `IconCapWindow.PreviewInterval` | `0.1` s | Shortest time between live preview renders |
