@@ -57,8 +57,6 @@ namespace Riry.RiryTools.Editor
         private RadialMenu radial;
         // The key Gesture Manager files its radial under (any ScriptableObject).
         private ScriptableObject owner;
-        private double lastDrawn;
-        private IVisualElementScheduledItem watch;
 
         public event Action<string, float> Written;
 
@@ -155,9 +153,9 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        public void Draw(Rect rect, EditorWindow surface)
+        public void Draw(Rect rect, Rect local, VisualElement root)
         {
-            if (radial == null || surface == null) return;
+            if (radial == null || root == null) return;
             if (Unsupported != null)
             {
                 Hide();
@@ -165,25 +163,13 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             // Mouse handling works in the OnGUI's coordinates (Rect); the element is placed in the window's root element.
+            // The window takes it off when a repaint does not draw it (no timer: IMGUI does not repaint while idle).
             radial.Rect = rect;
-            Rect screen = GUIUtility.GUIToScreenRect(rect);
-            var local = new Rect(screen.position - surface.position.position, rect.size);
-            radial.Render(surface.rootVisualElement, local);
-            lastDrawn = EditorApplication.timeSinceStartup;
-            if (watch == null)
-            {
-                // Not drawn for a moment (another tab, a closed foldout): take it off the window.
-                watch = radial.schedule.Execute(() =>
-                {
-                    if (EditorApplication.timeSinceStartup - lastDrawn > 0.5) Hide();
-                }).Every(250);
-            }
+            radial.Render(root, local);
         }
 
         public void Hide()
         {
-            if (watch != null) watch.Pause();
-            watch = null;
             if (radial != null) radial.RemoveFromHierarchy();
         }
 
@@ -216,7 +202,7 @@ namespace Riry.RiryTools.Editor
 //                            keeping earlier values; each own parameter reports writes (Written). Gesture Manager's radial
 //                            (GetOrCreateRadial(owner, official: true) by reflection, else the public one), opened on the root.
 //   Navigate / Path          RadialMenu._menuPath cleared and OpenMenu called per menu; Path reads each RadialPage._menu.
-//   Draw(rect, surface)      Rect (mouse maths) in GUI coordinates; Render places the element in the shown window's
-//                            rootVisualElement at the same spot; a watch takes it off when not drawn for 0.5 s.
+//   Draw(rect, local, root)  Rect (mouse maths) in GUI coordinates; Render places the element at local in root (the window's
+//                            rootVisualElement). The window hides it (Hide) when a repaint does not draw it.
 //   Unsupported              A Gesture Manager without these members: Draw shows that message instead of the radial.
 //   Dispose                  Removes the element, destroys the stand-in avatar and the key object.

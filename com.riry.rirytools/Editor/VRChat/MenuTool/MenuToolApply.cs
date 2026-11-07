@@ -75,7 +75,11 @@ namespace Riry.RiryTools.Editor
                                 .Concat(new[] { scan.Avatar.expressionsMenu }).Where(m => m != null).Select(m => AssetDatabase.GetAssetPath(m)));
                             MoveNative(scan, entry, destination, move.Index, references, report);
                             break;
-                        case MoveEdit.VrcfuryRule: AddRule(scan, check.Before, check.After, move.Index, entry.Parent == destination); break;
+                        case MoveEdit.VrcfuryRule:
+                            // Paths as VRCFury reads them: a slash inside a name written "\/".
+                            string from = MenuToolVrcfuryMenu.PathOf(entry), into = MenuToolVrcfuryMenu.PathOf(destination);
+                            AddRule(scan, from, (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name), move.Index, entry.Parent == destination);
+                            break;
                         case MoveEdit.MaReparent: Reparent(entry, destination, move.Index); break;
                         case MoveEdit.MaRetarget: Retarget(scan, entry, destination); break;
                     }
@@ -327,7 +331,7 @@ namespace Riry.RiryTools.Editor
                     var serialized = new SerializedObject(component);
                     SerializedProperty content = serialized.FindProperty("content");
                     if (content == null || MenuToolScanner.FeatureName(content) != "MoveMenuItem") continue;
-                    if (content.FindPropertyRelative("toPath").stringValue == from) existing = serialized;
+                    if (MenuToolVrcfuryMenu.SamePath(content.FindPropertyRelative("toPath").stringValue, from)) existing = serialized;
                 }
                 if (existing != null)
                 {
@@ -404,7 +408,8 @@ namespace Riry.RiryTools.Editor
 //                            (ReferenceIndex, built once per Apply for every native menu of the avatar: a text search for each
 //                            GUID, AssetDatabase.GetDependencies for binary files; copies made by this Apply are Made), apart
 //                            from the file holding this avatar (HolderFile) and this avatar's own native menus.
-//   AddRule / NewRule        VRCFury on the avatar object: updates a Move Menu Item whose toPath is the entry's path, else adds
-//                            one (content set through SerializedObject); a set index adds a Reorder Menu Item.
+//   AddRule / NewRule        VRCFury on the avatar object: updates a Move Menu Item whose toPath is the entry's path
+//                            (MenuToolVrcfuryMenu.SamePath), else adds one (content set through SerializedObject); a set index
+//                            adds a Reorder Menu Item. Paths are written as VRCFury reads them (PathOf / Escape: "\/" in names).
 //   Reparent                 Undo.SetTransformParent into the destination's MA children object, then the sibling index.
 //   Retarget                 The MA installer's installTargetMenu (none for the root menu).

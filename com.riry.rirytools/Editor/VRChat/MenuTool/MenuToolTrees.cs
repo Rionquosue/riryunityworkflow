@@ -157,7 +157,8 @@ namespace Riry.RiryTools.Editor
         {
             var row = (Row)args.item;
             Rect rect = args.rowRect;
-            if (Event.current.type == EventType.Repaint && row.Floats > 0)
+            // The Root Menu row is not shaded.
+            if (Event.current.type == EventType.Repaint && row.Floats > 0 && row.Entry != scan.Root)
             {
                 // The more synced Floats, the darker the red.
                 float t = Mathf.Clamp01((float)row.Floats / maxFloats);
@@ -378,7 +379,7 @@ namespace Riry.RiryTools.Editor
 // BudgetTree (this file)     Parameter budget tab. Main Menu: every submenu and control with its synced bits (each parameter
 //                            once, MenuToolBudget.Bits), parameters as the note (both columns give way to the name below
 //                            MinName, their values then in the tooltip), shaded red by synced Floats (darker = more,
-//                            relative to maxFloats); entries outside the target are hidden (InFilter). Animator only: per
+//                            relative to maxFloats; the Root Menu row itself unshaded); entries outside the target are hidden (InFilter). Animator only: per
 //                            controller and layer, synced parameters no menu uses, then those no layer uses. Double-click
 //                            selects and pings the source.
 // ManagerTree                Menu manager tab: the planned layout. Rows: drag handle (≡, only it starts a drag; none while

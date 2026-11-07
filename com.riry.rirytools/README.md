@@ -28,7 +28,8 @@ entry's first letter.
 (AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools,
 Import Presets, Menu Tool and Tools). Each tab draws the tool's own window, so
 it works there as it does on its own, and scrolls when the window is small
-(Menu Tool scrolls its own lists). The
+(Menu Tool scrolls its own lists; its **Menu manager** opens the Menu Tool
+window). The
 **Tools** tab opens IconCap and Avatar Migration Assistant in their own windows, and
 has **Reload domain** and the **Stop Auto Game** toggle.
 Documentation is a link at the bottom right.
@@ -273,7 +274,8 @@ saved in the `.yml` (`tab`, `activeTab`).
 ## Menu Tool
 
 Needs the VRChat Avatars SDK 3.7.0 or newer. Open **Tools > RiryTools > Menu
-Tool** for its own window, or use the Main Menu's **Menu Tool** tab. Pick an
+Tool** for its own window, or use the Main Menu's **Menu Tool** tab, where
+**Menu manager** opens the Menu Tool window on the same avatar. Pick an
 avatar, a prefab asset, an object in Prefab Mode or one in the Hierarchy (**Use
 selection** takes the selected one). Inside an avatar, the whole avatar is
 assembled and the chosen object filters the budget; a prefab with no avatar
@@ -282,24 +284,39 @@ the avatar it is added to.
 
 The scan reads the descriptor's menu and parameters, Modular Avatar menu
 installers, items, groups, install targets and parameters, and VRCFury Toggles,
-Puppets and Full Controllers, then applies VRCFury's Move Menu Item, Reorder
-Menu Item and Set Icon rules as a build would. Inactive objects are included,
-EditorOnly ones are not. VRCFury renames most parameters at build, so they are
-shown as `VF_<name>` and marked **estimated**. SPS and other generators the scan
+Puppets and Full Controllers, then applies VRCFury's Set Icon, Move Menu Item and
+Reorder Menu Item rules as a build would. Menu paths follow VRCFury's rules: `\/`
+is a slash inside a name; a name matches exactly, else ignoring case, rich text,
+line breaks and extra spaces, else any rich-text-separated part of a name;
+`Name.dup.2` picks the third submenu of that name; a submenu added where one
+matches merges into it; a rule acts on every item it matches, and a Move Menu
+Item with no destination deletes. Inactive objects are included, EditorOnly ones
+are not. VRCFury gives most parameters a unique name at build, so they are shown
+as `VF_<name>` and marked **estimated**; Full Controller parameters follow its
+Global Parameters list (`Prefix*`, `!` to exclude), **All non-synced are
+global** and GoGo Loco's `Go/` prefix. SPS and other generators the scan
 does not model, missing menu assets, and other scripts that only reference menu
 or parameter assets are listed under **Notes**.
 
 **Parameter budget** compares VRCFury's Parameter Compressor off and on: custom
-parameters, synced, local, synced bits (of 256) and what is left (of 8,192
-parameters). Without **Compare exactly** it is an estimate: synced menu-controlled
-Ints and Floats share a 16-bit transport (Bools with **Include Bools**; two- and
-four-axis puppet parameters only with **Include Puppets**; the avatar's own
-compressor settings when it has one). **Compare exactly** builds two isolated
-copies of the avatar through the VRChat SDK's build callbacks, one without and
-one with the compressor, compares their parameters and deletes both, in a
-temporary scene that is closed unsaved; the avatar itself is not changed. It is
-not available in Play Mode. The tree lists every submenu and control with its synced
-bits, darker red the more synced Floats it holds, then an **Animator only** block:
+parameters, synced, local, synced bits (of 256; an Int or Float set narrower in
+SDK 3.10.6 or newer counts its own width) and what is left (of 8,192
+parameters). VRCFury compresses on its own whenever an avatar is over the limit.
+Without **Compare exactly** the compressor column runs VRCFury's solver on the
+scan: it tries radial puppets, then toggles, then both, then two- and four-axis
+puppets and wider mixes, compressing the synced parameters only those controls
+use (not buttons' or submenus', and not a Parameter Driver's Add target unless
+four-axis puppets are included), and sends them in batches through number and
+bool slots widened until the bits are full. A warning shows when VRCFury cannot
+fit the avatar, or when its compressor is set to Fail. **Compare exactly** builds
+two isolated copies of the avatar through the VRChat SDK's build callbacks, with
+VRCFury's compressor setting at Fail and then at Compress (set back afterwards),
+compares their parameters and deletes both, in a temporary scene that is closed
+unsaved; the avatar itself is not changed. Over the limit, VRCFury shows its own
+"would have failed to upload" message for the first copy. It is not available in
+Play Mode. The tree lists every submenu and control with its synced
+bits, darker red the more synced Floats it holds (the **Root Menu** row is not
+shaded), then an **Animator only** block:
 synced parameters no menu uses, under the controllers and layers that use them.
 Double-click a row to select its source. **Shared parameters** are counted once
 (different types are shown in red), and **Content blocks** lists each control of

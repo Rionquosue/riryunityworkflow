@@ -140,6 +140,10 @@ namespace Riry.RiryTools.Editor
         internal bool Estimated;
         // Declared in the expression parameters (or by MA / VRCFury as such); false for names only menus or animators use.
         internal bool Declared;
+        // An Int's or Float's synced width in bits (the VRChat SDK's GetBitWidthByType: 2 to 8; 8 unless set), and whether
+        // its network representation is flipped (SDK 3.10.6 and later).
+        internal int Width = 8;
+        internal bool Flipped;
         internal readonly List<string> Blocks = new List<string>();
         internal readonly HashSet<VRCExpressionParameters.ValueType> DeclaredTypes = new HashSet<VRCExpressionParameters.ValueType>();
         internal readonly List<MenuEntry> UsedBy = new List<MenuEntry>();
@@ -150,10 +154,22 @@ namespace Riry.RiryTools.Editor
             get { return DeclaredTypes.Count > 1; }
         }
 
-        /// <summary>Synced bits: one for a Bool, eight for an Int or Float, none when not synced.</summary>
+        /// <summary>Synced bits: one for a Bool, Width (8 unless set narrower) for an Int or Float, none when not synced.</summary>
         internal int Bits
         {
-            get { return !Synced ? 0 : Type == VRCExpressionParameters.ValueType.Bool ? 1 : 8; }
+            get { return !Synced ? 0 : Cost; }
+        }
+
+        /// <summary>Its bits when synced (VRCFury's TypeCost).</summary>
+        internal int Cost
+        {
+            get { return Type == VRCExpressionParameters.ValueType.Bool ? 1 : Width; }
+        }
+
+        /// <summary>A Bool, or an 8-bit, unflipped Int or Float: what VRCFury's compressor can carry (HasStandardNetworkEncoding).</summary>
+        internal bool StandardEncoding
+        {
+            get { return Type == VRCExpressionParameters.ValueType.Bool || (Width == 8 && !Flipped); }
         }
     }
 
@@ -171,6 +187,20 @@ namespace Riry.RiryTools.Editor
         internal Object Controller;
         internal Object Source;
         internal readonly List<LayerUsage> Layers = new List<LayerUsage>();
+        // Parameters a VRChat Parameter Driver in it changes with Add: VRCFury's compressor leaves them out unless it is
+        // also compressing two- and four-axis puppets.
+        internal readonly HashSet<string> AddDriven = new HashSet<string>();
+    }
+
+    /// <summary>One VRCFury Set Icon, Move Menu Item or Reorder Menu Item rule, applied in VRCFury's order after the features.</summary>
+    internal sealed class VrcfuryMenuRule
+    {
+        internal string Kind = "";
+        internal Component Component;
+        internal string Path = "";
+        internal string To = "";
+        internal int Position;
+        internal Texture2D Icon;
     }
 
     /// <summary>Everything one scan found: the assembled menu, its parameters, controllers and notes.</summary>
@@ -186,10 +216,6 @@ namespace Riry.RiryTools.Editor
         internal readonly List<ControllerUsage> Controllers = new List<ControllerUsage>();
         // Unsupported generators, missing references and other things worth knowing, each once.
         internal readonly List<string> Notes = new List<string>();
-        // VRCFury's Parameter Compressor (Unlimited Parameters) on the avatar, and what it includes.
-        internal bool Compressor;
-        internal bool CompressorBools;
-        internal bool CompressorPuppets;
         internal bool VrcfuryInstalled;
         internal bool ModularAvatarInstalled;
 
@@ -228,9 +254,13 @@ namespace Riry.RiryTools.Editor
 //   Path / Find / Child      "A/B/C" path in the assembled menu; lookups by path or name.
 //   Parameters()             Parameter and sub-parameters, non-empty.
 //   Clone()                  Deep copy for the planned layout.
-// ParamEntry                 One parameter, counted once: Type, Synced, Saved, Default, Estimated, Declared, Blocks,
-//                            DeclaredTypes (TypeConflict when more than one), UsedBy (menu entries), Sources, Bits (1 Bool,
-//                            8 Int/Float, 0 unsynced).
-// ControllerUsage / LayerUsage  An animator controller and, per layer, the parameters it reads or drives.
-// MenuScan                   The scan: Target, Avatar, Standalone, Root, Params, Blocks, Controllers, Notes, Compressor
-//                            (+ CompressorBools/Puppets), VrcfuryInstalled, ModularAvatarInstalled; InFilter(source).
+// ParamEntry                 One parameter, counted once: Type, Synced, Saved, Default, Estimated, Declared, Width and Flipped
+//                            (SDK 3.10.6 bit widths), Blocks, DeclaredTypes (TypeConflict when more than one), UsedBy (menu
+//                            entries), Sources, Cost (1 Bool, Width Int/Float), Bits (Cost when synced, else 0),
+//                            StandardEncoding (what VRCFury's compressor can carry).
+// ControllerUsage / LayerUsage  An animator controller and, per layer, the parameters it reads or drives; AddDriven, the
+//                            parameters its Parameter Drivers change with Add.
+// VrcfuryMenuRule            A VRCFury SetIcon / MoveMenuItem / ReorderMenuItem rule (Kind, Component, Path, To, Position,
+//                            Icon), applied by MenuToolVrcfuryMenu in VRCFury's order.
+// MenuScan                   The scan: Target, Avatar, Standalone, Root, Params, Blocks, Controllers, Notes, VrcfuryInstalled,
+//                            ModularAvatarInstalled; InFilter(source).

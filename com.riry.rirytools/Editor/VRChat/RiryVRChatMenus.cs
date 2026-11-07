@@ -13,10 +13,10 @@ namespace Riry.RiryTools.Editor
     internal static class RiryVRChatMenus
     {
         // The Main Menu's Constraint Tool tab hosts these windows (its Train, Bezier and Insertable prop sub-tabs), and
-        // its Menu Tool tab the Menu Tool.
+        // its Menu Tool tab the Menu Tool's Parameter budget (its Menu manager opens the Menu Tool window).
         static RiryVRChatMenus()
         {
-            RiryToolsMainMenu.CreateMenuTool = () => UnityEngine.ScriptableObject.CreateInstance<MenuToolWindow>();
+            RiryToolsMainMenu.CreateMenuTool = MenuToolWindow.CreateHosted;
             RiryToolsMainMenu.CreateConstraintTrain = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintTrainWindow>();
             RiryToolsMainMenu.CreateConstraintBezier = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintBezierWindow>();
             RiryToolsMainMenu.CreateConstraintInsertable = () => UnityEngine.ScriptableObject.CreateInstance<InsertablePropWindow>();
@@ -55,7 +55,9 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Constraint Tool (2030)       -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/ConstraintToolWindow.cs):
 //                                                      the Constraint Tool window on the tab used last
 //   Tools/RiryTools/Menu Tool (2066), menu key E -> MenuToolWindow.Open (Editor/VRChat/MenuTool/MenuToolWindow.cs): its own
-//                                                      window; the Main Menu's Menu Tool tab hosts it (CreateMenuTool)
+//                                                      window; the Main Menu's Menu Tool tab hosts its Parameter budget
+//                                                      (CreateMenuTool = MenuToolWindow.CreateHosted); its Menu manager opens
+//                                                      this window
 //   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy: the Train tab; the active
 //                                                      object becomes the chain start, a selected descendant the end.
 //   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy: the Bezier tab, the same way.

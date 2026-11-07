@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
 using Object = UnityEngine.Object;
@@ -24,8 +25,11 @@ namespace Riry.RiryTools.Editor
         /// <summary>The menus open now, from the root ("" at Gesture Manager's own main page).</summary>
         List<VRCExpressionsMenu> Path { get; }
 
-        /// <summary>Draws it in rect (GUI coordinates of the current OnGUI) of the window actually shown.</summary>
-        void Draw(Rect rect, EditorWindow surface);
+        /// <summary>
+        /// Draws it: rect in GUI coordinates of the current OnGUI (for the mouse), local the same spot in root's coordinates
+        /// (where the element is placed).
+        /// </summary>
+        void Draw(Rect rect, Rect local, VisualElement root);
 
         /// <summary>Takes it off the window (another tab is shown).</summary>
         void Hide();
@@ -131,7 +135,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Menu Tool preview
 // ============================================================================
 //
-// IMenuToolRadial            The radial preview: Show(root, parameters), Navigate(path), Path, Draw(rect, surface), Hide, Value,
+// IMenuToolRadial            The radial preview: Show(root, parameters), Navigate(path), Path, Draw(rect, local, root), Hide, Value,
 //                            Written (each parameter write). Implemented by GestureManagerRadial (GestureManager/ folder).
 // MenuToolPreviewMenus (this file)
 //   CreateRadial             Set by the Gesture Manager bridge when Gesture Manager is installed; null otherwise.

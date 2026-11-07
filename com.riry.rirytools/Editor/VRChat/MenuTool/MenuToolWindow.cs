@@ -28,11 +28,11 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
+        // The Main Menu's copy (CreateHosted): never shown on its own, and its Menu manager tab opens the Menu Tool window.
+        [SerializeField] private bool hosted;
         [SerializeField] private Vector2 budgetScroll;
         [SerializeField] private Vector2 planScroll;
         [SerializeField] private Vector2 managerScroll;
-        [SerializeField] private bool includeBools;
-        [SerializeField] private bool includePuppets;
         [SerializeField] private bool showShared = true;
         [SerializeField] private bool showBlocks;
         [SerializeField] private bool showNotes = true;
@@ -67,10 +67,17 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private readonly List<string> writes = new List<string>();
         // The window it is drawn in: the Main Menu when hosted there, else itself.
         [NonSerialized] private EditorWindow surface;
+        // Where this OnGUI's (0, 0) is on screen, and whether this repaint drew the radial.
+        [NonSerialized] private Vector2 guiOrigin;
+        [NonSerialized] private bool radialDrawn;
 
         public EditorWindow Surface
         {
-            set { surface = value; }
+            set
+            {
+                surface = value;
+                if (value != null && value != this) hosted = true;
+            }
         }
 
         private EditorWindow Shown
@@ -86,11 +93,38 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
-            MenuToolWindow window = GetWindow<MenuToolWindow>(Title);
+            Open(null, -1);
+        }
+
+        /// <summary>The Main Menu's copy: drawn in its Menu Tool tab, never shown on its own.</summary>
+        internal static EditorWindow CreateHosted()
+        {
+            var window = CreateInstance<MenuToolWindow>();
+            window.hosted = true;
+            return window;
+        }
+
+        // Its own window on target (when given) and tab (when not -1). Never the Main Menu's copy: GetWindow could find
+        // that one and show it as a second window drawing the same tool.
+        private static void Open(GameObject target, int tab)
+        {
+            MenuToolWindow window = Resources.FindObjectsOfTypeAll<MenuToolWindow>().FirstOrDefault(found => !found.hosted);
+            if (window == null)
+            {
+                window = CreateInstance<MenuToolWindow>();
+                window.titleContent = new GUIContent(Title);
+            }
             window.minSize = new Vector2(MinWidth, MinHeight);
             window.wantsMouseMove = true;
-            if (window.target == null) window.UseSelection();
+            if (target != null && target != window.target)
+            {
+                window.target = target;
+                window.MarkStale();
+            }
+            else if (window.target == null) window.UseSelection();
+            if (tab >= 0) window.tab = tab;
             window.Show();
+            window.Focus();
         }
 
         private void OnEnable()
@@ -238,6 +272,16 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            bool repaint = Event.current.type == EventType.Repaint;
+            if (repaint) radialDrawn = false;
+            guiOrigin = GUIUtility.GUIToScreenPoint(Vector2.zero);
+            DrawWindow();
+            // Taken off whenever a repaint did not draw it (another tab, nothing to show, scrolled out of view).
+            if (repaint && !radialDrawn && radial != null) radial.Hide();
+        }
+
+        private void DrawWindow()
+        {
             if (Shown == this)
             {
                 wantsMouseMove = true;
@@ -266,8 +310,18 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             EditorGUILayout.Space(4f);
-            int chosen = RiryToolsMainMenu.TabStrip(Shown, tab, Tabs);
-            if (chosen != tab) tab = RiryGui.Set(this, "Menu Tool tab", tab, chosen);
+            int chosen = RiryToolsMainMenu.TabStrip(Shown, hosted ? 0 : tab, Tabs);
+            if (hosted)
+            {
+                // In the Main Menu, the Menu manager opens in the Menu Tool window, on the same target.
+                tab = 0;
+                if (chosen == 1)
+                {
+                    GameObject on = target;
+                    EditorApplication.delayCall += () => Open(on, 1);
+                }
+            }
+            else if (chosen != tab) tab = RiryGui.Set(this, "Menu Tool tab", tab, chosen);
             EditorGUILayout.Space(4f);
             if (tab == 0)
             {
@@ -313,10 +367,7 @@ namespace Riry.RiryTools.Editor
 
         private void DrawSummary()
         {
-            bool onAvatar = scan.Compressor;
-            bool bools = onAvatar ? scan.CompressorBools : includeBools;
-            bool puppets = onAvatar ? scan.CompressorPuppets : includePuppets;
-            MenuToolBudget.Result estimate = MenuToolBudget.Estimate(scan, bools, puppets);
+            MenuToolBudget.Result estimate = MenuToolBudget.Estimate(scan);
             MenuToolBudget.Result shown = exact != null && exact.Exact ? exact : estimate;
             string label = exact == null ? "Estimated" : exact.Exact ? "Exact (two isolated test builds, " + exactTime + "; Compare exactly again after changes)"
                 : "Unavailable: " + exact.Unavailable + " Showing the estimate.";
@@ -329,25 +380,17 @@ namespace Riry.RiryTools.Editor
             Row("Synced bits", shown.Off.Bits, shown.On.Bits, "of " + BudgetCount.MaxBits);
             Row("Bits left", shown.Off.BitsLeft, shown.On.BitsLeft, "");
             Row("Parameters left", shown.Off.ParametersLeft, shown.On.ParametersLeft, "");
+            if (estimate.Note.Length > 0) EditorGUILayout.HelpBox(estimate.Note, MessageType.Warning);
             using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUI.DisabledScope(onAvatar))
-                {
-                    bool newBools = EditorGUILayout.ToggleLeft(new GUIContent("Include Bools", onAvatar ? "Set by the Parameter Compressor on the avatar." : "As VRCFury's Include Bools."), bools, GUILayout.Width(110f));
-                    bool newPuppets = EditorGUILayout.ToggleLeft(new GUIContent("Include Puppets", onAvatar ? "Set by the Parameter Compressor on the avatar." : "As VRCFury's Include Puppets (two- and four-axis)."), puppets, GUILayout.Width(120f));
-                    if (!onAvatar)
-                    {
-                        includeBools = RiryGui.Set(this, "Menu Tool Include Bools", includeBools, newBools);
-                        includePuppets = RiryGui.Set(this, "Menu Tool Include Puppets", includePuppets, newPuppets);
-                    }
-                }
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(scan.Avatar == null || !scan.VrcfuryInstalled || EditorApplication.isPlayingOrWillChangePlaymode))
                 {
-                    if (GUILayout.Button(new GUIContent("Compare exactly", "Builds two isolated copies of the avatar, without and with the Parameter Compressor, " +
-                        "through the VRChat SDK's build callbacks, compares their parameters, then deletes both. The avatar is not changed."), GUILayout.Width(130f)))
+                    if (GUILayout.Button(new GUIContent("Compare exactly", "Builds two isolated copies of the avatar through the VRChat SDK's build callbacks, " +
+                        "with VRCFury's Parameter Compressor setting at Fail and then at Compress (restored afterwards), compares their parameters, then " +
+                        "deletes both. The avatar is not changed. Over the limit, VRCFury shows its own \"would have failed to upload\" message for the first build."), GUILayout.Width(130f)))
                     {
-                        exact = MenuToolBudget.Exact(scan.Avatar, bools, puppets);
+                        exact = MenuToolBudget.Exact(scan.Avatar);
                         exactFor = target;
                         exactTime = DateTime.Now.ToString("HH:mm", CultureInfo.InvariantCulture);
                         RiryGui.ExitAfterModal();
@@ -585,7 +628,13 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             // Placed and fed mouse events in every event but Layout, whose rects are placeholders.
-            if (Event.current.type != EventType.Layout) radial.Draw(square, Shown);
+            if (Event.current.type != EventType.Layout)
+            {
+                // Placed in this window's root element at the spot this OnGUI draws at.
+                var local = new Rect(GUIUtility.GUIToScreenPoint(square.position) - guiOrigin, square.size);
+                radial.Draw(square, local, rootVisualElement);
+                if (Event.current.type == EventType.Repaint) radialDrawn = true;
+            }
             // Follow the radial: a submenu opened there is selected in the list and the breadcrumbs.
             List<VRCExpressionsMenu> path = radial.Path;
             MenuEntry entry;
@@ -706,24 +755,31 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // MenuToolWindow (this file)
-//   Open()                   Its own window (minSize MinWidth 640 x MinHeight 760), on the selection when it has no target.
-//   Surface / Shown          IRiryHostedTool: the Main Menu sets itself as the surface when hosting, so tabs size to it and
-//                            the radial is placed in it; on its own, the window itself.
+//   Open() / Open(target, tab)  Its own window (minSize MinWidth 640 x MinHeight 760), on the selection when it has no target;
+//                            found among existing windows that are not hosted (never GetWindow, which could show the Main
+//                            Menu's copy as a second window).
+//   CreateHosted / hosted    The Main Menu's copy ([SerializeField] hosted): it shows the Parameter budget; its Menu manager tab
+//                            opens Open(target, 1) after the GUI pass instead.
+//   Surface / Shown          IRiryHostedTool: the Main Menu sets itself as the surface when hosting, so tabs size to it; on
+//                            its own, the window itself.
+//   OnGUI / DrawWindow       guiOrigin (this OnGUI's (0, 0) on screen); a repaint that did not draw the radial hides it
+//                            (radialDrawn), so it neither lingers nor blinks off while the window is idle.
 //   target                   Avatar, prefab asset, Prefab Mode or Hierarchy object ([SerializeField]; Undo via RiryGui.Set).
 //   Refresh / MarkStale      Rescans (MenuToolScanner) on the next Layout after a change (hierarchy, project, Undo, Rescan),
 //                            loads the plan (MenuPlan), rebuilds the trees and the preview (Replan).
 //   Replan                   Planned layout (MenuToolPlanner), the list, the preview menus and the radial, staying in the
 //                            submenu shown before.
 //   Parameter budget tab     DrawSummary: compression off / on / change (custom parameters, synced, local, synced bits, bits
-//                            and parameters left), Estimated / Exact / Unavailable; Include Bools / Puppets (the avatar's
-//                            compressor's when it has one); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
+//                            and parameters left), Estimated / Exact / Unavailable; the estimate's Note (VRCFury cannot fit
+//                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
 //                            parameters (types differ in red); Content blocks (each control's path, bindings, Select);
 //                            Notes.
 //   Menu manager tab         Search, Discard plan, Apply (disabled until every move checks out); ManagerTree; then, in a scroll
 //                            view (managerScroll; managerView its screen rect), DrawPlan
 //                            (before -> after, edit, choice popup when several sources fit, errors, warnings, remove);
 //                            DrawBreadcrumbs; DrawRadial (Gesture Manager, or how to get it; only when it fits and is wholly in
-//                            view, else a grey box saying to scroll or widen); DrawBits (last clicked control's
+//                            view, else a grey box saying to scroll or widen; placed in rootVisualElement at its GUI spot less
+//                            guiOrigin); DrawBits (last clicked control's
 //                            parameters: type, sync, bits, live value; the last WriteLog writes).
 //   plan / savedPlan         The plan ([SerializeField], so Ctrl+Z restores it) and the file's content as last read or written;
 //                            OnUndoRedo writes the plan back to its avatar's file when an undo or redo changed it.

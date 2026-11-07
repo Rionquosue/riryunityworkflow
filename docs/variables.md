@@ -32,6 +32,7 @@ EditorPrefs: per user, shared by every project.
 | `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
 | `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
 | `RiryTools.AttachTo.AddedBones` | string | `""` | `AttachTo.AddedBonesKey`: bones added with **Add bone** (HumanBodyBones names, comma separated), listed after `AttachTo.CommonBones`; **Remove** takes one off |
+| `com.vrcfury.parameterCompressor` | int | unset (Compress) | VRCFury's own Parameter Compressor setting (0 Compress, 1 Ask, 2 Fail): `MenuToolCompressor` reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset) |
 | `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigrationSettings` (per-entry options, sub-options, ignore children, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
@@ -126,13 +127,14 @@ Environment variables set for Git commands:
 | Name | Value | Use |
 |---|---|---|
 | `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
+| `RIRYTOOLS_VRC_BIT_WIDTH` | defined when `com.vrchat.avatars` is 3.10.6 or newer | Menu Tool reads each parameter's synced width and flipped flag (`GetBitWidthByType`, `flippedRepresentation`; `MenuToolScanner.WidthOf` / `FlippedOf`); older SDKs count 8 bits |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll` | Constraint Tool window (Train, Bezier and Insertable prop tabs), Menu Tool, and their menus |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | `AssemblyInfo.cs` | Lets the VRChat assembly use internal types and menu paths |
 | `RIRYTOOLS_GESTURE_MANAGER` | defined when `vrchat.blackstartx.gesture-manager` is 3.9.0 or newer | Compiles `Riry.RiryTools.Editor.GestureManager` (Menu Tool's radial preview); without it the Menu manager says to install Gesture Manager |
 | Assembly `Riry.RiryTools.Editor.GestureManager` | `VRChat/MenuTool/GestureManager/`; Editor only, references Gesture Manager's assemblies, `VRCSDK3A.dll` and `VRCSDKBase.dll`; needs `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_GESTURE_MANAGER` | `GestureManagerRadial`, built against Gesture Manager 3.9.9 |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.GestureManager")` | `VRChat/AssemblyInfo.cs` | Lets the bridge implement `IMenuToolRadial` |
-| Type names read by Menu Tool | `VF.Model.VRCFury` (features `Toggle`, `Puppet`, `FullController`, `MoveMenuItem`, `ReorderMenuItem`, `SetIcon`, `UnlimitedParameters`), `nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller`, `...MenuItem`, `...MenuGroup`, `...MenuInstallTarget`, `...Parameters`, `...MergeAnimator`, `VRC.SDKBase.Editor.BuildPipeline.VRCBuildPipelineCallbacks` | `MenuToolScanner`, `MenuToolBudget`, `MenuToolApply`: by name, so neither VRCFury nor Modular Avatar is needed to compile |
+| Type names read by Menu Tool | `VF.Model.VRCFury` (features `Toggle`, `Puppet`, `FullController`, `MoveMenuItem`, `ReorderMenuItem`, `SetIcon`), `nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller`, `...MenuItem`, `...MenuGroup`, `...MenuInstallTarget`, `...Parameters`, `...MergeAnimator`, `VRC.SDKBase.Editor.BuildPipeline.VRCBuildPipelineCallbacks` | `MenuToolScanner`, `MenuToolBudget`, `MenuToolApply`: by name, so neither VRCFury nor Modular Avatar is needed to compile |
 | `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
@@ -265,7 +267,8 @@ IconCap:
 | `IconCapWindow.SmallThumbnail` / `LargeThumbnail` | `64` / `128` | Icon Generator source and result size (**Large previews**) |
 | `MenuToolScanner.MaxControls` | `8` | Controls per menu (VRChat's limit); more are paged by VRCFury, otherwise flagged |
 | `BudgetCount.MaxBits` / `MaxParameters` | `256` / `8192` | VRChat's synced bits and custom expression parameters |
-| `MenuToolBudget.TransportBits` | `16` | VRCFury Parameter Compressor's shared transport, in the estimate |
+| `MenuToolCompressor.BatchTime` | `0.1` s | VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time) |
+| `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect | VRCFury's limit for compression |
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760` | Menu Tool's own window; the Menu manager asks for this width in the Main Menu too |
 | `MenuToolWindow.WriteLog` | `8` | Parameter writes listed under the radial |
 
@@ -292,7 +295,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
   - `Tools/RiryTools/Reload domain` (2058), menu key R: `EditorUtility.RequestScriptReload` (also a button on the Main Menu's Tools tab)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
   - `Tools/RiryTools/Menu Mockup` (2065): opens the Edit and Components windows
-  - `Tools/RiryTools/Menu Tool` (2066), written `M&enu Tool` so its menu key is E: the Menu Tool window (also the Main Menu's Menu Tool tab); without the VRChat SDK, the **VRCSDK not found** popup
+  - `Tools/RiryTools/Menu Tool` (2066), written `M&enu Tool` so its menu key is E: the Menu Tool window (the Main Menu's Menu Tool tab shows its Parameter budget; its Menu manager opens this window); without the VRChat SDK, the **VRCSDK not found** popup
   - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)

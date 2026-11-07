@@ -27,6 +27,11 @@
       "name": "com.vrchat.avatars",
       "expression": "3.7.0",
       "define": "RIRYTOOLS_VRC_CONSTRAINTS"
+    },
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.10.6",
+      "define": "RIRYTOOLS_VRC_BIT_WIDTH"
     }
   ],
   "noEngineReferences": false

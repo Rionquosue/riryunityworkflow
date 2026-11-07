@@ -391,8 +391,9 @@ namespace Riry.RiryTools.Editor
 //                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
 //   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK) makes the
-//                            hosted MenuToolWindow. It is drawn outside the tab scroll view (its radial preview is placed over
-//                            the window and cannot follow a scroll view).
+//                            hosted MenuToolWindow (MenuToolWindow.CreateHosted). It shows the Parameter budget, drawn
+//                            outside the tab scroll view (the budget scrolls itself); its Menu manager tab opens the Menu
+//                            Tool window.
 //   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw, and NotDrawn() in a GUI
 //                            pass that drew another tab (drawn: the one drawn), so Menu Tool's radial leaves at once.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
