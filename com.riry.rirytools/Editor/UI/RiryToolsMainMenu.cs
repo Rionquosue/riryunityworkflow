@@ -36,7 +36,7 @@ namespace Riry.RiryTools.Editor
 
         private static readonly string[] Tabs =
         {
-            "Animator Tools", "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools"
+            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools" 
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
