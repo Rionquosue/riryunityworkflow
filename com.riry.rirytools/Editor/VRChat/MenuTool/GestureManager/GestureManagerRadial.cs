@@ -79,9 +79,10 @@ namespace Riry.RiryTools.Editor
                 owner = ScriptableObject.CreateInstance<VRCExpressionsMenu>();
                 owner.hideFlags = HideFlags.HideAndDontSave;
             }
-            descriptor.customExpressions = true;
-            descriptor.expressionsMenu = root;
-            descriptor.expressionParameters = parameters;
+            // Set only when different, so an unchanged preview does not touch the stand-in.
+            if (!descriptor.customExpressions) descriptor.customExpressions = true;
+            if (descriptor.expressionsMenu != root) descriptor.expressionsMenu = root;
+            if (descriptor.expressionParameters != parameters) descriptor.expressionParameters = parameters;
 
             module = new ModuleVrc3(descriptor) { Settings = new ModuleSettings() };
             module.Params.Clear();

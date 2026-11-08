@@ -78,11 +78,12 @@ namespace Riry.RiryTools.Editor
             rowHeight = 18f;
         }
 
-        internal void Set(MenuScan value)
+        /// <summary>Rebuilds the rows; expandAll opens every row (a new target), otherwise rows keep how the user left them.</summary>
+        internal void Set(MenuScan value, bool expandAll)
         {
             scan = value;
             Reload();
-            ExpandAll();
+            if (expandAll) ExpandAll();
         }
 
         protected override TreeViewItem BuildRoot()
@@ -379,9 +380,10 @@ namespace Riry.RiryTools.Editor
 // BudgetTree (this file)     Parameter budget tab. Main Menu: every submenu and control with its synced bits (each parameter
 //                            once, MenuToolBudget.Bits), parameters as the note (both columns give way to the name below
 //                            MinName, their values then in the tooltip), shaded red by synced Floats (darker = more,
-//                            relative to maxFloats; the Root Menu row itself unshaded); entries outside the target are hidden (InFilter). Animator only: per
-//                            controller and layer, synced parameters no menu uses, then those no layer uses. Double-click
-//                            selects and pings the source.
+//                            relative to maxFloats; the Root Menu row itself unshaded); entries outside the target are hidden
+//                            (InFilter). Animator only: per controller and layer, synced parameters no menu uses, then those
+//                            no layer uses. Double-click selects and pings the source. Set(scan, expandAll): every row opened
+//                            only when expandAll (a new target); otherwise collapsed rows stay collapsed.
 // ManagerTree                Menu manager tab: the planned layout. Rows: drag handle (≡, only it starts a drag; none while
 //                            searching), the source's component icon, the control's icon, name, and the folder (submenu) it is
 //                            in (left out, and put in the tooltip, when the row is narrow). Search matches path and parameters. Drag onto a submenu (into it), onto a control (before it)

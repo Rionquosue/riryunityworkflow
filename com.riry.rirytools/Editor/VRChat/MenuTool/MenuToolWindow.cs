@@ -61,6 +61,8 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private GameObject exactFor;
         [NonSerialized] private string exactTime = "";
         [NonSerialized] private BudgetTree budgetTree;
+        // The target the budget tree was last built for: rescans of the same target keep its rows' collapsed state.
+        [NonSerialized] private GameObject budgetTreeFor;
         [NonSerialized] private ManagerTree managerTree;
         [NonSerialized] private SearchField search;
         [NonSerialized] private IMenuToolRadial radial;
@@ -213,7 +215,10 @@ namespace Riry.RiryTools.Editor
             }
             plan = MenuPlan.Load(PlanRoot);
             savedPlan = plan.Json;
-            budgetTree.Set(scan);
+            // Every row starts open for a new target (or a first build with nothing saved); a rescan keeps what was collapsed.
+            bool fresh = target != budgetTreeFor && !(budgetTreeFor == null && budgetState.expandedIDs.Count > 0);
+            budgetTree.Set(scan, fresh);
+            budgetTreeFor = target;
             Replan();
         }
 
@@ -224,7 +229,8 @@ namespace Riry.RiryTools.Editor
             string path = shownPath;
             if (preview != null) preview.Dispose();
             preview = MenuToolPreviewMenus.Build(planned, scan);
-            if (radial == null && MenuToolPreviewMenus.CreateRadial != null)
+            // The Main Menu's copy shows only the Parameter budget, so it never makes a radial.
+            if (radial == null && MenuToolPreviewMenus.CreateRadial != null && !hosted)
             {
                 radial = MenuToolPreviewMenus.CreateRadial();
                 radial.Written += OnWritten;
@@ -798,9 +804,10 @@ namespace Riry.RiryTools.Editor
 //                            ("t:VRCAvatarDescriptor": Hierarchy objects with a VRC Avatar Descriptor), applied when the
 //                            picker closes (pickerId); dragging in and Use selection still take any object.
 //   Refresh / MarkStale      Rescans (MenuToolScanner) on the next Layout after a change (hierarchy, project, Undo, Rescan),
-//                            loads the plan (MenuPlan), rebuilds the trees and the preview (Replan).
-//   Replan                   Planned layout (MenuToolPlanner), the list, the preview menus and the radial, staying in the
-//                            submenu shown before.
+//                            loads the plan (MenuPlan), rebuilds the trees and the preview (Replan). The budget tree opens
+//                            every row only for a new target (budgetTreeFor); a rescan keeps collapsed rows collapsed.
+//   Replan                   Planned layout (MenuToolPlanner), the list, the preview menus and the radial (never for the
+//                            hosted copy), staying in the submenu shown before.
 //   Parameter budget tab     DrawSummary: compression off / on / change (custom parameters, synced, local, synced bits, bits
 //                            and parameters left), Estimated / Exact / Unavailable; the estimate's Note (VRCFury cannot fit
 //                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
