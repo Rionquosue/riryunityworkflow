@@ -56,6 +56,7 @@ SessionState: until the editor quits; survives script reloads.
 | `RiryTools.ScriptLoadGuard.Guarded` | newline-separated asset paths | `ScriptLoadGuard` |
 | `RiryTools.AttachTo.LastAvatar` | instance ID | `AttachToAvatarTracker`: the last avatar selected in the Hierarchy (VRCAvatarDescriptor, else humanoid Animator); fills **Target avatar** |
 | `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines | `MenuToolAvatarKeys`: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved |
+| `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Scene`, `Avatar` (hierarchy path), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order) | Set as entry state; replayed in Play Mode by `GestureManagerEntryState` once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state |
 
 Window fields marked `[SerializeField]` survive script reloads while the window
 is open. Each window file lists them in its glossary.
@@ -273,7 +274,7 @@ IconCap:
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760` | Menu Tool's own window; the Menu manager asks for this width in the Main Menu too |
 | `MenuToolAddMenuDialog.Size` / `ControlSize` | `380` x `112` / `380` x `200` | Menu Tool's Add menu and Add New Control dialogs (fixed size, centred on the main window) |
 | `MenuToolWindow.IconPicker` | `0x52694963` | Control ID of the Assign Menu Icon object picker |
-| `MenuToolWindow.WriteLog` | `8` | Parameter writes listed under the radial |
+| Writes box height (`MenuToolWindow.DrawBits`) | `120` px | The Writes foldout's scroll box: every parameter write since the window opened or Reset menu state, one row each |
 | `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19` | The target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces |
 
 ## Menu paths

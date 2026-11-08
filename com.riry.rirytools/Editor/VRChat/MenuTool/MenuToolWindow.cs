@@ -24,7 +24,6 @@ namespace Riry.RiryTools.Editor
         private const float MinHeight = 760f;
         // Gesture Manager's radial is drawn at this size.
         private const float RadialSize = 300f;
-        private const int WriteLog = 8;
         // The target field's object picker lists only Hierarchy objects with a VRC Avatar Descriptor (prefab assets have
         // GameObject as their type, so the Assets tab finds none).
         private const string AvatarFilter = "t:VRCAvatarDescriptor";
@@ -73,7 +72,10 @@ namespace Riry.RiryTools.Editor
         // The Menu manager's scroll view on screen, from the last Repaint: the radial is only drawn while wholly inside it.
         [NonSerialized] private Rect managerView;
         [NonSerialized] private MenuEntry lastClicked;
-        [NonSerialized] private readonly List<string> writes = new List<string>();
+        // Every parameter write since the window opened or Reset menu state, in order.
+        [NonSerialized] private readonly List<MenuToolEntryState.Write> writes = new List<MenuToolEntryState.Write>();
+        [SerializeField] private bool showWrites;
+        [SerializeField] private Vector2 writesScroll;
         // The window it is drawn in: the Main Menu when hosted there, else itself.
         [NonSerialized] private EditorWindow surface;
         // Where this OnGUI's (0, 0) is on screen.
@@ -669,6 +671,7 @@ namespace Riry.RiryTools.Editor
             DrawPlan();
             DrawBreadcrumbs();
             DrawRadial();
+            DrawEntryState();
             DrawBits();
             EditorGUILayout.EndScrollView();
             if (Event.current.type == EventType.Repaint) managerView = GUIUtility.GUIToScreenRect(GUILayoutUtility.GetLastRect());
@@ -833,7 +836,54 @@ namespace Riry.RiryTools.Editor
                 }
                 if (!entry.Parameters().Any()) EditorGUILayout.LabelField("No parameter.", EditorStyles.miniLabel);
             }
-            if (writes.Count > 0) EditorGUILayout.LabelField("Writes: " + string.Join("   ", writes), EditorStyles.wordWrappedMiniLabel);
+            showWrites = EditorGUILayout.Foldout(showWrites, "Writes (" + writes.Count + ")", true);
+            if (!showWrites) return;
+            writesScroll = EditorGUILayout.BeginScrollView(writesScroll, EditorStyles.helpBox, GUILayout.Height(120f));
+            foreach (MenuToolEntryState.Write write in writes)
+                EditorGUILayout.LabelField(write.Name + " = " + write.Value.ToString("0.###", CultureInfo.InvariantCulture), EditorStyles.miniLabel);
+            EditorGUILayout.EndScrollView();
+        }
+
+        // Set as entry state, Reset entry state, Reset menu state: under the radial.
+        private void DrawEntryState()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(scan.Avatar == null || radial == null))
+                {
+                    if (GUILayout.Button(new GUIContent("Set as entry state",
+                        "In Play Mode this session, once Gesture Manager has set up this avatar, makes these writes in order and opens this submenu.")))
+                        SetEntryState();
+                }
+                using (new EditorGUI.DisabledScope(!MenuToolEntryState.Saved))
+                {
+                    if (GUILayout.Button("Reset entry state")) MenuToolEntryState.Clear();
+                }
+                using (new EditorGUI.DisabledScope(radial == null))
+                {
+                    if (GUILayout.Button(new GUIContent("Reset menu state",
+                        "Sets the preview's parameters back to their defaults and clears the writes. The plan is kept."))) ResetMenuState();
+                }
+            }
+        }
+
+        private void SetEntryState()
+        {
+            Transform root = scan.Avatar.transform;
+            var state = new MenuToolEntryState
+            {
+                Scene = root.gameObject.scene.name, Avatar = MenuToolEntryState.PathOf(root), Menu = shownPath ?? "",
+                Writes = new List<MenuToolEntryState.Write>(writes)
+            };
+            state.Save();
+        }
+
+        private void ResetMenuState()
+        {
+            radial.ResetValues();
+            pendingWrites.Clear();
+            writes.Clear();
+            lastClicked = null;
         }
 
         // Writes arrive while the radial handles an event; they are shown from the next Layout pass.
@@ -847,8 +897,7 @@ namespace Riry.RiryTools.Editor
         {
             foreach (KeyValuePair<string, float> write in pendingWrites)
             {
-                writes.Insert(0, write.Key + " = " + write.Value.ToString("0.###", CultureInfo.InvariantCulture));
-                if (writes.Count > WriteLog) writes.RemoveAt(writes.Count - 1);
+                writes.Add(new MenuToolEntryState.Write { Name = write.Key, Value = write.Value });
                 // The control that wrote it: in the submenu shown first, else anywhere.
                 MenuEntry at = planned != null ? planned.Find(shownPath) ?? planned : null;
                 if (at == null) continue;

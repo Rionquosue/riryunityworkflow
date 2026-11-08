@@ -37,6 +37,9 @@ namespace Riry.RiryTools.Editor
 
         float Value(string parameter);
 
+        /// <summary>Sets every parameter of the menu back to its default.</summary>
+        void ResetValues();
+
         /// <summary>Every parameter write the preview makes: name and value.</summary>
         event Action<string, float> Written;
 

@@ -66,12 +66,14 @@ namespace Riry.RiryTools.Editor
         private RadialMenu radial;
         // The key Gesture Manager files its radial under (any ScriptableObject).
         private ScriptableObject owner;
+        private VRCExpressionParameters shownParameters;
 
         public event Action<string, float> Written;
         public event Action<VRCExpressionsMenu.Control> ContextClicked;
 
         public void Show(VRCExpressionsMenu root, VRCExpressionParameters parameters)
         {
+            shownParameters = parameters;
             var values = new Dictionary<string, float>();
             if (module != null)
             {
@@ -232,6 +234,18 @@ namespace Riry.RiryTools.Editor
         {
             Vrc3Param param = module != null ? module.GetParam(parameter) : null;
             return param != null ? param.FloatValue() : 0f;
+        }
+
+        public void ResetValues()
+        {
+            if (module == null) return;
+            foreach (KeyValuePair<string, Vrc3Param> pair in module.Params.ToList())
+            {
+                if (Vrc3DefaultParams.Parameters.ContainsKey(pair.Key)) continue;
+                VRCExpressionParameters.Parameter declared = shownParameters != null
+                    ? shownParameters.parameters.FirstOrDefault(p => p.name == pair.Key) : null;
+                pair.Value.Set(module, declared != null ? declared.defaultValue : 0f);
+            }
         }
 
         public void Dispose()
