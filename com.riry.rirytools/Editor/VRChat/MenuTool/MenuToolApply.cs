@@ -24,6 +24,8 @@ namespace Riry.RiryTools.Editor
         private const string VrcfuryType = "VF.Model.VRCFury";
         private const string MoveType = "VF.Model.Feature.MoveMenuItem";
         private const string ReorderType = "VF.Model.Feature.ReorderMenuItem";
+        private const string ToggleType = "VF.Model.Feature.Toggle";
+        private const string SetIconType = "VF.Model.Feature.SetIcon";
         private const string MaInstallerType = "nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller";
         private const string MaItemType = "nadena.dev.modular_avatar.core.ModularAvatarMenuItem";
         // Modular Avatar's SubmenuSource.Children.
@@ -66,7 +68,7 @@ namespace Riry.RiryTools.Editor
                     MoveCheck check = checks[0];
                     if (!check.Ok)
                     {
-                        report.Problems.Add((move.IsAdd ? "New menu " + check.After : move.From) + ": " +
+                        report.Problems.Add((move.IsAdd ? "New menu " + check.After : move.IsAddControl ? "New control " + check.After : move.From) + ": " +
                             string.Join(" ", check.Errors.Concat(check.Edit == MoveEdit.Ambiguous ? new[] { "No source chosen." } : new string[0])));
                         continue;
                     }
@@ -80,7 +82,41 @@ namespace Riry.RiryTools.Editor
                         report.Applied++;
                         continue;
                     }
+                    if (move.IsAddControl)
+                    {
+                        var control = new MenuEntry { Name = move.NewControl.Trim(), Type = (VRCExpressionsMenu.Control.ControlType)move.ControlType };
+                        MenuToolPlanner.ControlOf(move, control);
+                        expected.Add(new Expected { Path = check.After, Type = control.Type, Icon = control.Icon,
+                            Parameters = check.Edit == MoveEdit.NewControlVrcfury ? null : control.Parameters().ToArray() });
+                        if (check.Edit == MoveEdit.NewControlAsset) NewControlAsset(scan, destination, control, Index(scan, ref references), report);
+                        else if (check.Edit == MoveEdit.NewControlMa) NewControlMa(scan, destination, control);
+                        else NewRule(scan.Avatar.gameObject, MenuToolScanner.TypeNamed(VrcfuryType), ToggleType, rule =>
+                        {
+                            string into = MenuToolVrcfuryMenu.PathOf(destination);
+                            rule.FindPropertyRelative("name").stringValue = (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(control.Name);
+                            if (control.Icon != null)
+                            {
+                                rule.FindPropertyRelative("enableIcon").boolValue = true;
+                                rule.FindPropertyRelative("icon.objRef").objectReferenceValue = control.Icon;
+                            }
+                            if (control.Parameter.Length > 0)
+                            {
+                                rule.FindPropertyRelative("useGlobalParam").boolValue = true;
+                                rule.FindPropertyRelative("globalParam").stringValue = control.Parameter;
+                            }
+                        });
+                        report.Applied++;
+                        continue;
+                    }
                     MenuEntry entry = scan.Root.Find(move.From);
+                    if (move.AssignIcon)
+                    {
+                        Texture2D icon = move.IconTexture;
+                        expected.Add(new Expected { Path = entry.Path, Type = entry.Type, Icon = icon, Parameters = entry.Parameters().ToArray() });
+                        SetIcon(scan, entry, icon, check.Edit, Index(scan, ref references), report);
+                        report.Applied++;
+                        continue;
+                    }
                     expected.Add(new Expected { Path = check.After, Type = entry.Type, Icon = entry.Icon, Parameters = entry.Parameters().ToArray() });
                     switch (check.Edit)
                     {
@@ -109,7 +145,7 @@ namespace Riry.RiryTools.Editor
             {
                 MenuEntry found = after.Root.Find(item.Path);
                 if (found == null) report.Problems.Add(item.Path + " is not where it was moved to.");
-                else if (found.Type != item.Type || found.Icon != item.Icon || !found.Parameters().SequenceEqual(item.Parameters))
+                else if (found.Type != item.Type || found.Icon != item.Icon || item.Parameters != null && !found.Parameters().SequenceEqual(item.Parameters))
                     report.Problems.Add(item.Path + " changed type, icon or parameters while moving.");
             }
             RiryLog.Info(RiryLog.MenuTool, "Applied " + report.Applied + " of " + total + " menu moves to " + target.name + " (one undo step)" +
@@ -174,6 +210,50 @@ namespace Riry.RiryTools.Editor
                 labels = new VRCExpressionsMenu.Control.Label[0]
             });
             EditorUtility.SetDirty(holder);
+        }
+
+        // Add New Control in a menu asset: the control at the end of the parent's menu (made safe to change first).
+        private static void NewControlAsset(MenuScan scan, MenuEntry parent, MenuEntry control, ReferenceIndex index, Report report)
+        {
+            VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), parent, report);
+            Undo.RecordObject(holder, UndoName);
+            holder.controls.Add(new VRCExpressionsMenu.Control
+            {
+                name = control.Name,
+                type = control.Type,
+                icon = control.Icon,
+                value = control.Value,
+                parameter = new VRCExpressionsMenu.Control.Parameter { name = control.Parameter },
+                subParameters = control.SubParameters.Select(n => new VRCExpressionsMenu.Control.Parameter { name = n }).ToArray(),
+                labels = new VRCExpressionsMenu.Control.Label[0]
+            });
+            EditorUtility.SetDirty(holder);
+        }
+
+        // Assign Menu Icon through the chosen owner.
+        private static void SetIcon(MenuScan scan, MenuEntry entry, Texture2D icon, MoveEdit edit, ReferenceIndex index, Report report)
+        {
+            switch (edit)
+            {
+                case MoveEdit.IconAsset:
+                    VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), entry.Parent, report);
+                    Undo.RecordObject(holder, UndoName);
+                    holder.controls[entry.OwnerIndex].icon = icon;
+                    EditorUtility.SetDirty(holder);
+                    break;
+                case MoveEdit.IconMa:
+                    var item = new SerializedObject(entry.MaItem);
+                    item.FindProperty("Control.icon").objectReferenceValue = icon;
+                    item.ApplyModifiedProperties();
+                    break;
+                default:
+                    NewRule(scan.Avatar.gameObject, MenuToolScanner.TypeNamed(VrcfuryType), SetIconType, rule =>
+                    {
+                        rule.FindPropertyRelative("path").stringValue = MenuToolVrcfuryMenu.PathOf(entry);
+                        rule.FindPropertyRelative("icon.objRef").objectReferenceValue = icon;
+                    });
+                    break;
+            }
         }
 
         /// <summary>
@@ -419,6 +499,19 @@ namespace Riry.RiryTools.Editor
         // targeting the parent's menu (none for the root menu).
         private static void NewMaItem(MenuScan scan, MenuEntry parent, string name)
         {
+            NewMaObject(scan, parent, new MenuEntry { Name = name });
+        }
+
+        // Add New Control as a Modular Avatar Menu Item, placed as NewMaItem places a new menu.
+        private static void NewControlMa(MenuScan scan, MenuEntry parent, MenuEntry control)
+        {
+            NewMaObject(scan, parent, control);
+        }
+
+        // The new object for an MA item: SubMenu (children) for a new menu, else the control's fields.
+        private static void NewMaObject(MenuScan scan, MenuEntry parent, MenuEntry control)
+        {
+            string name = control.Name;
             Type itemType = MenuToolScanner.TypeNamed(MaItemType), installerType = MenuToolScanner.TypeNamed(MaInstallerType);
             if (itemType == null || installerType == null) throw new InvalidOperationException("Modular Avatar's menu components were not found; Modular Avatar may have changed.");
             Transform under = parent.MaChildrenSource != null ? parent.MaChildrenSource.transform : scan.Avatar.transform;
@@ -437,8 +530,17 @@ namespace Riry.RiryTools.Editor
             }
             var item = new SerializedObject(Undo.AddComponent(made, itemType));
             item.FindProperty("Control.name").stringValue = name;
-            item.FindProperty("Control.type").intValue = (int)VRCExpressionsMenu.Control.ControlType.SubMenu;
-            item.FindProperty("MenuSource").intValue = MaChildrenSource;
+            item.FindProperty("Control.type").intValue = (int)control.Type;
+            if (control.IsSubMenu) item.FindProperty("MenuSource").intValue = MaChildrenSource;
+            else
+            {
+                item.FindProperty("Control.icon").objectReferenceValue = control.Icon;
+                item.FindProperty("Control.value").floatValue = control.Value;
+                item.FindProperty("Control.parameter.name").stringValue = control.Parameter;
+                SerializedProperty subs = item.FindProperty("Control.subParameters");
+                subs.arraySize = control.SubParameters.Length;
+                for (int i = 0; i < control.SubParameters.Length; i++) subs.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue = control.SubParameters[i];
+            }
             item.ApplyModifiedProperties();
         }
 
@@ -496,4 +598,10 @@ namespace Riry.RiryTools.Editor
 //   NewMaItem                Add menu: a new object named after the menu (RegisterCreatedObjectUndo), last under the parent's MA
 //                            children object, or under the avatar with an MA Menu Installer (installTargetMenu the parent's
 //                            asset, none for the root); an MA Menu Item on it (Control.name, Control.type SubMenu, MenuSource
-//                            Children, MaChildrenSource 1). MA types by name (MaInstallerType, MaItemType).
+//                            Children, MaChildrenSource 1). MA types by name (MaInstallerType, MaItemType). NewMaObject makes
+//                            it; NewControlMa uses it for a control (type, icon, value, parameter, sub-parameters).
+//   NewControlAsset          Add New Control: the control at the end of the parent's menu asset (Owned).
+//   New VRCFury Toggle       NewRule ToggleType on the avatar: name (the menu path), enableIcon/icon, useGlobalParam/globalParam
+//                            for a named parameter (else VRCFury makes one); its parameters are not verified after Apply.
+//   SetIcon                  Assign Menu Icon: the control's icon in its menu asset (Owned), the MA item's Control.icon, or a
+//                            VRCFury Set Icon rule (SetIconType: path, icon.objRef).

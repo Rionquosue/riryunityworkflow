@@ -23,10 +23,28 @@ namespace Riry.RiryTools.Editor
         public string Choice = "";
         // Add menu: the new submenu's name ("" for a move).
         public string NewMenu = "";
+        // Add New Control: the new control's name, type (ControlType), parameter, value and icon (texture GUID).
+        public string NewControl = "";
+        public int ControlType;
+        public string Parameter = "";
+        public float Value = 1f;
+        public string Icon = "";
+        // Assign Menu Icon: the entry at From gets the texture Icon.
+        public bool AssignIcon;
 
         internal bool IsAdd
         {
             get { return !string.IsNullOrEmpty(NewMenu); }
+        }
+
+        internal bool IsAddControl
+        {
+            get { return !string.IsNullOrEmpty(NewControl); }
+        }
+
+        internal Texture2D IconTexture
+        {
+            get { return string.IsNullOrEmpty(Icon) ? null : AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(Icon)); }
         }
     }
 
@@ -258,6 +276,14 @@ namespace Riry.RiryTools.Editor
         // Add menu: a new object with a Modular Avatar Menu Item (SubMenu, children from its own object), under the parent's
         // MA children object, or under the avatar with an MA Menu Installer targeting the parent menu.
         NewMaItem,
+        // Add New Control: a control in the parent's menu asset, an MA Menu Item object (as NewMaItem), or a VRCFury Toggle.
+        NewControlAsset,
+        NewControlMa,
+        NewControlVrcfury,
+        // Assign Menu Icon: the control's icon in its menu asset, a VRCFury Set Icon rule, or the MA Menu Item's icon.
+        IconAsset,
+        IconVrcfury,
+        IconMa,
         // Ownership unclear or unsupported: the user picks one of the candidates.
         Ambiguous,
         Invalid
@@ -295,20 +321,29 @@ namespace Riry.RiryTools.Editor
             MenuEntry root = scan.Root.Clone();
             foreach (PlannedMove move in plan.Moves)
             {
-                if (move.IsAdd)
+                if (move.IsAdd || move.IsAddControl)
                 {
                     MoveCheck added = CheckAdd(scan, root, move);
                     checks.Add(added);
                     if (added.Errors.Count > 0) continue;
-                    var menu = new MenuEntry
+                    var made = new MenuEntry
                     {
-                        Name = move.NewMenu,
-                        Type = VRCExpressionsMenu.Control.ControlType.SubMenu,
-                        Origin = added.Edit == MoveEdit.NewMaItem ? MenuOrigin.ModularAvatar : MenuOrigin.Native,
+                        Name = (move.IsAdd ? move.NewMenu : move.NewControl).Trim(),
+                        Type = move.IsAdd ? VRCExpressionsMenu.Control.ControlType.SubMenu : (VRCExpressionsMenu.Control.ControlType)move.ControlType,
+                        Origin = added.Edit == MoveEdit.NewMaItem || added.Edit == MoveEdit.NewControlMa ? MenuOrigin.ModularAvatar
+                            : added.Edit == MoveEdit.NewControlVrcfury ? MenuOrigin.VRCFury : MenuOrigin.Native,
                         Added = added.Edit
                     };
-                    added.Destination.Add(menu);
-                    added.Entry = menu;
+                    if (move.IsAddControl) ControlOf(move, made);
+                    added.Destination.Add(made);
+                    added.Entry = made;
+                    continue;
+                }
+                if (move.AssignIcon)
+                {
+                    MoveCheck icon = CheckIcon(scan, root, move);
+                    checks.Add(icon);
+                    if (icon.Errors.Count == 0) icon.Entry.Icon = move.IconTexture;
                     continue;
                 }
                 MoveCheck check = Check(scan, root, move);
@@ -364,9 +399,90 @@ namespace Riry.RiryTools.Editor
             return check;
         }
 
-        // Add menu: the parent must still be a submenu with room and no item of that name; then who owns the parent picks the edit.
+        /// <summary>A new control's fields from its planned add: puppets take the parameter as their first sub-parameter.</summary>
+        internal static void ControlOf(PlannedMove move, MenuEntry entry)
+        {
+            entry.Icon = move.IconTexture;
+            entry.Value = move.Value;
+            int axes = Axes(entry.Type);
+            if (axes == 0) entry.Parameter = move.Parameter ?? "";
+            else
+            {
+                entry.SubParameters = new string[axes];
+                entry.SubParameters[0] = move.Parameter ?? "";
+                for (int i = 1; i < axes; i++) entry.SubParameters[i] = "";
+            }
+        }
+
+        // Sub-parameters a control type uses (0 for Toggle and Button).
+        internal static int Axes(VRCExpressionsMenu.Control.ControlType type)
+        {
+            switch (type)
+            {
+                case VRCExpressionsMenu.Control.ControlType.RadialPuppet: return 1;
+                case VRCExpressionsMenu.Control.ControlType.TwoAxisPuppet: return 2;
+                case VRCExpressionsMenu.Control.ControlType.FourAxisPuppet: return 4;
+                default: return 0;
+            }
+        }
+
+        // Assign Menu Icon: the entry and texture must exist; who owns the entry picks the edit.
+        private static MoveCheck CheckIcon(MenuScan scan, MenuEntry root, PlannedMove move)
+        {
+            Texture2D texture = move.IconTexture;
+            var check = new MoveCheck { Move = move, Before = move.From, After = move.From + " (icon " + (texture != null ? texture.name : "?") + ")" };
+            check.Entry = root.Find(move.From ?? "");
+            if (check.Entry == null || check.Entry.Parent == null)
+            {
+                check.Errors.Add(move.From + " is no longer in the menu.");
+                return check;
+            }
+            if (texture == null)
+            {
+                check.Errors.Add("The icon texture is no longer in the project.");
+                return check;
+            }
+            if (check.Entry.Generated)
+            {
+                check.Errors.Add(check.Entry.Name + " is made by VRCFury's pagination and cannot take an icon.");
+                return check;
+            }
+            MenuEntry entry = check.Entry;
+            bool asset = entry.Origin == MenuOrigin.Native && (entry.OwnerMenu != null || entry.Added == MoveEdit.NewControlAsset || entry.Added == MoveEdit.NewMenuAsset);
+            bool ma = entry.Origin == MenuOrigin.ModularAvatar && (entry.MaItem != null && !EditorUtility.IsPersistent(entry.MaItem) || entry.Added == MoveEdit.NewControlMa || entry.Added == MoveEdit.NewMaItem);
+            if (asset) check.Candidates.Add(MoveEdit.IconAsset);
+            if (ma) check.Candidates.Add(MoveEdit.IconMa);
+            if (scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MoveEdit.IconVrcfury);
+            Decide(check, entry.Origin == MenuOrigin.Native && asset ? MoveEdit.IconAsset : entry.Origin == MenuOrigin.ModularAvatar && ma ? MoveEdit.IconMa
+                : entry.Origin == MenuOrigin.VRCFury && check.Candidates.Contains(MoveEdit.IconVrcfury) ? MoveEdit.IconVrcfury : MoveEdit.Ambiguous,
+                "No supported edit sets the icon of " + entry.Path + ".");
+            if (check.Edit == MoveEdit.IconAsset && entry.OwnerMenu != null) check.Affected.Add(entry.OwnerMenu);
+            if (check.Edit == MoveEdit.IconMa && entry.MaItem != null) check.Affected.Add(entry.MaItem);
+            if (check.Edit == MoveEdit.IconVrcfury) check.Affected.Add(scan.Avatar.gameObject);
+            return check;
+        }
+
+        // The edit: the user's Choice when it fits, else preferred (the only candidate when there is one); none is Invalid.
+        private static void Decide(MoveCheck check, MoveEdit preferred, string none)
+        {
+            if (check.Candidates.Count == 0)
+            {
+                check.Edit = MoveEdit.Invalid;
+                check.Errors.Add(none);
+                return;
+            }
+            if (check.Candidates.Count == 1) preferred = check.Candidates[0];
+            MoveEdit chosen;
+            if (!string.IsNullOrEmpty(check.Move.Choice) && Enum.TryParse(check.Move.Choice, out chosen) && check.Candidates.Contains(chosen)) check.Edit = chosen;
+            else check.Edit = preferred;
+            if (check.Edit == MoveEdit.Ambiguous) check.Warnings.Add("More than one source could make this: choose one.");
+        }
+
+        // Add menu / Add New Control: the parent must still be a submenu with room and no item of that name; then who owns
+        // the parent picks the edit.
         private static MoveCheck CheckAdd(MenuScan scan, MenuEntry root, PlannedMove move)
         {
+            if (move.IsAddControl) return CheckAddControl(scan, root, move);
             string name = move.NewMenu.Trim();
             string parentName = string.IsNullOrEmpty(move.To) ? "the root menu" : move.To;
             var check = new MoveCheck { Move = move, Before = "New menu" };
@@ -416,6 +532,50 @@ namespace Riry.RiryTools.Editor
             return check;
         }
 
+        private static MoveCheck CheckAddControl(MenuScan scan, MenuEntry root, PlannedMove move)
+        {
+            string name = move.NewControl.Trim();
+            var type = (VRCExpressionsMenu.Control.ControlType)move.ControlType;
+            string parentName = string.IsNullOrEmpty(move.To) ? "the root menu" : move.To;
+            var check = new MoveCheck { Move = move, Before = "New control" };
+            check.Destination = root.Find(move.To ?? "");
+            check.After = (string.IsNullOrEmpty(move.To) ? "" : move.To + "/") + name;
+            if (name.Length == 0 || name.Contains("/")) check.Errors.Add("A control name cannot be empty or contain /.");
+            else if (check.Destination == null || !check.Destination.IsSubMenu) check.Errors.Add("The parent " + parentName + " is no longer a submenu.");
+            else if (check.Destination.Children.Any(child => child.Name == name)) check.Errors.Add(parentName + " already has an item named " + name + ".");
+            if (check.Errors.Count > 0) return check;
+            int count = check.Destination.Children.Count + 1;
+            if (count > MenuToolScanner.MaxControls)
+            {
+                if (scan.VrcfuryInstalled) check.Warnings.Add(parentName + " will hold " + count + " controls: VRCFury pages the rest into a Next submenu.");
+                else check.Errors.Add(parentName + " would hold " + count + " controls; VRChat allows " + MenuToolScanner.MaxControls + ".");
+            }
+            MenuEntry parent = check.Destination;
+            if (scan.Avatar != null && NativeAsset(scan, parent)) check.Candidates.Add(MoveEdit.NewControlAsset);
+            if (scan.ModularAvatarInstalled && scan.Avatar != null && !EditorUtility.IsPersistent(scan.Avatar) &&
+                (MaChildren(parent) || parent.Parent == null || parent.SubMenuAsset != null || parent.Added == MoveEdit.NewMenuAsset))
+                check.Candidates.Add(MoveEdit.NewControlMa);
+            if (scan.VrcfuryInstalled && scan.Avatar != null && type == VRCExpressionsMenu.Control.ControlType.Toggle)
+                check.Candidates.Add(MoveEdit.NewControlVrcfury);
+            Decide(check, parent.Origin == MenuOrigin.Native && check.Candidates.Contains(MoveEdit.NewControlAsset) ? MoveEdit.NewControlAsset
+                : MaChildren(parent) && check.Candidates.Contains(MoveEdit.NewControlMa) ? MoveEdit.NewControlMa : MoveEdit.Ambiguous,
+                "No supported edit adds a control to " + parentName + ".");
+            if (check.Errors.Count > 0) return check;
+            // VRCFury makes its toggle's parameter (a global one when named); the others need a declared one.
+            string parameter = (move.Parameter ?? "").Trim();
+            if (check.Edit != MoveEdit.NewControlVrcfury && parameter.Length > 0 && scan.Param(parameter) == null)
+                check.Warnings.Add(parameter + " is not a declared parameter: add it to the avatar's parameters.");
+            if (Axes(type) > 1) check.Warnings.Add("Only the first axis parameter is set; set the others in the source after Apply.");
+            if (check.Edit == MoveEdit.NewControlAsset)
+            {
+                UnityEngine.Object parentMenu = parent.Parent == null ? scan.Avatar.expressionsMenu : parent.SubMenuAsset;
+                if (parentMenu != null) check.Affected.Add(parentMenu);
+            }
+            else if (check.Edit == MoveEdit.NewControlMa) check.Affected.Add(parent.MaChildrenSource != null ? (UnityEngine.Object)parent.MaChildrenSource : scan.Avatar.gameObject);
+            else if (check.Edit == MoveEdit.NewControlVrcfury) check.Affected.Add(scan.Avatar.gameObject);
+            return check;
+        }
+
         // A native submenu with its own menu asset (the root: the descriptor's menu), or one the plan adds as a menu asset.
         private static bool NativeAsset(MenuScan scan, MenuEntry menu)
         {
@@ -448,12 +608,12 @@ namespace Riry.RiryTools.Editor
                     break;
                 case MenuOrigin.Native:
                     // A menu the plan adds counts as made: Apply makes it before the moves after it.
-                    if (NativeAsset(scan, destination) && (entry.OwnerMenu != null || entry.Added == MoveEdit.NewMenuAsset))
+                    if (NativeAsset(scan, destination) && (entry.OwnerMenu != null || entry.Added == MoveEdit.NewMenuAsset || entry.Added == MoveEdit.NewControlAsset))
                         check.Candidates.Add(MoveEdit.NativeAssets);
                     if (vrcfuryRule) check.Candidates.Add(MoveEdit.VrcfuryRule);
                     break;
                 case MenuOrigin.ModularAvatar:
-                    if ((entry.MaItem != null && CanReparent(entry.MaItem.gameObject) || entry.Added == MoveEdit.NewMaItem) && MaChildren(destination))
+                    if ((entry.MaItem != null && CanReparent(entry.MaItem.gameObject) || entry.Added == MoveEdit.NewMaItem || entry.Added == MoveEdit.NewControlMa) && MaChildren(destination))
                         check.Candidates.Add(MoveEdit.MaReparent);
                     if (entry.MaInstaller != null && (entry.MaItem == null || entry.MaItem.gameObject == entry.MaInstaller.gameObject) && entry.Parent != null &&
                         IsInstallRoot(entry) && !MaChildren(destination) &&
@@ -546,6 +706,12 @@ namespace Riry.RiryTools.Editor
                 case MoveEdit.MaRetarget: return "Retarget the MA Menu Installer";
                 case MoveEdit.NewMenuAsset: return "New menu asset";
                 case MoveEdit.NewMaItem: return "New MA Menu Item";
+                case MoveEdit.NewControlAsset: return "New control in the menu asset";
+                case MoveEdit.NewControlMa: return "New MA Menu Item";
+                case MoveEdit.NewControlVrcfury: return "New VRCFury Toggle";
+                case MoveEdit.IconAsset: return "Icon in the menu asset";
+                case MoveEdit.IconVrcfury: return "Set Icon (VRCFury)";
+                case MoveEdit.IconMa: return "Icon on the MA Menu Item";
                 case MoveEdit.Ambiguous: return "Choose a source";
                 default: return "Cannot move";
             }
@@ -558,7 +724,9 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // PlannedMove                From (path), To (submenu path, "" root), Index (-1 end), Choice (the chosen MoveEdit when several fit),
-//                            NewMenu (Add menu: the new submenu's name, added at the end of To; IsAdd).
+//                            NewMenu (Add menu: the new submenu's name, added at the end of To; IsAdd); NewControl, ControlType,
+//                            Parameter, Value, Icon (Add New Control, IsAddControl; Icon a texture GUID, IconTexture); AssignIcon
+//                            (Assign Menu Icon: From gets Icon).
 // MenuPlan (this file)       The pathing JSON: UserSettings/RiryTools/MenuTool/<Key>.json; Key is the avatar's stamped GUID
 //                            (MenuToolAvatarKeys), kept in the plan so it is only ever saved to its own avatar's file. Load / Save
 //                            (an empty plan deletes the file); Json is what Save writes. Only Apply changes the sources.
@@ -567,7 +735,8 @@ namespace Riry.RiryTools.Editor
 //                            by instance id) until its scene is saved (sceneSaved), then it joins avatars.json.
 // MoveEdit                   NativeAssets (move the control between menu assets), VrcfuryRule (avatar-level Move / Reorder Menu
 //                            Item), MaReparent (MA Menu Item object), MaRetarget (MA installer's target menu), NewMenuAsset and
-//                            NewMaItem (Add menu), Ambiguous, Invalid.
+//                            NewMaItem (Add menu), NewControlAsset / NewControlMa / NewControlVrcfury (Add New Control),
+//                            IconAsset / IconVrcfury / IconMa (Assign Menu Icon), Ambiguous, Invalid.
 // MoveCheck                  A move checked against the menu: Entry, Destination, Before/After paths, Edit, Candidates, Errors,
 //                            Warnings (paging, same name), Affected sources; Ok when it can be applied.
 // MenuToolPlanner
@@ -584,5 +753,12 @@ namespace Riry.RiryTools.Editor
 //                            descriptor's root menu), NewMaItem with Modular Avatar for an MA children submenu, the root or any
 //                            submenu with an asset (never on a prefab asset). Several: native parent NewMenuAsset, MA children
 //                            NewMaItem, else the user's Choice. VRCFury has no feature that makes an empty submenu.
+//   CheckAddControl          Add New Control: as CheckAdd; edits NewControlAsset (native parent with an asset), NewControlMa
+//                            (with MA, as NewMaItem), NewControlVrcfury (VRCFury installed, Toggle only). Warns on an undeclared
+//                            parameter (not for VRCFury, which makes its own) and on puppets with more than one axis (only the
+//                            first is set). ControlOf / Axes: the planned entry's fields.
+//   CheckIcon                Assign Menu Icon: the entry and texture exist, not a pagination page; IconAsset (native control),
+//                            IconMa (MA item), IconVrcfury (VRCFury installed, any entry); the owner's edit is preferred.
+//   Decide                   The user's Choice, else the preferred edit (the only one when single); none: Invalid.
 //   NativeAsset / MaChildren Whether a submenu takes native moves and adds (its own asset) or MA reparenting (a children object),
 //                            counting menus the plan adds.

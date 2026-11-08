@@ -95,7 +95,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
-| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**); deleted when empty | `MenuPlan` |
+| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**); deleted when empty | `MenuPlan` |
 | `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar | `MenuToolAvatarKeys` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
@@ -271,7 +271,8 @@ IconCap:
 | `MenuToolCompressor.BatchTime` | `0.1` s | VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time) |
 | `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect | VRCFury's limit for compression |
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760` | Menu Tool's own window; the Menu manager asks for this width in the Main Menu too |
-| `MenuToolAddMenuDialog.Size` | `380` x `112` | Menu Tool's Add menu dialog (fixed size, centred on the main window) |
+| `MenuToolAddMenuDialog.Size` / `ControlSize` | `380` x `112` / `380` x `200` | Menu Tool's Add menu and Add New Control dialogs (fixed size, centred on the main window) |
+| `MenuToolWindow.IconPicker` | `0x52694963` | Control ID of the Assign Menu Icon object picker |
 | `MenuToolWindow.WriteLog` | `8` | Parameter writes listed under the radial |
 | `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19` | The target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces |
 

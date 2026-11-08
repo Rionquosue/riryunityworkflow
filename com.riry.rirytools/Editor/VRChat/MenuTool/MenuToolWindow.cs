@@ -30,6 +30,8 @@ namespace Riry.RiryTools.Editor
         private const string AvatarFilter = "t:VRCAvatarDescriptor";
         // Width of Unity's picker button at the right end of an object field.
         private const float PickerButton = 19f;
+        // The control ID the Assign Menu Icon picker reports to (menu callbacks run outside OnGUI, so no GetControlID).
+        private const int IconPicker = 0x52694963;
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
@@ -80,6 +82,9 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private bool radialInView;
         // The control ID the open object picker reports to, or 0.
         [NonSerialized] private int pickerId;
+        // Assign Menu Icon: the icon picker's control ID (0 when none is open) and the entry path it was opened for.
+        [NonSerialized] private int iconPickerId;
+        [NonSerialized] private string iconFor = "";
 
         public EditorWindow Surface
         {
@@ -280,7 +285,8 @@ namespace Riry.RiryTools.Editor
 
         private static bool Same(PlannedMove a, PlannedMove b)
         {
-            return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu;
+            return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu && a.NewControl == b.NewControl &&
+                a.AssignIcon == b.AssignIcon && a.Icon == b.Icon;
         }
 
         // Every submenu of the planned layout, the root first: its path and how menus show it ("Root › A › B").
@@ -293,6 +299,12 @@ namespace Riry.RiryTools.Editor
         private void MoveToMenu(MenuEntry entry)
         {
             var menu = new GenericMenu();
+            AddMoveItems(menu, entry);
+            menu.ShowAsContext();
+        }
+
+        private void AddMoveItems(GenericMenu menu, MenuEntry entry)
+        {
             foreach (MenuEntry destination in new[] { planned }.Concat(planned.Descendants()).Where(e => e.IsSubMenu))
             {
                 if (destination == entry || MenuToolScanner.IsUnder(destination, entry) || destination == entry.Parent) continue;
@@ -301,7 +313,6 @@ namespace Riry.RiryTools.Editor
                 menu.AddItem(new GUIContent("Move to…/" + label.Replace("/", "∕")), false, () => AddMove(entry.Path, to, -1));
             }
             if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("Move to…/No other submenu"));
-            menu.ShowAsContext();
         }
 
         // A right-click on the radial: the list's context menu for the control that slice shows; a greyed entry for a slice
@@ -310,20 +321,59 @@ namespace Riry.RiryTools.Editor
         {
             MenuEntry entry = null;
             if (control != null && preview != null) preview.EntryOfControl.TryGetValue(control, out entry);
-            if (entry != null)
-            {
-                MoveToMenu(entry);
-                return;
-            }
             var menu = new GenericMenu();
-            menu.AddDisabledItem(new GUIContent("Move to… (not a menu control)"));
+            if (entry != null) AddMoveItems(menu, entry);
+            else menu.AddDisabledItem(new GUIContent("Move to… (not a menu control)"));
+            // New items go in the right-clicked submenu, or the page it is on.
+            string into = entry != null && entry.IsSubMenu ? entry.Path : shownPath;
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Add New Control…"), false, () => AddControl(into));
+            menu.AddItem(new GUIContent("Add Submenu…"), false, () => AddMenu(into));
+            if (entry != null && !entry.Generated)
+            {
+                string path = entry.Path;
+                menu.AddItem(new GUIContent("Assign Menu Icon"), false, () =>
+                {
+                    iconFor = path;
+                    iconPickerId = IconPicker;
+                    EditorGUIUtility.ShowObjectPicker<Texture2D>(entry.Icon, false, "", iconPickerId);
+                });
+            }
+            else menu.AddDisabledItem(new GUIContent("Assign Menu Icon"));
             menu.ShowAsContext();
         }
 
-        // Add menu: the dialog asks for the name and the parent submenu (the one shown in the radial at first).
-        private void AddMenu()
+        // Assign Menu Icon: the object picker's choice, when it closes, is planned for the entry it was opened on.
+        private void PickedIcon()
         {
-            MenuToolAddMenuDialog.Open(Submenus().ToList(), shownPath, (name, parent) =>
+            Event current = Event.current;
+            if (iconPickerId == 0 || current.type != EventType.ExecuteCommand || current.commandName != "ObjectSelectorClosed" ||
+                EditorGUIUtility.GetObjectPickerControlID() != iconPickerId) return;
+            iconPickerId = 0;
+            var texture = EditorGUIUtility.GetObjectPickerObject() as Texture2D;
+            MenuEntry entry = planned != null ? planned.Find(iconFor) : null;
+            if (texture == null || entry == null || entry.Icon == texture) return;
+            string guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(texture));
+            string path = iconFor;
+            ChangePlan("Plan a menu icon", moves => moves.Add(new PlannedMove { From = path, AssignIcon = true, Icon = guid }));
+        }
+
+        // Add New Control: the dialog asks for the control's fields and its parent (into chosen first).
+        private void AddControl(string into)
+        {
+            string[] names = scan != null ? scan.Params.Keys.OrderBy(n => n, StringComparer.Ordinal).ToArray() : new string[0];
+            MenuToolAddMenuDialog.OpenControl(Submenus().ToList(), into, names, made =>
+                ChangePlan("Plan a new control", moves => moves.Add(new PlannedMove
+                {
+                    To = made.Parent, NewControl = made.Name, ControlType = (int)made.Type, Parameter = made.Parameter, Value = made.Value,
+                    Icon = made.Icon != null ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(made.Icon)) : ""
+                })));
+        }
+
+        // Add menu: the dialog asks for the name and the parent submenu (the one shown in the radial at first).
+        private void AddMenu(string into = null)
+        {
+            MenuToolAddMenuDialog.Open(Submenus().ToList(), into ?? shownPath, (name, parent) =>
                 ChangePlan("Plan a new menu", moves => moves.Add(new PlannedMove { To = parent, NewMenu = name })));
             RiryGui.ExitAfterModal();
         }
@@ -333,6 +383,7 @@ namespace Riry.RiryTools.Editor
         private void OnGUI()
         {
             guiOrigin = GUIUtility.GUIToScreenPoint(Vector2.zero);
+            PickedIcon();
             DrawWindow();
         }
 
@@ -685,6 +736,8 @@ namespace Riry.RiryTools.Editor
         private void DrawRadial()
         {
             Rect area = GUILayoutUtility.GetRect(RadialSize, RadialSize, GUILayout.ExpandWidth(true));
+            // An event the list used up (dragging a row) gets placeholder rects from GetRect: the radial is not placed then.
+            if (Event.current.type == EventType.Used) return;
             var square = new Rect(area.center.x - RadialSize / 2f, area.y, RadialSize, RadialSize);
             if (MenuToolPreviewMenus.CreateRadial == null)
             {
@@ -879,8 +932,13 @@ namespace Riry.RiryTools.Editor
 //   NotDrawn()               IRiryHostedTool: the Main Menu shows another tab; the radial is taken off.
 //   AddMove / MoveToMenu     A planned move from drag and drop or the Move to... context menu (ChangePlan); Submenus lists every
 //                            submenu (path, "Root › A › B").
-//   OnRadialContext          Right-click on the radial (IMenuToolRadial.ContextClicked): MoveToMenu for the slice's control's
-//                            entry (preview.EntryOfControl), else one greyed "Move to… (not a menu control)" entry.
+//   OnRadialContext          Right-click on the radial (IMenuToolRadial.ContextClicked): the list's Move to… items (AddMoveItems)
+//                            for the slice's control's entry (preview.EntryOfControl), else one greyed "Move to… (not a menu
+//                            control)" entry; then Add New Control… (AddControl), Add Submenu… (AddMenu) into the right-clicked
+//                            submenu or the shown page, and Assign Menu Icon (greyed without an entry or on a pagination page).
+//   PickedIcon               Assign Menu Icon: the Texture2D object picker (iconPickerId, iconFor) closing plans an AssignIcon move.
+//   AddControl               MenuToolAddMenuDialog.OpenControl with the avatar's parameter names; plans a NewControl move.
+//   DrawRadial (Used)        Not placed on an event the list used up (a row drag): GetRect gives placeholder rects then.
 //   AddMenu                  The Add menu button (between Discard plan and Apply): MenuToolAddMenuDialog with every submenu, the
 //                            radial's shown submenu chosen first; Add plans a PlannedMove with NewMenu (ChangePlan).
 //   Clicked / Navigate / OnWritten  List selection opens that submenu in the radial; the radial's submenu selects the list
