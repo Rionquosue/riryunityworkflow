@@ -32,14 +32,16 @@ namespace Riry.RiryTools.Editor
         internal static Func<EditorWindow> CreateConstraintBezier;
         internal static Func<EditorWindow> CreateConstraintInsertable;
         internal static Func<EditorWindow> CreateMenuTool;
+        internal static Func<EditorWindow> CreateFindReplace;
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools"
+            "Animator Tools", "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools"
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
         // Constraint Tool's sub-tabs, as in its own window (Editor/VRChat/ConstraintToolWindow.cs).
+        private static readonly string[] AnimatorTabs = { "Find and Replace" };
         private static readonly string[] ConstraintTabs = { "Train", "Bezier", "Insertable prop" };
         private static readonly string[] ImportTabs =
         {
@@ -141,6 +143,17 @@ namespace Riry.RiryTools.Editor
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
+                case "Animator Tools":
+                    if (CreateFindReplace == null)
+                    {
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Find and Replace").Message, MessageType.Info);
+                        break;
+                    }
+                    EditorGUILayout.Space(SubTabGap);
+                    TabStrip(this, 0, AnimatorTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                    EditorGUILayout.Space(4f);
+                    Draw(Active());
+                    break;
                 case "Blendshape Sync":
                     // The running jobs for review; a job is added or edited in its popup.
                     BlendshapeSyncJobList.Draw();
@@ -203,6 +216,7 @@ namespace Riry.RiryTools.Editor
             switch (Current)
             {
                 case "AutoSync": return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
+                case "Animator Tools": return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Tool":
                     if (CreateConstraintTrain == null) return null;

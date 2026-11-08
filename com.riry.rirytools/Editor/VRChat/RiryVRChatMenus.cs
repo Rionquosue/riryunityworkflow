@@ -17,6 +17,7 @@ namespace Riry.RiryTools.Editor
         static RiryVRChatMenus()
         {
             RiryToolsMainMenu.CreateMenuTool = MenuToolWindow.CreateHosted;
+            RiryToolsMainMenu.CreateFindReplace = BehaviourFindReplaceWindow.CreateHosted;
             RiryToolsMainMenu.CreateConstraintTrain = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintTrainWindow>();
             RiryToolsMainMenu.CreateConstraintBezier = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintBezierWindow>();
             RiryToolsMainMenu.CreateConstraintInsertable = () => UnityEngine.ScriptableObject.CreateInstance<InsertablePropWindow>();
@@ -27,6 +28,21 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(RiryMenus.MenuTool, false, 2066)]
         private static void MenuToolItem() { MenuToolWindow.Open(); }
+
+        [MenuItem(RiryMenus.FindReplaceTools, false, 1995)]
+        private static void FindReplaceToolsItem() { BehaviourFindReplaceWindow.OpenPopup(null); }
+
+        [MenuItem(RiryMenus.FindReplaceHierarchy, false, 22)]
+        private static void FindReplaceHierarchyItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeGameObject); }
+
+        [MenuItem(RiryMenus.FindReplaceHierarchy, true)]
+        private static bool FindReplaceHierarchyValid() { return SceneObjectSelected(); }
+
+        [MenuItem(RiryMenus.FindReplaceAssets, false, 2006)]
+        private static void FindReplaceAssetsItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeObject); }
+
+        [MenuItem(RiryMenus.FindReplaceAssets, true)]
+        private static bool FindReplaceAssetsValid() { return Selection.activeObject is UnityEditor.Animations.AnimatorController; }
 
         // No MenuCommand parameter, so a multi-selection opens the window once.
         // "GameObject/" entries with a priority below 50 also appear in the Hierarchy's right-click menu.

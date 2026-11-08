@@ -285,6 +285,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
 
 - **Tools** (one entry or submenu per tool):
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Reload domain and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab)
+  - `Tools/RiryTools/Animator Tools/Find and Replace` (1995): the Find and Replace popup (`BehaviourFindReplaceWindow`), no source; also the Main Menu's Animator Tools tab, sub-tab Find and Replace (`AnimatorTabs`)
   - `Tools/RiryTools/AutoSync/Sync` (2000), check mark
   - `Tools/RiryTools/AutoSync/Configuration` (2001)
   - `Tools/RiryTools/Avatar Migration Assistant` (2005), written `Avatar Migratio&n Assistant` so its menu key is N; without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup
@@ -310,8 +311,10 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
   - `Assets/RiryTools/Extract Animation` (2003): the Extract Animation window with the selected model; enabled only for a model with embedded animations
   - `Assets/RiryTools/Repair Missing GUID References` (2004)
   - `Assets/RiryTools/Clean Animation Keys` (2005)
+  - `Assets/RiryTools/Animator Tools/Find And Replace` (2006): the Find and Replace popup with the selected animator controller; enabled when one is selected
 - **Hierarchy right-click** (also in the GameObject menu):
   - `GameObject/RiryTools/Attach To` (19): the Attach To popup; enabled when scene objects are selected; in no other menu
+  - `GameObject/RiryTools/Animator tools/Find And Replace` (22): the Find and Replace popup with the selected scene object; enabled when one is selected
   - `GameObject/RiryTools/Constraint Tool/Train` (20): the Train tab, with the selection as the chain
   - `GameObject/RiryTools/Constraint Tool/Bezier` (21): the Bezier tab, with the selection as the chain
 - **Git menu:**

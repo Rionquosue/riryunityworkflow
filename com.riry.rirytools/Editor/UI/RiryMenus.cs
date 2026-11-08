@@ -69,6 +69,9 @@ namespace Riry.RiryTools.Editor
         internal const string ConstraintBezierHierarchy = "GameObject/RiryTools/Constraint Tool/Bezier";
         // "&e" makes E its menu key (M is Main Menu's and Menu Mockup's).
         internal const string MenuTool = "Tools/RiryTools/M&enu Tool";
+        internal const string FindReplaceTools = "Tools/RiryTools/Animator Tools/Find and Replace";
+        internal const string FindReplaceHierarchy = "GameObject/RiryTools/Animator tools/Find And Replace";
+        internal const string FindReplaceAssets = "Assets/RiryTools/Animator Tools/Find And Replace";
 
         // =====================================================================
         // Tools dropdown
@@ -240,6 +243,15 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(MenuTool, false, 2066)]
         private static void MenuToolItem() { VrcSdkMissing("Menu Tool"); }
+
+        [MenuItem(FindReplaceTools, false, 1995)]
+        private static void FindReplaceToolsItem() { VrcSdkMissing("Find and Replace"); }
+
+        [MenuItem(FindReplaceHierarchy, false, 22)]
+        private static void FindReplaceHierarchyItem() { VrcSdkMissing("Find and Replace"); }
+
+        [MenuItem(FindReplaceAssets, false, 2006)]
+        private static void FindReplaceAssetsItem() { VrcSdkMissing("Find and Replace"); }
 
         /// <summary>
         /// Shows VrcSdkNotFoundException's message as the "VRCSDK not found" popup. A missing SDK is a setup state, not a
