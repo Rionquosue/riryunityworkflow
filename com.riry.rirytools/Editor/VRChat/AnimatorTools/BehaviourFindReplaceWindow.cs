@@ -114,7 +114,7 @@ namespace Riry.RiryTools.Editor
 
             EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField("Found components" + (searched ? " (" + hits.Count + ")" : ""), EditorStyles.boldLabel);
-            foundScroll = EditorGUILayout.BeginScrollView(foundScroll, EditorStyles.helpBox, GUILayout.MinHeight(80f));
+            foundScroll = EditorGUILayout.BeginScrollView(foundScroll, EditorStyles.helpBox, GUILayout.MinHeight(160f));
             if (!searched) EditorGUILayout.LabelField("Search to list behaviour strings.", EditorStyles.miniLabel);
             else if (hits.Count == 0) EditorGUILayout.LabelField("Nothing found.", EditorStyles.miniLabel);
             foreach (Hit hit in hits)
@@ -124,7 +124,7 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.LabelField("Changed components", EditorStyles.boldLabel);
-            changedScroll = EditorGUILayout.BeginScrollView(changedScroll, EditorStyles.helpBox, GUILayout.MinHeight(80f));
+            changedScroll = EditorGUILayout.BeginScrollView(changedScroll, EditorStyles.helpBox, GUILayout.MinHeight(160f));
             if (changes.Count == 0) EditorGUILayout.LabelField("The last Apply's changes are listed here.", EditorStyles.miniLabel);
             foreach (Change change in changes)
             {
