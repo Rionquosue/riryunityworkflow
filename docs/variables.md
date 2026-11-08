@@ -84,6 +84,7 @@ In the project:
 | `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
 | `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets anything else uses (another slot of the avatar, Modular Avatar or VRCFury, a package, or any other file in the project), made by **Apply** before a native move and linked into that one slot; Ctrl+Z does not delete them | `MenuToolApply.Owned` |
+| `Assets/RiryTools/MenuTool/<avatar>/<new menu>.asset` | Menu Tool's new, empty menus planned with **Add menu** as a menu asset, made by **Apply** (unique path) and linked by a SubMenu control in the parent's menu; Ctrl+Z does not delete them | `MenuToolApply.NewMenuAsset` |
 
 In the user's Documents folder (`%USERPROFILE%\Documents` on Windows, including
 a OneDrive redirect; `~/Documents` elsewhere):
@@ -94,7 +95,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore`, `<name>.gitattributes` | `GitTemplates.RootPath` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list) | `ImportPresetPreferences.FilePath` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds) | `BlendshapeSyncJobs` |
-| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`); deleted when empty | `MenuPlan` |
+| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**); deleted when empty | `MenuPlan` |
 | `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar | `MenuToolAvatarKeys` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
@@ -270,6 +271,7 @@ IconCap:
 | `MenuToolCompressor.BatchTime` | `0.1` s | VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time) |
 | `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect | VRCFury's limit for compression |
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760` | Menu Tool's own window; the Menu manager asks for this width in the Main Menu too |
+| `MenuToolAddMenuDialog.Size` | `380` x `112` | Menu Tool's Add menu dialog (fixed size, centred on the main window) |
 | `MenuToolWindow.WriteLog` | `8` | Parameter writes listed under the radial |
 | `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19` | The target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces |
 

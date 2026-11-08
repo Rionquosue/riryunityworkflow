@@ -39,6 +39,12 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>Every parameter write the preview makes: name and value.</summary>
         event Action<string, float> Written;
+
+        /// <summary>
+        /// A right-click on a slice: the control it shows, or null for a slice that shows none (Back, Quick Actions,
+        /// Gesture Manager's own pages). The click never presses the slice.
+        /// </summary>
+        event Action<VRCExpressionsMenu.Control> ContextClicked;
     }
 
     /// <summary>
@@ -55,6 +61,8 @@ namespace Riry.RiryTools.Editor
         internal VRCExpressionParameters Parameters;
         internal readonly Dictionary<VRCExpressionsMenu, MenuEntry> EntryOf = new Dictionary<VRCExpressionsMenu, MenuEntry>();
         internal readonly Dictionary<MenuEntry, VRCExpressionsMenu> MenuOf = new Dictionary<MenuEntry, VRCExpressionsMenu>();
+        // The planned entry each control shows (VRCFury's "Next" page controls have none).
+        internal readonly Dictionary<VRCExpressionsMenu.Control, MenuEntry> EntryOfControl = new Dictionary<VRCExpressionsMenu.Control, MenuEntry>();
         private readonly List<Object> made = new List<Object>();
         private readonly StringBuilder signature = new StringBuilder();
 
@@ -97,6 +105,16 @@ namespace Riry.RiryTools.Editor
             MenuOf.Clear();
             foreach (KeyValuePair<VRCExpressionsMenu, MenuEntry> pair in fresh.EntryOf) EntryOf[(VRCExpressionsMenu)mine[pair.Key]] = pair.Value;
             foreach (KeyValuePair<MenuEntry, VRCExpressionsMenu> pair in fresh.MenuOf) MenuOf[pair.Key] = (VRCExpressionsMenu)mine[pair.Value];
+            // Controls stand at the same index in the same menu.
+            EntryOfControl.Clear();
+            for (int i = 0; i < made.Count; i++)
+            {
+                if (!(made[i] is VRCExpressionsMenu menu) || !(fresh.made[i] is VRCExpressionsMenu theirs)) continue;
+                for (int j = 0; j < theirs.controls.Count; j++)
+                {
+                    if (fresh.EntryOfControl.TryGetValue(theirs.controls[j], out MenuEntry entry)) EntryOfControl[menu.controls[j]] = entry;
+                }
+            }
             return true;
         }
 
@@ -128,7 +146,9 @@ namespace Riry.RiryTools.Editor
                     page.controls.Add(new VRCExpressionsMenu.Control { name = "Next", type = ControlType.SubMenu, subMenu = next, parameter = new VRCExpressionsMenu.Control.Parameter { name = "" } });
                     page = next;
                 }
-                page.controls.Add(Control(entry.Children[i], paginate));
+                VRCExpressionsMenu.Control control = Control(entry.Children[i], paginate);
+                EntryOfControl[control] = entry.Children[i];
+                page.controls.Add(control);
             }
             return menu;
         }
@@ -162,6 +182,7 @@ namespace Riry.RiryTools.Editor
             signature.Clear();
             EntryOf.Clear();
             MenuOf.Clear();
+            EntryOfControl.Clear();
         }
     }
 }
@@ -171,13 +192,15 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // IMenuToolRadial            The radial preview: Show(root, parameters), Navigate(path), Path, Draw(rect, local, root), Hide, Value,
-//                            Written (each parameter write). Implemented by GestureManagerRadial (GestureManager/ folder).
+//                            Written (each parameter write), ContextClicked (a right-clicked slice's control, null for one that
+//                            shows none). Implemented by GestureManagerRadial (GestureManager/ folder).
 // MenuToolPreviewMenus (this file)
 //   CreateRadial             Set by the Gesture Manager bridge when Gesture Manager is installed; null otherwise.
-//   Build(root, scan)        In-memory VRCExpressionsMenu per submenu of the planned layout (EntryOf / MenuOf map both ways) and
+//   Build(root, scan)        In-memory VRCExpressionsMenu per submenu of the planned layout (EntryOf / MenuOf map both ways;
+//                            EntryOfControl maps each control to its entry, none for a "Next" page control) and
 //                            a VRCExpressionParameters of every parameter, all HideAndDontSave; paged into "Next" submenus with
 //                            VRCFury installed, as VRCFury does. Dispose destroys them.
 //   Signature                Each menu (type, name), control (name, icon, type, parameter, value, sub-parameters, labels) and
 //                            parameter (name, type, default, saved, synced) in build order.
-//   Adopt(fresh)             Same Signature: takes fresh's EntryOf / MenuOf onto its own menus (same build order) and returns
-//                            true, so the caller keeps it and disposes fresh; false when they differ.
+//   Adopt(fresh)             Same Signature: takes fresh's EntryOf / MenuOf / EntryOfControl onto its own menus (same build
+//                            order) and returns true, so the caller keeps it and disposes fresh; false when they differ.

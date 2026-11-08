@@ -14,14 +14,20 @@ namespace Riry.RiryTools.Editor
     /// Applies a menu plan to its sources as one undo step: native controls move between menu assets (a menu asset other
     /// places also use is copied first and this avatar relinked to the copy), VRCFury entries get an avatar-level Move Menu
     /// Item rule (an existing rule that put the entry where it is now is updated instead), Modular Avatar items are
-    /// reparented or their installer retargeted. Each move is checked again on a fresh scan just before it is made, and the
-    /// result is verified on a scan afterwards. Ctrl+Z undoes every change; copied menu assets stay as files.
+    /// reparented or their installer retargeted. A planned new menu (Add menu) becomes a new menu asset linked from its
+    /// parent's menu asset, or a new object with a Modular Avatar Menu Item. Each move is checked again on a fresh scan just
+    /// before it is made, and the result is verified on a scan afterwards. Ctrl+Z undoes every change; copied and new menu
+    /// assets stay as files.
     /// </summary>
     internal static class MenuToolApply
     {
         private const string VrcfuryType = "VF.Model.VRCFury";
         private const string MoveType = "VF.Model.Feature.MoveMenuItem";
         private const string ReorderType = "VF.Model.Feature.ReorderMenuItem";
+        private const string MaInstallerType = "nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller";
+        private const string MaItemType = "nadena.dev.modular_avatar.core.ModularAvatarMenuItem";
+        // Modular Avatar's SubmenuSource.Children.
+        private const int MaChildrenSource = 1;
         private const string UndoName = "Apply menu layout";
 
         internal sealed class Report
@@ -29,6 +35,7 @@ namespace Riry.RiryTools.Editor
             internal int Applied;
             internal readonly List<string> Problems = new List<string>();
             internal readonly List<string> CopiedAssets = new List<string>();
+            internal readonly List<string> CreatedAssets = new List<string>();
         }
 
         private sealed class Expected
@@ -59,21 +66,26 @@ namespace Riry.RiryTools.Editor
                     MoveCheck check = checks[0];
                     if (!check.Ok)
                     {
-                        report.Problems.Add(move.From + ": " + string.Join(" ", check.Errors.Concat(check.Edit == MoveEdit.Ambiguous ? new[] { "No source chosen." } : new string[0])));
+                        report.Problems.Add((move.IsAdd ? "New menu " + check.After : move.From) + ": " +
+                            string.Join(" ", check.Errors.Concat(check.Edit == MoveEdit.Ambiguous ? new[] { "No source chosen." } : new string[0])));
                         continue;
                     }
                     // The scan's own entries (the planner works on a copy) for the ownership references.
-                    MenuEntry entry = scan.Root.Find(move.From);
                     MenuEntry destination = scan.Root.Find(move.To ?? "");
+                    if (move.IsAdd)
+                    {
+                        expected.Add(new Expected { Path = check.After, Type = VRCExpressionsMenu.Control.ControlType.SubMenu, Parameters = new string[0] });
+                        if (check.Edit == MoveEdit.NewMenuAsset) NewMenuAsset(scan, destination, move.NewMenu.Trim(), Index(scan, ref references), report);
+                        else NewMaItem(scan, destination, move.NewMenu.Trim());
+                        report.Applied++;
+                        continue;
+                    }
+                    MenuEntry entry = scan.Root.Find(move.From);
                     expected.Add(new Expected { Path = check.After, Type = entry.Type, Icon = entry.Icon, Parameters = entry.Parameters().ToArray() });
                     switch (check.Edit)
                     {
                         case MoveEdit.NativeAssets:
-                            // The project search, once per Apply, for every native menu of the avatar.
-                            if (references == null) references = new ReferenceIndex(new[] { scan.Root }.Concat(scan.Root.Descendants())
-                                .Where(e => e.Origin == MenuOrigin.Native).SelectMany(e => new[] { e.OwnerMenu, e.SubMenuAsset })
-                                .Concat(new[] { scan.Avatar.expressionsMenu }).Where(m => m != null).Select(m => AssetDatabase.GetAssetPath(m)));
-                            MoveNative(scan, entry, destination, move.Index, references, report);
+                            MoveNative(scan, entry, destination, move.Index, Index(scan, ref references), report);
                             break;
                         case MoveEdit.VrcfuryRule:
                             // Paths as VRCFury reads them: a slash inside a name written "\/".
@@ -101,9 +113,19 @@ namespace Riry.RiryTools.Editor
                     report.Problems.Add(item.Path + " changed type, icon or parameters while moving.");
             }
             RiryLog.Info(RiryLog.MenuTool, "Applied " + report.Applied + " of " + total + " menu moves to " + target.name + " (one undo step)" +
-                (report.CopiedAssets.Count > 0 ? "; copied shared menus to " + string.Join(", ", report.CopiedAssets) : "") + ".", target);
+                (report.CopiedAssets.Count > 0 ? "; copied shared menus to " + string.Join(", ", report.CopiedAssets) : "") +
+                (report.CreatedAssets.Count > 0 ? "; new menus at " + string.Join(", ", report.CreatedAssets) : "") + ".", target);
             foreach (string problem in report.Problems) RiryLog.Warn(RiryLog.MenuTool, problem, target);
             return report;
+        }
+
+        // The project search, once per Apply, for every native menu of the avatar.
+        private static ReferenceIndex Index(MenuScan scan, ref ReferenceIndex references)
+        {
+            if (references == null) references = new ReferenceIndex(new[] { scan.Root }.Concat(scan.Root.Descendants())
+                .Where(e => e.Origin == MenuOrigin.Native).SelectMany(e => new[] { e.OwnerMenu, e.SubMenuAsset })
+                .Concat(new[] { scan.Avatar.expressionsMenu }).Where(m => m != null).Select(m => AssetDatabase.GetAssetPath(m)));
+            return references;
         }
 
         // ---- Native ----------------------------------------------------------------
@@ -126,6 +148,32 @@ namespace Riry.RiryTools.Editor
             else to.controls.Insert(at, control);
             EditorUtility.SetDirty(from);
             EditorUtility.SetDirty(to);
+        }
+
+        // Add menu as a menu asset: a new empty menu in Assets/RiryTools/MenuTool/<avatar>/, linked by a SubMenu control at the end
+        // of the parent's menu (made safe to change first).
+        private static void NewMenuAsset(MenuScan scan, MenuEntry parent, string name, ReferenceIndex index, Report report)
+        {
+            VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), parent, report);
+            string folder = "Assets/RiryTools/MenuTool/" + Safe(scan.Avatar.name);
+            EnsureFolder(folder);
+            string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + Safe(name) + ".asset");
+            var menu = ScriptableObject.CreateInstance<VRCExpressionsMenu>();
+            menu.controls = new List<VRCExpressionsMenu.Control>();
+            AssetDatabase.CreateAsset(menu, path);
+            index.Made.Add(path);
+            report.CreatedAssets.Add(path);
+            Undo.RecordObject(holder, UndoName);
+            holder.controls.Add(new VRCExpressionsMenu.Control
+            {
+                name = name,
+                type = VRCExpressionsMenu.Control.ControlType.SubMenu,
+                subMenu = menu,
+                parameter = new VRCExpressionsMenu.Control.Parameter { name = "" },
+                subParameters = new VRCExpressionsMenu.Control.Parameter[0],
+                labels = new VRCExpressionsMenu.Control.Label[0]
+            });
+            EditorUtility.SetDirty(holder);
         }
 
         /// <summary>
@@ -366,6 +414,34 @@ namespace Riry.RiryTools.Editor
 
         // ---- Modular Avatar ------------------------------------------------------------
 
+        // Add menu as a Modular Avatar Menu Item: a new object named after the menu with a SubMenu item whose items are its own
+        // children, last under the parent's children object; for any other parent, under the avatar with a Menu Installer
+        // targeting the parent's menu (none for the root menu).
+        private static void NewMaItem(MenuScan scan, MenuEntry parent, string name)
+        {
+            Type itemType = MenuToolScanner.TypeNamed(MaItemType), installerType = MenuToolScanner.TypeNamed(MaInstallerType);
+            if (itemType == null || installerType == null) throw new InvalidOperationException("Modular Avatar's menu components were not found; Modular Avatar may have changed.");
+            Transform under = parent.MaChildrenSource != null ? parent.MaChildrenSource.transform : scan.Avatar.transform;
+            var made = new GameObject(name);
+            Undo.RegisterCreatedObjectUndo(made, UndoName);
+            Undo.SetTransformParent(made.transform, under, UndoName);
+            made.transform.localPosition = Vector3.zero;
+            made.transform.localRotation = Quaternion.identity;
+            made.transform.localScale = Vector3.one;
+            made.transform.SetAsLastSibling();
+            if (parent.MaChildrenSource == null)
+            {
+                var installer = new SerializedObject(Undo.AddComponent(made, installerType));
+                installer.FindProperty("installTargetMenu").objectReferenceValue = parent.Parent == null ? null : parent.SubMenuAsset;
+                installer.ApplyModifiedProperties();
+            }
+            var item = new SerializedObject(Undo.AddComponent(made, itemType));
+            item.FindProperty("Control.name").stringValue = name;
+            item.FindProperty("Control.type").intValue = (int)VRCExpressionsMenu.Control.ControlType.SubMenu;
+            item.FindProperty("MenuSource").intValue = MaChildrenSource;
+            item.ApplyModifiedProperties();
+        }
+
         private static void Reparent(MenuEntry entry, MenuEntry destination, int index)
         {
             Transform item = entry.MaItem.transform;
@@ -395,10 +471,14 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // MenuToolApply (this file)
-//   Apply(target, plan)      One undo group ("Apply menu layout", CollapseUndoOperations). For each planned move: a fresh scan,
-//                            the move checked alone (MenuToolPlanner), then its edit; afterwards a scan verifies each moved entry's
-//                            path, type, icon and parameters (Report.Problems). Logged under Menu Tool.
+//   Apply(target, plan)      One undo group ("Apply menu layout", CollapseUndoOperations). For each planned move or new menu: a
+//                            fresh scan, the move checked alone (MenuToolPlanner), then its edit; afterwards a scan verifies each
+//                            moved entry's path, type, icon and parameters, and each new menu's path (Report.Problems). Logged
+//                            under Menu Tool, with copied (CopiedAssets) and new (CreatedAssets) menu assets.
+//   Index                    The ReferenceIndex, built on first need once per Apply.
 //   MoveNative               Removes the control from its menu asset and inserts it in the destination's (RecordObject both).
+//   NewMenuAsset             Add menu: a new empty VRCExpressionsMenu at Assets/RiryTools/MenuTool/<avatar>/<name>.asset (unique
+//                            path; a file Ctrl+Z leaves), and a SubMenu control for it at the end of the parent's menu (Owned).
 //   Owned(scan, uses, slot)  The menu one slot shows (the moved entry's submenu or the destination; the root's is the
 //                            descriptor's), copied to Assets/RiryTools/MenuTool/<avatar>/ (Report.CopiedAssets) when anything else
 //                            uses it, and relinked in that slot only (the holding menu made safe first). Copies are files:
@@ -413,3 +493,7 @@ namespace Riry.RiryTools.Editor
 //                            adds a Reorder Menu Item. Paths are written as VRCFury reads them (PathOf / Escape: "\/" in names).
 //   Reparent                 Undo.SetTransformParent into the destination's MA children object, then the sibling index.
 //   Retarget                 The MA installer's installTargetMenu (none for the root menu).
+//   NewMaItem                Add menu: a new object named after the menu (RegisterCreatedObjectUndo), last under the parent's MA
+//                            children object, or under the avatar with an MA Menu Installer (installTargetMenu the parent's
+//                            asset, none for the root); an MA Menu Item on it (Control.name, Control.type SubMenu, MenuSource
+//                            Children, MaChildrenSource 1). MA types by name (MaInstallerType, MaItemType).

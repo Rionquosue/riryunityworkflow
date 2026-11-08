@@ -36,6 +36,9 @@ namespace Riry.RiryTools.Editor
         private static readonly FieldInfo MenuPath = typeof(RadialMenu).GetField("_menuPath", Members);
         private static readonly FieldInfo PageMenu = typeof(RadialPage).GetField("_menu", Members);
         private static readonly FieldInfo CursorField = typeof(RadialMenu).GetField("_cursor", Members);
+        // The radial's root menu (its main page has Quick Actions after Back) and the slice under the cursor.
+        private static readonly FieldInfo RootMenu = typeof(RadialMenu).GetField("_menu", Members);
+        private static readonly FieldInfo CursorSelection = typeof(RadialCursor).GetField("Selection", Members);
         private static readonly MethodInfo OpenMenu = typeof(RadialMenu).GetMethod("OpenMenu", Members, null,
             new[] { typeof(VRCExpressionsMenu), typeof(Vrc3Param), typeof(float) }, null);
         private static readonly MethodInfo OfficialRadial = typeof(ModuleVrc3).GetMethod("GetOrCreateRadial", Members, null,
@@ -65,6 +68,7 @@ namespace Riry.RiryTools.Editor
         private ScriptableObject owner;
 
         public event Action<string, float> Written;
+        public event Action<VRCExpressionsMenu.Control> ContextClicked;
 
         public void Show(VRCExpressionsMenu root, VRCExpressionParameters parameters)
         {
@@ -187,9 +191,36 @@ namespace Riry.RiryTools.Editor
             // Mouse handling works in the OnGUI's coordinates (Rect); the element is placed in the window's root element.
             // The window takes it off when it leaves view or another view is shown.
             radial.Rect = rect;
+            // A right-click opens the Menu Tool's context menu (on MouseDown) and never reaches Gesture Manager, which would
+            // press the slice; ContextClick and the button's MouseUp are swallowed too.
+            Event current = Event.current;
+            bool right = current.type == EventType.ContextClick ||
+                current.button == 1 && (current.type == EventType.MouseDown || current.type == EventType.MouseUp);
+            if (right && rect.Contains(current.mousePosition))
+            {
+                if (current.type == EventType.MouseDown && Hovered(out VRCExpressionsMenu.Control control)) ContextClicked?.Invoke(control);
+                current.Use();
+            }
             radial.Render(root, local);
             // A click in Render can open a page.
             RemoveRunning();
+        }
+
+        // Whether the cursor is on a slice, and the control that slice shows (null for Back, Quick Actions and Gesture Manager's
+        // own pages). Gesture Manager's menu pages show Back first, and Quick Actions second on the root menu.
+        private bool Hovered(out VRCExpressionsMenu.Control control)
+        {
+            control = null;
+            if (CursorSelection == null || RootMenu == null || CursorField == null || !(CursorField.GetValue(radial) is RadialCursor cursor)) return false;
+            int slice = (int)CursorSelection.GetValue(cursor);
+            if (slice < 0) return false;
+            var pages = (IList)MenuPath.GetValue(radial);
+            if (pages.Count == 0) return true;
+            var menu = PageMenu.GetValue(pages[pages.Count - 1]) as VRCExpressionsMenu;
+            if (menu == null) return true;
+            int builtIn = menu == (VRCExpressionsMenu)RootMenu.GetValue(radial) ? 2 : 1;
+            if (slice >= builtIn && slice - builtIn < menu.controls.Count) control = menu.controls[slice - builtIn];
+            return true;
         }
 
         public void Hide()
@@ -234,5 +265,9 @@ namespace Riry.RiryTools.Editor
 //   Draw(rect, local, root)  Rect (mouse maths) in GUI coordinates; Render places the element at local in root (the window's
 //                            rootVisualElement), then RemoveRunning (a click may have opened a page). The window hides it (Hide)
 //                            when it is not in view or another view is shown.
+//   ContextClicked / Hovered A right-click (MouseDown, button 1) inside the radial raises ContextClicked with the hovered slice's
+//                            control (RadialCursor.Selection read as CursorSelection; the last page's menu, less Back and, on
+//                            the root menu (_menu, RootMenu), Quick Actions), null for a built-in slice; none off the slices. MouseDown, MouseUp and ContextClick of the
+//                            right button are used up before Render, so Gesture Manager never presses the slice.
 //   Unsupported              A Gesture Manager without these members: Draw shows that message instead of the radial.
 //   Dispose                  Removes the element, destroys the stand-in avatar and the key object.

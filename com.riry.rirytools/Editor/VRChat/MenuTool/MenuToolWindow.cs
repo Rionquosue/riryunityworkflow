@@ -243,6 +243,7 @@ namespace Riry.RiryTools.Editor
             {
                 radial = MenuToolPreviewMenus.CreateRadial();
                 radial.Written += OnWritten;
+                radial.ContextClicked += OnRadialContext;
                 made = true;
             }
             if (radial == null) return;
@@ -279,7 +280,14 @@ namespace Riry.RiryTools.Editor
 
         private static bool Same(PlannedMove a, PlannedMove b)
         {
-            return a.From == b.From && a.To == b.To && a.Index == b.Index;
+            return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu;
+        }
+
+        // Every submenu of the planned layout, the root first: its path and how menus show it ("Root › A › B").
+        private IEnumerable<KeyValuePair<string, string>> Submenus()
+        {
+            foreach (MenuEntry menu in new[] { planned }.Concat(planned.Descendants()).Where(e => e.IsSubMenu))
+                yield return new KeyValuePair<string, string>(menu.Path, menu.Parent == null ? "Root" : "Root › " + menu.Path.Replace("/", " › "));
         }
 
         private void MoveToMenu(MenuEntry entry)
@@ -294,6 +302,30 @@ namespace Riry.RiryTools.Editor
             }
             if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("Move to…/No other submenu"));
             menu.ShowAsContext();
+        }
+
+        // A right-click on the radial: the list's context menu for the control that slice shows; a greyed entry for a slice
+        // that shows none (Back, Quick Actions, a "Next" page).
+        private void OnRadialContext(VRCExpressionsMenu.Control control)
+        {
+            MenuEntry entry = null;
+            if (control != null && preview != null) preview.EntryOfControl.TryGetValue(control, out entry);
+            if (entry != null)
+            {
+                MoveToMenu(entry);
+                return;
+            }
+            var menu = new GenericMenu();
+            menu.AddDisabledItem(new GUIContent("Move to… (not a menu control)"));
+            menu.ShowAsContext();
+        }
+
+        // Add menu: the dialog asks for the name and the parent submenu (the one shown in the radial at first).
+        private void AddMenu()
+        {
+            MenuToolAddMenuDialog.Open(Submenus().ToList(), shownPath, (name, parent) =>
+                ChangePlan("Plan a new menu", moves => moves.Add(new PlannedMove { To = parent, NewMenu = name })));
+            RiryGui.ExitAfterModal();
         }
 
         // ---- GUI ---------------------------------------------------------------------------------
@@ -542,6 +574,7 @@ namespace Riry.RiryTools.Editor
                 {
                     if (GUILayout.Button("Discard plan", GUILayout.Width(90f))) Discard();
                 }
+                if (GUILayout.Button(new GUIContent("Add menu", "Plans a new, empty submenu: its name and the submenu it goes in."), GUILayout.Width(80f))) AddMenu();
                 using (new EditorGUI.DisabledScope(plan.Moves.Count == 0 || checks.Any(c => !c.Ok)))
                 {
                     if (GUILayout.Button(new GUIContent("Apply", "Makes the planned moves in their sources, as one undo step."), GUILayout.Width(70f))) ApplyPlan();
@@ -573,6 +606,7 @@ namespace Riry.RiryTools.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     string status = check.Ok ? "✓" : "✕";
+                    // A new menu reads "New menu  →  its path".
                     EditorGUILayout.LabelField(new GUIContent(status + " " + (check.Before.Length == 0 ? "?" : check.Before) + "  →  " + (check.After.Length == 0 ? "?" : check.After),
                         string.Join("\n", check.Affected.Where(a => a != null).Select(a => a.name))), GUILayout.MinWidth(0f));
                     if (check.Candidates.Count > 1)
@@ -831,8 +865,8 @@ namespace Riry.RiryTools.Editor
 //                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
 //                            parameters (types differ in red); Content blocks (each control's path, bindings, Select);
 //                            Notes.
-//   Menu manager tab         Search, Discard plan, Apply (disabled until every move checks out); ManagerTree; then, in a scroll
-//                            view (managerScroll; managerView its screen rect), DrawPlan
+//   Menu manager tab         Search, Discard plan, Add menu, Apply (disabled until every move checks out); ManagerTree; then, in
+//                            a scroll view (managerScroll; managerView its screen rect), DrawPlan
 //                            (before -> after, edit, choice popup when several sources fit, errors, warnings, remove);
 //                            DrawBreadcrumbs; DrawRadial (Gesture Manager, or how to get it; only when it fits and is wholly in
 //                            view, decided on Repaint (radialInView) and hidden only when that turns false, else a grey box
@@ -843,7 +877,12 @@ namespace Riry.RiryTools.Editor
 //   ChangePlan(name, change) Every plan change (plan a move, choose a source, remove one, Discard): reloads the file (another
 //                            view may have changed it), records the window for Undo, changes, saves.
 //   NotDrawn()               IRiryHostedTool: the Main Menu shows another tab; the radial is taken off.
-//   AddMove / MoveToMenu     A planned move from drag and drop or the Move to... context menu (ChangePlan).
+//   AddMove / MoveToMenu     A planned move from drag and drop or the Move to... context menu (ChangePlan); Submenus lists every
+//                            submenu (path, "Root › A › B").
+//   OnRadialContext          Right-click on the radial (IMenuToolRadial.ContextClicked): MoveToMenu for the slice's control's
+//                            entry (preview.EntryOfControl), else one greyed "Move to… (not a menu control)" entry.
+//   AddMenu                  The Add menu button (between Discard plan and Apply): MenuToolAddMenuDialog with every submenu, the
+//                            radial's shown submenu chosen first; Add plans a PlannedMove with NewMenu (ChangePlan).
 //   Clicked / Navigate / OnWritten  List selection opens that submenu in the radial; the radial's submenu selects the list
 //                            row; a write marks the control that made it as last clicked.
 //   ApplyPlan / Discard      Confirmed. Apply runs MenuToolApply (one undo step, the plan cleared inside it, so undoing Apply

@@ -40,6 +40,9 @@ namespace Riry.RiryTools.Editor
         internal bool Estimated;
         // Added by pagination (VRCFury's "Next" pages), not by any source.
         internal bool Generated;
+        // A submenu the plan adds (Add menu), made on Apply by this edit (NewMenuAsset or NewMaItem, Ambiguous until
+        // chosen); null for everything the sources already hold.
+        internal MoveEdit? Added;
 
         // Where it lives, for edits. Native: the menu asset holding the control and its index there.
         internal VRCExpressionsMenu OwnerMenu;
@@ -249,7 +252,8 @@ namespace Riry.RiryTools.Editor
 // MenuOrigin                 Native (the descriptor's menu and parameter assets), VRCFury or ModularAvatar.
 // MenuEntry                  A control or submenu of the assembled menu: Name, Type, Icon, Parameter, Value, SubParameters,
 //                            Labels, Children/Parent; Origin, Source (to select), Block (content block), Estimated (worked out
-//                            from VRCFury settings), Generated (a VRCFury "Next" page). Ownership for edits: OwnerMenu/OwnerIndex
+//                            from VRCFury settings), Generated (a VRCFury "Next" page), Added (a submenu the plan adds, with
+//                            the edit that makes it on Apply; planned layout only). Ownership for edits: OwnerMenu/OwnerIndex
 //                            (native control), SubMenuAsset, MaItem/MaInstaller/MaChildrenSource, VrcfComponent/VrcfPath.
 //   Path / Find / Child      "A/B/C" path in the assembled menu; lookups by path or name.
 //   Parameters()             Parameter and sub-parameters, non-empty.
