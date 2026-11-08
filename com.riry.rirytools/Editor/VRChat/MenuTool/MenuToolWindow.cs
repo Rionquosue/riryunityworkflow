@@ -74,9 +74,10 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private readonly List<string> writes = new List<string>();
         // The window it is drawn in: the Main Menu when hosted there, else itself.
         [NonSerialized] private EditorWindow surface;
-        // Where this OnGUI's (0, 0) is on screen, and whether this repaint drew the radial.
+        // Where this OnGUI's (0, 0) is on screen.
         [NonSerialized] private Vector2 guiOrigin;
-        [NonSerialized] private bool radialDrawn;
+        // Whether the last Repaint found the radial fitting and wholly in view; it is only hidden when this turns false.
+        [NonSerialized] private bool radialInView;
         // The control ID the open object picker reports to, or 0.
         [NonSerialized] private int pickerId;
 
@@ -227,15 +228,29 @@ namespace Riry.RiryTools.Editor
             planned = MenuToolPlanner.Planned(scan, plan, out checks);
             managerTree.Set(planned);
             string path = shownPath;
-            if (preview != null) preview.Dispose();
-            preview = MenuToolPreviewMenus.Build(planned, scan);
+            MenuToolPreviewMenus fresh = MenuToolPreviewMenus.Build(planned, scan);
+            // A preview that shows the same is kept (with the new layout's entries), so the radial is not rebuilt.
+            bool same = preview != null && preview.Adopt(fresh);
+            if (same) fresh.Dispose();
+            else
+            {
+                if (preview != null) preview.Dispose();
+                preview = fresh;
+            }
             // The Main Menu's copy shows only the Parameter budget, so it never makes a radial.
+            bool made = false;
             if (radial == null && MenuToolPreviewMenus.CreateRadial != null && !hosted)
             {
                 radial = MenuToolPreviewMenus.CreateRadial();
                 radial.Written += OnWritten;
+                made = true;
             }
             if (radial == null) return;
+            if (same && !made)
+            {
+                if (lastClicked != null) lastClicked = planned.Find(lastClicked.Path);
+                return;
+            }
             radial.Show(preview.Root, preview.Parameters);
             // Stay in the submenu shown before, when it still exists.
             Navigate(planned.Find(path) ?? planned);
@@ -285,12 +300,8 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
-            bool repaint = Event.current.type == EventType.Repaint;
-            if (repaint) radialDrawn = false;
             guiOrigin = GUIUtility.GUIToScreenPoint(Vector2.zero);
             DrawWindow();
-            // Taken off whenever a repaint did not draw it (another tab, nothing to show, scrolled out of view).
-            if (repaint && !radialDrawn && radial != null) radial.Hide();
         }
 
         private void DrawWindow()
@@ -319,6 +330,7 @@ namespace Riry.RiryTools.Editor
             }
             if (scan == null)
             {
+                if (radial != null) radial.Hide();
                 EditorGUILayout.HelpBox("The scan failed; see the Console.", MessageType.Error);
                 return;
             }
@@ -647,14 +659,20 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             if (radial == null) return;
-            // The radial floats over the window and cannot be clipped: shown only when it fits and is wholly in view.
-            Rect onScreen = GUIUtility.GUIToScreenRect(square);
+            // The radial floats over the window and cannot be clipped: shown only when it fits and is wholly in view. Decided
+            // on Repaint, where the layout is final, and hidden only when that turns false, so it does not blink off and on.
             bool fits = area.width >= RadialSize;
-            bool inView = managerView.width > 0f && onScreen.xMin >= managerView.xMin - 0.5f && onScreen.xMax <= managerView.xMax + 0.5f &&
-                onScreen.yMin >= managerView.yMin - 0.5f && onScreen.yMax <= managerView.yMax + 0.5f;
-            if (Event.current.type != EventType.Layout && (!fits || !inView))
+            if (Event.current.type == EventType.Repaint)
             {
-                radial.Hide();
+                Rect onScreen = GUIUtility.GUIToScreenRect(square);
+                bool inView = managerView.width > 0f && onScreen.xMin >= managerView.xMin - 0.5f && onScreen.xMax <= managerView.xMax + 0.5f &&
+                    onScreen.yMin >= managerView.yMin - 0.5f && onScreen.yMax <= managerView.yMax + 0.5f;
+                bool inViewNow = fits && inView;
+                if (radialInView && !inViewNow) radial.Hide();
+                radialInView = inViewNow;
+            }
+            if (Event.current.type != EventType.Layout && !radialInView)
+            {
                 if (Event.current.type == EventType.Repaint)
                 {
                     EditorGUI.DrawRect(area, new Color(0f, 0f, 0f, 0.12f));
@@ -668,7 +686,6 @@ namespace Riry.RiryTools.Editor
                 // Placed in this window's root element at the spot this OnGUI draws at.
                 var local = new Rect(GUIUtility.GUIToScreenPoint(square.position) - guiOrigin, square.size);
                 radial.Draw(square, local, rootVisualElement);
-                if (Event.current.type == EventType.Repaint) radialDrawn = true;
             }
             // Follow the radial: a submenu opened there is selected in the list and the breadcrumbs.
             List<VRCExpressionsMenu> path = radial.Path;
@@ -797,8 +814,8 @@ namespace Riry.RiryTools.Editor
 //                            opens Open(target, 1) after the GUI pass instead.
 //   Surface / Shown          IRiryHostedTool: the Main Menu sets itself as the surface when hosting, so tabs size to it; on
 //                            its own, the window itself.
-//   OnGUI / DrawWindow       guiOrigin (this OnGUI's (0, 0) on screen); a repaint that did not draw the radial hides it
-//                            (radialDrawn), so it neither lingers nor blinks off while the window is idle.
+//   OnGUI / DrawWindow       guiOrigin (this OnGUI's (0, 0) on screen). The radial is hidden where a view stops drawing it
+//                            (no target, failed scan, Parameter budget tab, NotDrawn) and by DrawRadial when it leaves view.
 //   target                   Avatar, prefab asset, Prefab Mode or Hierarchy object ([SerializeField]; Undo via RiryGui.Set).
 //                            Its picker button (PickerButton wide) opens ShowObjectPicker with AvatarFilter
 //                            ("t:VRCAvatarDescriptor": Hierarchy objects with a VRC Avatar Descriptor), applied when the
@@ -807,7 +824,8 @@ namespace Riry.RiryTools.Editor
 //                            loads the plan (MenuPlan), rebuilds the trees and the preview (Replan). The budget tree opens
 //                            every row only for a new target (budgetTreeFor); a rescan keeps collapsed rows collapsed.
 //   Replan                   Planned layout (MenuToolPlanner), the list, the preview menus and the radial (never for the
-//                            hosted copy), staying in the submenu shown before.
+//                            hosted copy), staying in the submenu shown before. Preview menus that show the same (Adopt) are
+//                            kept and the radial is left as it is.
 //   Parameter budget tab     DrawSummary: compression off / on / change (custom parameters, synced, local, synced bits, bits
 //                            and parameters left), Estimated / Exact / Unavailable; the estimate's Note (VRCFury cannot fit
 //                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
@@ -817,9 +835,9 @@ namespace Riry.RiryTools.Editor
 //                            view (managerScroll; managerView its screen rect), DrawPlan
 //                            (before -> after, edit, choice popup when several sources fit, errors, warnings, remove);
 //                            DrawBreadcrumbs; DrawRadial (Gesture Manager, or how to get it; only when it fits and is wholly in
-//                            view, else a grey box saying to scroll or widen; placed in rootVisualElement at its GUI spot less
-//                            guiOrigin); DrawBits (last clicked control's
-//                            parameters: type, sync, bits, live value; the last WriteLog writes).
+//                            view, decided on Repaint (radialInView) and hidden only when that turns false, else a grey box
+//                            saying to scroll or widen; placed in rootVisualElement at its GUI spot less guiOrigin); DrawBits
+//                            (last clicked control's parameters: type, sync, bits, live value; the last WriteLog writes).
 //   plan / savedPlan         The plan ([SerializeField], so Ctrl+Z restores it) and the file's content as last read or written;
 //                            OnUndoRedo writes the plan back to its avatar's file when an undo or redo changed it.
 //   ChangePlan(name, change) Every plan change (plan a move, choose a source, remove one, Discard): reloads the file (another

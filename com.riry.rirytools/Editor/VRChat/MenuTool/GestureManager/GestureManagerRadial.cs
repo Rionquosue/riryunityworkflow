@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.Dynamics;
 using BlackStartX.GestureManager.Modules;
 using UnityEditor;
 using UnityEngine;
@@ -20,9 +21,13 @@ namespace Riry.RiryTools.Editor
     /// Manager normally runs it on a ModuleVrc3 set up for Play Mode (InitForAvatar rewrites the avatar's Animator); here
     /// the module is never set up: it belongs to a hidden, inactive stand-in avatar that only carries the preview's
     /// in-memory menu and parameters, and its parameters are filled directly. No animation plays and the real avatar is
-    /// never touched. Parameter writes are reported (Written) and kept in memory. Gesture Manager's internals used here
-    /// (RadialMenu._menuPath, OpenMenu, GetOrCreateRadial(editor, official), RadialPage._menu) are found by reflection;
-    /// when a Gesture Manager version renames them, the preview says so instead of drawing. Built against Gesture Manager 3.9.9.
+    /// never touched. Parameter writes are reported (Written) and kept in memory. One module and one radial are kept for
+    /// the window's life, so a new menu rebuilds the radial's pages in place instead of replacing the element. The
+    /// thumbstick cursor is hidden (hover selection still uses its position) and the spinning "running" icons are taken
+    /// out, so the radial does not animate. Gesture Manager's internals used here (RadialMenu._menuPath, OpenMenu,
+    /// _cursor, GetOrCreateRadial(editor, official), RadialPage._menu) are found by reflection; when a Gesture Manager
+    /// version renames the menu ones, the preview says so instead of drawing (a renamed _cursor only leaves the cursor
+    /// shown). Built against Gesture Manager 3.9.9.
     /// </summary>
     [InitializeOnLoad]
     internal sealed class GestureManagerRadial : IMenuToolRadial
@@ -30,6 +35,7 @@ namespace Riry.RiryTools.Editor
         private const BindingFlags Members = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         private static readonly FieldInfo MenuPath = typeof(RadialMenu).GetField("_menuPath", Members);
         private static readonly FieldInfo PageMenu = typeof(RadialPage).GetField("_menu", Members);
+        private static readonly FieldInfo CursorField = typeof(RadialMenu).GetField("_cursor", Members);
         private static readonly MethodInfo OpenMenu = typeof(RadialMenu).GetMethod("OpenMenu", Members, null,
             new[] { typeof(VRCExpressionsMenu), typeof(Vrc3Param), typeof(float) }, null);
         private static readonly MethodInfo OfficialRadial = typeof(ModuleVrc3).GetMethod("GetOrCreateRadial", Members, null,
@@ -67,7 +73,6 @@ namespace Riry.RiryTools.Editor
             {
                 foreach (KeyValuePair<string, Vrc3Param> pair in module.Params) values[pair.Key] = pair.Value.FloatValue();
             }
-            Hide();
             if (avatar == null)
             {
                 avatar = EditorUtility.CreateGameObjectWithHideFlags("RiryTools Menu Tool preview", HideFlags.HideAndDontSave, typeof(Animator));
@@ -84,7 +89,10 @@ namespace Riry.RiryTools.Editor
             if (descriptor.expressionsMenu != root) descriptor.expressionsMenu = root;
             if (descriptor.expressionParameters != parameters) descriptor.expressionParameters = parameters;
 
-            module = new ModuleVrc3(descriptor) { Settings = new ModuleSettings() };
+            // Kept across menus: a new module would make Gesture Manager build a new radial element.
+            if (module == null) module = new ModuleVrc3(descriptor) { Settings = new ModuleSettings() };
+            // The radial leaves its old pages before the parameters change: the menus they show are already destroyed.
+            if (radial != null) radial.Set(root);
             module.Params.Clear();
             foreach (KeyValuePair<string, Vrc3DefaultParams.DefaultParameter> pair in Vrc3DefaultParams.Parameters)
                 module.Params[pair.Key] = new Vrc3Param(pair.Value, pair.Value.SyncType);
@@ -111,9 +119,14 @@ namespace Riry.RiryTools.Editor
                 param.SetOnChange((changed, written) => Written?.Invoke(changed.Name, written));
             }
 
-            radial = OfficialRadial != null
-                ? (RadialMenu)OfficialRadial.Invoke(module, new object[] { owner, true })
-                : module.GetOrCreateRadial(owner);
+            if (radial == null)
+            {
+                radial = OfficialRadial != null
+                    ? (RadialMenu)OfficialRadial.Invoke(module, new object[] { owner, true })
+                    : module.GetOrCreateRadial(owner);
+                // The thumbstick cursor stays invisible; its position still picks the hovered slice.
+                if (CursorField != null && CursorField.GetValue(radial) is VisualElement cursor) cursor.visible = false;
+            }
             if (Unsupported == null) Navigate(new[] { root });
         }
 
@@ -137,6 +150,14 @@ namespace Riry.RiryTools.Editor
             var pages = (IList)MenuPath.GetValue(radial);
             pages.Clear();
             foreach (VRCExpressionsMenu menu in path) OpenMenu.Invoke(radial, new object[] { menu, null, 0f });
+            RemoveRunning();
+        }
+
+        // Gesture Manager gives every Button and Toggle a spinning "running" icon whose animation never ends; taken out of
+        // the radial after each page is built, so it neither spins nor keeps the window repainting.
+        private void RemoveRunning()
+        {
+            foreach (VisualRunningElement running in radial.Query<VisualRunningElement>().ToList()) running.RemoveFromHierarchy();
         }
 
         public List<VRCExpressionsMenu> Path
@@ -164,9 +185,11 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             // Mouse handling works in the OnGUI's coordinates (Rect); the element is placed in the window's root element.
-            // The window takes it off when a repaint does not draw it (no timer: IMGUI does not repaint while idle).
+            // The window takes it off when it leaves view or another view is shown.
             radial.Rect = rect;
             radial.Render(root, local);
+            // A click in Render can open a page.
+            RemoveRunning();
         }
 
         public void Hide()
@@ -198,12 +221,18 @@ namespace Riry.RiryTools.Editor
 // GestureManagerRadial (this file): IMenuToolRadial (Editor/VRChat/MenuTool/MenuToolPreview.cs)
 //   static constructor       [InitializeOnLoad]: sets MenuToolPreviewMenus.CreateRadial.
 //   Show(root, parameters)   A hidden, inactive stand-in avatar (Animator + VRCAvatarDescriptor, HideAndDontSave) carries the
-//                            preview menu and parameters; a fresh ModuleVrc3 on it, never InitForAvatar'd; its Params filled
-//                            with Gesture Manager's defaults, the preview parameters and names menus use undeclared (Floats),
-//                            keeping earlier values; each own parameter reports writes (Written). Gesture Manager's radial
-//                            (GetOrCreateRadial(owner, official: true) by reflection, else the public one), opened on the root.
-//   Navigate / Path          RadialMenu._menuPath cleared and OpenMenu called per menu; Path reads each RadialPage._menu.
+//                            preview menu and parameters; one ModuleVrc3 on it (made on the first Show, never InitForAvatar'd);
+//                            its Params refilled with Gesture Manager's defaults, the preview parameters and names menus use
+//                            undeclared (Floats), keeping earlier values; each own parameter reports writes (Written). Gesture
+//                            Manager's radial (GetOrCreateRadial(owner, official: true) by reflection, else the public one) is
+//                            made once, its cursor (_cursor) made invisible; later Shows Set the new root on it. Opened on the
+//                            root.
+//   Navigate / Path          RadialMenu._menuPath cleared and OpenMenu called per menu, then RemoveRunning; Path reads each
+//                            RadialPage._menu.
+//   RemoveRunning            Takes every VisualRunningElement (Gesture Manager's endlessly spinning icon on Buttons and Toggles)
+//                            out of the radial, which stops its animation.
 //   Draw(rect, local, root)  Rect (mouse maths) in GUI coordinates; Render places the element at local in root (the window's
-//                            rootVisualElement). The window hides it (Hide) when a repaint does not draw it.
+//                            rootVisualElement), then RemoveRunning (a click may have opened a page). The window hides it (Hide)
+//                            when it is not in view or another view is shown.
 //   Unsupported              A Gesture Manager without these members: Draw shows that message instead of the radial.
 //   Dispose                  Removes the element, destroys the stand-in avatar and the key object.
