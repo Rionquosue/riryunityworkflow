@@ -25,6 +25,11 @@ namespace Riry.RiryTools.Editor
         // Gesture Manager's radial is drawn at this size.
         private const float RadialSize = 300f;
         private const int WriteLog = 8;
+        // The target field's object picker lists only Hierarchy objects with a VRC Avatar Descriptor (prefab assets have
+        // GameObject as their type, so the Assets tab finds none).
+        private const string AvatarFilter = "t:VRCAvatarDescriptor";
+        // Width of Unity's picker button at the right end of an object field.
+        private const float PickerButton = 19f;
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
@@ -70,6 +75,8 @@ namespace Riry.RiryTools.Editor
         // Where this OnGUI's (0, 0) is on screen, and whether this repaint drew the radial.
         [NonSerialized] private Vector2 guiOrigin;
         [NonSerialized] private bool radialDrawn;
+        // The control ID the open object picker reports to, or 0.
+        [NonSerialized] private int pickerId;
 
         public EditorWindow Surface
         {
@@ -335,8 +342,30 @@ namespace Riry.RiryTools.Editor
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                var picked = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Avatar or prefab",
-                    "A prefab asset, an object in Prefab Mode or in the Hierarchy. Inside an avatar, the avatar is assembled and the object filters the budget."),
+                Rect field = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+                int id = GUIUtility.GetControlID(FocusType.Passive);
+                // The picker button opens a picker of Hierarchy objects with a VRC Avatar Descriptor instead of every GameObject.
+                var button = new Rect(field.xMax - PickerButton, field.y, PickerButton, field.height);
+                if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && button.Contains(Event.current.mousePosition))
+                {
+                    pickerId = id;
+                    EditorGUIUtility.ShowObjectPicker<GameObject>(target, true, AvatarFilter, id);
+                    Event.current.Use();
+                }
+                if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "ObjectSelectorClosed" && pickerId != 0 &&
+                    EditorGUIUtility.GetObjectPickerControlID() == pickerId)
+                {
+                    pickerId = 0;
+                    var chosen = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                    if (chosen != null && chosen != target)
+                    {
+                        target = RiryGui.Set(this, "Menu Tool target", target, chosen);
+                        MarkStale();
+                    }
+                }
+                var picked = (GameObject)EditorGUI.ObjectField(field, new GUIContent("Avatar or prefab",
+                    "A prefab asset, an object in Prefab Mode or in the Hierarchy. Inside an avatar, the avatar is assembled and the object filters the budget. " +
+                    "The picker lists Hierarchy objects with a VRC Avatar Descriptor."),
                     target, typeof(GameObject), true);
                 if (picked != target)
                 {
@@ -765,6 +794,9 @@ namespace Riry.RiryTools.Editor
 //   OnGUI / DrawWindow       guiOrigin (this OnGUI's (0, 0) on screen); a repaint that did not draw the radial hides it
 //                            (radialDrawn), so it neither lingers nor blinks off while the window is idle.
 //   target                   Avatar, prefab asset, Prefab Mode or Hierarchy object ([SerializeField]; Undo via RiryGui.Set).
+//                            Its picker button (PickerButton wide) opens ShowObjectPicker with AvatarFilter
+//                            ("t:VRCAvatarDescriptor": Hierarchy objects with a VRC Avatar Descriptor), applied when the
+//                            picker closes (pickerId); dragging in and Use selection still take any object.
 //   Refresh / MarkStale      Rescans (MenuToolScanner) on the next Layout after a change (hierarchy, project, Undo, Rescan),
 //                            loads the plan (MenuPlan), rebuilds the trees and the preview (Replan).
 //   Replan                   Planned layout (MenuToolPlanner), the list, the preview menus and the radial, staying in the

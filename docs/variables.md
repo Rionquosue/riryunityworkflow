@@ -271,6 +271,7 @@ IconCap:
 | `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect | VRCFury's limit for compression |
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760` | Menu Tool's own window; the Menu manager asks for this width in the Main Menu too |
 | `MenuToolWindow.WriteLog` | `8` | Parameter writes listed under the radial |
+| `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19` | The target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces |
 
 ## Menu paths
 
