@@ -305,14 +305,44 @@ namespace Riry.RiryTools.Editor
 
         private void AddMoveItems(GenericMenu menu, MenuEntry entry)
         {
-            foreach (MenuEntry destination in new[] { planned }.Concat(planned.Descendants()).Where(e => e.IsSubMenu))
+            int before = menu.GetItemCount();
+            if (planned != entry.Parent)
             {
-                if (destination == entry || MenuToolScanner.IsUnder(destination, entry) || destination == entry.Parent) continue;
-                string label = destination.Parent == null ? "Root" : "Root › " + destination.Path.Replace("/", " › ");
-                string to = destination.Path;
-                menu.AddItem(new GUIContent("Move to…/" + label.Replace("/", "∕")), false, () => AddMove(entry.Path, to, -1));
+                menu.AddItem(new GUIContent("Move to…/Top level"), false, () => AddMove(entry.Path, "", -1));
+                if (MoveDestinations(planned, entry).Any()) menu.AddSeparator("Move to…/");
             }
-            if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("Move to…/No other submenu"));
+            AddMoveSegment(menu, entry, planned, "Move to…/");
+            if (menu.GetItemCount() == before) menu.AddDisabledItem(new GUIContent("Move to…/No other submenu"));
+        }
+
+        // The submenus under a parent that the entry can move into: not itself or anything under it.
+        private static IEnumerable<MenuEntry> MoveDestinations(MenuEntry parent, MenuEntry entry)
+        {
+            return parent.Children.Where(e => e.IsSubMenu && e != entry && !MenuToolScanner.IsUnder(e, entry));
+        }
+
+        // One level of Move to…: a submenu with submenus of its own expands, its own name first, then a separator and its
+        // submenus; one without is a single item.
+        private void AddMoveSegment(GenericMenu menu, MenuEntry entry, MenuEntry parent, string prefix)
+        {
+            foreach (MenuEntry destination in MoveDestinations(parent, entry))
+            {
+                string name = destination.Name.Replace("/", "∕");
+                string to = destination.Path;
+                bool target = destination != entry.Parent;
+                if (!MoveDestinations(destination, entry).Any())
+                {
+                    if (target) menu.AddItem(new GUIContent(prefix + name), false, () => AddMove(entry.Path, to, -1));
+                    continue;
+                }
+                string segment = prefix + name + "/";
+                if (target)
+                {
+                    menu.AddItem(new GUIContent(segment + name), false, () => AddMove(entry.Path, to, -1));
+                    menu.AddSeparator(segment);
+                }
+                AddMoveSegment(menu, entry, destination, segment);
+            }
         }
 
         // A right-click on the radial: the list's context menu for the control that slice shows; a greyed entry for a slice
