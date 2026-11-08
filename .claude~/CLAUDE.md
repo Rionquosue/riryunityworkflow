@@ -12,6 +12,15 @@ Not part of the package: the `~` keeps Unity and the VPM build from picking this
 6. Instructions stay in force until the owner changes them.
 7. When reporting, say plainly whether the result does exactly what was asked; if not, what differs and why.
 
+## Reporting
+
+Keep messages to the owner minimal: clear, concise, only the important details. No running log of steps and no exposition of reasoning. Each report covers only:
+
+1. What was done.
+2. Why it was done.
+3. What parts of the request could not be acted on.
+4. Possible fixes for those, if needed.
+
 ## Token efficiency
 
 - Spend tokens on the change, not on planning around it. Keep internal reasoning short.
