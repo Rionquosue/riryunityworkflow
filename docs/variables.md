@@ -296,6 +296,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
   - `Tools/RiryTools/Import Presets/Save Import Preset` (2051)
   - `Tools/RiryTools/Import Presets/Extract Animation` (2052): the Extract Animation window
   - `Tools/RiryTools/Import Presets/Open Import Preset Library` (2053)
+  - `Tools/RiryTools/Find Null references` (2056): reads the Console's NullReferenceException entries (internal `UnityEditor.LogEntries`) once and lists empty or missing references in a popup, the whole open scenes when the log gives nothing (also a button on the Main Menu's Tools tab)
   - `Tools/RiryTools/Reload domain` (2058), menu key R: `EditorUtility.RequestScriptReload` (also a button on the Main Menu's Tools tab)
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
   - `Tools/RiryTools/Menu Mockup` (2065): opens the Edit and Components windows

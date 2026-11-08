@@ -38,6 +38,7 @@ namespace Riry.RiryTools.Editor
         private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animation";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
+        private const string FindNullReferencesMenu = "Tools/RiryTools/Find Null references";
         private const string ReloadDomainMenu = "Tools/RiryTools/Reload domain";
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
         private const string Documentation = "Tools/RiryTools/Documentation";
@@ -120,6 +121,9 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
+
+        [MenuItem(FindNullReferencesMenu, false, 2056)]
+        private static void FindNullReferencesItem() { FindNullReferences.Run(); }
 
         // Unity 2022.3 has no menu item for this, only the Play Mode setting in Project Settings > Editor.
         [MenuItem(ReloadDomainMenu, false, 2058)]
