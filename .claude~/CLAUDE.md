@@ -23,6 +23,8 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 
 ## Token efficiency
 
+- Skip extras unless instructed: no `User tests.md` updates, no GLOSSARY updates, no bridge compile check, no reports beyond the Reporting format. The only thing always updated is `docs/variables.md`.
+
 - Spend tokens on the change, not on planning around it. Keep internal reasoning short.
 - Read only the code the change touches. Don't read dependency or reference sources unless the change calls into them and the call can't be confirmed otherwise.
 - Never re-read a file already in context, and don't page through other sessions' transcripts.
@@ -43,7 +45,7 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 ## Code conventions
 
 - Unity 2022.3 LTS, C# 9. Assemblies `Riry.RiryTools.Editor`, `Riry.RiryTools.Editor.VRChat` (needs `RIRYTOOLS_VRC_CONSTRAINTS`, VRChat SDK 3.7.0+) and `Riry.RiryTools.Editor.GestureManager` (`RIRYTOOLS_GESTURE_MANAGER`, Gesture Manager 3.9+). `RIRYTOOLS_VRC_BIT_WIDTH` for `com.vrchat.avatars` 3.10.6+.
-- Every code file ends with a GLOSSARY block of its members; keep it current.
+- Every code file ends with a GLOSSARY block of its members; update it only when instructed.
 - `docs/variables.md` lists every stored key, path, GUID, symbol, constant, menu path and workflow variable; keep it current.
 - Every new file gets a `.meta` with a fresh uuid4 hex GUID. Never delete or regenerate an existing `.meta`.
 - The product is `RiryTools` everywhere. Settings keys `RiryTools.<Tool>.<Setting>`. Menus under `Tools > RiryTools`; no "..." in entry names; never hard-code Alt key sequences.
@@ -52,7 +54,7 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 
 - Compile check: `dotnet build` against the Unity 2021.1 reference assemblies (NuGet `Unity3D.SDK` 2021.1.14.1 for UnityEditor, `UnityEngine.Modules` 2021.3.33 for the engine modules), VRChat SDK 3.10.6 DLLs and a small shims file. Two projects: the package, and the package plus Gesture Manager 3.9.9 source and the bridge (netstandard2.1). Baseline: 10 errors from Unity 2022 APIs missing in the references (`Undo.undoRedoEvent`, `AssetDatabase.SaveAssetIfDirty`, `PrefabUtility.ApplyAddedGameObjects`, `RenderSettings.customReflectionTexture`), plus `Undo.isProcessing` in Gesture Manager's source for the bridge project. Anything else is a real error.
 - Use the cheapest check that works. No zipping or full pipeline runs.
-- `User tests.md` (owner-held, never committed): one numbered paragraph per test, only what needs Unity or VRChat to see. Update it and send it after each change.
+- `User tests.md` (owner-held, never committed): one numbered paragraph per test, only what needs Unity or VRChat to see. Update it only when instructed.
 
 ## Common requests
 
