@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>What the Set Folder Import Presets window draws. State and actions are in Editor/ImportPresets/ImportPresetWindowActions.cs.</summary>
+    /// <summary>What the Set Folder Import Presets window draws. State and actions are in Editor/UI/ImportPresetWindowActions.cs.</summary>
     internal sealed partial class ImportPresetFolderWindow
     {
         /// <summary>Opens the window on the folder shown in the Project window.</summary>

@@ -11,22 +11,21 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Animator Tools > Find and Replace: finds the strings of state behaviours (case-insensitive, FuzzyMatch "contains")
-    /// in an avatar's controllers (its playable layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the
-    /// Menu Tool's scan finds them) or one animator controller, and replaces whole strings on Apply, as one undo step.
-    /// VRC Animator Play Audio paths can be repathed to a scene object (relative to the avatar, or to a VRCFury Full
-    /// Controller's root object), and VRC Avatar Parameter Driver names mapped to one of the controller's parameters.
+    /// Animator Tools > Find and Replace, without its window (Editor/UI/VRChat/BehaviourFindReplaceWindow.cs): finds the
+    /// strings of state behaviours (case-insensitive, FuzzyMatch "contains") in an avatar's controllers (its playable
+    /// layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the Menu Tool's scan finds them) or one
+    /// animator controller, replaces whole strings as one undo step, and shows a found state in the Animator window.
     /// </summary>
-    internal sealed class BehaviourFindReplaceWindow : EditorWindow
+    internal static class BehaviourFindReplace
     {
-        private enum Kind
+        internal enum Kind
         {
             Other,
             PlayAudio,
             Driver
         }
 
-        private sealed class Hit
+        internal sealed class Hit
         {
             internal AnimatorController Controller;
             internal int Layer;
@@ -43,135 +42,16 @@ namespace Riry.RiryTools.Editor
             internal string Label = "";
         }
 
-        private sealed class Change
+        internal sealed class Change
         {
             internal Hit Hit;
             internal string Before = "";
             internal string After = "";
         }
 
-        [SerializeField] private Object source;
-        [SerializeField] private string search = "";
-        [SerializeField] private string replace = "";
-        [SerializeField] private GameObject repath;
-        [SerializeField] private string map = "";
-        [SerializeField] private Vector2 foundScroll;
-        [SerializeField] private Vector2 changedScroll;
-        [NonSerialized] private List<Hit> hits = new List<Hit>();
-        [NonSerialized] private List<Change> changes = new List<Change>();
-        [NonSerialized] private bool searched;
-        [NonSerialized] private List<string> driverParameters = new List<string>();
-
-        internal static EditorWindow CreateHosted()
-        {
-            return CreateInstance<BehaviourFindReplaceWindow>();
-        }
-
-        /// <summary>The popup, with this source (the right-clicked object or controller, or none).</summary>
-        internal static void OpenPopup(Object with)
-        {
-            var window = CreateInstance<BehaviourFindReplaceWindow>();
-            window.titleContent = new GUIContent("Find and Replace");
-            window.source = Usable(with) ? with : null;
-            window.minSize = new Vector2(460f, 420f);
-            window.ShowUtility();
-        }
-
-        private static bool Usable(Object value)
-        {
-            return value is GameObject || value is AnimatorController;
-        }
-
-        private void OnGUI()
-        {
-            EditorGUILayout.Space(4f);
-            Object chosen = EditorGUILayout.ObjectField(new GUIContent("Source", "An avatar or an object in one (its playable layers, VRCFury Full Controllers and Modular Avatar Merge Animators), or an animator controller."),
-                source, typeof(Object), true);
-            if (chosen != source && (chosen == null || Usable(chosen)))
-            {
-                source = chosen;
-                searched = false;
-                hits.Clear();
-            }
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                search = EditorGUILayout.TextField("Search", search);
-                if (GUILayout.Button("Search", GUILayout.Width(70f))) Search();
-            }
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                replace = EditorGUILayout.TextField("Replace with", replace);
-                using (new EditorGUI.DisabledScope(!searched || hits.Count == 0))
-                {
-                    if (GUILayout.Button(new GUIContent("Apply", "Replaces the whole of each found string, as one undo step."), GUILayout.Width(70f))) Apply();
-                }
-            }
-
-            if (searched && !(source is AnimatorController) && hits.Any(h => h.Kind == Kind.PlayAudio))
-                repath = (GameObject)EditorGUILayout.ObjectField("Repath to scene object:", repath, typeof(GameObject), true);
-            if (searched && hits.Any(h => h.Kind == Kind.Driver)) DrawMap();
-
-            EditorGUILayout.Space(6f);
-            EditorGUILayout.LabelField("Found components" + (searched ? " (" + hits.Count + ")" : ""), EditorStyles.boldLabel);
-            foundScroll = EditorGUILayout.BeginScrollView(foundScroll, EditorStyles.helpBox, GUILayout.MinHeight(160f));
-            if (!searched) EditorGUILayout.LabelField("Search to list behaviour strings.", EditorStyles.miniLabel);
-            else if (hits.Count == 0) EditorGUILayout.LabelField("Nothing found.", EditorStyles.miniLabel);
-            foreach (Hit hit in hits)
-            {
-                if (GUILayout.Button(hit.Label + "  =  " + hit.Value, EditorStyles.linkLabel)) Reveal(hit);
-            }
-            EditorGUILayout.EndScrollView();
-
-            EditorGUILayout.LabelField("Changed components", EditorStyles.boldLabel);
-            changedScroll = EditorGUILayout.BeginScrollView(changedScroll, EditorStyles.helpBox, GUILayout.MinHeight(160f));
-            if (changes.Count == 0) EditorGUILayout.LabelField("The last Apply's changes are listed here.", EditorStyles.miniLabel);
-            foreach (Change change in changes)
-            {
-                if (GUILayout.Button(change.Hit.Label + "  :  " + change.Before + "  →  " + change.After, EditorStyles.linkLabel)) Reveal(change.Hit);
-            }
-            EditorGUILayout.EndScrollView();
-        }
-
-        // Map to parameter: typed text, with the controllers' parameters that match it below while it names none.
-        private void DrawMap()
-        {
-            map = EditorGUILayout.TextField("Map to parameter:", map);
-            if (driverParameters.Contains(map)) return;
-            foreach (string name in Ranked(map).Take(6))
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    GUILayout.Space(EditorGUIUtility.labelWidth);
-                    if (GUILayout.Button(name, EditorStyles.miniButtonLeft))
-                    {
-                        map = name;
-                        GUI.FocusControl(null);
-                    }
-                }
-            }
-        }
-
-        private IEnumerable<string> Ranked(string typed)
-        {
-            return driverParameters.Select(name => new { name, score = FuzzyMatch.Score(name, typed ?? "") })
-                .Where(p => p.score > 0).OrderByDescending(p => p.score).ThenBy(p => p.name.Length).ThenBy(p => p.name, StringComparer.Ordinal)
-                .Select(p => p.name);
-        }
-
         // ---- Search -------------------------------------------------------------------------------
 
-        private void Search()
-        {
-            searched = true;
-            hits = Find(source, search ?? "");
-            driverParameters = hits.Where(h => h.Kind == Kind.Driver).Select(h => h.Controller).Distinct()
-                .SelectMany(c => c.parameters.Select(p => p.name)).Distinct().ToList();
-            if (driverParameters.Count > 0 && !driverParameters.Contains(map)) map = Ranked(search).FirstOrDefault() ?? "";
-            GUI.FocusControl(null);
-        }
-
-        private static List<Hit> Find(Object from, string text)
+        internal static List<Hit> Find(Object from, string text)
         {
             var found = new List<Hit>();
             foreach (KeyValuePair<AnimatorController, KeyValuePair<string, Transform>> usage in Controllers(from))
@@ -277,9 +157,10 @@ namespace Riry.RiryTools.Editor
 
         // ---- Apply --------------------------------------------------------------------------------
 
-        // Play Audio paths take the repath object's path when one is set, Parameter Driver names the mapped parameter when
-        // one is typed; every other found string becomes Replace with, when it is not empty. One undo step.
-        private void Apply()
+        // Play Audio paths take the repath object's path when one is set (not for a controller asset), Parameter Driver
+        // names the mapped parameter when one is typed; every other found string becomes replace, when it is not empty.
+        // One undo step. Returns what changed.
+        internal static List<Change> Apply(List<Hit> hits, string replace, GameObject repath, string map, bool asset)
         {
             var made = new List<Change>();
             Undo.IncrementCurrentGroup();
@@ -290,7 +171,7 @@ namespace Riry.RiryTools.Editor
                 var serialized = new SerializedObject(behaviour.Key);
                 foreach (Hit hit in behaviour)
                 {
-                    string after = NewValue(hit);
+                    string after = NewValue(hit, replace, asset ? null : repath, map);
                     if (after == null) continue;
                     SerializedProperty property = serialized.FindProperty(hit.Property);
                     if (property == null || property.propertyType != SerializedPropertyType.String || property.stringValue == after) continue;
@@ -300,15 +181,13 @@ namespace Riry.RiryTools.Editor
                 serialized.ApplyModifiedProperties();
             }
             Undo.CollapseUndoOperations(group);
-            if (made.Count == 0) return;
-            changes = made;
             foreach (AnimatorController controller in made.Select(c => c.Hit.Controller).Distinct()) EditorUtility.SetDirty(controller);
-            Search();
+            return made;
         }
 
-        private string NewValue(Hit hit)
+        private static string NewValue(Hit hit, string replace, GameObject repath, string map)
         {
-            if (hit.Kind == Kind.PlayAudio && repath != null && !(source is AnimatorController))
+            if (hit.Kind == Kind.PlayAudio && repath != null)
             {
                 if (hit.Root != null && (repath.transform == hit.Root || repath.transform.IsChildOf(hit.Root)))
                     return AnimationUtility.CalculateTransformPath(repath.transform, hit.Root);
@@ -321,7 +200,7 @@ namespace Riry.RiryTools.Editor
 
         // Opens the Animator window on the hit's controller, layer and state machine, selects its state (shown in the
         // Inspector) and frames it. The Animator window's members (UnityEditor.Graphs.AnimatorControllerTool) are internal.
-        private static void Reveal(Hit hit)
+        internal static void Reveal(Hit hit)
         {
             if (hit.Controller == null || hit.Owner == null) return;
             EditorApplication.ExecuteMenuItem("Window/Animation/Animator");

@@ -6,18 +6,6 @@ using UnityEngine.Animations;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>The answers given in the up-front check, read by the run.</summary>
-    internal sealed class AvatarUpFrontAnswers
-    {
-        internal bool CopySkinnedMeshRenderers;
-        // Bounds of renderers whose mesh is a different one on the target.
-        internal bool CopyChangedBounds;
-        // Unpacked prefabs placed again as child prefabs of their models (RepackPrefabs.cs).
-        internal bool RepackPrefabs;
-        internal bool CopyMeshRenderers;
-        internal bool UpgradeConstraints;
-    }
-
     /// <summary>
     /// Everything up front: before anything is changed, a test finds the possible issues of
     /// this run, each with what to do about it, and asks every question the run needs

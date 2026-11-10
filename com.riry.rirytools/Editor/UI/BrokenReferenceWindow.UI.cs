@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>What the Broken References window draws. State and actions are in Editor/GuidTools/BrokenReferenceWindow.cs.</summary>
+    /// <summary>What the Broken References window draws. State and actions are in Editor/UI/BrokenReferenceWindow.cs.</summary>
     internal sealed partial class BrokenReferenceWindow
     {
         private static readonly Color Unresolved = new Color(1f, 0.35f, 0.35f);

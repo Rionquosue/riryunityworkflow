@@ -15,11 +15,11 @@ namespace Riry.RiryTools.Editor
     /// Find Null references: reads the Console's NullReferenceException entries, shows where each was thrown (the first
     /// frame in a project or package file), and scans the open scenes' components of the types that error's frames were
     /// handed for empty or missing references. If the log gives nothing, it scans every component in the open scenes.
-    /// Runs once and shows the result in a popup.
+    /// Runs once; its popup is Editor/UI/FindNullReferencesWindow.cs.
     /// </summary>
-    internal sealed class FindNullReferences : EditorWindow
+    internal static class FindNullReferences
     {
-        private sealed class Report
+        internal sealed class Report
         {
             internal string Title = "";
             internal string Location = "";
@@ -30,19 +30,7 @@ namespace Riry.RiryTools.Editor
         // "(at ./Packages/x/File.cs:27)" at the end of a stack frame.
         private static readonly Regex FrameAt = new Regex(@"\(at (?<path>[^()]+?):(?<line>\d+)\)\s*$");
 
-        private List<Report> reports = new List<Report>();
-        private Vector2 scroll;
-
-        internal static void Run()
-        {
-            var window = CreateInstance<FindNullReferences>();
-            window.titleContent = new GUIContent("Find Null references");
-            window.reports = Find();
-            window.minSize = new Vector2(480f, 240f);
-            window.ShowUtility();
-        }
-
-        private static List<Report> Find()
+        internal static List<Report> Find()
         {
             var reports = new List<Report>();
             foreach (string message in NullReferenceEntries())
@@ -278,22 +266,6 @@ namespace Riry.RiryTools.Editor
                 parts.Add(property != null ? property.displayName : piece);
             }
             return string.Join(" > ", parts);
-        }
-
-        private void OnGUI()
-        {
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-            foreach (Report report in reports)
-            {
-                EditorGUILayout.LabelField(report.Title, EditorStyles.boldLabel);
-                if (report.Location.Length > 0) EditorGUILayout.SelectableLabel(report.Location, EditorStyles.wordWrappedLabel);
-                if (report.Source.Length > 0) EditorGUILayout.SelectableLabel(report.Source, EditorStyles.helpBox);
-                if (report.Hits.Count == 0) EditorGUILayout.LabelField("No empty or missing references found.", EditorStyles.miniLabel);
-                foreach (string hit in report.Hits)
-                    EditorGUILayout.SelectableLabel(hit, EditorStyles.label, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                EditorGUILayout.Space(8f);
-            }
-            EditorGUILayout.EndScrollView();
         }
     }
 }

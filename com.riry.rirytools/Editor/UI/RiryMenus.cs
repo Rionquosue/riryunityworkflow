@@ -6,7 +6,7 @@ namespace Riry.RiryTools.Editor
     /// Every menu entry of this package in one place: the Tools dropdown, the
     /// Project window right-click menu (Assets/...), and the Git menu. Constraint
     /// Tool's entries (Tools and Hierarchy right-click) are in
-    /// Editor/VRChat/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
+    /// Editor/UI/VRChat/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
     /// Without the SDK, the same entries at the bottom of this file show a
     /// "VRCSDK not found" popup instead.
     ///
@@ -126,7 +126,7 @@ namespace Riry.RiryTools.Editor
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
 
         [MenuItem(FindNullReferencesMenu, false, 2056)]
-        private static void FindNullReferencesItem() { FindNullReferences.Run(); }
+        private static void FindNullReferencesItem() { FindNullReferencesWindow.Run(); }
 
         // Unity 2022.3 has no menu item for this, only the Play Mode setting in Project Settings > Editor.
         [MenuItem(ReloadDomainMenu, false, 2058)]

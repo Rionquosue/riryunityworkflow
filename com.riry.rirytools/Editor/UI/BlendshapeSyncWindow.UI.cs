@@ -6,7 +6,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// What the Blendshape Sync window draws. Its menu entry is in RiryMenus.cs;
-    /// state and actions are in Editor/BlendshapeSyncWindow.cs. A glossary is at
+    /// state and actions are in Editor/UI/BlendshapeSyncWindow.cs. A glossary is at
     /// the bottom.
     /// </summary>
     internal sealed partial class BlendshapeSyncWindow
