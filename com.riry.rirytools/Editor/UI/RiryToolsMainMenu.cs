@@ -27,7 +27,7 @@ namespace Riry.RiryTools.Editor
     /// </summary>
     internal sealed class RiryToolsMainMenu : EditorWindow
     {
-        // Set by Editor/UI/VRChat/RiryVRChatMenus.cs when the VRChat SDK is in the project.
+        // Set by Editor/VRChat/UI/RiryVRChatMenus.cs when the VRChat SDK is in the project.
         internal static Func<EditorWindow> CreateConstraintTrain;
         internal static Func<EditorWindow> CreateConstraintBezier;
         internal static Func<EditorWindow> CreateConstraintInsertable;
@@ -40,7 +40,7 @@ namespace Riry.RiryTools.Editor
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
-        // Constraint Tool's sub-tabs, as in its own window (Editor/UI/VRChat/ConstraintToolWindow.cs).
+        // Constraint Tool's sub-tabs, as in its own window (Editor/VRChat/UI/ConstraintToolWindow.cs).
         private static readonly string[] AnimatorTabs = { "Find and Replace" };
         private static readonly string[] ConstraintTabs = { "Train", "Bezier", "Insertable prop" };
         private static readonly string[] ImportTabs =

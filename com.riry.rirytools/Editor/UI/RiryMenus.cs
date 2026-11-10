@@ -6,7 +6,7 @@ namespace Riry.RiryTools.Editor
     /// Every menu entry of this package in one place: the Tools dropdown, the
     /// Project window right-click menu (Assets/...), and the Git menu. Constraint
     /// Tool's entries (Tools and Hierarchy right-click) are in
-    /// Editor/UI/VRChat/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
+    /// Editor/VRChat/UI/RiryVRChatMenus.cs, because they only compile with the VRChat SDK.
     /// Without the SDK, the same entries at the bottom of this file show a
     /// "VRCSDK not found" popup instead.
     ///

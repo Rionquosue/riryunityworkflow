@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Animator Tools > Find and Replace, without its window (Editor/UI/VRChat/BehaviourFindReplaceWindow.cs): finds the
+    /// Animator Tools > Find and Replace, without its window (Editor/VRChat/UI/BehaviourFindReplaceWindow.cs): finds the
     /// strings of state behaviours (case-insensitive, FuzzyMatch "contains") in an avatar's controllers (its playable
     /// layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the Menu Tool's scan finds them) or one
     /// animator controller, replaces whole strings as one undo step, and shows a found state in the Animator window.
