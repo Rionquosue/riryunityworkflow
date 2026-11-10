@@ -418,7 +418,7 @@ namespace Riry.RiryTools.Editor
             {
                 foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
                 {
-                    string objectPath = ObjectPath(transform);
+                    string objectPath = HierarchyPath.Of(transform);
                     if (PrefabUtility.IsPrefabAssetMissing(transform.gameObject))
                         broken.Add(new BrokenReference { Where = objectPath + " > Prefab", Guid = MissingPrefabGuid(transform.gameObject) });
                     foreach (Component component in transform.GetComponents<Component>())
@@ -473,14 +473,6 @@ namespace Riry.RiryTools.Editor
             long localId;
             return source != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(source.objectReferenceInstanceIDValue, out guid, out localId) &&
                 !string.IsNullOrEmpty(guid) ? guid : null;
-        }
-
-        // "Avatar/Body", the GameObject's place in the hierarchy.
-        private static string ObjectPath(Transform transform)
-        {
-            string path = transform.name;
-            for (Transform parent = transform.parent; parent != null; parent = parent.parent) path = parent.name + "/" + path;
-            return path;
         }
 
         // "m_Materials.Array.data[0]" as "Materials[0]".

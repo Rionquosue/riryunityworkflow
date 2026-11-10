@@ -76,7 +76,7 @@ namespace Riry.RiryTools.Editor
             get
             {
                 if (sdkPresent.HasValue) return sdkPresent.Value;
-                sdkPresent = AvatarCopyTypes.Find(SdkProbeType) != null;
+                sdkPresent = RiryTypes.Named(SdkProbeType) != null;
                 return sdkPresent.Value;
             }
         }
@@ -649,30 +649,9 @@ namespace Riry.RiryTools.Editor
                 }
                 return types;
             }
-            Type found = Find(name);
+            Type found = RiryTypes.Named(name);
             if (found != null && typeof(Component).IsAssignableFrom(found)) types.Add(found);
             return types;
-        }
-
-        /// <summary>A type by full name in any loaded assembly, or null.</summary>
-        internal static Type Find(string fullName)
-        {
-            Type found;
-            if (Cache.TryGetValue(fullName, out found)) return found;
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                try
-                {
-                    found = assembly.GetType(fullName, false);
-                }
-                catch (Exception)
-                {
-                    found = null;
-                }
-                if (found != null) break;
-            }
-            Cache[fullName] = found;
-            return found;
         }
 
         /// <summary>A type by its simple name in any loaded assembly, or null (for SDK editor classes).</summary>

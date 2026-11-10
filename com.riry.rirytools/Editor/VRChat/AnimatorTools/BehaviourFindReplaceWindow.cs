@@ -325,7 +325,7 @@ namespace Riry.RiryTools.Editor
         {
             if (hit.Controller == null || hit.Owner == null) return;
             EditorApplication.ExecuteMenuItem("Window/Animation/Animator");
-            Type toolType = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("UnityEditor.Graphs.AnimatorControllerTool", false)).FirstOrDefault(t => t != null);
+            Type toolType = RiryTypes.Named("UnityEditor.Graphs.AnimatorControllerTool");
             var tool = toolType != null ? Resources.FindObjectsOfTypeAll(toolType).FirstOrDefault() as EditorWindow : null;
             if (tool != null)
             {

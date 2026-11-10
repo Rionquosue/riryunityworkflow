@@ -23,7 +23,7 @@ namespace Riry.RiryTools.Editor
         private void RetargetVrcFury()
         {
             if (includedPrefabs.Count == 0) return;
-            Type type = AvatarCopyTypes.Find(VrcFuryType);
+            Type type = RiryTypes.Named(VrcFuryType);
             if (type == null)
             {
                 report.PossibleIssues.Add("VRCFury in the included child prefabs: " + VrcFuryType + " was not found (VRCFury is not " +

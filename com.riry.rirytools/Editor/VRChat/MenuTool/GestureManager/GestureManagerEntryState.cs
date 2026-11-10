@@ -69,7 +69,7 @@ namespace Riry.RiryTools.Editor
             if (module == null)
             {
                 module = GmManager.ControlledAvatars.Values.OfType<ModuleVrc3>().FirstOrDefault(m => m.Avatar != null &&
-                    m.Avatar.scene.name == state.Scene && MenuToolEntryState.PathOf(m.Avatar.transform) == state.Avatar);
+                    m.Avatar.scene.name == state.Scene && HierarchyPath.Of(m.Avatar.transform) == state.Avatar);
                 // Its writes start the frame after it is set up.
                 return;
             }

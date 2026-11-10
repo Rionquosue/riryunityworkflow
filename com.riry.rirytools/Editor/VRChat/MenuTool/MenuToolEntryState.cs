@@ -51,12 +51,5 @@ namespace Riry.RiryTools.Editor
         {
             SessionState.EraseString(Key);
         }
-
-        internal static string PathOf(Transform transform)
-        {
-            var names = new List<string>();
-            for (Transform t = transform; t != null; t = t.parent) names.Insert(0, t.name);
-            return string.Join("/", names);
-        }
     }
 }

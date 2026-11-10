@@ -93,7 +93,7 @@ namespace Riry.RiryTools.Editor
         private void Collect()
         {
             Transform targetRoot = map.TargetRoot;
-            Type descriptorType = AvatarCopyTypes.Find(AvatarCopyTypes.DescriptorType);
+            Type descriptorType = RiryTypes.Named(AvatarCopyTypes.DescriptorType);
             Component descriptor = descriptorType != null ? targetRoot.GetComponent(descriptorType) : null;
             if (descriptor != null)
             {

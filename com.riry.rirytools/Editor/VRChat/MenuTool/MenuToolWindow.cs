@@ -872,7 +872,7 @@ namespace Riry.RiryTools.Editor
             Transform root = scan.Avatar.transform;
             var state = new MenuToolEntryState
             {
-                Scene = root.gameObject.scene.name, Avatar = MenuToolEntryState.PathOf(root), Menu = shownPath ?? "",
+                Scene = root.gameObject.scene.name, Avatar = HierarchyPath.Of(root), Menu = shownPath ?? "",
                 Writes = new List<MenuToolEntryState.Write>(writes)
             };
             state.Save();

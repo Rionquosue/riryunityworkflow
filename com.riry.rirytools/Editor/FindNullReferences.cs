@@ -83,7 +83,7 @@ namespace Riry.RiryTools.Editor
                     {
                         foreach (Component component in transform.GetComponents<Component>())
                         {
-                            if (component == null) scene.Hits.Add(PathOf(transform) + " > Missing script");
+                            if (component == null) scene.Hits.Add(HierarchyPath.Of(transform, " > ") + " > Missing script");
                             else scene.Hits.AddRange(Scan(component, false));
                         }
                     }
@@ -170,20 +170,10 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private static readonly Dictionary<string, Type> Resolved = new Dictionary<string, Type>();
-
+        // Stack traces write nested types as "Outer/Inner".
         private static Type Resolve(string name)
         {
-            Type type;
-            if (Resolved.TryGetValue(name, out type)) return type;
-            string clr = name.Replace('/', '+');
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                type = assembly.GetType(clr, false);
-                if (type != null) break;
-            }
-            Resolved[name] = type;
-            return type;
+            return RiryTypes.Named(name.Replace('/', '+'));
         }
 
         private static IEnumerable<GameObject> Roots()
@@ -205,7 +195,7 @@ namespace Riry.RiryTools.Editor
         // when empty is true, empty object fields (except under a layer marked as default, which has none by design).
         private static IEnumerable<string> Scan(Component component, bool empty)
         {
-            string owner = PathOf(component.transform) + " > " + ObjectNames.NicifyVariableName(component.GetType().Name);
+            string owner = HierarchyPath.Of(component.transform, " > ") + " > " + ObjectNames.NicifyVariableName(component.GetType().Name);
             var hits = new List<string>();
 
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -288,13 +278,6 @@ namespace Riry.RiryTools.Editor
                 parts.Add(property != null ? property.displayName : piece);
             }
             return string.Join(" > ", parts);
-        }
-
-        private static string PathOf(Transform transform)
-        {
-            var names = new List<string>();
-            for (Transform t = transform; t != null; t = t.parent) names.Insert(0, t.name);
-            return string.Join(" > ", names);
         }
 
         private void OnGUI()

@@ -37,7 +37,7 @@ namespace Riry.RiryTools.Editor
             {
                 foreach (Type component in type.Types) ClearTarget(component);
             }
-            Type vrcType = AvatarCopyTypes.Find(AvatarCopyTypes.VrcConstraintPrefix + type.Types[0].Name);
+            Type vrcType = RiryTypes.Named(AvatarCopyTypes.VrcConstraintPrefix + type.Types[0].Name);
             if (vrcType == null) return;
             foreach (Component converted in constraintHolder.GetComponentsInChildren(vrcType, true))
             {

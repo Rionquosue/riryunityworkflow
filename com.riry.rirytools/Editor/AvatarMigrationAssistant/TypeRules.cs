@@ -331,7 +331,7 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         private void CopyAvatarDescriptor()
         {
-            Type descriptorType = AvatarCopyTypes.Find(AvatarCopyTypes.DescriptorType);
+            Type descriptorType = RiryTypes.Named(AvatarCopyTypes.DescriptorType);
             if (descriptorType == null)
             {
                 report.NotCopied.Add("Avatar Descriptor: " + AvatarCopyTypes.DescriptorType + " was not found in this project, so it was not copied.");
@@ -477,7 +477,7 @@ namespace Riry.RiryTools.Editor
 
         private void CopyBlueprintId()
         {
-            Type pipelineType = AvatarCopyTypes.Find(AvatarCopyTypes.PipelineManager);
+            Type pipelineType = RiryTypes.Named(AvatarCopyTypes.PipelineManager);
             if (pipelineType == null)
             {
                 report.NotCopied.Add("Blueprint ID: " + AvatarCopyTypes.PipelineManager + " was not found in this project, so it was not copied.");

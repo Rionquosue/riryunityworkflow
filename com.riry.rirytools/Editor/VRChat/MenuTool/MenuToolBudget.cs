@@ -122,8 +122,8 @@ namespace Riry.RiryTools.Editor
         internal static Result Exact(VRCAvatarDescriptor avatar)
         {
             var result = new Result();
-            Type vrcfury = MenuToolScanner.TypeNamed(VrcfuryType);
-            Type callbacks = MenuToolScanner.TypeNamed(CallbacksType);
+            Type vrcfury = RiryTypes.Named(VrcfuryType);
+            Type callbacks = RiryTypes.Named(CallbacksType);
             MethodInfo preprocess = callbacks != null ? callbacks.GetMethod("OnPreprocessAvatar", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(GameObject) }, null) : null;
             if (EditorApplication.isPlayingOrWillChangePlaymode) result.Unavailable = "Not available in Play Mode.";
             else if (avatar == null) result.Unavailable = "No avatar descriptor.";

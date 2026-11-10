@@ -12,7 +12,8 @@
 Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it. In each, a tool's logic is in its own folder (or one file when small) and its window in `Editor/UI/`.
 
 - `Editor/` (Unity only):
-  - Shared: `RiryLog`, `RiryToolsPaths`, `RiryToolsProjectFolder`, `FuzzyMatch`, `VrcSdkNotFoundException`, `AssemblyInfo` (opens internals to the VRChat assembly).
+  - `Components/`: code shared by several tools: `RiryLog`, `RiryToolsPaths`, `RiryToolsProjectFolder`, `FuzzyMatch`, `VrcSdkNotFoundException`, `RiryTypes` (type by name), `HierarchyPath` (transform path).
+  - `AssemblyInfo` opens internals to the VRChat and Gesture Manager assemblies.
   - Single files: `AttachTo`, `BlendshapeSync*`, `CleanAnimationKeys`, `FindNullReferences` (with its popup), `MenuMockup`, `StopAutoGame`, `AvatarMigrationAssistant` (steps in its folder).
   - Folders: `AutoSync/` (Git sync), `AvatarMigrationAssistant/` (one file per step, `types.yml`), `GuidTools/`, `IconCap/` (with `Shaders/`), `ImportPresets/`; `ConstraintBezier/`, `ConstraintTrain/`, `InsertableProp/` hold Constraint Tool math, here because it needs no SDK.
 - `Editor/UI/`: every core window, `RiryMenus.cs` (all core menu entries and the "VRCSDK not found" stand-ins), `RiryToolsMainMenu.cs` (Main Menu; `Tabs` sets tab order), `RiryGui.cs`.
