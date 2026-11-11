@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// What the Blendshape Sync window draws. Its menu entry is in RiryMenus.cs;
+    /// What the Blendshape Sync window draws. Its menu entry is in RiryToolsMenuBar.cs;
     /// state and actions are in Editor/UI/BlendshapeSyncWindow.cs. A glossary is at
     /// the bottom.
     /// </summary>
@@ -123,13 +123,13 @@ namespace Riry.RiryTools.Editor
                     {
                         EditorGUILayout.LabelField(new GUIContent("Source", "Name on the master."),
                             EditorStyles.miniLabel);
-                        link.Source = RiryGui.Set(this, SettingsUndo, link.Source, EditorGUILayout.TextField(link.Source));
+                        link.Source = RiryToolGUI.Set(this, SettingsUndo, link.Source, EditorGUILayout.TextField(link.Source));
                     }
                     using (new EditorGUILayout.VerticalScope())
                     {
                         EditorGUILayout.LabelField(new GUIContent("Destination", "Name on this child."),
                             EditorStyles.miniLabel);
-                        link.Destination = RiryGui.Set(this, SettingsUndo, link.Destination, EditorGUILayout.TextField(link.Destination));
+                        link.Destination = RiryToolGUI.Set(this, SettingsUndo, link.Destination, EditorGUILayout.TextField(link.Destination));
                     }
                     if (GUILayout.Button("X", GUILayout.Width(22))) remove = i;
                 }
@@ -176,7 +176,7 @@ namespace Riry.RiryTools.Editor
 //   ChildPlan / IndexLink / WeightChange   Internal planning and change records.
 //
 // UI METHODS (this file)
-//   Open()                     Opens the window (called from RiryMenus).
+//   Open()                     Opens the window (called from RiryToolsMenuBar).
 //   OnGUI()                    Master field, child rows, toggles, buttons and messages.
 //   DrawManualLinks(child)     Source/Destination rows for one child.
 //

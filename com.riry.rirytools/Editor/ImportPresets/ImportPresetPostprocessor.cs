@@ -80,7 +80,7 @@ namespace Riry.RiryTools.Editor
             // Only Blender files can be opened by Blender; any other listed type
             // (an .fbx would even overwrite itself) is ignored.
             string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path));
-            if (extension != BetterFbxExporter.SourceExtension) return null;
+            if (extension != ImportPresetBetterFBX.SourceExtension) return null;
             ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(path);
             return rules != null && rules.BetterFbx.Contains(extension) ? rules : null;
         }
@@ -140,9 +140,9 @@ namespace Riry.RiryTools.Editor
             if (!File.Exists(source)) return;
             try
             {
-                bool existed = File.Exists(BetterFbxExporter.FbxPathFor(source));
+                bool existed = File.Exists(ImportPresetBetterFBX.FbxPathFor(source));
                 string message;
-                string fbx = BetterFbxExporter.Export(source, force, out message);
+                string fbx = ImportPresetBetterFBX.Export(source, force, out message);
                 if (fbx == null)
                 {
                     // A lasting state (Blender missing, a kept FBX, bad options) is reported once per session, not per file
@@ -160,7 +160,7 @@ namespace Riry.RiryTools.Editor
                     return;
                 }
                 ImportPresetAnimations.Extraction result = ImportPresetAnimations.ExtractPreservingSettings(importer,
-                    AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, false);
+                    ImportPresetAnimationExtraction.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, false);
                 result.Log(fbx, message.TrimEnd('.') + "; refreshed " + result.Written + " clip(s) in " + result.Folder +
                     (result.Skipped.Count > 0 ? ", kept " + result.Skipped.Count + " clip(s) that were edited or extracted from another model" : ""));
             }

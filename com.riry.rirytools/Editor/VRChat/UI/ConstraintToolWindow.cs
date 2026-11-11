@@ -7,7 +7,7 @@ namespace Riry.RiryTools.Editor
     /// Constraint Tool: one window with a tab per subtool, Train (ConstraintTrainWindow),
     /// Bezier (ConstraintBezierWindow) and Insertable prop (InsertablePropWindow). Each subtool is its own window, hosted unseen and drawn
     /// by calling its OnGUI, as the Main Menu does. Opened from Tools > RiryTools > Constraint
-    /// Tool and the Hierarchy's RiryTools > Constraint Tool > Train / Bezier (RiryVRChatMenus.cs).
+    /// Tool and the Hierarchy's RiryTools > Constraint Tool > Train / Bezier (RiryToolsVRChatMenus.cs).
     /// </summary>
     internal sealed class ConstraintToolWindow : EditorWindow
     {

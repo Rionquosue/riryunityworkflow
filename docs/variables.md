@@ -29,20 +29,20 @@ EditorPrefs: per user, shared by every project.
 | Key | Type | Default | Owner |
 |---|---|---|---|
 | `RiryTools.StopAutoGame.Enabled` | bool | `true` | `StopAutoGame.Enabled` |
-| `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `BetterFbxExporter.BlenderPath` |
-| `RiryTools.BetterFbx.Options` | string | `""` | `BetterFbxExporter.Options` |
+| `RiryTools.BetterFbx.BlenderPath` | string | `""` (detect) | `ImportPresetBetterFBX.BlenderPath` |
+| `RiryTools.BetterFbx.Options` | string | `""` | `ImportPresetBetterFBX.Options` |
 | `RiryTools.AttachTo.AddedBones` | string | `""` | `AttachTo.AddedBonesKey`: bones added with **Add bone** (HumanBodyBones names, comma separated), listed after `AttachTo.CommonBones`; **Remove** takes one off |
 | `com.vrcfury.parameterCompressor` | int | unset (Compress) | VRCFury's own Parameter Compressor setting (0 Compress, 1 Ask, 2 Fail): `MenuToolCompressor` reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset) |
-| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigrationSettings` (per-entry options, sub-options, ignore children, migrated folder) |
+| `RiryTools.AvatarMigrationAssistant.Settings` | JSON | unset: `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty | `AvatarMigratorSettings` (per-entry options, sub-options, ignore children, migrated folder) |
 
 EditorUserSettings: per user and per project, in `UserSettings/`.
 
 | Key | Values | Default | Owner |
 |---|---|---|---|
 | `RiryTools.AutoSync.Enabled` | `1` / `0` | `0` | `AutoSync.Enabled` (**Sync**) |
-| `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `GitRemotes.Selected` (**Remote**) |
+| `RiryTools.AutoSync.Remote` | remote name | unset: `origin`, else the first remote | `AutoSyncGitRemotes.Selected` (**Remote**) |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | remote URLs, one per line | unset | `AutoSync.LargeFileNotice`: **Do Not Show Again** |
-| `RiryTools.GuidTools.BrokenPromptOff` | scene and prefab paths, one per line | unset | `BrokenReferenceMonitor.PromptOnOpen`: **Do Not Show Again** |
+| `RiryTools.GuidTools.BrokenPromptOff` | scene and prefab paths, one per line | unset | `GuidToolBrokenReferenceMonitor.PromptOnOpen`: **Do Not Show Again** |
 | `RiryTools.AvatarMigrationAssistant.SdkNoticeOff` | `1` | unset | `AvatarMigrationSdkNotice`: **Do not show again** on the VRC SDK not detected popup |
 
 SessionState: until the editor quits; survives script reloads.
@@ -68,21 +68,21 @@ In the project:
 | Path | Contents | Owner |
 |---|---|---|
 | `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Tool Train clips, `_ROOT` prefab variants | `RiryToolsProjectFolder.AssetPath` |
-| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `RegenerateGuid.CacheDirectoryPath` |
-| `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `BetterFbxExporter` |
-| `Library/RiryTools/GuidTools/` | `restore`, `restore-meta` while a Git backup is written | `GuidReferenceRepair.Restore` |
-| `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `RegenerateGuid.LogDirectoryPath`, `GuidToolLog` |
-| `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidRemapLedger.RelativePath` |
-| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration** | `GitActions.CopyTemplate` |
+| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches | `GuidToolRegenerate.CacheDirectoryPath` |
+| `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx` | `ImportPresetOwnedFiles`, `ImportPresetAnimations`, `ImportPresetBetterFBX` |
+| `Library/RiryTools/GuidTools/` | `restore`, `restore-meta` while a Git backup is written | `GuidToolReferenceRepair.Restore` |
+| `Logs/RiryTools/GuidTools/` | `guid-tools.log`, `archive/guid-tools_<UTC time>.log` | `GuidToolRegenerate.LogDirectoryPath`, `GuidToolLog` |
+| `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control | `GuidToolRemapLedger.RelativePath` |
+| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration** | `AutoSyncGitActions.CopyTemplate` |
 | `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits | `GitLargeFiles.Ignore` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder | `ImportPresetMarker.FileName` |
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips (or the model's Destination) | `ImportPresetAnimations.FolderName` |
-| `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git | `AnimationExtractSettings.PathFor` |
-| `<name>.fbx` beside `<name>.blend` | Better FBX export | `BetterFbxExporter.FbxPathFor` |
+| `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git | `ImportPresetAnimationExtraction.PathFor` |
+| `<name>.fbx` beside `<name>.blend` | Better FBX export | `ImportPresetBetterFBX.FbxPathFor` |
 | `<model>_ROOT.prefab` | Constraint Tool Train prefab variant | `ConstraintTrainPrefabs.RootSuffix` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows | `IconCapFiles.JobFileName` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run) | `IconCapFiles.OldFolderPrefix` |
-| `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratedFolder.Destination` |
+| `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` under `<migrated folder>/Packages/`); never overwritten | `AvatarMigratorMigratedFolder.Destination` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset | `IconGenerator.OutputName` |
 | `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets anything else uses (another slot of the avatar, Modular Avatar or VRCFury, a package, or any other file in the project), made by **Apply** before a native move and linked into that one slot; Ctrl+Z does not delete them | `MenuToolApply.Owned` |
 | `Assets/RiryTools/MenuTool/<avatar>/<new menu>.asset` | Menu Tool's new, empty menus planned with **Add menu** as a menu asset, made by **Apply** (unique path) and linked by a SubMenu control in the parent's menu; Ctrl+Z does not delete them | `MenuToolApply.NewMenuAsset` |
@@ -99,7 +99,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**); deleted when empty | `MenuPlan` |
 | `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar | `MenuToolAvatarKeys` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them) | `MenuMockup.Folder`, `MockupFile` |
-| `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarCopyTypes.FilePath` |
+| `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here | `AvatarMigratorCopyTypes.FilePath` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack) | `IconCapFiles.PresetFolder` |
 
 ## Git names (AutoSync)
@@ -107,7 +107,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 | Name | Value | Owner |
 |---|---|---|
 | Branch | The checked-out branch | `AutoSyncJob.Commit` |
-| Remote | The one chosen in Configuration; **Add Remote** adds `origin` | `GitRemotes.DefaultName`, `AutoSyncJob.PushBranch` |
+| Remote | The one chosen in Configuration; **Add Remote** adds `origin` | `AutoSyncGitRemotes.DefaultName`, `AutoSyncJob.PushBranch` |
 | Reflog message | `RiryTools AutoSync: drop large files` | `GitLargeFiles.Ignore` |
 | `.gitignore` lines | `/<path>`, pattern characters escaped | `GitLargeFiles.AppendToGitignore` |
 | LFS query | HTTP(S): `POST <remote>.git/info/lfs/objects/batch` (or `remote.<name>.lfsurl`, `lfs.url`), one all-zero object; SSH: `git-lfs-authenticate <path> download` with `core.sshCommand` or `ssh` | `GitLfsQuery` |
@@ -118,7 +118,7 @@ a OneDrive redirect; `~/Documents` elsewhere):
 
 Environment variables set for Git commands:
 
-- `GIT_TERMINAL_PROMPT=0` (`GitRunner`, every command): Git never waits on a
+- `GIT_TERMINAL_PROMPT=0` (`AutoSyncGitRunner`, every command): Git never waits on a
   terminal prompt; sign-in goes through Git's credential manager.
 - `GIT_LITERAL_PATHSPECS=1` (`AutoSyncJob`): saved paths are not patterns.
 - `GIT_AUTHOR_*`, `GIT_COMMITTER_*` (`AutoSyncJob`): the fallback identity.
@@ -128,7 +128,7 @@ Environment variables set for Git commands:
 
 | Name | Value | Use |
 |---|---|---|
-| `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryMenus.cs` shows the **VRCSDK not found** popup |
+| `RIRYTOOLS_VRC_CONSTRAINTS` | defined when `com.vrchat.avatars` is 3.7.0 or newer | Compiles `Riry.RiryTools.Editor.VRChat`; without it, `RiryToolsMenuBar.cs` and `RiryToolsRightClickMenu.cs` show the **VRCSDK not found** popup |
 | `RIRYTOOLS_VRC_BIT_WIDTH` | defined when `com.vrchat.avatars` is 3.10.6 or newer | Menu Tool reads each parameter's synced width and flipped flag (`GetBitWidthByType`, `flippedRepresentation`; `MenuToolScanner.WidthOf` / `FlippedOf`); older SDKs count 8 bits |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced | All tools except the VRChat window |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Editor only, needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll` | Constraint Tool window (Train, Bezier and Insertable prop tabs), Menu Tool, and their menus |
@@ -137,7 +137,7 @@ Environment variables set for Git commands:
 | Assembly `Riry.RiryTools.Editor.GestureManager` | `VRChat/MenuTool/GestureManager/`; Editor only, references Gesture Manager's assemblies, `VRCSDK3A.dll` and `VRCSDKBase.dll`; needs `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_GESTURE_MANAGER` | `GestureManagerRadial`, built against Gesture Manager 3.9.9 |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.GestureManager")` | `VRChat/AssemblyInfo.cs` | Lets the bridge implement `IMenuToolRadial` |
 | Type names read by Menu Tool | `VF.Model.VRCFury` (features `Toggle`, `Puppet`, `FullController`, `MoveMenuItem`, `ReorderMenuItem`, `SetIcon`), `nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller`, `...MenuItem`, `...MenuGroup`, `...MenuInstallTarget`, `...Parameters`, `...MergeAnimator`, `VRC.SDKBase.Editor.BuildPipeline.VRCBuildPipelineCallbacks` | `MenuToolScanner`, `MenuToolBudget`, `MenuToolApply`: by name, so neither VRCFury nor Modular Avatar is needed to compile |
-| `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarCopyTypes.TemplateGuid`) |
+| `0756bf5a933b437db4405f7a01a55498` | `AvatarMigrationAssistant/types.yml.meta` | Avatar Migration Assistant's type list template, found by GUID (`AvatarMigratorCopyTypes.TemplateGuid`) |
 | Shader `Hidden/RiryTools/IconCap/Effects` | `IconCap/Shaders/IconCapEffects.shader` | IconCap effect stack, composite and HDRI unwrap passes |
 | Shader `Hidden/RiryTools/IconCap/Draw` | `IconCap/Shaders/IconCapDraw.shader` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP` |
 
@@ -155,30 +155,30 @@ AutoSync and Git:
 | `AutoSyncJob.PushTimeoutMs` | `600000` | Push timeout, long enough to sign in |
 | `GitLargeFiles.ProxyLimitBytes` | 100 MiB | Cloudflare's proxied upload limit: the ! button and held pushes |
 | `GitLfsQuery.TimeoutMs` | `30000` | LFS query timeout |
-| `GitRunner.TimedOut` | `-1` | Exit code reported for a timed-out or cancelled command |
+| `AutoSyncGitRunner.TimedOut` | `-1` | Exit code reported for a timed-out or cancelled command |
 | `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/` | **Download Git** link |
 | `GitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore` | Default `.gitignore` template, saved as `Unity` |
 | `GitTemplates.UnityAttributesUrl` | gitattributes project's `Unity.gitattributes` | Default `.gitattributes` template, saved as `Unity` |
 | `GitTemplates.DefaultAttributes` | built-in text | Built-in LFS template, saved as `UnityLFS` |
 | `ScriptLoadGuard.CaptureSeconds` | `5.0` | Errors this long before a prefab opens count as suspects |
 | `ScriptLoadGuard.RecentLimit` | `50` | Logged errors kept |
-| `BrokenReferenceMonitor.Threshold` / `WindowSeconds` | `3` in `30.0` s | Missing-reference log lines that trigger the prompt |
+| `GuidToolBrokenReferenceMonitor.Threshold` / `WindowSeconds` | `3` in `30.0` s | Missing-reference log lines that trigger the prompt |
 
 GUID Tools:
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `RegenerateGuid.GuidLength` | `32` | Hex digits in a GUID |
-| `RegenerateGuid.ScanBlockSize` | 256 KiB | Read block for scanning |
-| `RegenerateGuid.MaxDirectoryDepth` | `64` | Stops symbolic link loops |
-| `RegenerateGuid.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1` | Cache file format |
-| `RegenerateGuid.CacheNameLength` | `40` | Readable part of a cache file name |
-| `RegenerateGuid.TextExtensions` | list | Files scanned for references |
-| `RegenerateGuid.UnitySerializedExtensions` | list | Files that must be text to be patched |
+| `GuidToolRegenerate.GuidLength` | `32` | Hex digits in a GUID |
+| `GuidToolRegenerate.ScanBlockSize` | 256 KiB | Read block for scanning |
+| `GuidToolRegenerate.MaxDirectoryDepth` | `64` | Stops symbolic link loops |
+| `GuidToolRegenerate.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1` | Cache file format |
+| `GuidToolRegenerate.CacheNameLength` | `40` | Readable part of a cache file name |
+| `GuidToolRegenerate.TextExtensions` | list | Files scanned for references |
+| `GuidToolRegenerate.UnitySerializedExtensions` | list | Files that must be text to be patched |
 | `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB | Log rotation and archive trim |
-| `GuidRemapLedger.MaxChain` | `64` | Longest old-to-new GUID chain followed |
-| `GuidReferenceRepair.Title` | `Broken References` | Window and dialog title |
-| `GuidReferenceRepair.MaxNameMatches` | `5` | Name matches offered per old name |
+| `GuidToolRemapLedger.MaxChain` | `64` | Longest old-to-new GUID chain followed |
+| `GuidToolReferenceRepair.Title` | `Broken References` | Window and dialog title |
+| `GuidToolReferenceRepair.MaxNameMatches` | `5` | Name matches offered per old name |
 
 Import Presets and Better FBX:
 
@@ -190,9 +190,9 @@ Import Presets and Better FBX:
 | `ImportPresetFolderWindow.MaxSuggestions` | `8` | Folder suggestions in Set Folder Import Presets |
 | `ImportPresetLibrary.ConfigFileName` / `PresetExtension` | `config.json` / `.preset` | Configuration files |
 | `ImportPresetLibrary.ReservedNames` | `CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` | Names Windows refuses |
-| `BetterFbxExporter.SourceExtension` | `blend` | Only file type Blender exports |
-| `BetterFbxExporter.TimeoutSeconds` | `600` | Blender run limit |
-| `BetterFbxExporter.SuccessMarker` | `RIRYTOOLS_BETTER_FBX_OK` | Printed by the export script on success |
+| `ImportPresetBetterFBX.SourceExtension` | `blend` | Only file type Blender exports |
+| `ImportPresetBetterFBX.TimeoutSeconds` | `600` | Blender run limit |
+| `ImportPresetBetterFBX.SuccessMarker` | `RIRYTOOLS_BETTER_FBX_OK` | Printed by the export script on success |
 
 Other tools:
 
@@ -212,7 +212,7 @@ Other tools:
 | `BlendshapeSyncJobList.WideRow` | `570` | Window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line |
 | `ImportPresetAnimations.UndoName` | `Extract Animation` | Undo step of the Extract button's extraction (replaced clips are recorded; new files are not removed by Undo). Automatic extractions (first import, re-export, Folder Rules Apply) leave no Undo step |
 | `RiryLog.Format` | `[RiryTools/<tool>] <message>` | Every Console line (`Editor/Components/RiryLog.cs`); tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, IconCap, Import Presets, Menu Mockup, Menu Tool, Project Folder, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings` | Undo steps of window settings edits (`RiryGui.Set`, `UI/RiryGui.cs`) |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings` | Undo steps of window settings edits (`RiryToolGUI.Set`, `UI/RiryToolGUI.cs`) |
 | `ConstraintTrainPlanner.MaxChains` | `5` | Physics chains |
 | `ConstraintTrainChains.RestPrefix` / `ChainPrefix(n)` / `EndpointSuffix` | `Rest_` / `Phys<n>_` / `_End` | Generated chain names |
 | `ConstraintTrainWindow.UndoName` | `Constraint Train` | Undo group name |
@@ -232,7 +232,7 @@ Other tools:
 | `InsertablePropRig.TipRadius` / `GripReceiverRadius` / `GrabRadius` / `PickupLayer` | `0.01` / `0.15` / `0.06` m / `13` | Tip sender, grip receiver, PhysBone grab radius, body layer |
 | `InsertablePropAnimator.WeakSeparation` / `InsideSheath` | `0.01` m / `0.001` | Grip reading too weak below this; tip inside the capture radius above this proximity |
 | `StopAutoGame.HandleDelayMs` | `100` | Delay after Play Mode starts before focus is restored |
-| `RiryMenus.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
+| `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow` | Opened by **Documentation**; change it when the wiki is up |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~` | Package folder unpacked into `Assets/RiryTools` |
 
 Attach To:
@@ -249,11 +249,11 @@ Avatar Migration Assistant:
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `AvatarMigrationSettings.DefaultTolerance` | `0.001` | Structure match distance in avatar-root space |
+| `AvatarMigratorSettings.DefaultTolerance` | `0.001` | Structure match distance in avatar-root space |
 | `AvatarMigrationMap.TieEpsilon` | `1e-7` | Candidates this close in distance are a tie (left unmatched) |
-| `AvatarCopyRun.ScaleDecimals` | `8` | Decimal places of every scale-corrected value |
-| `AvatarCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig` | Names treated as the armature, besides the parent of the hips |
-| `AvatarCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints` | The VRChat SDK's constraint converter, found by name |
+| `AvatarMigratorCopyRun.ScaleDecimals` | `8` | Decimal places of every scale-corrected value |
+| `AvatarMigratorCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig` | Names treated as the armature, besides the parent of the hips |
+| `AvatarMigratorCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints` | The VRChat SDK's constraint converter, found by name |
 
 IconCap:
 
@@ -279,9 +279,9 @@ IconCap:
 
 ## Menu paths
 
-Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
-`VRChat/RiryVRChatMenus.cs` and use `RiryMenus.ConstraintTool`,
-`RiryMenus.ConstraintTrainHierarchy`, `RiryMenus.ConstraintBezierHierarchy` and `RiryMenus.MenuTool`. The number is the priority.
+Defined in `UI/RiryToolsMenuBar.cs` and `UI/RiryToolsRightClickMenu.cs`. Constraint Tool's and Menu Tool's entries are in
+`VRChat/RiryToolsVRChatMenus.cs` and use `RiryToolsMenuBar.ConstraintTool`,
+`RiryToolsRightClickMenu.ConstraintTrainHierarchy`, `RiryToolsRightClickMenu.ConstraintBezierHierarchy` and `RiryToolsMenuBar.MenuTool`. The number is the priority.
 
 - **Tools** (one entry or submenu per tool):
   - `Tools/RiryTools/Main Menu` (1990): the dockable RiryTools window, a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Reload domain and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab)
@@ -303,7 +303,7 @@ Defined in `UI/RiryMenus.cs`. Constraint Tool's and Menu Tool's entries are in
   - `Tools/RiryTools/Stop Auto Game` (2060), check mark
   - `Tools/RiryTools/Menu Mockup` (2065): opens the Edit and Components windows
   - `Tools/RiryTools/Menu Tool` (2066), written `M&enu Tool` so its menu key is E: the Menu Tool window (the Main Menu's Menu Tool tab shows its Parameter budget; its Menu manager opens this window); without the VRChat SDK, the **VRCSDK not found** popup
-  - `Tools/RiryTools/Documentation` (2070): opens `RiryMenus.DocumentationLink`
+  - `Tools/RiryTools/Documentation` (2070): opens `RiryToolsMenuBar.DocumentationLink`
 - **Project window right-click:**
   - `Assets/RiryTools/Regenerate GUID` (2000)
   - `Assets/RiryTools/Set Folder Import Presets` (2001): the small popup (one preset per folder, or for all)

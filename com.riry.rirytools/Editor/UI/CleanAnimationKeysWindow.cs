@@ -8,7 +8,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// The Clean Animation Keys window: the animations to clean, the whitelist,
-    /// the keep rules and Clean. Logic is in Editor/CleanAnimationKeys.cs.
+    /// the keep rules and Clean. Logic is in Editor/AnimatorTools/CleanAnimationKeys.cs.
     /// </summary>
     internal sealed class CleanAnimationKeysWindow : EditorWindow
     {
@@ -153,13 +153,13 @@ namespace Riry.RiryTools.Editor
 
             EditorGUILayout.Space(6.0f);
             EditorGUI.BeginChangeCheck();
-            options.KeepNonZeroShapekeys = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepNonZeroShapekeys, EditorGUILayout.ToggleLeft(new GUIContent("Keep non-zero shapekeys",
+            options.KeepNonZeroShapekeys = RiryToolGUI.Set(SettingsOwner, SettingsUndo, options.KeepNonZeroShapekeys, EditorGUILayout.ToggleLeft(new GUIContent("Keep non-zero shapekeys",
                 "Keep a shapekey curve that has any non-zero key."), options.KeepNonZeroShapekeys));
-            options.KeepShapekeyTangentMotion = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepShapekeyTangentMotion, EditorGUILayout.ToggleLeft(new GUIContent("Keep shapekey tangent motion",
+            options.KeepShapekeyTangentMotion = RiryToolGUI.Set(SettingsOwner, SettingsUndo, options.KeepShapekeyTangentMotion, EditorGUILayout.ToggleLeft(new GUIContent("Keep shapekey tangent motion",
                 "Keep a shapekey whose keys are 0 but whose tangents move the value between keys."), options.KeepShapekeyTangentMotion));
-            options.KeepMovingBones = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepMovingBones, EditorGUILayout.ToggleLeft(new GUIContent("Keep moving bones",
+            options.KeepMovingBones = RiryToolGUI.Set(SettingsOwner, SettingsUndo, options.KeepMovingBones, EditorGUILayout.ToggleLeft(new GUIContent("Keep moving bones",
                 "Keep a bone's translation, rotation or scale when its start and finish differ (3 decimal places)."), options.KeepMovingBones));
-            options.KeepBoneMidKeys = RiryGui.Set(SettingsOwner, SettingsUndo, options.KeepBoneMidKeys, EditorGUILayout.ToggleLeft(new GUIContent("Keep bone mid-keys/tangents",
+            options.KeepBoneMidKeys = RiryToolGUI.Set(SettingsOwner, SettingsUndo, options.KeepBoneMidKeys, EditorGUILayout.ToggleLeft(new GUIContent("Keep bone mid-keys/tangents",
                 "Keep a bone's translation, rotation or scale with more than a start and finish key, or whose tangents " +
                 "move between matching endpoints."), options.KeepBoneMidKeys));
             if (EditorGUI.EndChangeCheck()) Changed();
@@ -168,7 +168,7 @@ namespace Riry.RiryTools.Editor
             if (summary != null) EditorGUILayout.HelpBox(summary, MessageType.Info);
             using (new EditorGUI.DisabledScope(animations.Count == 0))
             {
-                if (GUILayout.Button("Clean", GUILayout.Height(28.0f))) { Clean(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Clean", GUILayout.Height(28.0f))) { Clean(); RiryToolGUI.ExitAfterModal(); }
             }
             EditorGUILayout.Space(6.0f);
         }
@@ -467,7 +467,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Clean Animation Keys UI
-// Menu entries (Tools dropdown and Project right-click) are in RiryMenus.cs.
+// Menu entries (Tools dropdown and Project right-click) are in RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs.
 // ============================================================================
 //
 // CleanAnimationKeysWindow (this file)
@@ -507,7 +507,7 @@ namespace Riry.RiryTools.Editor
 //   WatchForAnimationWindows()  Installs the button on a focused Animation window.
 //   InstallButton(window)    Adds the button, which opens the window with that window's clip.
 //
-// CleanAnimationKeys (Editor/CleanAnimationKeys.cs): the logic
+// CleanAnimationKeys (Editor/AnimatorTools/CleanAnimationKeys.cs): the logic
 //   DisplayName              "Clean Animation Keys": window title and Undo name.
 //   Options                  The keep rules; curves that cannot be read or hold NaN/Infinity are always kept.
 //   Group                    One shapekey, or one bone's translation, rotation or scale; Name is what the whitelist matches.

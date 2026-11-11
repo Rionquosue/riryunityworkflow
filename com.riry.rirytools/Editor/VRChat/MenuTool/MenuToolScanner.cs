@@ -68,8 +68,8 @@ namespace Riry.RiryTools.Editor
             if (target == null) return scan;
             scan.Avatar = DescriptorAbove(target.transform);
             scan.Standalone = scan.Avatar == null;
-            scan.VrcfuryInstalled = RiryTypes.Named(VrcfuryType) != null;
-            scan.ModularAvatarInstalled = RiryTypes.Named(MaInstallerType) != null;
+            scan.VrcfuryInstalled = RiryToolsTypes.Named(VrcfuryType) != null;
+            scan.ModularAvatarInstalled = RiryToolsTypes.Named(MaInstallerType) != null;
             var context = new Context { Scan = scan, Root = scan.Avatar != null ? scan.Avatar.gameObject : target };
             if (scan.Standalone) scan.Note("No avatar descriptor above " + target.name + ": its own contributions are shown; where they land and what they cost depend on the avatar it is added to.");
 

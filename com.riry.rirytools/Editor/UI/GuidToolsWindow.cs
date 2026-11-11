@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>The GUID Tools window. Its menu entries are in RiryMenus.cs.</summary>
+    /// <summary>The GUID Tools window. Its menu entries are in RiryToolsMenuBar.cs.</summary>
     internal sealed class GuidToolsWindow : EditorWindow
     {
         internal static void Open()
@@ -24,17 +24,17 @@ namespace Riry.RiryTools.Editor
                 "Folders are expanded recursively without changing folder GUIDs.",
                 MessageType.Info);
 
-            using (new EditorGUI.DisabledScope(!RegenerateGuid.HasValidSelection()))
+            using (new EditorGUI.DisabledScope(!GuidToolRegenerate.HasValidSelection()))
             {
                 if (GUILayout.Button("Regenerate GUID", GUILayout.Height(30f)))
                 {
-                    RegenerateGuid.RegenerateSelectedGuids();
-                    RiryGui.ExitAfterModal();
+                    GuidToolRegenerate.RegenerateSelectedGuids();
+                    RiryToolGUI.ExitAfterModal();
                 }
                 if (GUILayout.Button("Repair Missing GUID References", GUILayout.Height(24f)))
                 {
-                    GuidReferenceRepair.RepairSelected();
-                    RiryGui.ExitAfterModal();
+                    GuidToolReferenceRepair.RepairSelected();
+                    RiryToolGUI.ExitAfterModal();
                 }
             }
 
@@ -42,17 +42,17 @@ namespace Riry.RiryTools.Editor
             if (GUILayout.Button("Check for Broken References", GUILayout.Height(24f)))
             {
                 BrokenReferenceWindow.OpenForOpenScenes("Checked from the GUID Tools window.");
-                RiryGui.ExitAfterModal();
+                RiryToolGUI.ExitAfterModal();
             }
             if (GUILayout.Button("Delete GUID Reference Cache", GUILayout.Height(24f)))
             {
-                GuidReferenceCache.DeleteWithConfirmation();
-                RiryGui.ExitAfterModal();
+                GuidToolReferenceCache.DeleteWithConfirmation();
+                RiryToolGUI.ExitAfterModal();
             }
 
             GUILayout.Space(6f);
-            EditorGUILayout.LabelField("Cache: " + RegenerateGuid.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);
-            EditorGUILayout.LabelField("Logs: " + RegenerateGuid.LogDirectoryPath, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Cache: " + GuidToolRegenerate.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Logs: " + GuidToolRegenerate.LogDirectoryPath, EditorStyles.wordWrappedMiniLabel);
         }
 
         private void OnSelectionChange()
@@ -66,24 +66,24 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: GUID Tools window
 // Menu entries (Tools > RiryTools > GUID Tools, and the Project right-click
 // Regenerate GUID / Repair Missing GUID References, which run without the window)
-// are in RiryMenus.cs.
+// are in RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // GuidToolsWindow (this file)
-//   Open()            Opens the window (called from RiryMenus).
+//   Open()            Opens the window (called from RiryToolsMenuBar).
 //   OnGUI()           Regenerate GUID, Repair Missing GUID References, Check for Broken References,
 //                     Delete GUID Reference Cache, and the cache and log locations.
 //   OnSelectionChange()  Repaints so buttons follow the Project selection.
 //
 // Called from the window
-//   RegenerateGuid.HasValidSelection()       Any asset or folder under Assets is selected.
-//   RegenerateGuid.RegenerateSelectedGuids() New GUIDs for the selection, references updated (Assets, ProjectSettings,
+//   GuidToolRegenerate.HasValidSelection()       Any asset or folder under Assets is selected.
+//   GuidToolRegenerate.RegenerateSelectedGuids() New GUIDs for the selection, references updated (Assets, ProjectSettings,
 //                                            Packages, UserSettings/RiryTools). ConfirmUnusualFiles lists non-reference
 //                                            and Packages files before writing; RenameGuidNamedFiles renames
 //                                            UserSettings/RiryTools files named by an old GUID afterwards.
-//   GuidReferenceRepair.RepairSelected()          Broken References window for the selection.
-//   GuidReferenceCache.DeleteWithConfirmation()  Deletes Library/RiryTools/GuidReferenceCache.
+//   GuidToolReferenceRepair.RepairSelected()          Broken References window for the selection.
+//   GuidToolReferenceCache.DeleteWithConfirmation()  Deletes Library/RiryTools/GuidToolReferenceCache.
 //
 // Locations shown
-//   Library/RiryTools/GuidReferenceCache   RegenerateGuid.CacheDirectoryPath
-//   Logs/RiryTools/GuidTools               RegenerateGuid.LogDirectoryPath
+//   Library/RiryTools/GuidToolReferenceCache   GuidToolRegenerate.CacheDirectoryPath
+//   Logs/RiryTools/GuidTools               GuidToolRegenerate.LogDirectoryPath

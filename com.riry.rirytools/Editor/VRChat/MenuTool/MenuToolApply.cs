@@ -90,7 +90,7 @@ namespace Riry.RiryTools.Editor
                             Parameters = check.Edit == MoveEdit.NewControlVrcfury ? null : control.Parameters().ToArray() });
                         if (check.Edit == MoveEdit.NewControlAsset) NewControlAsset(scan, destination, control, Index(scan, ref references), report);
                         else if (check.Edit == MoveEdit.NewControlMa) NewControlMa(scan, destination, control);
-                        else NewRule(scan.Avatar.gameObject, RiryTypes.Named(VrcfuryType), ToggleType, rule =>
+                        else NewRule(scan.Avatar.gameObject, RiryToolsTypes.Named(VrcfuryType), ToggleType, rule =>
                         {
                             string into = MenuToolVrcfuryMenu.PathOf(destination);
                             rule.FindPropertyRelative("name").stringValue = (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(control.Name);
@@ -247,7 +247,7 @@ namespace Riry.RiryTools.Editor
                     item.ApplyModifiedProperties();
                     break;
                 default:
-                    NewRule(scan.Avatar.gameObject, RiryTypes.Named(VrcfuryType), SetIconType, rule =>
+                    NewRule(scan.Avatar.gameObject, RiryToolsTypes.Named(VrcfuryType), SetIconType, rule =>
                     {
                         rule.FindPropertyRelative("path").stringValue = MenuToolVrcfuryMenu.PathOf(entry);
                         rule.FindPropertyRelative("icon.objRef").objectReferenceValue = icon;
@@ -449,7 +449,7 @@ namespace Riry.RiryTools.Editor
         private static void AddRule(MenuScan scan, string from, string to, int index, bool sameMenu)
         {
             GameObject avatar = scan.Avatar.gameObject;
-            Type vrcfury = RiryTypes.Named(VrcfuryType);
+            Type vrcfury = RiryToolsTypes.Named(VrcfuryType);
             if (!sameMenu)
             {
                 // A rule that already moved this entry here is updated, so rules don't stack up.
@@ -482,7 +482,7 @@ namespace Riry.RiryTools.Editor
 
         private static void NewRule(GameObject avatar, Type vrcfury, string featureType, Action<SerializedProperty> set)
         {
-            Type feature = RiryTypes.Named(featureType);
+            Type feature = RiryToolsTypes.Named(featureType);
             if (feature == null) throw new InvalidOperationException("VRCFury's " + featureType + " was not found; VRCFury may have changed.");
             Component component = Undo.AddComponent(avatar, vrcfury);
             var serialized = new SerializedObject(component);
@@ -512,7 +512,7 @@ namespace Riry.RiryTools.Editor
         private static void NewMaObject(MenuScan scan, MenuEntry parent, MenuEntry control)
         {
             string name = control.Name;
-            Type itemType = RiryTypes.Named(MaItemType), installerType = RiryTypes.Named(MaInstallerType);
+            Type itemType = RiryToolsTypes.Named(MaItemType), installerType = RiryToolsTypes.Named(MaInstallerType);
             if (itemType == null || installerType == null) throw new InvalidOperationException("Modular Avatar's menu components were not found; Modular Avatar may have changed.");
             Transform under = parent.MaChildrenSource != null ? parent.MaChildrenSource.transform : scan.Avatar.transform;
             var made = new GameObject(name);

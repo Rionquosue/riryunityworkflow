@@ -31,46 +31,51 @@ Scheme: code that relies on a dependency goes in a folder for that dependency (i
 ```text
 com.riry.rirytools/
 └── Editor/
+    ├── AnimatorTools/
+    │   └── CleanAnimationKeys.cs
     ├── AutoSync/
     │   ├── AutoSync.cs
-    │   ├── AutoSyncJob.cs
-    │   ├── GitActions.cs > AutoSyncGitActions.cs
-    │   ├── GitRemotes.cs > AutoSyncGitRemotes.cs
-    │   ├── GitRunner.cs > AutoSyncGitRunner.cs
-    │   ├── GitSetup.cs > AutoSyncGitSetup.cs
-    │   └── ScriptLoadGuard.cs > Move this to Debug, change codebase so that this is called much like "StopAutoGame"
+    │   ├── AutoSyncGitActions.cs
+    │   ├── AutoSyncGitRemotes.cs
+    │   ├── AutoSyncGitRunner.cs
+    │   ├── AutoSyncGitSetup.cs
+    │   └── AutoSyncJob.cs
     ├── AvatarMigrationAssistant/
-    │   ├── CopyPrefabs.cs > AvatarMigratorCopyPrefabs.cs
-    │   ├── CopyRun.cs > AvatarMigratorCopyRun.cs
-    │   ├── CopyTypes.cs > AvatarMigratorCopyTypes.cs
-    │   ├── CorrectRotation.cs > AvatarMigratorCorrectRotation.cs
-    │   ├── CorrectScale.cs > AvatarMigratorCorrectScale.cs
-    │   ├── IgnoreList.cs > AvatarMigratorIgnoreList.cs
-    │   ├── MatchObjects.cs > AvatarMigratorMatchObjects.cs
-    │   ├── MigratedFolder.cs > AvatarMigratorMigratedFolder.cs
-    │   ├── RepackPrefabs.cs > AvatarMigratorRepackPrefabs.cs
-    │   ├── RepointReferences.cs > AvatarMigratorRepointReferences.cs
-    │   ├── RetargetAnimations.cs > AvatarMigratorRetargetAnim.cs
-    │   ├── RunReport.cs > AvatarMigratorRunReport.cs
-    │   ├── Settings.cs > AvatarMigratorSettings.cs
-    │   ├── TypeRules.cs > AvatarMigratorTypeRules.cs
-    │   ├── UpFrontAnswers.cs > AvatarMigratorPreFlightAnswers.cs
-    │   ├── UpgradeConstraints.cs > AvatarMigratorUpgradeConstraints.cs
-    │   └── VrcFuryPrefabs.cs > AvatarMigratorVRCFuryMover.cs
+    │   ├── AvatarMigratorCopyPrefabs.cs
+    │   ├── AvatarMigratorCopyRun.cs
+    │   ├── AvatarMigratorCopyTypes.cs
+    │   ├── AvatarMigratorCorrectRotation.cs
+    │   ├── AvatarMigratorCorrectScale.cs
+    │   ├── AvatarMigratorIgnoreList.cs
+    │   ├── AvatarMigratorMatchObjects.cs
+    │   ├── AvatarMigratorMigratedFolder.cs
+    │   ├── AvatarMigratorPreFlightAnswers.cs
+    │   ├── AvatarMigratorRepackPrefabs.cs
+    │   ├── AvatarMigratorRepointReferences.cs
+    │   ├── AvatarMigratorRetargetAnim.cs
+    │   ├── AvatarMigratorRunReport.cs
+    │   ├── AvatarMigratorSettings.cs
+    │   ├── AvatarMigratorTypeRules.cs
+    │   ├── AvatarMigratorUpgradeConstraints.cs
+    │   └── AvatarMigratorVRCFuryMover.cs
     ├── Components/
     │   ├── FuzzyMatch.cs
+    │   ├── GestureManagerNotFoundException.cs
     │   ├── HierarchyPath.cs
     │   ├── RiryLog.cs
     │   ├── RiryToolsPaths.cs
     │   ├── RiryToolsProjectFolder.cs
-    │   ├── RiryTypes.cs > RiryToolsTypes.cs
-    │   └── VrcSdkNotFoundException.cs > (Add a GestureManagerNotFOundException.cs for when tools call Gesture Manager and it isn't located. Move relevant code to this file.)
+    │   ├── RiryToolsTypes.cs
+    │   └── VrcSdkNotFoundException.cs
+    ├── Debug/
+    │   ├── FindNullReferences.cs
+    │   └── ScriptLoadGuard.cs
     ├── GuidTools/
-    │   ├── BrokenReferenceMonitor.cs > Prefix with "GuidTool"
-    │   ├── GuidReferenceCache.cs > Prefix with "GuidTool",  do not repeat Guid in the name.
-    │   ├── GuidReferenceRepair.cs > Prefix with "GuidTool",  do not repeat Guid in the name.
-    │   ├── GuidRemapLedger.cs > Prefix with "GuidTool",  do not repeat Guid in the name.
-    │   └── RegenerateGuid.cs > Prefix with "GuidTool"
+    │   ├── GuidToolBrokenReferenceMonitor.cs
+    │   ├── GuidToolReferenceCache.cs
+    │   ├── GuidToolReferenceRepair.cs
+    │   ├── GuidToolRegenerate.cs
+    │   └── GuidToolRemapLedger.cs
     ├── IconCap/
     │   ├── IconCapData.cs
     │   ├── IconCapEffects.cs
@@ -78,10 +83,10 @@ com.riry.rirytools/
     │   ├── IconCapRenderer.cs
     │   └── IconGenerator.cs
     ├── ImportPresets/
-    │   ├── AnimationExtractSettings.cs > ImportPresetAnimationExtraction.cs
-    │   ├── BetterFbxExporter.cs > ImportPresetBetterFBX.cs
     │   ├── ImportPresetActions.cs
+    │   ├── ImportPresetAnimationExtraction.cs
     │   ├── ImportPresetAnimations.cs
+    │   ├── ImportPresetBetterFBX.cs
     │   ├── ImportPresetFolderRules.cs
     │   ├── ImportPresetLibrary.cs
     │   ├── ImportPresetMarker.cs
@@ -89,8 +94,14 @@ com.riry.rirytools/
     │   ├── ImportPresetPostprocessor.cs
     │   └── ImportPresetPreferences.cs
     ├── UI/
-    │   ├── AttachToWindow.cs > AvatarAttachWindow.cs
+    │   ├── Components/
+    │   │   ├── ScriptLoadFailureWindow.cs
+    │   │   └── SdkNotice.cs
+    │   ├── AutoSyncGitConfigureWindow.cs
+    │   ├── AutoSyncGitWindow.cs
+    │   ├── AvatarAttachWindow.cs
     │   ├── AvatarMigrationAssistant.cs
+    │   ├── AvatarMigrationPreFlightChecks.cs
     │   ├── AvatarRunReportWindow.cs
     │   ├── BlendshapeSyncJobWindow.cs
     │   ├── BlendshapeSyncWindow.UI.cs
@@ -100,8 +111,6 @@ com.riry.rirytools/
     │   ├── CleanAnimationKeysWindow.cs
     │   ├── ExtractAnimationWindow.cs
     │   ├── FindNullReferencesWindow.cs
-    │   ├── GitConfigureWindow.cs > AutoSyncGitConfigureWindow.cs
-    │   ├── GitWindows.cs > AutoSyncGitWindow.cs
     │   ├── GuidToolsWindow.cs
     │   ├── IconCapEffectStackGUI.cs
     │   ├── IconCapWindow.cs
@@ -110,27 +119,24 @@ com.riry.rirytools/
     │   ├── ImportPresetWindows.cs
     │   ├── ManualMatching.cs
     │   ├── MenuMockupWindows.cs
-    │   ├── RiryGui.cs > RiryToolGUI.cs
-    │   ├── RiryMenus.cs > ( Expand this into RiryToolsRightClickMenu.cs & RiryToolsMenuBar.cs )
+    │   ├── RiryToolGUI.cs
     │   ├── RiryToolsMainMenu.cs
-    │   ├── ScriptLoadFailureWindow.cs > Move to /components subfolder of UI folder.
-    │   ├── SdkNotice.cs > Move to /components subfolder of UI folder.
-    │   └── UpFrontCheck.cs > Rename to AvatarMigrationPreFlightChecks.cs
+    │   ├── RiryToolsMenuBar.cs
+    │   └── RiryToolsRightClickMenu.cs
     ├── VRChat/
     │   ├── AnimatorTools/
     │   │   └── BehaviourFindReplace.cs
-    |   ├── ConstraintTools > (Add this folder, move all constraint tools into it. Future constraint tools should go in here. They are all dependent on the VRChat SDK and should all be moved to a single folder.)
-    |   |   ├── ConstraintBezier/
-    |   |   │   └── ConstraintBezierCurve.cs
-    |   |   ├── ConstraintTrain/
-    |   |   │   ├── ConstraintTrainChains.cs
-    |   |   │   ├── ConstraintTrainPlanner.cs
-    |   |   │   └── ConstraintTrainPrefabs.cs
-    |   |   └── InsertableProp/
-    |   |       ├── InsertablePropMath.cs 
-    |   |       ├── InsertablePropAnimator.cs
-    │   |       └── InsertablePropRig.cs
-    │   │   
+    │   ├── ConstraintTools/
+    │   │   ├── ConstraintBezier/
+    │   │   │   └── ConstraintBezierCurve.cs
+    │   │   ├── ConstraintTrain/
+    │   │   │   ├── ConstraintTrainChains.cs
+    │   │   │   ├── ConstraintTrainPlanner.cs
+    │   │   │   └── ConstraintTrainPrefabs.cs
+    │   │   └── InsertableProp/
+    │   │       ├── InsertablePropAnimator.cs
+    │   │       ├── InsertablePropMath.cs
+    │   │       └── InsertablePropRig.cs
     │   ├── MenuTool/
     │   │   ├── GestureManager/
     │   │   │   ├── GestureManagerEntryState.cs
@@ -155,15 +161,13 @@ com.riry.rirytools/
     │   │   ├── MenuToolAddMenuDialog.cs
     │   │   ├── MenuToolTrees.cs
     │   │   ├── MenuToolWindow.cs
-    │   │   └── RiryVRChatMenus.cs > RiryToolsVRCHatMenus.cs
+    │   │   └── RiryToolsVRChatMenus.cs
     │   ├── AssemblyInfo.cs
     │   └── Riry.RiryTools.Editor.VRChat.asmdef
     ├── AssemblyInfo.cs
     ├── AttachTo.cs
     ├── BlendshapeSyncJob.cs
     ├── BlendshapeSyncJobs.cs
-    ├── CleanAnimationKeys.cs > 
-    ├── FindNullReferences.cs > Debug folder
     ├── MenuMockup.cs
     ├── Riry.RiryTools.Editor.asmdef
     └── StopAutoGame.cs

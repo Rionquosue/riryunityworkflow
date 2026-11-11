@@ -77,7 +77,7 @@ namespace Riry.RiryTools.Editor
             if (importer == null) return;
 
             EnsureGeneric(importer);
-            AnimationExtractSettings settings = AnimationExtractSettings.Load(assetPath);
+            ImportPresetAnimationExtraction settings = ImportPresetAnimationExtraction.Load(assetPath);
             Extraction result = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, false);
             ReportSkipped(assetPath, result.Skipped);
 
@@ -121,7 +121,7 @@ namespace Riry.RiryTools.Editor
         /// <paramref name="undoable"/>: only the Extract button's run is recorded for Undo; automatic runs
         /// (first import, re-export, Folder Rules Apply) are not, so they never take the user's next Ctrl+Z.
         /// </summary>
-        internal static Extraction ExtractPreservingSettings(ModelImporter importer, AnimationExtractSettings settings,
+        internal static Extraction ExtractPreservingSettings(ModelImporter importer, ImportPresetAnimationExtraction settings,
             Func<string, bool> mayReplace, bool undoable)
         {
             Preset snapshot = new Preset(importer);
@@ -163,12 +163,12 @@ namespace Riry.RiryTools.Editor
         /// <summary>Whether clips are extracted before the model's preset is applied: its Automatically extract animations.</summary>
         internal static bool ShouldExtract(string modelPath)
         {
-            AnimationExtractSettings settings = AnimationExtractSettings.Load(modelPath);
+            ImportPresetAnimationExtraction settings = ImportPresetAnimationExtraction.Load(modelPath);
             return settings != null && settings.AutoExtract;
         }
 
         /// <summary>The settings' Destination when it is valid, else Animations/ next to the model.</summary>
-        internal static string Destination(string modelPath, AnimationExtractSettings settings)
+        internal static string Destination(string modelPath, ImportPresetAnimationExtraction settings)
         {
             if (settings == null || settings.Destination.Length == 0) return AnimationsFolder(modelPath);
             if (DestinationProblem(settings.Destination) == null) return settings.Destination;
@@ -240,7 +240,7 @@ namespace Riry.RiryTools.Editor
 
         internal const string UndoName = "Extract Animation";
 
-        private static Extraction ExtractClips(string modelPath, AnimationExtractSettings settings, Func<string, bool> mayReplace,
+        private static Extraction ExtractClips(string modelPath, ImportPresetAnimationExtraction settings, Func<string, bool> mayReplace,
             bool undoable)
         {
             var result = new Extraction();
@@ -322,7 +322,7 @@ namespace Riry.RiryTools.Editor
         }
 
         // Cleans the clips; the summary goes into the model's line. A failed clip is logged by CleanAnimationKeys itself.
-        private static void Clean(List<string> paths, AnimationExtractSettings settings, Extraction result)
+        private static void Clean(List<string> paths, ImportPresetAnimationExtraction settings, Extraction result)
         {
             var clips = new List<AnimationClip>();
             foreach (string path in paths)
@@ -375,7 +375,7 @@ namespace Riry.RiryTools.Editor
         /// Extract in the Extract Animation window: asks once about clips the user
         /// edited or made, then extracts the model with the window's settings.
         /// </summary>
-        internal static void Extract(ModelImporter importer, AnimationExtractSettings settings)
+        internal static void Extract(ModelImporter importer, ImportPresetAnimationExtraction settings)
         {
             string folder = Destination(importer.assetPath, settings);
             int blocked = 0;

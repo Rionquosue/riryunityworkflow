@@ -23,11 +23,11 @@ namespace Riry.RiryTools.Editor
     /// Each tab draws the tool's own window, hosted unseen, so the tools work there as
     /// they do on their own; their own menu entries are unchanged. Documentation is a
     /// link at the bottom right. Menu Mockup stays in the Tools menu only.
-    /// Opened from Tools > RiryTools > Main Menu (Editor/UI/RiryMenus.cs).
+    /// Opened from Tools > RiryTools > Main Menu (Editor/UI/RiryToolsMenuBar.cs).
     /// </summary>
     internal sealed class RiryToolsMainMenu : EditorWindow
     {
-        // Set by Editor/VRChat/UI/RiryVRChatMenus.cs when the VRChat SDK is in the project.
+        // Set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs when the VRChat SDK is in the project.
         internal static Func<EditorWindow> CreateConstraintTrain;
         internal static Func<EditorWindow> CreateConstraintBezier;
         internal static Func<EditorWindow> CreateConstraintInsertable;
@@ -123,7 +123,7 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.FlexibleSpace();
-                if (EditorGUILayout.LinkButton("Documentation")) Application.OpenURL(RiryMenus.DocumentationLink);
+                if (EditorGUILayout.LinkButton("Documentation")) Application.OpenURL(RiryToolsMenuBar.DocumentationLink);
             }
         }
 
@@ -139,7 +139,7 @@ namespace Riry.RiryTools.Editor
             {
                 case "AutoSync":
                     bool sync = EditorGUILayout.ToggleLeft("Sync", AutoSync.Enabled);
-                    if (sync != AutoSync.Enabled) { GitActions.ToggleSync(); RiryGui.ExitAfterModal(); }
+                    if (sync != AutoSync.Enabled) { AutoSyncGitActions.ToggleSync(); RiryToolGUI.ExitAfterModal(); }
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
@@ -197,12 +197,15 @@ namespace Riry.RiryTools.Editor
                     }
                     if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
                     // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
-                    if (GUILayout.Button("Reload domain", GUILayout.Height(28f))) RiryMenus.ReloadDomain();
+                    if (GUILayout.Button("Reload domain", GUILayout.Height(28f))) RiryToolsMenuBar.ReloadDomain();
                     EditorGUILayout.Space(4f);
                     // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
                     bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
                         "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
                     if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
+                    bool guard = EditorGUILayout.ToggleLeft(new GUIContent("Script Load Guard",
+                        "Block saving a scene or prefab that loaded with far fewer objects than its file holds."), ScriptLoadGuard.Enabled);
+                    if (guard != ScriptLoadGuard.Enabled) ScriptLoadGuard.Enabled = guard;
                     break;
                 default:
                     Draw(Active());
@@ -215,7 +218,7 @@ namespace Riry.RiryTools.Editor
         {
             switch (Current)
             {
-                case "AutoSync": return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
+                case "AutoSync": return Host("Configuration", () => CreateInstance<AutoSyncGitConfigureWindow>(), window => ((AutoSyncGitConfigureWindow)window).Reload());
                 case "Animator Tools": return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Tool":
@@ -398,14 +401,14 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Main Menu
-// The menu entry, Tools > RiryTools > Main Menu, is in RiryMenus.cs.
+// The menu entry, Tools > RiryTools > Main Menu, is in RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
 //   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, Import Presets,
 //                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
-//   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK) makes the
+//   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the
 //                            hosted MenuToolWindow (MenuToolWindow.CreateHosted). It shows the Parameter budget, drawn
 //                            outside the tab scroll view (the budget scrolls itself); its Menu manager tab opens the Menu
 //                            Tool window.
@@ -413,12 +416,13 @@ namespace Riry.RiryTools.Editor
 //                            pass that drew another tab (drawn: the one drawn), so Menu Tool's radial leaves at once.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
 //                            the tool in its own floating window (OpenPopup), not inside this one; then Reload domain
-//                            (RiryMenus.ReloadDomain) and the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked).
+//                            (RiryToolsMenuBar.ReloadDomain), the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked) and
+//                            the Script Load Guard toggle (ScriptLoadGuard.Enabled, the same way).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
 //   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train, Bezier and Insertable prop,
 //                            hosted under those names, like its own window (Editor/VRChat/ConstraintToolWindow.cs).
-//   CreateConstraintTrain / CreateConstraintBezier / CreateConstraintInsertable  Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK
+//   CreateConstraintTrain / CreateConstraintBezier / CreateConstraintInsertable  Set by Editor/VRChat/RiryToolsVRChatMenus.cs; null without the VRChat SDK
 //                            (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
@@ -437,5 +441,5 @@ namespace Riry.RiryTools.Editor
 //                            line up with the main tabs.
 //   TopMargin / SubTabGap    2 px above the main tabs (and Constraint Tool window's); 8 px between them and a tab's sub-tabs
 //                            (Constraint Tool, Import Presets).
-//   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration.
+//   AutoSync tab             Sync toggle (AutoSyncGitActions.ToggleSync) above Configuration.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.

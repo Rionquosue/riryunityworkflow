@@ -184,7 +184,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>True when the folder itself holds a .blend file.</summary>
         internal static bool HasBlend(string folder)
         {
-            return Directory.Exists(folder) && Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension).Length > 0;
+            return Directory.Exists(folder) && Directory.GetFiles(folder, "*." + ImportPresetBetterFBX.SourceExtension).Length > 0;
         }
 
         /// <summary>The file types in the folders, each with the library presets that fit any of its files.</summary>
@@ -311,7 +311,7 @@ namespace Riry.RiryTools.Editor
                 var model = listed as ModelImporter;
                 if (model != null && ImportPresetAnimations.ShouldExtract(path))
                 {
-                    ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
+                    ImportPresetAnimations.ExtractPreservingSettings(model, ImportPresetAnimationExtraction.Load(path),
                         ImportPresetOwnedFiles.IsUnchanged, false);
                 }
                 AssetImporter importer = AssetImporter.GetAtPath(path);
@@ -320,9 +320,9 @@ namespace Riry.RiryTools.Editor
                 importer.SaveAndReimport();
                 processed++;
             }
-            if (betterFbx == true && !before.BetterFbx.Contains(BetterFbxExporter.SourceExtension))
+            if (betterFbx == true && !before.BetterFbx.Contains(ImportPresetBetterFBX.SourceExtension))
             {
-                foreach (string file in Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension))
+                foreach (string file in Directory.GetFiles(folder, "*." + ImportPresetBetterFBX.SourceExtension))
                 {
                     ImportPresetPostprocessor.ExportOne(folder.TrimEnd('/') + "/" + Path.GetFileName(file), false);
                     processed++;
@@ -340,8 +340,8 @@ namespace Riry.RiryTools.Editor
             if (HandEdited(folder)) return 0;
             ImportPresetMarker.Rules before = Read(folder);
             int count = Changes(folder, before, After(folder, picks, betterFbx)).Count;
-            if (betterFbx == true && !before.BetterFbx.Contains(BetterFbxExporter.SourceExtension))
-                count += Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension).Length;
+            if (betterFbx == true && !before.BetterFbx.Contains(ImportPresetBetterFBX.SourceExtension))
+                count += Directory.GetFiles(folder, "*." + ImportPresetBetterFBX.SourceExtension).Length;
             return count;
         }
 
@@ -361,8 +361,8 @@ namespace Riry.RiryTools.Editor
             foreach (Pick pick in picks) after.Set(pick.Label, pick.Configuration, pick.Configuration != null ? pick.Preset : null);
             if (betterFbx.HasValue)
             {
-                after.BetterFbx.Remove(BetterFbxExporter.SourceExtension);
-                if (betterFbx.Value) after.BetterFbx.Add(BetterFbxExporter.SourceExtension);
+                after.BetterFbx.Remove(ImportPresetBetterFBX.SourceExtension);
+                if (betterFbx.Value) after.BetterFbx.Add(ImportPresetBetterFBX.SourceExtension);
             }
             return after;
         }

@@ -895,7 +895,7 @@ namespace Riry.RiryTools.Editor
             {
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Cancel", GUILayout.Width(80f))) Close();
-                if (GUILayout.Button("Save", GUILayout.Width(80f))) { Save(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Save", GUILayout.Width(80f))) { Save(); RiryToolGUI.ExitAfterModal(); }
             }
         }
 
@@ -1109,7 +1109,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Menu Mockup windows
-// The model and file format are in Editor/MenuMockup.cs; the menu entry is in RiryMenus.cs.
+// The model and file format are in Editor/MenuMockup.cs; the menu entry is in RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // MenuMockupEditWindow ("Edit"): the mockup

@@ -133,8 +133,8 @@ namespace Riry.RiryTools.Editor
                 outcome.Detached = true;
                 return;
             }
-            string url = GitRemotes.Url(ProjectRoot, Remote);
-            if (GitRemotes.IsHttps(url))
+            string url = AutoSyncGitRemotes.Url(ProjectRoot, Remote);
+            if (AutoSyncGitRemotes.IsHttps(url))
             {
                 List<string> large = GitLargeFiles.Unpushed(ProjectRoot, Remote);
                 if (large.Count > 0)
@@ -147,20 +147,20 @@ namespace Riry.RiryTools.Editor
             if (!Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded) push.Add("--set-upstream");
             push.Add(Remote);
             push.Add(branch);
-            Check(GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()), "Pushing " + branch + " to " + Remote);
+            Check(AutoSyncGitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()), "Pushing " + branch + " to " + Remote);
             outcome.PushedTo = Remote + "/" + branch;
         }
 
-        private GitRunner.Result Run(params string[] arguments)
+        private AutoSyncGitRunner.Result Run(params string[] arguments)
         {
             // Objects and refs reach the disk before git reports success, so a
             // power loss right after a commit keeps it (Git 2.36+; older Git ignores this).
             var all = new List<string> { "-c", "core.fsync=committed" };
             all.AddRange(arguments);
-            return GitRunner.Run(ProjectRoot, environment, TimeoutMs, all.ToArray());
+            return AutoSyncGitRunner.Run(ProjectRoot, environment, TimeoutMs, all.ToArray());
         }
 
-        private static string Check(GitRunner.Result result, string action)
+        private static string Check(AutoSyncGitRunner.Result result, string action)
         {
             if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
             return result.Output;

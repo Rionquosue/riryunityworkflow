@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     /// builds a Motion Time clip that moves the chain onto physics chains as a staggered train.
     /// This file holds the state and the actions; everything drawn in the tab is in
     /// ConstraintTrainWindow.UI.cs. The window and its Open methods are in
-    /// ConstraintToolWindow.cs, and the menu entries in RiryVRChatMenus.cs.
+    /// ConstraintToolWindow.cs, and the menu entries in RiryToolsVRChatMenus.cs.
     /// </summary>
     internal sealed partial class ConstraintTrainWindow : EditorWindow
     {

@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// block type to click or drag in, New, Save Mockup and Load). Every component is a block, any
     /// block holds blocks, and blocks lay out like flexbox. Mockups are saved as
     /// annotated .yml files in Documents/RiryTools/Mockups, which Unity never compiles.
-    /// The menu entry, Tools > RiryTools > Menu Mockup, is in Editor/UI/RiryMenus.cs.
+    /// The menu entry, Tools > RiryTools > Menu Mockup, is in Editor/UI/RiryToolsMenuBar.cs.
     /// </summary>
     internal static class MenuMockup
     {
@@ -446,7 +446,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Menu Mockup (model and file)
-// The windows are in Editor/UI/MenuMockupWindows.cs; the menu entry is in RiryMenus.cs.
+// The windows are in Editor/UI/MenuMockupWindows.cs; the menu entry is in RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // MenuMockup                Open() opens Edit and Components; Folder (Documents/RiryTools/Mockups);

@@ -186,7 +186,7 @@ namespace Riry.RiryTools.Editor
         {
             GameObject selected = Selection.activeGameObject;
             if (selected == null) return;
-            target = RiryGui.Set(this, "Menu Tool target", target, selected);
+            target = RiryToolGUI.Set(this, "Menu Tool target", target, selected);
             MarkStale();
         }
 
@@ -407,7 +407,7 @@ namespace Riry.RiryTools.Editor
         {
             MenuToolAddMenuDialog.Open(Submenus().ToList(), into ?? shownPath, (name, parent) =>
                 ChangePlan("Plan a new menu", moves => moves.Add(new PlannedMove { To = parent, NewMenu = name })));
-            RiryGui.ExitAfterModal();
+            RiryToolGUI.ExitAfterModal();
         }
 
         // ---- GUI ---------------------------------------------------------------------------------
@@ -461,7 +461,7 @@ namespace Riry.RiryTools.Editor
                     EditorApplication.delayCall += () => Open(on, 1);
                 }
             }
-            else if (chosen != tab) tab = RiryGui.Set(this, "Menu Tool tab", tab, chosen);
+            else if (chosen != tab) tab = RiryToolGUI.Set(this, "Menu Tool tab", tab, chosen);
             EditorGUILayout.Space(4f);
             if (tab == 0)
             {
@@ -492,7 +492,7 @@ namespace Riry.RiryTools.Editor
                     var chosen = EditorGUIUtility.GetObjectPickerObject() as GameObject;
                     if (chosen != null && chosen != target)
                     {
-                        target = RiryGui.Set(this, "Menu Tool target", target, chosen);
+                        target = RiryToolGUI.Set(this, "Menu Tool target", target, chosen);
                         MarkStale();
                     }
                 }
@@ -502,7 +502,7 @@ namespace Riry.RiryTools.Editor
                     target, typeof(GameObject), true);
                 if (picked != target)
                 {
-                    target = RiryGui.Set(this, "Menu Tool target", target, picked);
+                    target = RiryToolGUI.Set(this, "Menu Tool target", target, picked);
                     MarkStale();
                 }
                 if (GUILayout.Button("Use selection", GUILayout.Width(100f))) UseSelection();
@@ -555,7 +555,7 @@ namespace Riry.RiryTools.Editor
                         exact = MenuToolBudget.Exact(scan.Avatar);
                         exactFor = target;
                         exactTime = DateTime.Now.ToString("HH:mm", CultureInfo.InvariantCulture);
-                        RiryGui.ExitAfterModal();
+                        RiryToolGUI.ExitAfterModal();
                     }
                 }
             }
@@ -774,8 +774,8 @@ namespace Riry.RiryTools.Editor
             var square = new Rect(area.center.x - RadialSize / 2f, area.y, RadialSize, RadialSize);
             if (MenuToolPreviewMenus.CreateRadial == null)
             {
-                EditorGUI.HelpBox(new Rect(area.x, area.y, area.width, 40f),
-                    "Install Gesture Manager (3.9 or newer) to preview the radial menu here. The list above still plans moves.", MessageType.Info);
+                EditorGUI.HelpBox(new Rect(area.x, area.y, area.width, 56f),
+                    new GestureManagerNotFoundException("The radial menu preview").Message + " The list above still plans moves.", MessageType.Info);
                 return;
             }
             if (radial == null) return;
@@ -934,11 +934,11 @@ namespace Riry.RiryTools.Editor
             if (!EditorUtility.DisplayDialog(Title, "Discard the " + plan.Moves.Count + " planned moves? Nothing has been applied yet; Ctrl+Z brings them back.",
                 "Discard", "Cancel"))
             {
-                RiryGui.ExitAfterModal();
+                RiryToolGUI.ExitAfterModal();
                 return;
             }
             ChangePlan("Discard plan", moves => moves.Clear());
-            RiryGui.ExitAfterModal();
+            RiryToolGUI.ExitAfterModal();
         }
 
         private void ApplyPlan()
@@ -948,7 +948,7 @@ namespace Riry.RiryTools.Editor
                 "\n\nMenu assets other places also use are copied to Assets/RiryTools/MenuTool first. One Ctrl+Z undoes everything this does (copied files stay).";
             if (!EditorUtility.DisplayDialog(Title, message, "Apply", "Cancel"))
             {
-                RiryGui.ExitAfterModal();
+                RiryToolGUI.ExitAfterModal();
                 return;
             }
             // The plan is cleared inside Apply's undo step, so undoing Apply brings the plan back too.
@@ -962,14 +962,14 @@ namespace Riry.RiryTools.Editor
             MarkStale();
             if (report.Problems.Count > 0)
                 EditorUtility.DisplayDialog(Title, "Applied " + report.Applied + " moves. Check these:\n\n" + string.Join("\n", report.Problems.Take(12)), "OK");
-            RiryGui.ExitAfterModal();
+            RiryToolGUI.ExitAfterModal();
         }
     }
 }
 
 // ============================================================================
 // GLOSSARY: Menu Tool window
-// The menu entry, Tools > RiryTools > Menu Tool, is in Editor/VRChat/RiryVRChatMenus.cs; the Main Menu hosts it as a tab.
+// The menu entry, Tools > RiryTools > Menu Tool, is in Editor/VRChat/RiryToolsVRChatMenus.cs; the Main Menu hosts it as a tab.
 // ============================================================================
 //
 // MenuToolWindow (this file)
@@ -982,7 +982,7 @@ namespace Riry.RiryTools.Editor
 //                            its own, the window itself.
 //   OnGUI / DrawWindow       guiOrigin (this OnGUI's (0, 0) on screen). The radial is hidden where a view stops drawing it
 //                            (no target, failed scan, Parameter budget tab, NotDrawn) and by DrawRadial when it leaves view.
-//   target                   Avatar, prefab asset, Prefab Mode or Hierarchy object ([SerializeField]; Undo via RiryGui.Set).
+//   target                   Avatar, prefab asset, Prefab Mode or Hierarchy object ([SerializeField]; Undo via RiryToolGUI.Set).
 //                            Its picker button (PickerButton wide) opens ShowObjectPicker with AvatarFilter
 //                            ("t:VRCAvatarDescriptor": Hierarchy objects with a VRC Avatar Descriptor), applied when the
 //                            picker closes (pickerId); dragging in and Use selection still take any object.

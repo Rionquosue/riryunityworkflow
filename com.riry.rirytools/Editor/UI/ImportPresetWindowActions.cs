@@ -75,7 +75,7 @@ namespace Riry.RiryTools.Editor
             picks.Clear();
             foreach (ImportPresetMarker.TypeRule rule in rules.TypeRules)
                 picks.Add(new ImportPresetFolderRules.Pick { Label = rule.Label, Configuration = rule.Configuration, Preset = rule.Preset });
-            betterFbx = rules.BetterFbx.Contains(BetterFbxExporter.SourceExtension);
+            betterFbx = rules.BetterFbx.Contains(ImportPresetBetterFBX.SourceExtension);
             Scan();
         }
 

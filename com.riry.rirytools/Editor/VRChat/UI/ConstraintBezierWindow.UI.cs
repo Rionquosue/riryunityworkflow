@@ -39,9 +39,9 @@ namespace Riry.RiryTools.Editor
         private void DrawChain(List<Transform> bones)
         {
             EditorGUILayout.LabelField("Bone chain", EditorStyles.boldLabel);
-            chainStart = RiryGui.Set(this, SettingsUndo, chainStart, (Transform)EditorGUILayout.ObjectField(
+            chainStart = RiryToolGUI.Set(this, SettingsUndo, chainStart, (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("Start", "First bone of the chain: the curve starts here (Anchor Start)."), chainStart, typeof(Transform), true));
-            chainEnd = RiryGui.Set(this, SettingsUndo, chainEnd, (Transform)EditorGUILayout.ObjectField(
+            chainEnd = RiryToolGUI.Set(this, SettingsUndo, chainEnd, (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("End", "Last bone of the chain: the curve ends here (Anchor End)."), chainEnd, typeof(Transform), true));
             if (chainStart == null || chainEnd == null) return;
             string error;
@@ -62,22 +62,22 @@ namespace Riry.RiryTools.Editor
         private void DrawOptions()
         {
             EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
-            handlesFollowAnchors = RiryGui.Set(this, SettingsUndo, handlesFollowAnchors, EditorGUILayout.Toggle(
+            handlesFollowAnchors = RiryToolGUI.Set(this, SettingsUndo, handlesFollowAnchors, EditorGUILayout.Toggle(
                 new GUIContent("Handles follow anchors", "On: each handle is a child of its anchor, so moving or rotating " +
                     "an anchor carries its handle. Off: the handles are separate objects."), handlesFollowAnchors));
-            mode = (Mode)RiryGui.Set(this, SettingsUndo, (int)mode, EditorGUILayout.Popup(
+            mode = (Mode)RiryToolGUI.Set(this, SettingsUndo, (int)mode, EditorGUILayout.Popup(
                 new GUIContent("Mode", "Stretch: every bone is held on the curve, and stretches when the curve is longer. " +
                     "Keep length: only the first bone is held on the curve; the rest aim along it and keep their lengths."),
                 (int)mode, ModeNames));
-            target = (Target)RiryGui.Set(this, SettingsUndo, (int)target, EditorGUILayout.Popup(
+            target = (Target)RiryToolGUI.Set(this, SettingsUndo, (int)target, EditorGUILayout.Popup(
                 new GUIContent("Constrain", "Deform bones: the curve's constraints go on the bones. Mechanism chain: they go on a " +
                     MechanismPrefix + " copy of the chain, and each bone follows its copy by a VRC Parent Constraint."),
                 (int)target, TargetNames));
-            spacing = (Spacing)RiryGui.Set(this, SettingsUndo, (int)spacing, EditorGUILayout.Popup(
+            spacing = (Spacing)RiryToolGUI.Set(this, SettingsUndo, (int)spacing, EditorGUILayout.Popup(
                 new GUIContent("Spacing", "Where each bone sits along the curve, from the distances between the bones. " +
                     "Existing: at its own distance along the chain. Even: at equal distances."),
                 (int)spacing, SpacingNames));
-            twist = RiryGui.Set(this, SettingsUndo, twist, EditorGUILayout.Toggle(
+            twist = RiryToolGUI.Set(this, SettingsUndo, twist, EditorGUILayout.Toggle(
                 new GUIContent("Twist from anchors", "Rotating an anchor twists the chain, blended from one anchor to the other. " +
                     "Off: the bones take their twist from the rig."), twist));
         }
@@ -109,11 +109,11 @@ namespace Riry.RiryTools.Editor
             {
                 using (new EditorGUI.DisabledScope(rigged))
                 {
-                    if (GUILayout.Button("Generate rig")) { Act(() => Generate(bones)); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Generate rig")) { Act(() => Generate(bones)); RiryToolGUI.ExitAfterModal(); }
                 }
                 using (new EditorGUI.DisabledScope(!rigged))
                 {
-                    if (GUILayout.Button("Remove rig")) { Act(() => RemoveRig(bones)); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Remove rig")) { Act(() => RemoveRig(bones)); RiryToolGUI.ExitAfterModal(); }
                 }
             }
         }
@@ -142,7 +142,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 // GLOSSARY: Constraint Tool's Bezier tab
 // Both window files are one partial class. The curve math is in
-// Editor/ConstraintBezier/ConstraintBezierCurve.cs.
+// Editor/VRChat/ConstraintTools/ConstraintBezier/ConstraintBezierCurve.cs.
 // ============================================================================
 //
 // FIELDS (ConstraintBezierWindow.cs; [S] = serialized)
@@ -155,7 +155,7 @@ namespace Riry.RiryTools.Editor
 //   twist                  [S] bool       Twist from anchors: per-node Twist helpers are the aims' world up.
 //   status                     string     Message at the bottom, also logged by Act(action) after Generate rig and
 //                                         Remove rig.  scroll: Vector2, the tab's scroll position.
-//   UndoName "Bezier rig"; SettingsUndo "Bezier settings" (RiryGui.Set on every field).
+//   UndoName "Bezier rig"; SettingsUndo "Bezier settings" (RiryToolGUI.Set on every field).
 //   RigPrefix "BezierRig_", MechanismPrefix "Bezier_"; MinAimDistance 1e-5: shorter cannot be aimed along.
 //
 // THE RIG (Generate): BezierRig_<start>, a sibling of the chain start at its position

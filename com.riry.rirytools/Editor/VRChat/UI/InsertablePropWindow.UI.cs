@@ -44,12 +44,12 @@ namespace Riry.RiryTools.Editor
         private void DrawPair()
         {
             EditorGUILayout.LabelField("Prop and socket", EditorStyles.boldLabel);
-            avatar = RiryGui.Set(this, SettingsUndo, avatar, (VRCAvatarDescriptor)EditorGUILayout.ObjectField(
+            avatar = RiryToolGUI.Set(this, SettingsUndo, avatar, (VRCAvatarDescriptor)EditorGUILayout.ObjectField(
                 new GUIContent("Avatar root", "The avatar's root, with its Avatar Descriptor."), avatar, typeof(VRCAvatarDescriptor), true));
-            propPrefab = RiryGui.Set(this, SettingsUndo, propPrefab, (GameObject)EditorGUILayout.ObjectField(
+            propPrefab = RiryToolGUI.Set(this, SettingsUndo, propPrefab, (GameObject)EditorGUILayout.ObjectField(
                 new GUIContent("Prop prefab", "The prop, as a prefab asset. It's placed as an instance; the asset is never changed."),
                 propPrefab, typeof(GameObject), false));
-            socket = RiryGui.Set(this, SettingsUndo, socket, (Transform)EditorGUILayout.ObjectField(
+            socket = RiryToolGUI.Set(this, SettingsUndo, socket, (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("Socket", "Where the prop is seated, inside the avatar (a sheath, a holster)."), socket, typeof(Transform), true));
         }
 
@@ -64,22 +64,22 @@ namespace Riry.RiryTools.Editor
                 settings.platform = (Platform)platform;
                 platformChosen = true;
             }
-            settings.allowSelf = RiryGui.Set(this, SettingsUndo, settings.allowSelf, EditorGUILayout.Toggle(
+            settings.allowSelf = RiryToolGUI.Set(this, SettingsUndo, settings.allowSelf, EditorGUILayout.Toggle(
                 new GUIContent("Wearer can grab", "The wearer can grab the prop."), settings.allowSelf));
-            settings.allowOthers = RiryGui.Set(this, SettingsUndo, settings.allowOthers, EditorGUILayout.Toggle(
+            settings.allowOthers = RiryToolGUI.Set(this, SettingsUndo, settings.allowOthers, EditorGUILayout.Toggle(
                 new GUIContent("Others can grab", "Other players can grab the prop."), settings.allowOthers));
-            settings.captureRadius = RiryGui.Set(this, SettingsUndo, settings.captureRadius, Mathf.Max(0.005f, EditorGUILayout.FloatField(
+            settings.captureRadius = RiryToolGUI.Set(this, SettingsUndo, settings.captureRadius, Mathf.Max(0.005f, EditorGUILayout.FloatField(
                 new GUIContent("Capture radius", "Releasing with the tip this close to the socket opening (meters) inserts the prop. " +
                     "The aim into the socket fades in inside it."), settings.captureRadius)));
-            settings.gripSmoothing = RiryGui.Set(this, SettingsUndo, settings.gripSmoothing, EditorGUILayout.Slider(
+            settings.gripSmoothing = RiryToolGUI.Set(this, SettingsUndo, settings.gripSmoothing, EditorGUILayout.Slider(
                 new GUIContent("Grip smoothing", "Seconds of constraint smoothing on the prop's rotation in the hand, against jitter."),
                 settings.gripSmoothing, 0f, 0.5f));
-            settings.insertSmoothing = RiryGui.Set(this, SettingsUndo, settings.insertSmoothing, EditorGUILayout.Slider(
+            settings.insertSmoothing = RiryToolGUI.Set(this, SettingsUndo, settings.insertSmoothing, EditorGUILayout.Slider(
                 new GUIContent("Insert smoothing", "Seconds of constraint smoothing for each step of the slide into the socket " +
                     "(and the Android drop)."), settings.insertSmoothing, 0.01f, 1f));
             using (new EditorGUI.DisabledScope(settings.platform != Platform.PC))
             {
-                settings.stiffness = RiryGui.Set(this, SettingsUndo, settings.stiffness, Mathf.Max(1f, EditorGUILayout.FloatField(
+                settings.stiffness = RiryToolGUI.Set(this, SettingsUndo, settings.stiffness, Mathf.Max(1f, EditorGUILayout.FloatField(
                     new GUIContent("Stiffness", "PC: spring of the joint that carries the hand's motion into a throw. Damping is set " +
                         "to critical from it."), settings.stiffness)));
             }
@@ -90,17 +90,17 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Animator", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
-                appendController = RiryGui.Set(this, SettingsUndo, appendController, (AnimatorController)EditorGUILayout.ObjectField(
+                appendController = RiryToolGUI.Set(this, SettingsUndo, appendController, (AnimatorController)EditorGUILayout.ObjectField(
                     new GUIContent("Append to controller:", "The layers and parameters go here. Empty: the avatar's FX controller."),
                     appendController, typeof(AnimatorController), false));
-                if (GUILayout.Button("New controller", GUILayout.Width(ButtonWidth))) { Act(NewController); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("New controller", GUILayout.Width(ButtonWidth))) { Act(NewController); RiryToolGUI.ExitAfterModal(); }
             }
             using (new EditorGUILayout.HorizontalScope())
             {
-                appendParameters = RiryGui.Set(this, SettingsUndo, appendParameters, (VRCExpressionParameters)EditorGUILayout.ObjectField(
+                appendParameters = RiryToolGUI.Set(this, SettingsUndo, appendParameters, (VRCExpressionParameters)EditorGUILayout.ObjectField(
                     new GUIContent("Append to parameters:", "The synced state goes here. Empty: the avatar's Expression Parameters."),
                     appendParameters, typeof(VRCExpressionParameters), false));
-                if (GUILayout.Button("New parameters", GUILayout.Width(ButtonWidth))) { Act(NewParameters); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("New parameters", GUILayout.Width(ButtonWidth))) { Act(NewParameters); RiryToolGUI.ExitAfterModal(); }
             }
             if (avatar != null)
             {
@@ -145,11 +145,11 @@ namespace Riry.RiryTools.Editor
             {
                 using (new EditorGUI.DisabledScope(error != null))
                 {
-                    if (GUILayout.Button(exists ? "Update pair" : "Generate")) { Act(Generate); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button(exists ? "Update pair" : "Generate")) { Act(Generate); RiryToolGUI.ExitAfterModal(); }
                 }
                 using (new EditorGUI.DisabledScope(!exists))
                 {
-                    if (GUILayout.Button("Remove", GUILayout.Width(ButtonWidth))) { Act(RemovePair); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Remove", GUILayout.Width(ButtonWidth))) { Act(RemovePair); RiryToolGUI.ExitAfterModal(); }
                 }
             }
         }
@@ -195,7 +195,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 // GLOSSARY: Constraint Tool's Insertable prop tab
 // Both window files are one partial class. The scene rig is InsertablePropRig.cs, the animator
-// InsertablePropAnimator.cs, the math Editor/InsertableProp/InsertablePropMath.cs.
+// InsertablePropAnimator.cs, the math Editor/VRChat/ConstraintTools/InsertableProp/InsertablePropMath.cs.
 // ============================================================================
 //
 // FIELDS (InsertablePropWindow.cs; [S] = serialized)
@@ -209,7 +209,7 @@ namespace Riry.RiryTools.Editor
 //   appendParameters [S]    "Append to parameters:"; empty uses the avatar's Expression Parameters. New parameters beside it.
 //   status, lastDrawn, scroll   Message (also logged by Act(action) after New controller, New parameters, Generate and
 //                           Remove); when the tab last drew (scene handles show for 2 s after); scroll position.
-//   UndoName "Insertable prop"; SettingsUndo "Insertable prop settings" (RiryGui.Set on every field).
+//   UndoName "Insertable prop"; SettingsUndo "Insertable prop settings" (RiryToolGUI.Set on every field).
 //
 // UI (this file)
 //   OnGUI                   Prop and socket, Options, Animator, Handles, Generate (Update pair once it exists) and Remove.

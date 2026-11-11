@@ -110,7 +110,7 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Abort", GUILayout.Width(80.0f))) Close();
                 using (new EditorGUI.DisabledScope(folders.Count == 0))
                 {
-                    if (GUILayout.Button("Apply", GUILayout.Width(80.0f))) { Apply(); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Apply", GUILayout.Width(80.0f))) { Apply(); RiryToolGUI.ExitAfterModal(); }
                 }
             }
             EditorGUILayout.Space(4.0f);
@@ -187,7 +187,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Set Folder Import Presets popup (Project right-click)
-// The menu entry is in RiryMenus.cs; the full window (Tools menu) is ImportPresetFolderWindow.
+// The menu entry is in RiryToolsMenuBar.cs; the full window (Tools menu) is ImportPresetFolderWindow.
 // ============================================================================
 //
 // ImportPresetQuickWindow (this file)

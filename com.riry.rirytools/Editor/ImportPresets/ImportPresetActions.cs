@@ -7,7 +7,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// What the import preset menu entries do. The entries themselves are in
-    /// Editor/UI/RiryMenus.cs and the windows in Editor/UI/ImportPresetWindows.cs.
+    /// Editor/UI/RiryToolsMenuBar.cs and the windows in Editor/UI/ImportPresetWindows.cs.
     /// </summary>
     internal static class ImportPresetActions
     {

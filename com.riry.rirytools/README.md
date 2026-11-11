@@ -174,7 +174,7 @@ closed Prefab Mode. Open scenes are reloaded from disk afterwards. It bypasses
 Unity Undo, so commit or back up the project first.
 
 Reverse-reference indexes are cached under
-`Library/RiryTools/GuidReferenceCache`. Delete them from the GUID Tools window. Diagnostic logs are written
+`Library/RiryTools/GuidToolReferenceCache`. Delete them from the GUID Tools window. Diagnostic logs are written
 to `Logs/RiryTools/GuidTools/` in the project; the active log rotates at 10 MiB, also
 during a run, and archived logs are trimmed oldest-first above 100 MiB.
 
@@ -355,8 +355,8 @@ parameter writes. Values stay in memory only.
 ## Editing the UI
 
 Every menu entry (Tools dropdown, Project and Hierarchy right-click, Git menu)
-is in `Editor/UI/RiryMenus.cs`, except Constraint Tool's and Menu Tool's, which are in
-`Editor/VRChat/RiryVRChatMenus.cs` because they need the VRChat SDK. Change a
+is in `Editor/UI/RiryToolsMenuBar.cs`, except Constraint Tool's and Menu Tool's, which are in
+`Editor/VRChat/RiryToolsVRChatMenus.cs` because they need the VRChat SDK. Change a
 path or priority there to move an entry. Each window's drawing code is in
 `Editor/UI/` (Constraint Tool's in `Editor/VRChat/`: `ConstraintToolWindow.cs`, and its
 tabs `ConstraintTrainWindow.UI.cs`, `ConstraintBezierWindow.UI.cs` and `InsertablePropWindow.UI.cs`;

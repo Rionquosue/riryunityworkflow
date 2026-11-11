@@ -22,7 +22,7 @@ namespace Riry.RiryTools.Editor
             const int ShownFiles = 10;
             EditorGUILayout.LabelField("Files (" + files.Count + "): " + string.Join(", ", files.GetRange(0, Math.Min(ShownFiles, files.Count))) +
                 (files.Count > ShownFiles ? " and " + (files.Count - ShownFiles) + " more" : ""), EditorStyles.wordWrappedMiniLabel);
-            if (GUILayout.Button("Rescan")) { Rescan(); RiryGui.ExitAfterModal(); }
+            if (GUILayout.Button("Rescan")) { Rescan(); RiryToolGUI.ExitAfterModal(); }
             if (plan == null) return;
             if (plan.Missing.Count == 0)
             {
@@ -58,7 +58,7 @@ namespace Riry.RiryTools.Editor
             int ready = Redirects().Count + Restores().Count;
             using (new EditorGUI.DisabledScope(ready == 0))
             {
-                if (GUILayout.Button("Apply " + ready + " Repair(s)", GUILayout.Height(28f))) { ApplyRedirects(); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Apply " + ready + " Repair(s)", GUILayout.Height(28f))) { ApplyRedirects(); RiryToolGUI.ExitAfterModal(); }
             }
         }
 
@@ -166,8 +166,8 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 // GLOSSARY: Broken References window
 // Opened from the GUID Tools window (Check for Broken References and Repair Missing GUID
-// References), Project right-click > RiryTools > Repair Missing GUID References (RiryMenus.cs),
-// and the BrokenReferenceMonitor prompt. Git history is searched when the project is in a repository.
+// References), Project right-click > RiryTools > Repair Missing GUID References (RiryToolsRightClickMenu.cs),
+// and the GuidToolBrokenReferenceMonitor prompt. Git history is searched when the project is in a repository.
 // ============================================================================
 //
 // UI (this file)
@@ -202,16 +202,16 @@ namespace Riry.RiryTools.Editor
 //                         confirms, restores, rewrites, reloads, then starts the next pass with the
 //                         restored files added, until nothing is broken.
 //
-// RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidReferenceRepair.cs)
+// RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidToolReferenceRepair.cs)
 //   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.
 //   RepairCandidate: TargetGuid or a restore (Commit, RepoPath), Path, Sources, and the restore's
 //     breaks: MissingReferences and GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept). PathTaken is not
-//     a break: Destination is a free name beside the taken path (GuidReferenceRepair.FreePath), so nothing is
+//     a break: Destination is a free name beside the taken path (GuidToolReferenceRepair.FreePath), so nothing is
 //     overwritten and the references follow the restored file by its GUID; Restore refuses a destination that exists.
 // RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): levels shown per pass; a restore at the third
 //   level that breaks something is a recursive break, and its references come in the next pass.
 // RepairCache: Candidates and LastKnownPaths searched so far.
-// GuidReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, owner, restore, log),
+// GuidToolReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, owner, restore, log),
 //   Apply(plan, redirects, restores, log), SelectedFiles(), IsMissing(guid), FindGuidReferences(bytes), RepairSelected(),
 //   LastKnownNames(guids) (file names from the remap ledger and .meta Git history).
 // UpdateExitPrompt() / SaveChanges() (BrokenReferenceWindow.cs): closing with broken references
@@ -219,9 +219,9 @@ namespace Riry.RiryTools.Editor
 // BrokenReferenceSaveGuard / BrokenSaveWindow (BrokenReferenceWindow.cs): interrupt saving a scene or
 //   Prefab Mode prefab with broken asset references (FindBroken: empty references whose GUID is missing),
 //   listing each as "<last known name> in <object > component > field> (GUID:...)";
-//   CONTINUE ANYWAY needs three clicks ([2], [1]). Skipped while BrokenReferenceMonitor.Loading.
-// BrokenReferenceMonitor.Loading: true from EditorSceneManager.sceneOpening until two editor updates after the
+//   CONTINUE ANYWAY needs three clicks ([2], [1]). Skipped while GuidToolBrokenReferenceMonitor.Loading.
+// GuidToolBrokenReferenceMonitor.Loading: true from EditorSceneManager.sceneOpening until two editor updates after the
 //   scene opens (StartLoading; loadNumber keeps an earlier load from ending a later one).
-// BrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window every time a file opens with
+// GuidToolBrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window every time a file opens with
 //   missing GUIDs (PromptOnOpen; Do Not Show Again turns it off for that file, OffKey), and once per session when
 //   Unity logs several missing-prefab or broken-reference messages.

@@ -31,7 +31,7 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open(List<string> files, string reason)
         {
-            BrokenReferenceWindow window = GetWindow<BrokenReferenceWindow>(true, GuidReferenceRepair.Title);
+            BrokenReferenceWindow window = GetWindow<BrokenReferenceWindow>(true, GuidToolReferenceRepair.Title);
             window.minSize = new Vector2(520f, 360f);
             window.files = files;
             window.reason = reason;
@@ -45,7 +45,7 @@ namespace Riry.RiryTools.Editor
             List<string> paths = OpenPaths();
             if (paths.Count == 0)
             {
-                EditorUtility.DisplayDialog(GuidReferenceRepair.Title, "Open a saved scene or prefab first.", "OK");
+                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Open a saved scene or prefab first.", "OK");
                 return;
             }
             Open(paths, reason);
@@ -70,8 +70,8 @@ namespace Riry.RiryTools.Editor
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
-                plan = GuidReferenceRepair.Scan(files, log);
-                GuidReferenceRepair.Suggest(plan, null, cache, log);
+                plan = GuidToolReferenceRepair.Scan(files, log);
+                GuidToolReferenceRepair.Suggest(plan, null, cache, log);
                 choices.Clear();
                 others.Clear();
                 expanded.Clear();
@@ -87,8 +87,8 @@ namespace Riry.RiryTools.Editor
             {
                 plan = null;
                 UpdateExitPrompt();
-                RiryLog.Exception(RiryLog.GuidTools, GuidReferenceRepair.Title + ": the scan failed", exception);
-                EditorUtility.DisplayDialog(GuidReferenceRepair.Title, exception.Message, "OK");
+                RiryLog.Exception(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": the scan failed", exception);
+                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, exception.Message, "OK");
             }
             finally
             {
@@ -173,7 +173,7 @@ namespace Riry.RiryTools.Editor
             {
                 // Past the third level, the references wait for the next pass, which lists them by itself.
                 if (plan.DepthOf(owner) < RepairPlan.MaxFixDepth)
-                    GuidReferenceRepair.AddDependencies(plan, owner, restore, cache, log);
+                    GuidToolReferenceRepair.AddDependencies(plan, owner, restore, cache, log);
                 restore.MissingDecision = BreakDecision.Fix;
                 PreselectSingles();
             }
@@ -194,23 +194,23 @@ namespace Riry.RiryTools.Editor
             }
             if (PrefabStageUtility.GetCurrentPrefabStage() != null)
             {
-                EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
+                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title,
                     "Close Prefab Mode without saving first, then apply the redirects.", "OK");
                 return;
             }
             List<RepairCandidate> restores = Restores();
             // A break without Fix (accepted, or not decided) stays broken after Apply.
             if (restores.Exists(restore => restore.Unfixed) &&
-                !EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
+                !EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title,
                     "This repair will cause further broken references. Please run tool again afterwards.",
                     "ACCEPT BROKEN REFERENCES", "ABORT"))
                 return;
             // Saving a scene with broken references could overwrite the good file, so
             // open scenes are reloaded from disk instead of saved.
-            if (!EditorUtility.DisplayDialog(GuidReferenceRepair.Title,
+            if (!EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title,
                     (restores.Count > 0 ? "Restore " + restores.Count + " asset(s) from Git, then r" : "R") +
                     "ewrite " + Redirects().Count + " missing GUID(s) on disk, then reload the open scenes from disk?" +
-                    (RegenerateGuid.ScenesAreSaved() ? "" : "\n\nUnsaved scene changes are discarded.") +
+                    (GuidToolRegenerate.ScenesAreSaved() ? "" : "\n\nUnsaved scene changes are discarded.") +
                     "\n\nThis bypasses Unity Undo.", "Apply", "Cancel"))
                 return;
 
@@ -219,16 +219,16 @@ namespace Riry.RiryTools.Editor
             var restoredFiles = new List<string>();
             try
             {
-                int changed = GuidReferenceRepair.Apply(plan, Redirects(), restores, restoredFiles, log);
-                RiryLog.Info(RiryLog.GuidTools, GuidReferenceRepair.Title + ": repaired references in " + changed + " file(s)" +
+                int changed = GuidToolReferenceRepair.Apply(plan, Redirects(), restores, restoredFiles, log);
+                RiryLog.Info(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": repaired references in " + changed + " file(s)" +
                     (restoredFiles.Count > 0 ? ", restoring " + string.Join(", ", restoredFiles) : "") + ".");
                 applied = true;
             }
             catch (Exception exception)
             {
                 log.Write("FAILURE: " + exception);
-                RiryLog.Exception(RiryLog.GuidTools, GuidReferenceRepair.Title + ": the repair failed", exception);
-                EditorUtility.DisplayDialog(GuidReferenceRepair.Title + " Failed", exception.Message, "OK");
+                RiryLog.Exception(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": the repair failed", exception);
+                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title + " Failed", exception.Message, "OK");
             }
             finally
             {
@@ -242,7 +242,7 @@ namespace Riry.RiryTools.Editor
             // The next pass: the same files plus the restored ones, with what was already found.
             foreach (string restored in restoredFiles)
             {
-                if (RegenerateGuid.UnitySerializedExtensions.Contains(System.IO.Path.GetExtension(restored)) && !files.Contains(restored))
+                if (GuidToolRegenerate.UnitySerializedExtensions.Contains(System.IO.Path.GetExtension(restored)) && !files.Contains(restored))
                     files.Add(restored);
             }
             reason = "Next pass: what is still broken after the last Apply.";
@@ -269,7 +269,7 @@ namespace Riry.RiryTools.Editor
         internal static bool Confirm(string path, List<string> broken)
         {
             BrokenSaveWindow window = CreateInstance<BrokenSaveWindow>();
-            window.titleContent = new GUIContent(GuidReferenceRepair.Title);
+            window.titleContent = new GUIContent(GuidToolReferenceRepair.Title);
             window.path = path;
             window.broken = broken;
             Rect main = EditorGUIUtility.GetMainWindowPosition();

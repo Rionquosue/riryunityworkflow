@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     /// Stop Auto Game: when Play Mode starts, the windows that had focus get it
     /// back from the Game view, and a Game view that Play Mode opened (the layout
     /// had none) is closed when Play Mode ends, unless it was one of those windows. Behaves like DreadScripts' NoAutoGame with AutoUnfocus
-    /// on and AutoClose off. Its menu toggle is in Editor/UI/RiryMenus.cs.
+    /// on and AutoClose off. Its menu toggle is in Editor/UI/RiryToolsMenuBar.cs.
     /// </summary>
     internal static class StopAutoGame
     {
@@ -136,7 +136,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Stop Auto Game
-// The menu toggle is in Editor/UI/RiryMenus.cs; the Main Menu's Tools tab has the same toggle.
+// The menu toggle is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's Tools tab has the same toggle.
 // ============================================================================
 //
 // StopAutoGame (this file)

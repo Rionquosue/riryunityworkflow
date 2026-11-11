@@ -8,10 +8,10 @@ namespace Riry.RiryTools.Editor
     /// <summary>The popup after a run: the summary, then each section of the report.</summary>
     internal sealed class AvatarRunReportWindow : EditorWindow
     {
-        private AvatarRunReport report;
+        private AvatarMigratorRunReport report;
         private Vector2 scroll;
 
-        internal static void Open(AvatarRunReport report)
+        internal static void Open(AvatarMigratorRunReport report)
         {
             RiryLog.Info(RiryLog.AvatarMigration, report.Text());
             var window = CreateInstance<AvatarRunReportWindow>();

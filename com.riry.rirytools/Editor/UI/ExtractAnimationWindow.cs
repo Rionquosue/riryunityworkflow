@@ -9,13 +9,13 @@ namespace Riry.RiryTools.Editor
     /// The Extract Animation window: Target, Destination, Automatically clean keys
     /// (with Configure and Save animation extract settings), Automatically extract
     /// animations, and Extract. Every change is saved to the target's settings file
-    /// (Editor/ImportPresets/AnimationExtractSettings.cs); extraction is in
+    /// (Editor/ImportPresets/ImportPresetAnimationExtraction.cs); extraction is in
     /// Editor/ImportPresets/ImportPresetAnimations.cs.
     /// </summary>
     internal sealed class ExtractAnimationWindow : EditorWindow
     {
         [SerializeField] private GameObject target;
-        [SerializeField] private AnimationExtractSettings settings = new AnimationExtractSettings();
+        [SerializeField] private ImportPresetAnimationExtraction settings = new ImportPresetAnimationExtraction();
         // The Configure window: Clean Animation Keys working on these settings.
         [SerializeField] private CleanAnimationKeysWindow configure;
 
@@ -27,7 +27,7 @@ namespace Riry.RiryTools.Editor
             window.Show();
         }
 
-        internal AnimationExtractSettings Settings
+        internal ImportPresetAnimationExtraction Settings
         {
             get { return settings; }
         }
@@ -87,7 +87,7 @@ namespace Riry.RiryTools.Editor
             target = model;
             keptTarget = model;
             string path = TargetPath;
-            settings = (path != null ? AnimationExtractSettings.Load(path) : null) ?? new AnimationExtractSettings();
+            settings = (path != null ? ImportPresetAnimationExtraction.Load(path) : null) ?? new ImportPresetAnimationExtraction();
             if (path != null && settings.Destination.Length == 0)
                 settings.Destination = ImportPresetAnimations.AnimationsFolder(path);
             if (configure != null) configure.Close();
@@ -110,24 +110,24 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUI.DisabledScope(path == null))
             {
                 EditorGUI.BeginChangeCheck();
-                settings.Destination = RiryGui.Set(this, SettingsUndo, settings.Destination, EditorGUILayout.DelayedTextField(new GUIContent("Destination",
+                settings.Destination = RiryToolGUI.Set(this, SettingsUndo, settings.Destination, EditorGUILayout.DelayedTextField(new GUIContent("Destination",
                     "Folder the clips are written to. Default: Animations in the target's folder."), settings.Destination).Trim());
                 if (path != null && settings.Destination.Length == 0)
                     settings.Destination = ImportPresetAnimations.AnimationsFolder(path);
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    settings.AutoClean = RiryGui.Set(this, SettingsUndo, settings.AutoClean, EditorGUILayout.ToggleLeft(new GUIContent("Automatically clean keys",
+                    settings.AutoClean = RiryToolGUI.Set(this, SettingsUndo, settings.AutoClean, EditorGUILayout.ToggleLeft(new GUIContent("Automatically clean keys",
                         "Clean the extracted clips with Clean Animation Keys. Configure sets what is kept."), settings.AutoClean));
                     if (settings.AutoClean && GUILayout.Button("Configure", GUILayout.Width(90.0f))) OpenConfigure(path);
                 }
                 if (settings.AutoClean)
                 {
-                    settings.SaveCleanSettings = RiryGui.Set(this, SettingsUndo, settings.SaveCleanSettings, EditorGUILayout.ToggleLeft(
+                    settings.SaveCleanSettings = RiryToolGUI.Set(this, SettingsUndo, settings.SaveCleanSettings, EditorGUILayout.ToggleLeft(
                         new GUIContent("Save animation extract settings",
                         "Keep the cleaning settings in the target's settings file, so automatic extraction cleans too."),
                         settings.SaveCleanSettings));
                 }
-                settings.AutoExtract = RiryGui.Set(this, SettingsUndo, settings.AutoExtract, EditorGUILayout.ToggleLeft(
+                settings.AutoExtract = RiryToolGUI.Set(this, SettingsUndo, settings.AutoExtract, EditorGUILayout.ToggleLeft(
                     new GUIContent("Automatically extract animations",
                     "Always extract the Generic clips before the Humanoid or other import preset set for the folder is applied."),
                     settings.AutoExtract));
@@ -139,7 +139,7 @@ namespace Riry.RiryTools.Editor
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(problem != null))
                 {
-                    if (GUILayout.Button("Extract", GUILayout.Height(28.0f))) { Extract(path); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Extract", GUILayout.Height(28.0f))) { Extract(path); RiryToolGUI.ExitAfterModal(); }
                 }
                 EditorGUILayout.Space(6.0f);
             }
@@ -160,14 +160,14 @@ namespace Riry.RiryTools.Editor
             if (path == null) return;
             try
             {
-                AnimationExtractSettings.Save(path, settings);
+                ImportPresetAnimationExtraction.Save(path, settings);
             }
             catch (Exception exception)
             {
-                RiryLog.Exception(RiryLog.ImportPresets, "Extract Animation could not save " + AnimationExtractSettings.PathFor(path), exception);
-                EditorUtility.DisplayDialog("Extract Animation", "Could not save " + AnimationExtractSettings.PathFor(path) +
+                RiryLog.Exception(RiryLog.ImportPresets, "Extract Animation could not save " + ImportPresetAnimationExtraction.PathFor(path), exception);
+                EditorUtility.DisplayDialog("Extract Animation", "Could not save " + ImportPresetAnimationExtraction.PathFor(path) +
                     ":\n" + exception.Message, "OK");
-                RiryGui.ExitAfterModal();
+                RiryToolGUI.ExitAfterModal();
             }
         }
 
@@ -187,12 +187,12 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Extract Animation window
-// Menu entries (Tools > RiryTools > Import Presets and Project right-click) are in RiryMenus.cs.
+// Menu entries (Tools > RiryTools > Import Presets and Project right-click) are in RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs.
 // ============================================================================
 //
 // ExtractAnimationWindow (this file)
 //   target                   GameObject  The model (FBX or other model file); filled from the Project window selection.
-//   settings                 AnimationExtractSettings  Destination, the three toggles, the cleaning options and whitelist.
+//   settings                 ImportPresetAnimationExtraction  Destination, the three toggles, the cleaning options and whitelist.
 //   configure                CleanAnimationKeysWindow  The Configure window, sharing settings.CleanOptions and settings.Whitelist.
 //   Open()                   Opens the window with the selected model.
 //   ShowSelection()          The same for the Main Menu tab.
@@ -200,13 +200,13 @@ namespace Riry.RiryTools.Editor
 //   OnGUI()                  Target; Destination; Automatically clean keys with Configure; Save animation extract
 //                            settings (only while cleaning); Automatically extract animations; Extract.
 //   OpenConfigure(path)      Opens Clean Animation Keys for these settings, listing the clips already in Destination.
-//   SettingsChanged()        AnimationExtractSettings.Save: writes or removes the settings file.
-//   SettingsUndo             "Extract Animation settings": Destination and the three toggles are recorded (RiryGui.Set), like
+//   SettingsChanged()        ImportPresetAnimationExtraction.Save: writes or removes the settings file.
+//   SettingsUndo             "Extract Animation settings": Destination and the three toggles are recorded (RiryToolGUI.Set), like
 //                            the Configure window's options on this window; OnUndoRedo saves the file again. keptTarget: the
 //                            model as last chosen; a step recorded for an earlier target does not switch it back.
 //   Extract(path)            ImportPresetAnimations.Extract with these settings.
 //
-// AnimationExtractSettings (Editor/ImportPresets/AnimationExtractSettings.cs)
+// ImportPresetAnimationExtraction (Editor/ImportPresets/ImportPresetAnimationExtraction.cs)
 //   ".<model>_ani-extract.json~" beside the model: no .meta (Unity skips "." and "~" names), hidden on Windows.
 //   Worth                    AutoExtract, or AutoClean with SaveCleanSettings: only then the file exists.
 //   Load(model) / Save(model, settings)  Reads; writes or deletes, then git add (and queued for Sync when it is on).

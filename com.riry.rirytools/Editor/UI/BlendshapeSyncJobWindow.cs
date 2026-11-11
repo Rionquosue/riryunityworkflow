@@ -113,7 +113,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Blendshape Sync jobs
-// The Tools > RiryTools > Blendshape Sync entry (Add Job) is in RiryMenus.cs.
+// The Tools > RiryTools > Blendshape Sync entry (Add Job) is in RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // BlendshapeSyncJobs (Editor/BlendshapeSyncJobs.cs)

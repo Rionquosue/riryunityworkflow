@@ -94,9 +94,9 @@ namespace Riry.RiryTools.Editor
             {
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(!Usable(folder) || handEdited ||
-                    (hasBlend && betterFbx && BetterFbxExporter.OptionsError(BetterFbxExporter.Options) != null)))
+                    (hasBlend && betterFbx && ImportPresetBetterFBX.OptionsError(ImportPresetBetterFBX.Options) != null)))
                 {
-                    if (GUILayout.Button("Apply", GUILayout.Width(80))) { Apply(); RiryGui.ExitAfterModal(); }
+                    if (GUILayout.Button("Apply", GUILayout.Width(80))) { Apply(); RiryToolGUI.ExitAfterModal(); }
                 }
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
             }
@@ -166,21 +166,21 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Better FBX (saved for this computer)", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
-                BetterFbxExporter.BlenderPath = EditorGUILayout.TextField("Blender", BetterFbxExporter.BlenderPath);
+                ImportPresetBetterFBX.BlenderPath = EditorGUILayout.TextField("Blender", ImportPresetBetterFBX.BlenderPath);
                 if (GUILayout.Button("Browse", GUILayout.Width(65)))
                 {
                     string chosen = EditorUtility.OpenFilePanel("Blender executable", "", "");
-                    if (!string.IsNullOrEmpty(chosen)) BetterFbxExporter.BlenderPath = chosen;
-                    RiryGui.ExitAfterModal();
+                    if (!string.IsNullOrEmpty(chosen)) ImportPresetBetterFBX.BlenderPath = chosen;
+                    RiryToolGUI.ExitAfterModal();
                 }
             }
-            string resolved = BetterFbxExporter.ResolveBlender();
+            string resolved = ImportPresetBetterFBX.ResolveBlender();
             EditorGUILayout.LabelField(resolved != null ? "Using: " + resolved : "Blender not found.",
                 EditorStyles.wordWrappedMiniLabel);
-            BetterFbxExporter.Options = EditorGUILayout.TextField(
+            ImportPresetBetterFBX.Options = EditorGUILayout.TextField(
                 new GUIContent("Exporter options", "Extra bpy.ops.better_export.fbx arguments, for example " +
-                    "my_fbx_unit='m', use_triangulate=True. Every action is exported unless you set my_animation_type."), BetterFbxExporter.Options);
-            string error = BetterFbxExporter.OptionsError(BetterFbxExporter.Options);
+                    "my_fbx_unit='m', use_triangulate=True. Every action is exported unless you set my_animation_type."), ImportPresetBetterFBX.Options);
+            string error = ImportPresetBetterFBX.OptionsError(ImportPresetBetterFBX.Options);
             if (error != null) EditorGUILayout.HelpBox(error, MessageType.Warning);
         }
     }
@@ -256,7 +256,7 @@ namespace Riry.RiryTools.Editor
                     else
                     {
                         Save(importer, configuration);
-                        RiryGui.ExitAfterModal();
+                        RiryToolGUI.ExitAfterModal();
                     }
                 }
                 if (GUILayout.Button("Close", GUILayout.Width(80))) Close();
@@ -269,7 +269,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Import Presets windows
 // Menu entries (Set Folder Import Presets, Save Import Preset, Extract Animation and
 // Open Import Preset Library, under Tools > RiryTools > Import Presets and the Project
-// right-click menu) are in RiryMenus.cs. The right-click Set Folder Import Presets popup
+// right-click menu) are in RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs. The right-click Set Folder Import Presets popup
 // is Editor/UI/ImportPresetQuickWindow.cs.
 // ============================================================================
 //

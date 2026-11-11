@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Everything Constraint Tool's Train tab draws. It is shown in a tab of
     /// ConstraintToolWindow (and the Main Menu), whose menu entries are in
-    /// RiryVRChatMenus.cs. The state and the actions behind the buttons are in
+    /// RiryToolsVRChatMenus.cs. The state and the actions behind the buttons are in
     /// ConstraintTrainWindow.cs; both files are one class, so methods and fields
     /// can be moved between them freely. A glossary is at the bottom.
     /// </summary>
@@ -41,11 +41,11 @@ namespace Riry.RiryTools.Editor
         private void DrawRealChain(List<Transform> realBones)
         {
             EditorGUILayout.LabelField("Real bone chain", EditorStyles.boldLabel);
-            realStart = RiryGui.Set(this, SettingsUndo, realStart, (Transform)EditorGUILayout.ObjectField("Start (RB1)", realStart, typeof(Transform), true));
-            realEnd = RiryGui.Set(this, SettingsUndo, realEnd, (Transform)EditorGUILayout.ObjectField("End", realEnd, typeof(Transform), true));
+            realStart = RiryToolGUI.Set(this, SettingsUndo, realStart, (Transform)EditorGUILayout.ObjectField("Start (RB1)", realStart, typeof(Transform), true));
+            realEnd = RiryToolGUI.Set(this, SettingsUndo, realEnd, (Transform)EditorGUILayout.ObjectField("End", realEnd, typeof(Transform), true));
             if (avatarRoot == null && realStart != null)
                 avatarRoot = ConstraintTrainChains.FindAvatarRoot(realStart);
-            avatarRoot = RiryGui.Set(this, SettingsUndo, avatarRoot, (Transform)EditorGUILayout.ObjectField(
+            avatarRoot = RiryToolGUI.Set(this, SettingsUndo, avatarRoot, (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("Avatar root", "Animation paths are relative to this Animator. " +
                     "Defaults to the outermost Animator above the chain."),
                 avatarRoot, typeof(Transform), true));
@@ -77,16 +77,16 @@ namespace Riry.RiryTools.Editor
                 chainEnds = ConstraintTrainPlanner.DefaultChainEnds(trainEnd, chains);
                 chainCount = chains;
             }
-            addEndpoints = RiryGui.Set(this, SettingsUndo, addEndpoints, EditorGUILayout.Toggle(
+            addEndpoints = RiryToolGUI.Set(this, SettingsUndo, addEndpoints, EditorGUILayout.Toggle(
                 new GUIContent("Add endpoints", "Generated physics chains get an extra end bone that " +
                     "repeats the offset between the last two real bones."), addEndpoints));
 
             bool canGenerate = realBones.Count > 0 && GenerationError(realBones) == null;
-            restStart = RiryGui.Set(this, SettingsUndo, restStart, DrawChainRow("Rest", restStart, realBones, ConstraintTrainChains.RestPrefix, false,
+            restStart = RiryToolGUI.Set(this, SettingsUndo, restStart, DrawChainRow("Rest", restStart, realBones, ConstraintTrainChains.RestPrefix, false,
                 canGenerate));
             for (int c = 0; c < chainCount; c++)
             {
-                chainStarts[c] = RiryGui.Set(this, SettingsUndo, chainStarts[c], DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,
+                chainStarts[c] = RiryToolGUI.Set(this, SettingsUndo, chainStarts[c], DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,
                     ConstraintTrainChains.ChainPrefix(c), addEndpoints, canGenerate));
             }
             using (new EditorGUI.DisabledScope(!canGenerate))
@@ -118,11 +118,11 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Timing", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
-                trainEnd = RiryGui.Set(this, SettingsUndo, trainEnd, EditorGUILayout.Slider(
+                trainEnd = RiryToolGUI.Set(this, SettingsUndo, trainEnd, EditorGUILayout.Slider(
                     new GUIContent("Train end", "Value where every bone reaches its physics chain 1 bone."),
                     trainEnd, 0.01f, 1f));
                 if (GUILayout.Button("Default", GUILayout.Width(65)))
-                    trainEnd = RiryGui.Set(this, SettingsUndo, trainEnd, ConstraintTrainPlanner.DefaultTrainEnd(chainCount));
+                    trainEnd = RiryToolGUI.Set(this, SettingsUndo, trainEnd, ConstraintTrainPlanner.DefaultTrainEnd(chainCount));
             }
             var unit = new Rect(0, 0, 1, 1);
             EditorGUI.BeginChangeCheck();
@@ -149,7 +149,7 @@ namespace Riry.RiryTools.Editor
             }
             for (int c = 0; c < chainCount - 1; c++)
             {
-                chainEnds[c] = RiryGui.Set(this, SettingsUndo, chainEnds[c], EditorGUILayout.Slider(
+                chainEnds[c] = RiryToolGUI.Set(this, SettingsUndo, chainEnds[c], EditorGUILayout.Slider(
                     new GUIContent("Chain " + (c + 2) + " end", "Value where every bone reaches physics chain " + (c + 2) + "."),
                     chainEnds[c], 0.01f, 1f));
             }
@@ -170,25 +170,25 @@ namespace Riry.RiryTools.Editor
             {
                 EditorGUILayout.HelpBox("These bones are in an instance of " + source + ". Generated chains and constraints " +
                     "are overrides in this scene until saved to the prefab.", MessageType.Info);
-                if (GUILayout.Button("Save as Prefab Overrides")) { Act(SaveToPrefab); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Save as Prefab Overrides")) { Act(SaveToPrefab); RiryToolGUI.ExitAfterModal(); }
                 return;
             }
             EditorGUILayout.HelpBox(source + " is a model or read-only prefab and cannot hold overrides. Saving creates " +
                 ConstraintTrainPrefabs.RootPrefabPath(source) + " as a variant of it with these changes, and connects " +
                 "this object to it.", MessageType.Info);
-            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) { Act(SaveToPrefab); RiryGui.ExitAfterModal(); }
+            if (GUILayout.Button("Save to " + Path.GetFileName(ConstraintTrainPrefabs.RootPrefabPath(source)))) { Act(SaveToPrefab); RiryToolGUI.ExitAfterModal(); }
         }
 
         private void DrawOutput()
         {
             EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
-            clip = RiryGui.Set(this, SettingsUndo, clip, (AnimationClip)EditorGUILayout.ObjectField(
+            clip = RiryToolGUI.Set(this, SettingsUndo, clip, (AnimationClip)EditorGUILayout.ObjectField(
                 new GUIContent("Clip", "Leave empty to save a new clip. An assigned clip is replaced."),
                 clip, typeof(AnimationClip), false));
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Set up constraints")) { Act(SetUpConstraints); RiryGui.ExitAfterModal(); }
-                if (GUILayout.Button("Build animation")) { Act(BuildAnimation); RiryGui.ExitAfterModal(); }
+                if (GUILayout.Button("Set up constraints")) { Act(SetUpConstraints); RiryToolGUI.ExitAfterModal(); }
+                if (GUILayout.Button("Build animation")) { Act(BuildAnimation); RiryToolGUI.ExitAfterModal(); }
             }
             DrawPrefabSave();
         }
@@ -220,7 +220,7 @@ namespace Riry.RiryTools.Editor
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
 //
-// MENU ENTRIES (Editor/VRChat/RiryVRChatMenus.cs; the window is Editor/VRChat/ConstraintToolWindow.cs)
+// MENU ENTRIES (Editor/VRChat/RiryToolsVRChatMenus.cs; the window is Editor/VRChat/ConstraintToolWindow.cs)
 //   Tools/RiryTools/Constraint Tool              -> ConstraintToolWindow.OpenFromTools(): the tab used last
 //   GameObject/RiryTools/Constraint Tool/Train   -> ConstraintToolWindow.OpenTrainFromHierarchy(): this tab, UseSelection
 //
@@ -236,7 +236,7 @@ namespace Riry.RiryTools.Editor
 // ACTIONS AND HELPERS (ConstraintTrainWindow.cs)
 //   UseSelection(active, selected) Internal; sets realStart (and realEnd from a selected descendant), recorded for Undo.
 //   OnEnable()                     Window size and field repair; repaints on Undo/Redo (OnUndoRedo).
-//   SettingsUndo                   "Constraint Train settings": Undo name of every field edit (RiryGui.Set), so Ctrl+Z
+//   SettingsUndo                   "Constraint Train settings": Undo name of every field edit (RiryToolGUI.Set), so Ctrl+Z
 //                                  puts back the chain, slots, timing, curves and clip; generating also fills slots undoably.
 //   SaveToPrefab()                 Applies overrides to the prefab, or saves a _ROOT variant.
 //   CurrentSettings(boneCount)     Planner settings from the timing fields.
@@ -253,13 +253,13 @@ namespace Riry.RiryTools.Editor
 //   Plan                           Real bones, Rest and physics chains, settings and root.
 //
 // OTHER FILES
-//   ConstraintTrainChains (Editor/ConstraintTrain/ConstraintTrainChains.cs)
+//   ConstraintTrainChains (Editor/VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainChains.cs)
 //     RestPrefix, ChainPrefix(c), EndpointSuffix, TryCollectChain, TryFollowChain,
 //     FindExisting, AnimationPathError, FindSharedTarget, FindAvatarRoot, CreateChain.
-//   ConstraintTrainPlanner (Editor/ConstraintTrain/ConstraintTrainPlanner.cs)
+//   ConstraintTrainPlanner (Editor/VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPlanner.cs)
 //     MaxChains, Settings, DefaultTrainEnd, DefaultChainEnds, Validate, SourceCount, ChainSource,
 //     EvaluateWeights, BreakTimes, Shape, DescribeSource, BuildCurves, SourceWeightProperty.
-//   ConstraintTrainPrefabs (Editor/ConstraintTrain/ConstraintTrainPrefabs.cs)
+//   ConstraintTrainPrefabs (Editor/VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs)
 //     Changes, Collect(bone, end, isConstraint) (only chains added beside the start and constraints on the real chain
 //     or inside those chains; TrainScope), Describe (names for the Apply dialog), IsGeneratedChain, ApplyToSource
 //     (one Undo group, collapsed in finally), RootPrefabPath, SaveAsRootVariant.

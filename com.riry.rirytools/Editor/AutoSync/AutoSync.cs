@@ -162,7 +162,7 @@ namespace Riry.RiryTools.Editor
                 ProjectRoot = project,
                 Saves = saves,
                 Push = push,
-                Remote = GitRemotes.Selected(GitRemotes.Names(project))
+                Remote = AutoSyncGitRemotes.Selected(AutoSyncGitRemotes.Names(project))
             };
         }
 

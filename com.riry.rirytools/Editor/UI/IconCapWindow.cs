@@ -398,7 +398,7 @@ namespace Riry.RiryTools.Editor
                         exportFolder = IconCapFiles.DisplayFolder(chosen);
                         GUI.FocusControl(null);
                     }
-                    RiryGui.ExitAfterModal();
+                    RiryToolGUI.ExitAfterModal();
                 }
             }
             using (new EditorGUILayout.HorizontalScope())
@@ -417,7 +417,7 @@ namespace Riry.RiryTools.Editor
             foldObjects = EditorGUILayout.Foldout(foldObjects, "Objects", true);
             if (!foldObjects) return;
             EditorGUI.indentLevel++;
-            onlySelected = RiryGui.Set(this, SettingsUndo, onlySelected, EditorGUILayout.ToggleLeft("Capture only selected objects", onlySelected));
+            onlySelected = RiryToolGUI.Set(this, SettingsUndo, onlySelected, EditorGUILayout.ToggleLeft("Capture only selected objects", onlySelected));
             if (onlySelected)
             {
                 EditorGUI.indentLevel++;
@@ -439,11 +439,11 @@ namespace Riry.RiryTools.Editor
             }
             using (new EditorGUILayout.HorizontalScope())
             {
-                isolated = RiryGui.Set(this, SettingsUndo, isolated, (GameObject)EditorGUILayout.ObjectField(new GUIContent("Isolated item", "Only this item and its children are captured."),
+                isolated = RiryToolGUI.Set(this, SettingsUndo, isolated, (GameObject)EditorGUILayout.ObjectField(new GUIContent("Isolated item", "Only this item and its children are captured."),
                     isolated, typeof(GameObject), true));
                 using (new EditorGUI.DisabledScope(isolated == null))
                 {
-                    if (GUILayout.Button("Clear", GUILayout.Width(50f))) isolated = RiryGui.Set(this, SettingsUndo, isolated, (GameObject)null);
+                    if (GUILayout.Button("Clear", GUILayout.Width(50f))) isolated = RiryToolGUI.Set(this, SettingsUndo, isolated, (GameObject)null);
                 }
             }
             if (isolated != null && EditorUtility.IsPersistent(isolated)) isolated = null;
@@ -1251,7 +1251,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: IconCap window
-// The menu entry, Tools > RiryTools > IconCap, is in RiryMenus.cs; the Main Menu's Tools tab opens it in its own window.
+// The menu entry, Tools > RiryTools > IconCap, is in RiryToolsMenuBar.cs; the Main Menu's Tools tab opens it in its own window.
 // ============================================================================
 //
 // IconCapWindow (this file)
@@ -1283,7 +1283,7 @@ namespace Riry.RiryTools.Editor
 //   SettingsUndo        "IconCap settings": OnGUI compares the settings' JSON before and after each draw (DrawWindow);
 //                       a change is put back, recorded and set again, so Ctrl+Z undoes Size, a loaded preset, the
 //                       effect stack, camera, background and options. Capture only selected, the object slots and
-//                       Isolated item record the same way (RiryGui.Set). Repaints on Undo/Redo.
+//                       Isolated item record the same way (RiryToolGUI.Set). Repaints on Undo/Redo.
 //   Kept / Keep() / OnUndoRedo()  Everything else (session, latest, last capture and save, export folder, generators,
 //                       job, preset name, folds, scroll), kept after each draw and action and put back after any
 //                       Undo/Redo, so Ctrl+Z of a setting never reverts captures or exports.
