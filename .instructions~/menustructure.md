@@ -23,7 +23,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
 
     Project folder
         - Animator Tools
-        - Clean Animation Keys
+        - Clean Animation Keys  
         - GUID Tools
         - Import Presets
         
@@ -66,47 +66,47 @@ Formatted as breadcrumbs where > expands into a submenu.
 
     Where [] contains the currently active tab.
 
-    | [Utilities] | Animator Tools | Avatar Tools | Debug Tools ]
-    | :---: | :---: | :---: | :---: | :---: |
-    | [General tools] | AutoSync | | |
-    | []Stop Auto Game| | | |
-    | GUID Rebuild tool | | |
-    | GUID repair tool | | |
-    | IconCap | | |
+    | [Utilities] | Animator Tools | Avatar Tools | Debug Tools |
+    | :---: | :---: | :---: | :---: |
+    | [General tools] | AutoSync | |
+    | []Stop Auto Game| | |
+    | GUID Rebuild tool | |
+    | GUID repair tool | |
+    | IconCap | |
     
 ----
 
-    | [Utilities] | Animator Tools | Avatar Tools | Debug Tools ]
-    | :---: | :---: | :---: | :---: | :---: |
-    | [General tools] | [AutoSync] | | |
-    | [] Sync | | | |
-    | Git Configuraiton block | | | |
+    | [Utilities] | Animator Tools | Avatar Tools | Debug Tools |
+    | :---: | :---: | :---: | :---: |
+    | [General tools] | [AutoSync] | |
+    | [] Sync | | |
+    | Git Configuraton block | | |
     
 ----
 
-    | Utilities | [Animator Tools] | Avatar Tools | Debug Tools ]
-    | :---: | :---: | :---: | :---: | :---: |
-    | [Find and Replace] | Clean Animation Keys | | |
-    | Find and Replace UI here| | | |
+    | Utilities | [Animator Tools] | Avatar Tools | Debug Tools |
+    | :---: | :---: | :---: | :---: |
+    | [Find and Replace] | Clean Animation Keys | |
+    | Find and Replace UI here| | |
 
 ----    
 
-    | Utilities | [Animator Tools] | Avatar Tools | Debug Tools ]
-    | :---: | :---: | :---: | :---: | :---: |
-    | Find and Replace | [Clean Animation Keys] | | |
-    | [Select Clean Target(s) field] | | | |
-    | Clean animation keys UI here | | | |
+    | Utilities | [Animator Tools] | Avatar Tools | Debug Tools |
+    | :---: | :---: | :---: | :---: |
+    | Find and Replace | [Clean Animation Keys] | |
+    | [Select Clean Target(s) field] | | |
+    | Clean animation keys UI here | | |
     
 ---- 
 
     | Utilities | Animator Tools | [Avatar Tools] | Debug Tools |
-    | :---: | :---: | :---: | :---: | :---: |
-    | Avatar Migration Assistant | | | |
-    | Menu tool | | | |
-    | Blendshape Sync | | | |
+    | :---: | :---: | :---: | :---: |
+    | Avatar Migration Assistant | | |
+    | Menu tool | | |
+    | Blendshape Sync | | |
 
 ----
 
     | Utilities | Animator Tools | Avatar Tools | [Debug Tools] |
-    | :---: | :---: | :---: | :---: | :---: |
+    | :---: | :---: | :---: | :---: |
     
