@@ -13,3 +13,5 @@ beta, by [Rionquosue/rirytools_vpm](https://github.com/Rionquosue/rirytools_vpm)
 [VPM Publishing](docs/design/vpm-publishing.md).
 
 This tool is written with machine assistance.
+
+main contains only stable tools. beta contains untested or unreviewed code, betastaging contains code that is getting staged for beta but not quite ready for beta yet.
