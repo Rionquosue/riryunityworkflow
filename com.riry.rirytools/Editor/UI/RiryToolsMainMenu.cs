@@ -197,7 +197,7 @@ namespace Riry.RiryTools.Editor
                     }
                     if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
                     // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
-                    if (GUILayout.Button("Reload domain", GUILayout.Height(28f))) RiryToolsMenuBar.ReloadDomain();
+                    if (GUILayout.Button("Refresh Scripts", GUILayout.Height(28f))) RefreshScripts.Run();
                     EditorGUILayout.Space(4f);
                     // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
                     bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
@@ -415,8 +415,8 @@ namespace Riry.RiryTools.Editor
 //   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw, and NotDrawn() in a GUI
 //                            pass that drew another tab (drawn: the one drawn), so Menu Tool's radial leaves at once.
 //   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
-//                            the tool in its own floating window (OpenPopup), not inside this one; then Reload domain
-//                            (RiryToolsMenuBar.ReloadDomain), the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked) and
+//                            the tool in its own floating window (OpenPopup), not inside this one; then Refresh Scripts
+//                            (RefreshScripts.Run), the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked) and
 //                            the Script Load Guard toggle (ScriptLoadGuard.Enabled, the same way).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).

@@ -375,10 +375,11 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Import Presets/Open Import Preset Library` | (2053) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Save Import Preset` | (2051) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Set Folder Import Presets` | (2050) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window: a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Reload domain and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab). | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
+| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window: a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Refresh Scripts and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab). | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `Tools/RiryTools/Menu Mockup` | (2065) Opens the Edit and Components windows. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Menu Tool` | (2066) Written `M&enu Tool` so its menu key is E: the Menu Tool window (the Main Menu's Menu Tool tab shows its Parameter budget; its Menu manager opens this window). Without the VRChat SDK, the **VRCSDK not found** popup. Path is `RiryToolsMenuBar.MenuTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Tools/RiryTools/Reload domain` | (2058) Menu key R: `EditorUtility.RequestScriptReload`. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Refresh Scripts` | (2058) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `RefreshScripts.cs` |
+| `RiryTools.RefreshScripts.Reopen` | SessionState: JSON of the windows to reopen after the reload (type names, positions); erased once read. | `RefreshScripts.cs` |
 | `Tools/RiryTools/Script Load Guard` | (2061) Turns Script Load Guard on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Stop Auto Game` | (2060) Turns Stop Auto Game on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
 

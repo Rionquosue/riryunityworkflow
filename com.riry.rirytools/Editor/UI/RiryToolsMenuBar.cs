@@ -36,7 +36,7 @@ namespace Riry.RiryTools.Editor
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
         private const string FindNullReferencesMenu = "Tools/RiryTools/Find Null references";
-        private const string ReloadDomainMenu = "Tools/RiryTools/Reload domain";
+        private const string RefreshScriptsMenu = "Tools/RiryTools/Refresh Scripts";
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
         private const string ScriptLoadGuardMenu = "Tools/RiryTools/Script Load Guard";
         private const string Documentation = "Tools/RiryTools/Documentation";
@@ -111,9 +111,8 @@ namespace Riry.RiryTools.Editor
         [MenuItem(FindNullReferencesMenu, false, 2056)]
         private static void FindNullReferencesItem() { FindNullReferencesWindow.Run(); }
 
-        // Unity 2022.3 has no menu item for this, only the Play Mode setting in Project Settings > Editor.
-        [MenuItem(ReloadDomainMenu, false, 2058)]
-        internal static void ReloadDomain() { EditorUtility.RequestScriptReload(); }
+        [MenuItem(RefreshScriptsMenu, false, 2058)]
+        internal static void RefreshScriptsItem() { RefreshScripts.Run(); }
 
         [MenuItem(StopAutoGameMenu, false, 2060)]
         private static void StopAutoGameItem() { StopAutoGame.Enabled = !StopAutoGame.Enabled; }
@@ -213,7 +212,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ExtractAnimationWindow.Open (Editor/UI/ExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/FindNullReferencesWindow.cs)
-//   Tools/RiryTools/Reload domain (2058)            -> ReloadDomain: EditorUtility.RequestScriptReload (also the Main Menu's Tools tab)
+//   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //   Tools/RiryTools/Script Load Guard (2061)  [check mark] -> ScriptLoadGuard.Enabled (Editor/Debug/ScriptLoadGuard.cs)
 //   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
