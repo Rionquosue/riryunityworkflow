@@ -26,7 +26,7 @@ namespace Riry.RiryTools.Editor
         // "&n" makes N its menu key (A is AutoSync's, M Main Menu's and Menu Mockup's).
         private const string AvatarMigratorMenu = "Tools/RiryTools/Avatar Migratio&n Assistant";
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
-        private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
+        private const string CleanAnimationKeysMenu = "Tools/RiryTools/Animator Tools/Clean Animation Keys";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
         // "&o" makes O its menu key (Import Presets has I).
         private const string IconCapMenu = "Tools/RiryTools/Ic&onCap";
@@ -49,7 +49,7 @@ namespace Riry.RiryTools.Editor
         private const string Configuration = "Git/Configuration";
 
         // ---- VRChat tools (also used by RiryToolsVRChatMenus.cs) ------------
-        // "&T" makes T its menu key (Clean Animation Keys has C). The space before it is
+        // "&T" makes T its menu key. The space before it is
         // U+00A0, because Unity reads "<space>&..." at the end of a path as an Alt shortcut.
         internal const string ConstraintTool = "Tools/RiryTools/Constraint\u00A0&Tool";
         // "&e" makes E its menu key (M is Main Menu's and Menu Mockup's).
@@ -82,7 +82,8 @@ namespace Riry.RiryTools.Editor
         [MenuItem(BlendshapeSync, false, 2010)]
         private static void BlendshapeSyncItem() { BlendshapeSyncJobs.Add(); }
 
-        [MenuItem(CleanAnimationKeysMenu, false, 2020)]
+        // In the Animator Tools submenu, before Find and Replace (1995).
+        [MenuItem(CleanAnimationKeysMenu, false, 1994)]
         private static void CleanAnimationKeysItem() { CleanAnimationKeysWindow.Open(new UnityEngine.AnimationClip[0]); }
 
         // Constraint Tool is 2030 (RiryToolsVRChatMenus.cs).
@@ -193,6 +194,7 @@ namespace Riry.RiryTools.Editor
 //
 // TOOLS DROPDOWN (one entry or submenu per tool; a first letter selects its entry)
 //   Tools/RiryTools/Main Menu (1990)               -> RiryToolsMainMenu.Open (Editor/UI/RiryToolsMainMenu.cs): every tool as a tab
+//   Tools/RiryTools/Animator Tools/Clean Animation Keys (1994) -> CleanAnimationKeysWindow.Open (Editor/UI/AnimatorTools/CleanAnimationKeysWindow.cs), empty
 //   Tools/RiryTools/Animator Tools/Find and Replace (1995) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> AutoSyncGitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/AutoSyncGitActions.cs)
@@ -201,7 +203,6 @@ namespace Riry.RiryTools.Editor
 //                                                      (Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs); without the VRChat SDK it still
 //                                                      opens, after the VRC SDK not detected popup
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSync/BlendshapeSyncJobWindow.cs)
-//   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty
 //   Tools/RiryTools/Constraint Tool (2030), menu key T -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs): Train and Bezier tabs, on the one used last;
 //                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
@@ -228,7 +229,7 @@ namespace Riry.RiryTools.Editor
 // VrcSdkMissing(tool)   The "VRCSDK not found" popup, shared with RiryToolsRightClickMenu.cs.
 //
 // OTHER UI OUTSIDE MENUS
-//   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/CleanAnimationKeysWindow.cs)
+//   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/AnimatorTools/CleanAnimationKeysButton.cs)
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Components/ScriptLoadFailureWindow.cs
 //   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTrainWindow.UI.cs,
 //                                                      its Bezier tab Editor/VRChat/UI/ConstraintBezierWindow.UI.cs

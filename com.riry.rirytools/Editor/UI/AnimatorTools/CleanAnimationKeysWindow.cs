@@ -311,163 +311,11 @@ namespace Riry.RiryTools.Editor
             }
         }
     }
-
-    /// <summary>
-    /// One animation's keys that Clean would remove, each with a checkbox; APPLY
-    /// adds the checked names to the whitelist.
-    /// </summary>
-    internal sealed class CleanAnimationKeysWhitelistWindow : EditorWindow
-    {
-        private CleanAnimationKeysWindow owner;
-        private readonly List<CleanAnimationKeys.Group> groups = new List<CleanAnimationKeys.Group>();
-        private readonly HashSet<string> chosen = new HashSet<string>();
-        private Vector2 scroll;
-
-        internal static void Open(CleanAnimationKeysWindow owner, AnimationClip clip)
-        {
-            CleanAnimationKeysWhitelistWindow window = GetWindow<CleanAnimationKeysWhitelistWindow>(true, "Whitelist: " + clip.name);
-            window.minSize = new Vector2(360.0f, 360.0f);
-            window.owner = owner;
-            window.groups.Clear();
-            window.chosen.Clear();
-            var seen = new HashSet<string>();
-            foreach (CleanAnimationKeys.Group group in CleanAnimationKeys.Removable(clip, owner.Options, owner.Whitelist))
-            {
-                if (seen.Add(group.Label)) window.groups.Add(group);
-            }
-            window.groups.Sort((left, right) => string.Compare(left.Label, right.Label, StringComparison.OrdinalIgnoreCase));
-            window.Show();
-        }
-
-        private void OnGUI()
-        {
-            if (owner == null)
-            {
-                Close();
-                return;
-            }
-            EditorGUILayout.HelpBox("Only keys that will be removed shown", MessageType.Info);
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-            foreach (CleanAnimationKeys.Group group in groups)
-            {
-                bool on = chosen.Contains(group.Name);
-                if (EditorGUILayout.ToggleLeft(group.Label, on) != on)
-                {
-                    if (on) chosen.Remove(group.Name);
-                    else chosen.Add(group.Name);
-                }
-            }
-            EditorGUILayout.EndScrollView();
-            if (GUILayout.Button("APPLY", GUILayout.Height(28.0f)))
-            {
-                owner.AddToWhitelist(chosen);
-                Close();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Unity 2022.3's AnimationWindow does not opt in to the public Overlay API.
-    /// Add one lightweight UI Toolkit button over its existing IMGUI toolbar.
-    /// Only the focused editor window is inspected, twice per second, so this
-    /// also supports Animation windows opened after the script is compiled.
-    /// </summary>
-    [InitializeOnLoad]
-    internal static class CleanAnimationKeysButton
-    {
-        private const string ButtonElementName =
-            "rirytools-clean-animation-keys";
-        private const double ScanIntervalSeconds = 0.5;
-        // Where the button sits: the hierarchy pane's bottom bar, past the Dopesheet and Curves buttons.
-        private const float ButtonLeft = 170.0f;
-        private const float ButtonBottom = 1.0f;
-
-        private static readonly object ButtonOwner = new object();
-
-        private static double nextScanTime;
-
-        static CleanAnimationKeysButton()
-        {
-            AssemblyReloadEvents.beforeAssemblyReload += BeforeAssemblyReload;
-            EditorApplication.update += WatchForAnimationWindows;
-        }
-
-        private static void WatchForAnimationWindows()
-        {
-            if (EditorApplication.timeSinceStartup < nextScanTime)
-            {
-                return;
-            }
-
-            nextScanTime = EditorApplication.timeSinceStartup +
-                           ScanIntervalSeconds;
-
-            AnimationWindow animationWindow =
-                EditorWindow.focusedWindow as AnimationWindow;
-
-            if (animationWindow != null)
-            {
-                InstallButton(animationWindow);
-            }
-        }
-
-        private static void InstallButton(AnimationWindow animationWindow)
-        {
-            if (animationWindow == null ||
-                animationWindow.rootVisualElement == null)
-            {
-                return;
-            }
-
-            VisualElement root = animationWindow.rootVisualElement;
-            Button existing = root.Q<Button>(ButtonElementName);
-
-            if (existing != null)
-            {
-                if (object.ReferenceEquals(existing.userData, ButtonOwner))
-                {
-                    return;
-                }
-
-                existing.RemoveFromHierarchy();
-            }
-
-            Button button = new Button(delegate
-            {
-                CleanAnimationKeysWindow.Open(new[] { animationWindow.animationClip });
-            });
-
-            button.name = ButtonElementName;
-            button.userData = ButtonOwner;
-            button.text = "Clean Keys";
-            button.tooltip =
-                "Open Clean Animation Keys with this Animation window's active AnimationClip.";
-
-            // The AnimationWindow toolbar is IMGUI in Unity 2022.3, so the
-            // public rootVisualElement is the accessible attachment point.
-            // Absolute positioning keeps this button out of the window layout. It sits in the
-            // bottom bar of the hierarchy pane, right of the Dopesheet and Curves buttons, where
-            // nothing is drawn; the top right would cover the time ruler and events strip.
-            button.style.position = Position.Absolute;
-            button.style.bottom = ButtonBottom;
-            button.style.left = ButtonLeft;
-            button.style.width = 78.0f;
-            button.style.height = 18.0f;
-
-            root.Add(button);
-        }
-
-        private static void BeforeAssemblyReload()
-        {
-            EditorApplication.update -= WatchForAnimationWindows;
-            AssemblyReloadEvents.beforeAssemblyReload -= BeforeAssemblyReload;
-        }
-    }
 }
 
 // ============================================================================
-// GLOSSARY: Clean Animation Keys UI
-// Menu entries (Tools dropdown and Project right-click) are in RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs.
+// GLOSSARY: Clean Animation Keys window
+// Menu entries (Tools dropdown and Project right-click) are in Editor/UI/RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs; the logic is in Editor/AnimatorTools/CleanAnimationKeys.cs.
 // ============================================================================
 //
 // CleanAnimationKeysWindow (this file)
@@ -486,7 +334,7 @@ namespace Riry.RiryTools.Editor
 //   Changed()                Clears the summary; in Configure, saves the Extract Animation settings.
 //   DrawAnimations()         One row per animation with Whitelist, plus an empty row while under 64.
 //   DrawWhitelist()          Search field with Add, fuzzy suggestions, entries with x.
-//   Suggestions(typed)       Ranks names with FuzzyMatch.Score (Editor/FuzzyMatch.cs): starts with, contains, letters in order.
+//   Suggestions(typed)       Ranks names with FuzzyMatch.Score (Editor/Components/FuzzyMatch.cs): starts with, contains, letters in order.
 //   AddToWhitelist(names)    Adds names (from Add, a suggestion, or APPLY).
 //   Clean()                  Asks first (curve and animation counts; clips are edited in place, shared ones included),
 //                            then CleanAnimationKeys.Clean, then shows the summary.
@@ -495,24 +343,3 @@ namespace Riry.RiryTools.Editor
 //                            whitelist and options (Extract Animation in Configure, else this window); OnUndoRedo
 //                            refreshes and, in Configure, saves the settings.
 //
-// CleanAnimationKeysWhitelistWindow (this file): the Whitelist popup
-//   Open(owner, clip)        Lists the groups Clean would remove from the clip.
-//   OnGUI()                  "Only keys that will be removed shown", a checkbox per key, APPLY.
-//
-// CleanAnimationKeysButton (this file): the "Clean Keys" button
-//   ButtonElementName        const string    UI Toolkit name, used to find an installed button.
-//   ScanIntervalSeconds      const double    How often the focused window is checked (0.5 s).
-//   ButtonLeft / ButtonBottom  const float   170 / 1: the button in the hierarchy pane's bottom bar, right of Dopesheet
-//                                            and Curves (not over the time ruler).
-//   WatchForAnimationWindows()  Installs the button on a focused Animation window.
-//   InstallButton(window)    Adds the button, which opens the window with that window's clip.
-//
-// CleanAnimationKeys (Editor/AnimatorTools/CleanAnimationKeys.cs): the logic
-//   DisplayName              "Clean Animation Keys": window title and Undo name.
-//   Options                  The keep rules; curves that cannot be read or hold NaN/Infinity are always kept.
-//   Group                    One shapekey, or one bone's translation, rotation or scale; Name is what the whitelist matches.
-//   Groups(clip) / Removable(clip, options, whitelist)  Every group; the ones Clean would remove.
-//   Clean(clips, options, whitelist)  Removes them from every editable clip as one Undo step; returns the summary. A clip
-//                            that fails is put back and the rest still cleaned; then it throws listing each failed clip.
-//   TryRemoveBindings(...)   Removes curves, rolling back on failure.
-//   RepaintAnimationWindows()  Refreshes open Animation windows after a change.

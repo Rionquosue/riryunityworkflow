@@ -143,6 +143,8 @@ com.riry.rirytools/
     │   └── ImportPresetPreferences.cs
     ├── UI/
     │   ├── AnimatorTools/
+    │   │   ├── CleanAnimationKeysButton.cs
+    │   │   ├── CleanAnimationKeysWhitelistWindow.cs
     │   │   └── CleanAnimationKeysWindow.cs
     │   ├── AutoSync/
     │   │   ├── AutoSyncGitConfigureWindow.cs

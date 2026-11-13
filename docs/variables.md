@@ -258,7 +258,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/MenuMockupWindows.cs`, `VRChat/UI/ConstraintToolWindow.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/CleanAnimationKeysWindow.cs`, `UI/ExtractAnimationWindow.cs`, `UI/IconCapWindow.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ExtractAnimationWindow.cs`, `UI/IconCapWindow.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `StopAutoGame.cs` |
 
 ### Attach To
@@ -289,13 +289,13 @@ Moving or renaming a file must move its `.meta` with it.
 | `BlendshapeSyncWindow.Interval` | `0.5` s: automatic sync period. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `BlendshapeSync/BlendshapeSyncJob.cs` |
 | `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights`: Undo names; also mark the tool's own Undo steps. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `BlendshapeSync/BlendshapeSyncWindow.Sync.cs` |
 | `CleanAnimationKeys.BoneValueDecimalPlaces` | `3`: rounding for bone endpoint comparison. | `AnimatorTools/CleanAnimationKeys.cs` |
-| `CleanAnimationKeys.DisplayName` | `Clean Animation Keys`: dialog, window and Undo name. | `AnimatorTools/CleanAnimationKeys.cs`, `UI/CleanAnimationKeysWindow.cs` |
-| `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys`: UI Toolkit name of the **Clean Keys** button. | `UI/CleanAnimationKeysWindow.cs` |
-| `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1`: **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves. | `UI/CleanAnimationKeysWindow.cs` |
-| `CleanAnimationKeysButton.ScanIntervalSeconds` | `0.5`: how often the focused Animation window is checked. | `UI/CleanAnimationKeysWindow.cs` |
-| `CleanAnimationKeysWindow.AnimationListHeight` | `150`: height of the scrolling Animations list. | `UI/CleanAnimationKeysWindow.cs` |
-| `CleanAnimationKeysWindow.MaxAnimations` | `64`: animations in the list. | `UI/CleanAnimationKeysWindow.cs` |
-| `CleanAnimationKeysWindow.MaxSuggestions` | `8`: whitelist suggestions shown. | `UI/CleanAnimationKeysWindow.cs` |
+| `CleanAnimationKeys.DisplayName` | `Clean Animation Keys`: dialog, window and Undo name. | `AnimatorTools/CleanAnimationKeys.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs` |
+| `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys`: UI Toolkit name of the **Clean Keys** button. | `UI/AnimatorTools/CleanAnimationKeysButton.cs` |
+| `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1`: **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves. | `UI/AnimatorTools/CleanAnimationKeysButton.cs` |
+| `CleanAnimationKeysButton.ScanIntervalSeconds` | `0.5`: how often the focused Animation window is checked. | `UI/AnimatorTools/CleanAnimationKeysButton.cs` |
+| `CleanAnimationKeysWindow.AnimationListHeight` | `150`: height of the scrolling Animations list. | `UI/AnimatorTools/CleanAnimationKeysWindow.cs` |
+| `CleanAnimationKeysWindow.MaxAnimations` | `64`: animations in the list. | `UI/AnimatorTools/CleanAnimationKeysWindow.cs` |
+| `CleanAnimationKeysWindow.MaxSuggestions` | `8`: whitelist suggestions shown. | `UI/AnimatorTools/CleanAnimationKeysWindow.cs` |
 
 ### Constraint Tool
 
@@ -360,12 +360,12 @@ One entry or submenu per tool.
 
 | Name | Use | Scripts |
 |---|---|---|
+| `Tools/RiryTools/Animator Tools/Clean Animation Keys` | (1994) The Clean Animation Keys window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Animator Tools/Find and Replace` | (1995) The Find and Replace popup (`BehaviourFindReplaceWindow`), no source; also the Main Menu's Animator Tools tab, sub-tab Find and Replace (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/AutoSync/Configuration` | (2001) The AutoSync Configuration window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/AutoSync/Sync` | (2000) Turns AutoSync on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Avatar Migration Assistant` | (2005) Written `Avatar Migratio&n Assistant` so its menu key is N. Without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Blendshape Sync` | (2010) Add Job: a new job in its popup. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Clean Animation Keys` | (2020) The Clean Animation Keys window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Constraint Tool` | (2030) Written `Constraint\u00A0&Tool` (a no-break space) so its menu key is T: the Constraint Tool window on the tab used last. Path is `RiryToolsMenuBar.ConstraintTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/Documentation` | (2070) Opens `RiryToolsMenuBar.DocumentationLink`. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Find Null references` | (2056) Reads the Console's NullReferenceException entries (internal `UnityEditor.LogEntries`) once and lists empty or missing references in a popup, the whole open scenes when the log gives nothing. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `Debug/FindNullReferences.cs` |

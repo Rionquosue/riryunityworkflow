@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
     /// animations that key every bone and shapekey. What is kept is decided by the
     /// options (the built-in rules), the whitelist (names), and, always, curves that
     /// cannot be read or hold NaN or Infinity. The window is in
-    /// Editor/UI/CleanAnimationKeysWindow.cs; its menu entries are in Editor/UI/RiryToolsMenuBar.cs.
+    /// Editor/UI/AnimatorTools/; its menu entries are in Editor/UI/RiryToolsMenuBar.cs.
     /// </summary>
     internal static class CleanAnimationKeys
     {
@@ -426,3 +426,17 @@ namespace Riry.RiryTools.Editor
     }
 
 }
+
+// ============================================================================
+// GLOSSARY: Clean Animation Keys logic
+// ============================================================================
+//
+// CleanAnimationKeys (this file): the logic
+//   DisplayName              "Clean Animation Keys": window title and Undo name.
+//   Options                  The keep rules; curves that cannot be read or hold NaN/Infinity are always kept.
+//   Group                    One shapekey, or one bone's translation, rotation or scale; Name is what the whitelist matches.
+//   Groups(clip) / Removable(clip, options, whitelist)  Every group; the ones Clean would remove.
+//   Clean(clips, options, whitelist)  Removes them from every editable clip as one Undo step; returns the summary. A clip
+//                            that fails is put back and the rest still cleaned; then it throws listing each failed clip.
+//   TryRemoveBindings(...)   Removes curves, rolling back on failure.
+//   RepaintAnimationWindows()  Refreshes open Animation windows after a change.
