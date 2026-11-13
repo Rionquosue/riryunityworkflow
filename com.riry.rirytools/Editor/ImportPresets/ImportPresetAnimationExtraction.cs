@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     /// with "~", so the file gets no .meta. It exists only while there is something
     /// to keep (Automatically extract animations, or the saved cleaning settings),
     /// and is staged in Git when the project is a repository. The window is in
-    /// Editor/UI/ExtractAnimationWindow.cs.
+    /// Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs.
     /// </summary>
     [Serializable]
     internal sealed class ImportPresetAnimationExtraction

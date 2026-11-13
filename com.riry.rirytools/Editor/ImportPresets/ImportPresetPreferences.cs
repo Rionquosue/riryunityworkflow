@@ -99,3 +99,10 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Import Presets preferences
+// ============================================================================
+//
+// ImportPresetPreferences (this file): Documents/RiryTools/ImportPresets/preferences.yml
+//   Tags() (created with DefaultTags, the Substance Painter PBR map names), SaveTags(tags), ValidateTag(tag).

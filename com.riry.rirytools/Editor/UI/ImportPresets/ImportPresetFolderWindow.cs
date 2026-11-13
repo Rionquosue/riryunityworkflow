@@ -9,7 +9,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Set Folder Import Presets: one folder, chosen with a fuzzy search field, and a
     /// preset for each file type directly in it, plus Better FBX when it holds .blend
-    /// files. State and actions; the drawing is in Editor/UI/ImportPresetWindows.cs.
+    /// files. State and actions; the drawing is in ImportPresetFolderWindow.UI.cs.
     /// Rules are written by ImportPresetFolderRules.
     /// </summary>
     internal sealed partial class ImportPresetFolderWindow : EditorWindow
@@ -147,44 +147,27 @@ namespace Riry.RiryTools.Editor
             Repaint();
         }
     }
-
-    /// <summary>Saves the selected asset's import settings into the shared library.</summary>
-    internal sealed partial class ImportPresetSaveWindow : EditorWindow
-    {
-        [SerializeField] private string assetPath;
-        [SerializeField] private int choice;
-        [SerializeField] private string newConfiguration = "";
-        [SerializeField] private string presetName = "";
-        [NonSerialized] private bool saveTried;
-        [NonSerialized] private List<string> configurations = new List<string>();
-        [NonSerialized] private string message;
-
-        private void OnEnable()
-        {
-            configurations = ImportPresetFolderWindow.LoadConfigurations(out message);
-        }
-
-        private void Save(AssetImporter importer, string configuration)
-        {
-            string target = Path.Combine(ImportPresetLibrary.ConfigurationPath(configuration),
-                presetName + ImportPresetLibrary.PresetExtension);
-            if (File.Exists(target) && !EditorUtility.DisplayDialog("Save Import Preset",
-                    "Replace " + presetName + ImportPresetLibrary.PresetExtension + " in '" + configuration + "'?",
-                    "Replace", "Cancel"))
-                return;
-            try
-            {
-                string saved = ImportPresetLibrary.SavePreset(importer, configuration, presetName);
-                configurations = ImportPresetFolderWindow.LoadConfigurations(out message);
-                choice = configurations.FindIndex(name =>
-                    string.Equals(name, configuration, StringComparison.OrdinalIgnoreCase)) + 1;
-                message = "Saved " + saved;
-            }
-            catch (Exception exception)
-            {
-                message = "Could not save: " + exception.Message;
-                RiryLog.Exception(RiryLog.ImportPresets, "Save Import Preset could not save " + presetName, exception);
-            }
-        }
-    }
 }
+
+// ============================================================================
+// GLOSSARY: Set Folder Import Presets window, fields and actions
+// Drawing is in ImportPresetFolderWindow.UI.cs; the rules are in Editor/ImportPresets/ImportPresetFolderRules.cs.
+// ============================================================================
+//
+// ImportPresetFolderWindow (this part)
+//   folder                [S] string        The folder shown; first the Project window's (ImportPresetActions.ActiveFolder).
+//   search                [S] string        Folder field text; suggestions show while it is not the folder, at the top
+//                                           of the scroll view (so they never push Apply and Close out of view).
+//   picks                 [S] List<Pick>    The chosen preset (or none) per file type.
+//   betterFbx             [S] bool          Export .blend with Better FBX.
+//   types                     List<FileType>  File types directly in the folder, each with the presets that fit it.
+//   hasBlend / handEdited     bool          The folder holds .blend files / its ImportPreset.md was edited by hand.
+//   allFolders                List<string>  Every folder in Assets, for suggestions.
+//   message                   string        Result of Apply.
+//   OnEnable() / OnProjectChange()  Find the file types again (after a domain reload or an import); the picks stay.
+//   LoadConfigurations(out error)  Library configurations, or why there are none (Save Import Preset).
+//   Load(folder)          Shows a folder with the picks from its ImportPreset.md.
+//   Scan()                Finds the file types, .blend files and a hand-edited marker.
+//   Suggestions(typed)    Up to 8 folders, ranked by FuzzyMatch.Score on name or path.
+//   Apply()               Asks first when files would be reimported (WouldChange, ConfirmApply: Undo can't revert
+//                         it), then ImportPresetFolderRules.Apply for the folder.

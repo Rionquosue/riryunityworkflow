@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     /// (Editor/ImportPresets/ImportPresetAnimationExtraction.cs); extraction is in
     /// Editor/ImportPresets/ImportPresetAnimations.cs.
     /// </summary>
-    internal sealed class ExtractAnimationWindow : EditorWindow
+    internal sealed class ImportPresetExtractAnimationWindow : EditorWindow
     {
         [SerializeField] private GameObject target;
         [SerializeField] private ImportPresetAnimationExtraction settings = new ImportPresetAnimationExtraction();
@@ -21,7 +21,7 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
-            ExtractAnimationWindow window = GetWindow<ExtractAnimationWindow>(true, "Extract Animation");
+            ImportPresetExtractAnimationWindow window = GetWindow<ImportPresetExtractAnimationWindow>(true, "Extract Animation");
             window.minSize = new Vector2(420.0f, 190.0f);
             window.UseSelection();
             window.Show();
@@ -190,7 +190,7 @@ namespace Riry.RiryTools.Editor
 // Menu entries (Tools > RiryTools > Import Presets and Project right-click) are in RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs.
 // ============================================================================
 //
-// ExtractAnimationWindow (this file)
+// ImportPresetExtractAnimationWindow (this file)
 //   target                   GameObject  The model (FBX or other model file); filled from the Project window selection.
 //   settings                 ImportPresetAnimationExtraction  Destination, the three toggles, the cleaning options and whitelist.
 //   configure                CleanAnimationKeysWindow  The Configure window, sharing settings.CleanOptions and settings.Whitelist.

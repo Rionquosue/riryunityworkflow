@@ -104,7 +104,7 @@ namespace Riry.RiryTools.Editor
         private static bool SaveImportPresetToolsValid() { return ImportPresetActions.ValidateSaveToLibrary(); }
 
         [MenuItem(ExtractAnimationsTools, false, 2052)]
-        private static void ExtractAnimationsToolsItem() { ExtractAnimationWindow.Open(); }
+        private static void ExtractAnimationsToolsItem() { ImportPresetExtractAnimationWindow.Open(); }
 
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
@@ -208,9 +208,9 @@ namespace Riry.RiryTools.Editor
 //                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidTools/GuidToolsWindow.cs)
 //   Tools/RiryTools/IconCap (2045), menu key O     -> IconCapWindow.Open (Editor/UI/IconCap/IconCapWindow.cs)
-//   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresetWindows.cs)
+//   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresets/)
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
-//   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ExtractAnimationWindow.Open (Editor/UI/ExtractAnimationWindow.cs)
+//   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ImportPresetExtractAnimationWindow.Open (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/FindNullReferencesWindow.cs)
 //   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)

@@ -436,3 +436,19 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Import Presets folder rules
+// ============================================================================
+//
+// ImportPresetFolderRules (this file): shared with the right-click popup
+//   Label(importer)          "Image files", "Model files", "Audio files", "Video files", "Font files", else "<Type> files".
+//   Ending / Decorators / DecoratorIn / DecoratorLabel  Tags ("normal files") and "_word" name endings (not
+//                            number-only; "_normal files") as file types; a name containing several uses the one ending last.
+//   InFolder(folder)         Importers of the files directly in the folder, by file type (decorated files under both types).
+//   Effective(rules, importer, decorators)  A file's preset: its decorator's type's, else its plain type's.
+//   Types(folders)           The file types with the library presets that fit each (Preset.CanBeAppliedTo).
+//   Entries / Chosen / FirstIn  Popup entries ("None", "Configuration/Preset"), the pick for an entry, a configuration's preset.
+//   Apply(folder, picks, betterFbx, ref processed)  Writes ImportPreset.md; applies only changed presets to the folder's
+//                            files (none and unchanged types are not reimported); exports .blend files when Better FBX is turned on.
+//   WriteMarker / ReadOrNull / Read / HandEdited  ImportPreset.md helpers; a hand-edited one is never changed.

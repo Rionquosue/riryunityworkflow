@@ -22,7 +22,7 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private string search = "";
         [SerializeField] private string summary;
         // Set when opened by Configure in Extract Animation: the options and whitelist are that window's settings.
-        [SerializeField] private ExtractAnimationWindow extract;
+        [SerializeField] private ImportPresetExtractAnimationWindow extract;
         private Vector2 animationScroll;
         private const string SettingsUndo = "Clean Animation Keys settings";
         // What the options and whitelist belong to, for Undo: Extract Animation's settings in Configure, else this window.
@@ -60,7 +60,7 @@ namespace Riry.RiryTools.Editor
         /// Opens a separate window for Extract Animation's Configure. Its options and
         /// whitelist are the Extract Animation settings, saved there on every change.
         /// </summary>
-        internal static CleanAnimationKeysWindow OpenFor(ExtractAnimationWindow owner, string targetName)
+        internal static CleanAnimationKeysWindow OpenFor(ImportPresetExtractAnimationWindow owner, string targetName)
         {
             var window = CreateInstance<CleanAnimationKeysWindow>();
             window.titleContent = new GUIContent(CleanAnimationKeys.DisplayName + ": " + targetName);
@@ -328,7 +328,7 @@ namespace Riry.RiryTools.Editor
 //   keyedNames               List<string>    Names keyed in the listed animations, for suggestions.
 //   AnimationListHeight      const float     Height of the scrolling Animations list (150).
 //   MaxSuggestions           const int       Suggestions shown (8).
-//   extract                  ExtractAnimationWindow  Set for Configure: options and whitelist are its settings.
+//   extract                  ImportPresetExtractAnimationWindow  Set for Configure: options and whitelist are its settings.
 //   Open(clips)              Opens the window and adds clips (Project selection or Animation window clip).
 //   OpenFor(owner, name)     Opens a separate window for Extract Animation's Configure.
 //   Changed()                Clears the summary; in Configure, saves the Extract Animation settings.

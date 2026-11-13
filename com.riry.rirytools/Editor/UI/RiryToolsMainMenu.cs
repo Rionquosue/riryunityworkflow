@@ -237,8 +237,8 @@ namespace Riry.RiryTools.Editor
                             return Host("Save Import Preset", () => CreateInstance<ImportPresetSaveWindow>(),
                                 window => ((ImportPresetSaveWindow)window).UseImporter(ImportPresetActions.SelectedImporter()));
                         case 2:
-                            return Host("Extract Animation", () => CreateInstance<ExtractAnimationWindow>(),
-                                window => ((ExtractAnimationWindow)window).ShowSelection());
+                            return Host("Extract Animation", () => CreateInstance<ImportPresetExtractAnimationWindow>(),
+                                window => ((ImportPresetExtractAnimationWindow)window).ShowSelection());
                     }
                     return null;
                 default: return null;
