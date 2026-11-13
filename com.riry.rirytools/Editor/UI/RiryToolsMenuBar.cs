@@ -196,7 +196,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Animator Tools/Find and Replace (1995) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> AutoSyncGitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/AutoSyncGitActions.cs)
-//   Tools/RiryTools/AutoSync/Configuration (2001) -> AutoSyncGitActions.OpenConfiguration -> AutoSyncGitConfigureWindow (Editor/UI/AutoSyncGitWindow.cs)
+//   Tools/RiryTools/AutoSync/Configuration (2001) -> AutoSyncGitActions.OpenConfiguration -> AutoSyncGitConfigureWindow (Editor/UI/AutoSync/)
 //   Tools/RiryTools/Avatar Migration Assistant (2005), menu key N -> AvatarMigrationAssistant.Open
 //                                                      (Editor/UI/AvatarMigrationAssistant.cs); without the VRChat SDK it still
 //                                                      opens, after the VRC SDK not detected popup
@@ -223,7 +223,7 @@ namespace Riry.RiryTools.Editor
 //
 // GIT MENU (main menu bar)
 //   Git/Sync (1)  [check mark]                      -> AutoSyncGitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/AutoSyncGitActions.cs)
-//   Git/Configuration (2)                        -> AutoSyncGitActions.OpenConfiguration -> AutoSyncGitConfigureWindow (Editor/UI/AutoSyncGitWindow.cs)
+//   Git/Configuration (2)                        -> AutoSyncGitActions.OpenConfiguration -> AutoSyncGitConfigureWindow (Editor/UI/AutoSync/)
 //
 // VrcSdkMissing(tool)   The "VRCSDK not found" popup, shared with RiryToolsRightClickMenu.cs.
 //

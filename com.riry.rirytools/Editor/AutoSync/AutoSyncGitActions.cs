@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// What the Sync and Configuration menu entries do. The entries themselves are
-    /// in Editor/UI/RiryToolsMenuBar.cs; the Configuration window is drawn in Editor/UI/AutoSyncGitWindow.cs.
+    /// in Editor/UI/RiryToolsMenuBar.cs; the Configuration window is in Editor/UI/AutoSync/.
     /// </summary>
     internal static class AutoSyncGitActions
     {
@@ -37,15 +37,15 @@ namespace Riry.RiryTools.Editor
                             "repository will see this folder as an embedded repository.", "Create", "Cancel"))
                         return;
                     EnsureTemplates();
-                    Check(AutoSyncGitRunner.Run(project, null, 30000, "init"), "Creating the repository");
+                    GitRunner.Run(project, null, 30000, "init").RequireSuccess("Creating the repository");
                     // Existing files are kept.
-                    CopyTemplate(GitTemplates.DefaultName, GitTemplates.IgnoreExtension, false);
-                    CopyTemplate(GitTemplates.DefaultName, GitTemplates.AttributesExtension, false);
+                    CopyTemplate(AutoSyncGitTemplates.DefaultName, AutoSyncGitTemplates.IgnoreExtension, false);
+                    CopyTemplate(AutoSyncGitTemplates.DefaultName, AutoSyncGitTemplates.AttributesExtension, false);
                     GitState.Refresh(true);
                 }
                 try
                 {
-                    GitLfs.Enable(project);
+                    AutoSyncGitLfs.Enable(project);
                 }
                 catch (InvalidOperationException exception)
                 {
@@ -68,9 +68,9 @@ namespace Riry.RiryTools.Editor
         /// <summary>Creates the template folder with the Unity defaults when it has none, and says so.</summary>
         internal static void EnsureTemplates()
         {
-            if (GitTemplates.EnsureDefaults())
+            if (AutoSyncGitTemplates.EnsureDefaults())
                 EditorUtility.DisplayDialog("AutoSync", "Created the Git templates folder with the Unity defaults:\n" +
-                    GitTemplates.RootPath, "OK");
+                    AutoSyncGitTemplates.RootPath, "OK");
         }
 
         internal static string ProjectFile(string name)
@@ -81,7 +81,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>Copies a template into the project; an existing different file is replaced only when allowed and confirmed.</summary>
         internal static void CopyTemplate(string name, string extension, bool mayReplace)
         {
-            string template = GitTemplates.PathFor(name, extension);
+            string template = AutoSyncGitTemplates.PathFor(name, extension);
             if (!File.Exists(template)) return;
             string text = File.ReadAllText(template);
             if (File.Exists(ProjectFile(extension)) && (File.ReadAllText(ProjectFile(extension)) == text || !mayReplace ||
@@ -89,11 +89,6 @@ namespace Riry.RiryTools.Editor
                         name + extension + "?", "Replace", "Keep Current")))
                 return;
             File.WriteAllText(ProjectFile(extension), text);
-        }
-
-        internal static void Check(AutoSyncGitRunner.Result result, string action)
-        {
-            if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
         }
 
         /// <summary>Runs a menu action; a missing git is shown, a failed step shown and logged as an exception.</summary>
@@ -120,3 +115,15 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: AutoSync actions
+// ============================================================================
+//
+// AutoSyncGitActions
+//   ToggleSync()            Turns Sync off, or on (asks for Git, creates the repository, enables Git LFS).
+//   OpenConfiguration()     Opens Configuration (throws GitNotInstalledException without git).
+//   EnsureTemplates()       Creates the template folder with the Unity defaults and says so.
+//   CopyTemplate(name, extension, mayReplace)  Copies one template into the project.
+//   ProjectFile(name)       The project's .gitignore or .gitattributes path.
+//   Guard(action)           Runs an action; shows a missing git or a failure as a dialog.

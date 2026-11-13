@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>Configuration: state and actions. The drawing is in Editor/UI/AutoSyncGitWindow.cs.</summary>
+    /// <summary>Configuration: state and actions. The drawing is in AutoSyncGitConfigureWindow.UI.cs.</summary>
     internal sealed partial class AutoSyncGitConfigureWindow : EditorWindow
     {
         private const string KeepCurrent = "(keep current file)";
@@ -33,8 +33,8 @@ namespace Riry.RiryTools.Editor
         internal void Reload()
         {
             AutoSyncGitActions.Guard(AutoSyncGitActions.EnsureTemplates);
-            ignoreOptions = Options(GitTemplates.IgnoreExtension);
-            attributeOptions = Options(GitTemplates.AttributesExtension);
+            ignoreOptions = Options(AutoSyncGitTemplates.IgnoreExtension);
+            attributeOptions = Options(AutoSyncGitTemplates.AttributesExtension);
             ignoreChoice = Math.Max(0, Math.Min(ignoreChoice, ignoreOptions.Length - 1));
             attributeChoice = Math.Max(0, Math.Min(attributeChoice, attributeOptions.Length - 1));
             GitState.Refresh(true);
@@ -52,7 +52,7 @@ namespace Riry.RiryTools.Editor
                     selectedRemote = AutoSyncGitRemotes.Selected(remotes);
                     if (selectedRemote != null) currentRemoteUrl = AutoSyncGitRemotes.Url(project, selectedRemote);
                     LoadBranches(project);
-                    largeFiles = GitLargeFiles.Tracked(project);
+                    largeFiles = AutoSyncGitLargeFiles.Tracked(project);
                 });
             }
             remoteUrl = currentRemoteUrl;
@@ -63,9 +63,9 @@ namespace Riry.RiryTools.Editor
         // (git switch creates them); the current branch is first choice.
         private void LoadBranches(string project)
         {
-            string current = AutoSyncGitRunner.Run(project, null, 10000, "symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
+            string current = GitRunner.Run(project, null, 10000, "symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
             var names = new List<string>();
-            foreach (string line in AutoSyncGitRunner.Run(project, null, 10000, "for-each-ref", "--format=%(refname:short)", "refs/heads")
+            foreach (string line in GitRunner.Run(project, null, 10000, "for-each-ref", "--format=%(refname:short)", "refs/heads")
                          .Output.Replace("\r", "").Split('\n'))
             {
                 if (line.Length > 0) names.Add(line);
@@ -74,7 +74,7 @@ namespace Riry.RiryTools.Editor
             if (selectedRemote != null)
             {
                 string prefix = selectedRemote + "/";
-                foreach (string line in AutoSyncGitRunner.Run(project, null, 10000, "for-each-ref", "--format=%(refname:short)",
+                foreach (string line in GitRunner.Run(project, null, 10000, "for-each-ref", "--format=%(refname:short)",
                              "refs/remotes/" + selectedRemote).Output.Replace("\r", "").Split('\n'))
                 {
                     if (!line.StartsWith(prefix, StringComparison.Ordinal)) continue;
@@ -95,7 +95,7 @@ namespace Riry.RiryTools.Editor
             if (selectedRemote == null || currentRemoteUrl.Length == 0) return;
             string project = RiryToolsPaths.ProjectRoot, remote = selectedRemote, url = currentRemoteUrl;
             lfsStatus = "Checking Git LFS on " + remote + "...";
-            lfsQuery = Task.Run(() => GitLfsQuery.Ask(project, remote, url));
+            lfsQuery = Task.Run(() => AutoSyncGitLfsQuery.Ask(project, remote, url));
         }
 
         private void OnInspectorUpdate()
@@ -110,7 +110,7 @@ namespace Riry.RiryTools.Editor
         {
             var options = new List<string>();
             if (File.Exists(AutoSyncGitActions.ProjectFile(extension))) options.Add(KeepCurrent);
-            options.AddRange(GitTemplates.Names(extension));
+            options.AddRange(AutoSyncGitTemplates.Names(extension));
             return options.ToArray();
         }
 
@@ -121,7 +121,7 @@ namespace Riry.RiryTools.Editor
             GitState.RequireGit();
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             AutoSync.CommitNow();
-            AutoSyncGitActions.Check(AutoSyncGitRunner.Run(RiryToolsPaths.ProjectRoot, null, 120000, "switch", name), "Switching to " + name);
+            GitRunner.Run(RiryToolsPaths.ProjectRoot, null, 120000, "switch", name).RequireSuccess("Switching to " + name);
             AssetDatabase.Refresh();
             Reload();
         }
@@ -137,9 +137,9 @@ namespace Riry.RiryTools.Editor
         {
             GitState.RequireGit();
             if (ignoreOptions.Length > 0 && ignoreOptions[ignoreChoice] != KeepCurrent)
-                AutoSyncGitActions.CopyTemplate(ignoreOptions[ignoreChoice], GitTemplates.IgnoreExtension, true);
+                AutoSyncGitActions.CopyTemplate(ignoreOptions[ignoreChoice], AutoSyncGitTemplates.IgnoreExtension, true);
             if (attributeOptions.Length > 0 && attributeOptions[attributeChoice] != KeepCurrent)
-                AutoSyncGitActions.CopyTemplate(attributeOptions[attributeChoice], GitTemplates.AttributesExtension, true);
+                AutoSyncGitActions.CopyTemplate(attributeOptions[attributeChoice], AutoSyncGitTemplates.AttributesExtension, true);
 
             if (remoteUrl.Length > 0 && remoteUrl != currentRemoteUrl) SaveRemote();
             Reload();
@@ -150,48 +150,37 @@ namespace Riry.RiryTools.Editor
         {
             GitState.RequireGit();
             string project = RiryToolsPaths.ProjectRoot;
-            AutoSyncGitActions.Check(selectedRemote == null
-                ? AutoSyncGitRunner.Run(project, null, 30000, "remote", "add", AutoSyncGitRemotes.DefaultName, remoteUrl)
-                : AutoSyncGitRunner.Run(project, null, 30000, "remote", "set-url", selectedRemote, remoteUrl),
-                "Setting the remote");
+            (selectedRemote == null
+                ? GitRunner.Run(project, null, 30000, "remote", "add", AutoSyncGitRemotes.DefaultName, remoteUrl)
+                : GitRunner.Run(project, null, 30000, "remote", "set-url", selectedRemote, remoteUrl)).RequireSuccess("Setting the remote");
             Reload();
         }
     }
-
-    /// <summary>Large Files: state and actions. The drawing is in Editor/UI/AutoSyncGitWindow.cs.</summary>
-    internal sealed partial class LargeFilesWindow : EditorWindow
-    {
-        private List<string> files = new List<string>();
-        private readonly HashSet<string> toIgnore = new HashSet<string>();
-        private Vector2 scroll;
-
-        private void Load()
-        {
-            toIgnore.Clear();
-            AutoSyncGitActions.Guard(() => files = GitLargeFiles.Tracked(RiryToolsPaths.ProjectRoot));
-        }
-
-        /// <summary>Selects and pings the file in the Project window when it is an asset.</summary>
-        private static void Ping(string path)
-        {
-            UnityEngine.Object asset = AssetDatabase.LoadMainAssetAtPath(path);
-            if (asset == null) return;
-            EditorUtility.FocusProjectWindow();
-            Selection.activeObject = asset;
-            EditorGUIUtility.PingObject(asset);
-        }
-
-        /// <summary>Ignores the marked files and takes them out of the unpushed commits.</summary>
-        private void Ok()
-        {
-            if (toIgnore.Count > 0)
-            {
-                string project = RiryToolsPaths.ProjectRoot;
-                AutoSync.CommitNow();
-                GitLargeFiles.Ignore(project, AutoSyncGitRemotes.Selected(AutoSyncGitRemotes.Names(project)), new List<string>(toIgnore));
-            }
-            Close();
-            if (HasOpenInstances<AutoSyncGitConfigureWindow>()) GetWindow<AutoSyncGitConfigureWindow>().Reload();
-        }
-    }
 }
+
+// ============================================================================
+// GLOSSARY: AutoSync Configuration window, fields and actions
+// Drawing is in AutoSyncGitConfigureWindow.UI.cs.
+// ============================================================================
+//
+// AutoSyncGitConfigureWindow (Configuration)
+//   ignoreOptions / attributeOptions  string[]  Template popup entries.
+//   ignoreChoice / attributeChoice    int       Selected entries.
+//   branches / branchChoice           Local branches, the remote's other branches, the current one chosen.
+//   remotes / selectedRemote          Remote names; the one Sync pushes to (AutoSyncGitRemotes.Selected).
+//   remoteUrl             string     Push to remote, as edited.
+//   currentRemoteUrl      string     URL of the chosen remote, or "".
+//   largeFiles            List<string>  Tracked files over 100 MiB (shows the ! button).
+//   lfsQuery / lfsStatus  The Git LFS query running off the main thread, and its result line.
+//   templateName          string     Name for Save template.
+//   scroll                Vector2    Scroll position.
+//   KeepCurrent / Detached  const string  "(keep current file)" and "(detached HEAD)" popup entries.
+//   Reload()              Creates default templates if needed; reloads branches, remotes, large files; starts the LFS query.
+//   LoadBranches(project) Fills the Branch popup.
+//   StartLfsQuery()       Asks the chosen remote whether Git LFS is enabled (AutoSyncGitLfsQuery.Ask).
+//   OnInspectorUpdate()   Shows the LFS query's result when it finishes.
+//   Options(extension)    Popup entries for one template type.
+//   SwitchBranch(name)    Saves modified scenes if wanted, commits pending saves, runs git switch.
+//   SelectRemote(name)    Stores the remote Sync pushes to and reloads.
+//   Apply()               Copies the chosen templates (asks before replacing), then SaveRemote() when the URL changed.
+//   SaveRemote()          Adds origin (Add Remote) or changes the chosen remote's URL (Change Remote).

@@ -362,7 +362,7 @@ namespace Riry.RiryTools.Editor
         {
             string project = RiryToolsPaths.ProjectRoot;
             string repoPath = prefix + hit.Path;
-            if (AutoSyncGitRunner.Run(project, null, 30000, "cat-file", "-t", hit.Commit + ":" + repoPath).Output.Trim() != "blob")
+            if (GitRunner.Run(project, null, 30000, "cat-file", "-t", hit.Commit + ":" + repoPath).Output.Trim() != "blob")
             {
                 log.Write("No restore for " + guid + ": " + hit.Commit + " has no file at " + repoPath);
                 return null;
@@ -375,11 +375,11 @@ namespace Riry.RiryTools.Editor
             };
             candidate.Sources.Add("Git history backup: " + hit.Path + " at " + hit.Commit.Substring(0, Math.Min(8, hit.Commit.Length)));
 
-            string size = AutoSyncGitRunner.Run(project, null, 30000, "cat-file", "-s", hit.Commit + ":" + repoPath).Output.Trim();
+            string size = GitRunner.Run(project, null, 30000, "cat-file", "-s", hit.Commit + ":" + repoPath).Output.Trim();
             long bytes;
             if (long.TryParse(size, out bytes) && bytes <= GuidToolRegenerate.ScanBlockSize * 64L)
             {
-                string content = AutoSyncGitRunner.Run(project, null, 60000, "cat-file", "-p", hit.Commit + ":" + repoPath).Output;
+                string content = GitRunner.Run(project, null, 60000, "cat-file", "-p", hit.Commit + ":" + repoPath).Output;
                 if (content.IndexOf('\0') < 0)
                 {
                     foreach (KeyValuePair<long, string> reference in FindGuidReferences(Encoding.UTF8.GetBytes(content)))
@@ -593,7 +593,7 @@ namespace Riry.RiryTools.Editor
             foreach (string suffix in new[] { "", ".meta" })
             {
                 string temporary = Path.Combine(folder, "restore" + (suffix.Length > 0 ? "-meta" : ""));
-                AutoSyncGitRunner.Result result = AutoSyncGitRunner.RunToFile(project, temporary, 600000, "cat-file", "--filters",
+                GitRunner.Result result = GitRunner.RunToFile(project, temporary, 600000, "cat-file", "--filters",
                     restore.Commit + ":" + restore.RepoPath + suffix);
                 if (!result.Succeeded)
                     throw new InvalidOperationException(result.Describe("Restoring " + restore.RepoPath + suffix + " from " + restore.Commit));
@@ -745,7 +745,7 @@ namespace Riry.RiryTools.Editor
             out string prefix)
         {
             string projectRoot = RiryToolsPaths.ProjectRoot;
-            AutoSyncGitRunner.Result location = AutoSyncGitRunner.Run(projectRoot, null, 30000, "rev-parse", "--show-prefix");
+            GitRunner.Result location = GitRunner.Run(projectRoot, null, 30000, "rev-parse", "--show-prefix");
             prefix = location.Output.Trim();
             if (!location.Succeeded)
             {
@@ -756,7 +756,7 @@ namespace Riry.RiryTools.Editor
 
             var parser = new MetaHistoryParser(guids, prefix);
             bool cancelled = false;
-            AutoSyncGitRunner.Result result = AutoSyncGitRunner.Stream(projectRoot, HistoryArguments, parser.Feed,
+            GitRunner.Result result = GitRunner.Stream(projectRoot, HistoryArguments, parser.Feed,
                 () => parser.Complete || (cancelled = EditorUtility.DisplayCancelableProgressBar(Title,
                     "Searching Git history: " + parser.Found.Count + " of " + guids.Count + " found", 0.6f)));
             if (cancelled) throw new OperationCanceledException();

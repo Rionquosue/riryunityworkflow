@@ -9,24 +9,12 @@ using System.Threading.Tasks;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>Thrown by every Git operation when git is not installed or not on PATH.</summary>
-    internal sealed class GitNotInstalledException : InvalidOperationException
-    {
-        internal const string DownloadUrl = "https://git-scm.com/install/";
-
-        internal GitNotInstalledException(Exception inner)
-            : base("Git is not installed or not on PATH. Install it from " + DownloadUrl +
-                " and restart Unity.", inner)
-        {
-        }
-    }
-
     /// <summary>
     /// Runs git without a console window. Sign-in goes through Git's credential
     /// manager, which shows its own window; git never waits on a terminal prompt.
     /// Safe to call from a worker thread: it uses no Unity API.
     /// </summary>
-    internal static class AutoSyncGitRunner
+    internal static class GitRunner
     {
         internal sealed class Result
         {
@@ -43,6 +31,13 @@ namespace Riry.RiryTools.Editor
             {
                 string detail = (Error.Trim().Length > 0 ? Error : Output).Trim();
                 return action + " failed (git exit code " + ExitCode + ")" + (detail.Length > 0 ? ":\n" + detail : ".");
+            }
+
+            /// <summary>Throws Describe(action) when git failed; otherwise returns the output.</summary>
+            public string RequireSuccess(string action)
+            {
+                if (!Succeeded) throw new InvalidOperationException(Describe(action));
+                return Output;
             }
         }
 

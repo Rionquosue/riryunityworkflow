@@ -60,10 +60,10 @@ namespace Riry.RiryTools.Editor
         internal static Dictionary<string, string> LoadWithHistory(GuidToolLog log, Dictionary<string, string> paths = null)
         {
             Dictionary<string, string> map = Load(paths);
-            AutoSyncGitRunner.Result history;
+            GitRunner.Result history;
             try
             {
-                history = AutoSyncGitRunner.Run(RiryToolsPaths.ProjectRoot, null, 120000, "log", "--all", "--reflog", "-p",
+                history = GitRunner.Run(RiryToolsPaths.ProjectRoot, null, 120000, "log", "--all", "--reflog", "-p",
                     "--format=", "--unified=0", "--no-color", "--no-ext-diff", "--", RelativePath);
             }
             catch (GitNotInstalledException exception)

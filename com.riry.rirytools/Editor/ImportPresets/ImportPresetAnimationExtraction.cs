@@ -113,9 +113,9 @@ namespace Riry.RiryTools.Editor
                 string project = RiryToolsPaths.ProjectRoot;
                 var environment = new Dictionary<string, string> { { "GIT_LITERAL_PATHSPECS", "1" } };
                 // A deleted file that was never tracked has nothing to stage.
-                if (deleted && AutoSyncGitRunner.Run(project, environment, 10000, "ls-files", "--", path).Output.Trim().Length == 0)
+                if (deleted && GitRunner.Run(project, environment, 10000, "ls-files", "--", path).Output.Trim().Length == 0)
                     return;
-                AutoSyncGitRunner.Result result = AutoSyncGitRunner.Run(project, environment, 30000, "add", "--force", "--all", "--", path);
+                GitRunner.Result result = GitRunner.Run(project, environment, 30000, "add", "--force", "--all", "--", path);
                 if (!result.Succeeded) RiryLog.Warn(RiryLog.ImportPresets, "Extract Animation: " + result.Describe("Staging " + path));
                 if (!deleted) AutoSync.Track(path);
             }

@@ -78,7 +78,7 @@ Per user and per project, in `UserSettings/`.
 |---|---|---|
 | `RiryTools.AutoSync.Enabled` | The **Sync** toggle (`1` / `0`; default `0`). Read through `AutoSync.Enabled`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/RiryToolsMainMenu.cs`, `UI/RiryToolsMenuBar.cs` |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | Remote URLs, one per line, where the large file notice's **Do Not Show Again** was chosen. Unset by default. | `AutoSync/AutoSync.cs` |
-| `RiryTools.AutoSync.Remote` | The **Remote** AutoSync pushes to (a remote name). Unset means `origin`, else the first remote. Read through `AutoSyncGitRemotes.Selected`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `UI/AutoSyncGitConfigureWindow.cs`, `UI/AutoSyncGitWindow.cs` |
+| `RiryTools.AutoSync.Remote` | The **Remote** AutoSync pushes to (a remote name). Unset means `origin`, else the first remote. Read through `AutoSyncGitRemotes.Selected`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
 | `RiryTools.AvatarMigrationAssistant.SdkNoticeOff` | `1` once **Do not show again** is chosen on the VRC SDK not detected popup. Unset by default. | `UI/Components/SdkNotice.cs`, `UI/AvatarMigrationAssistant.cs` |
 | `RiryTools.GuidTools.BrokenPromptOff` | Scene and prefab paths, one per line, where the broken reference prompt's **Do Not Show Again** was chosen. Unset by default. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
 
@@ -124,9 +124,9 @@ Not stored, but named like settings keys.
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows. Named by `IconCapFiles.JobFileName`. | `IconCap/IconCapFiles.cs` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run). Named by `IconCapFiles.OldFolderPrefix`. | `IconCap/IconCapFiles.cs`, `UI/IconCapWindow.cs` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder. Named by `ImportPresetMarker.FileName`. | `ImportPresets/ImportPresetFolderRules.cs`, `ImportPresets/ImportPresetMarker.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
-| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSyncGitConfigureWindow.cs` |
+| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset. Named by `IconGenerator.OutputName`. | `IconCap/IconGenerator.cs` |
-| `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits. | `AutoSync/AutoSyncGitRemotes.cs` |
+| `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits. | `AutoSync/AutoSyncGitLargeFiles.cs` |
 | `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches. Path is `GuidToolRegenerate.CacheDirectoryPath`. | `GuidTools/GuidToolReferenceCache.cs`, `GuidTools/GuidToolRegenerate.cs`, `UI/GuidToolsWindow.cs` |
 | `Library/RiryTools/GuidTools/` | `restore` and `restore-meta` while a Git backup is written. | `GuidTools/GuidToolReferenceRepair.cs` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx`. | `ImportPresets/ImportPresetOwnedFiles.cs`, `ImportPresets/ImportPresetAnimations.cs`, `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ExtractAnimationWindow.cs` |
@@ -148,7 +148,7 @@ Not stored, but named like settings keys.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `Documents/RiryTools/GitTemplates/` | `<name>.gitignore` and `<name>.gitattributes` templates. Path is `GitTemplates.RootPath`. | `AutoSync/AutoSyncGitSetup.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSyncGitWindow.cs` |
+| `Documents/RiryTools/GitTemplates/` | `<name>.gitignore` and `<name>.gitattributes` templates. Path is `AutoSyncGitTemplates.RootPath`. | `AutoSync/AutoSyncGitTemplates.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack). Path is `IconCapFiles.PresetFolder`. | `IconCap/IconCapFiles.cs`, `UI/IconCapWindow.cs` |
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset` and optional `config.json`. Path is `ImportPresetLibrary.RootPath`. | `ImportPresets/ImportPresetLibrary.cs`, `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresetWindowActions.cs` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list). Path is `ImportPresetPreferences.FilePath`. | `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresetWindows.cs` |
@@ -162,22 +162,22 @@ Not stored, but named like settings keys.
 | Branch | The checked-out branch AutoSync commits to. | `AutoSync/AutoSyncJob.cs` |
 | Commit contents | The saved `.unity` and `.prefab` files and their `.meta` files. | `AutoSync/AutoSyncJob.cs` |
 | Commit title | Time of the save, `yyyy-MM-dd'T'HH:mm:sszzz` (`2026-10-30T14:05:12+01:00`). Format is `AutoSync.TimeFormat`. | `AutoSync/AutoSync.cs` |
-| Default templates | `Unity.gitignore` and `Unity.gitattributes`. Name is `GitTemplates.DefaultName`. | `AutoSync/AutoSyncGitSetup.cs`, `AutoSync/AutoSyncGitActions.cs` |
+| Default templates | `Unity.gitignore` and `Unity.gitattributes`. Name is `AutoSyncGitTemplates.DefaultName`. | `AutoSync/AutoSyncGitTemplates.cs`, `AutoSync/AutoSyncGitActions.cs` |
 | Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset. | `AutoSync/AutoSyncJob.cs` |
-| `.gitignore` lines | `/<path>`, pattern characters escaped; added by **Large Files**. | `AutoSync/AutoSyncGitRemotes.cs` |
-| LFS query | HTTP(S): `POST <remote>.git/info/lfs/objects/batch` (or `remote.<name>.lfsurl`, `lfs.url`), one all-zero object. SSH: `git-lfs-authenticate <path> download` with `core.sshCommand` or `ssh`. | `AutoSync/AutoSyncGitRemotes.cs` |
-| Reflog message | `RiryTools AutoSync: drop large files`. | `AutoSync/AutoSyncGitRemotes.cs` |
-| Remote | The one chosen in Configuration; **Add Remote** adds `origin` (`AutoSyncGitRemotes.DefaultName`). | `AutoSync/AutoSyncGitRemotes.cs`, `AutoSync/AutoSyncJob.cs`, `UI/AutoSyncGitConfigureWindow.cs` |
+| `.gitignore` lines | `/<path>`, pattern characters escaped; added by **Large Files**. | `AutoSync/AutoSyncGitLargeFiles.cs` |
+| LFS query | HTTP(S): `POST <remote>.git/info/lfs/objects/batch` (or `remote.<name>.lfsurl`, `lfs.url`), one all-zero object. SSH: `git-lfs-authenticate <path> download` with `core.sshCommand` or `ssh`. | `AutoSync/AutoSyncGitLfsQuery.cs` |
+| Reflog message | `RiryTools AutoSync: drop large files`. | `AutoSync/AutoSyncGitLargeFiles.cs` |
+| Remote | The one chosen in Configuration; **Add Remote** adds `origin` (`AutoSyncGitRemotes.DefaultName`). | `AutoSync/AutoSyncGitRemotes.cs`, `AutoSync/AutoSyncJob.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
 
 ### Git environment variables and arguments
 
 | Name | Use | Scripts |
 |---|---|---|
 | `-c core.fsync=committed` | Argument for AutoSync commits. | `AutoSync/AutoSyncJob.cs` |
-| `-c core.quotepath=off` | Argument on every Git command. | `AutoSync/AutoSyncGitRunner.cs` |
+| `-c core.quotepath=off` | Argument on every Git command. | `Components/GitRunner.cs` |
 | `GIT_AUTHOR_*`, `GIT_COMMITTER_*` | The fallback identity. | `AutoSync/AutoSyncJob.cs` |
-| `GIT_LITERAL_PATHSPECS=1` | Saved paths are not patterns. | `AutoSync/AutoSyncJob.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `ImportPresets/ImportPresetAnimationExtraction.cs` |
-| `GIT_TERMINAL_PROMPT=0` | Set on every command: Git never waits on a terminal prompt; sign-in goes through Git's credential manager. | `AutoSync/AutoSyncGitRunner.cs` |
+| `GIT_LITERAL_PATHSPECS=1` | Saved paths are not patterns. | `AutoSync/AutoSyncJob.cs`, `AutoSync/AutoSyncGitLargeFiles.cs`, `ImportPresets/ImportPresetAnimationExtraction.cs` |
+| `GIT_TERMINAL_PROMPT=0` | Set on every command: Git never waits on a terminal prompt; sign-in goes through Git's credential manager. | `Components/GitRunner.cs` |
 
 ## GUIDs and build symbols
 
@@ -205,16 +205,16 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `AutoSyncGitRunner.TimedOut` | `-1`: exit code reported for a timed-out or cancelled command. | `AutoSync/AutoSyncGitRunner.cs` |
+| `GitRunner.TimedOut` | `-1`: exit code reported for a timed-out or cancelled command. | `Components/GitRunner.cs` |
 | `AutoSyncJob.PushTimeoutMs` | `600000`: push timeout, long enough to sign in. | `AutoSync/AutoSyncJob.cs` |
 | `AutoSyncJob.TimeoutMs` | `120000`: timeout per Git command. | `AutoSync/AutoSyncJob.cs` |
-| `GitLargeFiles.ProxyLimitBytes` | 100 MiB: Cloudflare's proxied upload limit, used for the ! button and held pushes. | `AutoSync/AutoSyncGitRemotes.cs` |
-| `GitLfsQuery.TimeoutMs` | `30000`: LFS query timeout. | `AutoSync/AutoSyncGitRemotes.cs` |
-| `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/`: the **Download Git** link. | `AutoSync/AutoSyncGitRunner.cs`, `AutoSync/AutoSyncGitActions.cs` |
-| `GitState.CacheSeconds` | `5.0`: how long Git and repository state is cached. | `AutoSync/AutoSyncGitSetup.cs` |
-| `GitTemplates.DefaultAttributes` | Built-in LFS template text, saved as `UnityLFS`. | `AutoSync/AutoSyncGitSetup.cs` |
-| `GitTemplates.UnityAttributesUrl` | The gitattributes project's `Unity.gitattributes`: default `.gitattributes` template, saved as `Unity`. | `AutoSync/AutoSyncGitSetup.cs` |
-| `GitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore`: default `.gitignore` template, saved as `Unity`. | `AutoSync/AutoSyncGitSetup.cs` |
+| `AutoSyncGitLargeFiles.ProxyLimitBytes` | 100 MiB: Cloudflare's proxied upload limit, used for the ! button and held pushes. | `AutoSync/AutoSyncGitLargeFiles.cs` |
+| `AutoSyncGitLfsQuery.TimeoutMs` | `30000`: LFS query timeout. | `AutoSync/AutoSyncGitLfsQuery.cs` |
+| `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/`: the **Download Git** link. | `Components/GitNotInstalledException.cs`, `AutoSync/AutoSyncGitActions.cs` |
+| `GitState.CacheSeconds` | `5.0`: how long Git and repository state is cached. | `Components/GitState.cs` |
+| `AutoSyncGitTemplates.DefaultAttributes` | Built-in LFS template text, saved as `UnityLFS`. | `AutoSync/AutoSyncGitTemplates.cs` |
+| `AutoSyncGitTemplates.UnityAttributesUrl` | The gitattributes project's `Unity.gitattributes`: default `.gitattributes` template, saved as `Unity`. | `AutoSync/AutoSyncGitTemplates.cs` |
+| `AutoSyncGitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore`: default `.gitignore` template, saved as `Unity`. | `AutoSync/AutoSyncGitTemplates.cs` |
 | `GuidToolBrokenReferenceMonitor.Threshold` / `WindowSeconds` | `3` in `30.0` s: missing-reference log lines that trigger the prompt. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
 | `ScriptLoadGuard.CaptureSeconds` | `5.0`: errors this long before a prefab opens count as suspects. | `Debug/ScriptLoadGuard.cs` |
 | `ScriptLoadGuard.RecentLimit` | `50`: logged errors kept. | `Debug/ScriptLoadGuard.cs` |

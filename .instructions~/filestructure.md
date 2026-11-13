@@ -50,7 +50,7 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 - **Main Menu:** `UI/RiryToolsMainMenu.cs`. Hosts each tool's window in a tab. VRChat tools are handed to it by `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Tools > RiryTools menu:** `UI/RiryToolsMenuBar.cs`; the VRChat entries are in `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Right click menus (Hierarchy, Project):** `UI/RiryToolsRightClickMenu.cs`.
-- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, missing-SDK exceptions), `UI/Components/RiryToolGUI.cs` (shared drawing and Undo for window settings).
+- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/RiryToolGUI.cs` (shared drawing and Undo for window settings).
 - **A tool:** its logic folder and its `UI/<folder>/` window, per the table above.
 
 ## Script locations
@@ -63,10 +63,13 @@ com.riry.rirytools/
     ├── AutoSync/
     │   ├── AutoSync.cs
     │   ├── AutoSyncGitActions.cs
+    │   ├── AutoSyncGitLargeFiles.cs
+    │   ├── AutoSyncGitLfs.cs
+    │   ├── AutoSyncGitLfsQuery.cs
     │   ├── AutoSyncGitRemotes.cs
-    │   ├── AutoSyncGitRunner.cs
-    │   ├── AutoSyncGitSetup.cs
-    │   └── AutoSyncJob.cs
+    │   ├── AutoSyncGitTemplates.cs
+    │   ├── AutoSyncJob.cs
+    │   └── AutoSyncSaveProcessor.cs
     ├── AvatarMigrator/
     │   ├── AvatarMigratorCopyPrefabs.cs
     │   ├── AvatarMigratorCopyRun.cs
@@ -92,6 +95,9 @@ com.riry.rirytools/
     ├── Components/
     │   ├── FuzzyMatch.cs
     │   ├── GestureManagerNotFoundException.cs
+    │   ├── GitNotInstalledException.cs
+    │   ├── GitRunner.cs
+    │   ├── GitState.cs
     │   ├── HierarchyPath.cs
     │   ├── RiryLog.cs
     │   ├── RiryToolsPaths.cs

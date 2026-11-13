@@ -211,7 +211,7 @@ namespace Riry.RiryTools.Editor
                 "). If the server is behind Cloudflare, the push will fail, so Sync commits without pushing until they are " +
                 "removed.\n\n" + string.Join("\n", held.Files.GetRange(0, Math.Min(8, held.Files.Count))),
                 "Fix Now", "Close", "Do Not Show Again");
-            if (choice == 0) LargeFilesWindow.Open();
+            if (choice == 0) AutoSyncGitLargeFilesWindow.Open();
             if (choice == 2)
             {
                 off.Add(held.Url);
@@ -243,16 +243,6 @@ namespace Riry.RiryTools.Editor
                 saves.Add(save);
             }
             return saves;
-        }
-    }
-
-    internal sealed class AutoSyncSaveProcessor : AssetModificationProcessor
-    {
-        // Saves made through Unity's save pipeline, in addition to the scene and Prefab Mode events.
-        private static string[] OnWillSaveAssets(string[] paths)
-        {
-            foreach (string path in paths) AutoSync.Saved(path);
-            return paths;
         }
     }
 }
