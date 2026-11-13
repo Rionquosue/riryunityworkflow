@@ -82,6 +82,7 @@ Per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Remote` | The **Remote** AutoSync pushes to (a remote name). Unset means `origin`, else the first remote. Read through `AutoSyncGitRemotes.Selected`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
 | `RiryTools.AvatarMigrator.SdkNoticeOff` | `1` once **Do not show again** is chosen on the VRC SDK not detected popup. Unset by default. | `UI/AvatarMigrator/AvatarMigratorSdkNoticeWindow.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
 | `RiryTools.GuidTools.BrokenPromptOff` | Scene and prefab paths, one per line, where the broken reference prompt's **Do Not Show Again** was chosen. Unset by default. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
+| `RiryTools.MenuTool.LastAvatar` | GlobalObjectId of the last avatar the Menu Tool scanned (saved scenes only); selected when the Menu Tool opens with no target. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 
 ### SessionState
 
@@ -92,15 +93,13 @@ Until the editor quits; survives script reloads.
 | `RiryTools.AttachTo.LastAvatar` | Instance ID of the last avatar selected in the Hierarchy (VRCAvatarDescriptor, else humanoid Animator); fills **Target avatar**. | `Utilities/AttachToAvatarTracker.cs`, `UI/Utilities/AttachToWindow.cs` |
 | `RiryTools.AutoSync.LargeFileNoticeShown` | Remote URLs, one per line, whose **Push Held** notice was shown this session. | `AutoSync/AutoSync.cs` |
 | `RiryTools.AutoSync.Pending` | Saves not yet committed when scripts reloaded: one save per line, title then paths, tab-separated. | `AutoSync/AutoSync.cs` |
-| `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Scene`, `Avatar` (hierarchy path), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order). Set by Set as entry state; replayed in Play Mode once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state. | `VRChat/MenuTool/MenuToolEntryState.cs`, `VRChat/MenuTool/GestureManager/GestureManagerEntryState.cs` |
+| `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Avatar` (the avatar's GlobalObjectId; saved scenes only), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order). Set by Set as entry state; replayed in Play Mode once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state. | `VRChat/MenuTool/MenuToolEntryState.cs`, `VRChat/MenuTool/GestureManager/GestureManagerEntryState.cs` |
 | `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved. | `VRChat/MenuTool/MenuToolAvatarKeys.cs` |
 | `RiryTools.RefreshScripts.Reopen` | JSON of the RiryTools windows to reopen after **Refresh Scripts** reloads scripts (assembly-qualified type names, positions); erased once read. | `Utilities/RefreshScripts.cs` |
 | `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Debug/ScriptLoadGuardFailureWindow.cs` |
 | `RiryTools.StopAutoGame.FocusedWindows` | Comma-separated instance IDs of the windows focused when Play Mode started. | `Utilities/StopAutoGame.cs` |
 | `RiryTools.StopAutoGame.GameViewWasOpen` | Bool: a Game view existed before Play Mode. | `Utilities/StopAutoGame.cs` |
 | `RiryTools.StopAutoGame.Missing.<what>` | Bool: the warning about a reflection lookup this Unity version lacks was already logged this session. | `Utilities/StopAutoGame.cs` |
-| `RiryTools.UnpackNoPackage` | Bool: the "package could not be located" warning was already logged this session. | `Components/RiryToolsProjectFolder.cs` |
-| `RiryTools.UnpackProblem.<message>` | Bool: this project folder copy error was already logged this session. | `Components/RiryToolsProjectFolder.cs` |
 
 ### Other keys
 
@@ -120,6 +119,7 @@ Not stored, but named like settings keys.
 | Name | Use | Scripts |
 |---|---|---|
 | `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
+| `<main prefab folder>/<prefab> Variant.prefab`, `<controller> Variant.controller` | Find and Replace **Apply to child prefab**: the child prefab (a Prefab Variant of the main prefab) and the copied controllers it uses, next to the main prefab; unique names (Unity numbers them). | `VRChat/AnimatorTools/BehaviourFindReplaceChildPrefab.cs` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows. Named by `IconCapFiles.JobFileName`. | `IconCap/IconCapFiles.cs` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run). Named by `IconCapFiles.OldFolderPrefix`. | `IconCap/IconCapFiles.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder. Named by `ImportPresetMarker.FileName`. | `ImportPresets/ImportPresetFolderRules.cs`, `ImportPresets/ImportPresetMarker.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
@@ -256,10 +256,9 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `RiryLog.Format` | `[RiryTools/<tool>] <message>` on every Console line. Tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, Find and Replace, Find Null references, GUID Tools, IconCap, Import Presets, Menu Mockup, Menu Tool, Project Folder, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it. | `Components/RiryLog.cs` |
+| `RiryLog.Format` | `[RiryTools/<tool>] <message>` on every Console line. Tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, Find and Replace, Find Null references, GUID Tools, IconCap, Import Presets, Menu Mockup, Menu Tool, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it. | `Components/RiryLog.cs` |
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/Debug/MenuMockupPreview.cs`, `VRChat/UI/ConstraintTools/ConstraintToolWindow.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
-| `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
 | Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/Components/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs`, `VRChat/UI/ConstraintTools/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `Utilities/StopAutoGame.cs` |
 

@@ -24,7 +24,6 @@ namespace Riry.RiryTools.Editor
         internal const string ImportPresets = "Import Presets";
         internal const string MenuMockup = "Menu Mockup";
         internal const string MenuTool = "Menu Tool";
-        internal const string ProjectFolder = "Project Folder";
         internal const string ScriptLoadGuard = "Script Load Guard";
         internal const string StopAutoGame = "Stop Auto Game";
 

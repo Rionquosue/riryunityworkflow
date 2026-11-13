@@ -7,7 +7,7 @@
 - `.instructions~/`: Working instructions for LLMs while maintaining this repo. Start with `for_agents.md`.
 - `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`.
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
-- `com.riry.rirytools/`: Is the extension package; `ProjectFolder~/` is copied into the user's `Assets/RiryTools` when imported.
+- `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
 
 ## Rules
 
@@ -216,7 +216,10 @@ com.riry.rirytools/
     │   └── StopAutoGame.cs
     ├── VRChat/
     │   ├── AnimatorTools/
-    │   │   └── BehaviourFindReplace.cs
+    │   │   ├── BehaviourFindReplace.cs
+    │   │   ├── BehaviourFindReplaceApply.cs
+    │   │   ├── BehaviourFindReplaceChildPrefab.cs
+    │   │   └── BehaviourFindReplaceUsers.cs
     │   ├── Components/
     │   │   ├── ConstraintToolChains.cs
     │   │   ├── ConstraintToolObjects.cs

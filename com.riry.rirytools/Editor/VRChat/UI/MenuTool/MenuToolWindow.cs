@@ -138,7 +138,7 @@ namespace Riry.RiryTools.Editor
                 window.target = target;
                 window.MarkStale();
             }
-            else if (window.target == null) window.UseSelection();
+            else if (window.target == null && !window.UseLastAvatar()) window.UseSelection();
             if (tab >= 0) window.tab = tab;
             window.Show();
             window.Focus();
@@ -182,6 +182,20 @@ namespace Riry.RiryTools.Editor
             Shown.Repaint();
         }
 
+        // The avatar last scanned (by GlobalObjectId, in UserSettings), when it is in an open scene.
+        private const string LastAvatarKey = "RiryTools.MenuTool.LastAvatar";
+
+        private bool UseLastAvatar()
+        {
+            GlobalObjectId id;
+            if (!GlobalObjectId.TryParse(EditorUserSettings.GetConfigValue(LastAvatarKey) ?? "", out id)) return false;
+            var avatar = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id) as GameObject;
+            if (avatar == null) return false;
+            target = RiryToolGUI.Set(this, "Menu Tool target", target, avatar);
+            MarkStale();
+            return true;
+        }
+
         private void UseSelection()
         {
             GameObject selected = Selection.activeGameObject;
@@ -214,6 +228,8 @@ namespace Riry.RiryTools.Editor
             try
             {
                 scan = MenuToolScanner.Scan(target);
+                string avatarId = scan != null && scan.Avatar != null ? MenuToolEntryState.IdOf(scan.Avatar.gameObject) : null;
+                if (avatarId != null && EditorUserSettings.GetConfigValue(LastAvatarKey) != avatarId) EditorUserSettings.SetConfigValue(LastAvatarKey, avatarId);
             }
             catch (Exception exception)
             {
@@ -849,10 +865,11 @@ namespace Riry.RiryTools.Editor
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUI.DisabledScope(scan.Avatar == null || radial == null))
+                using (new EditorGUI.DisabledScope(scan.Avatar == null || radial == null || MenuToolEntryState.IdOf(scan.Avatar.gameObject) == null))
                 {
                     if (GUILayout.Button(new GUIContent("Set as entry state",
-                        "In Play Mode this session, once Gesture Manager has set up this avatar, makes these writes in order and opens this submenu.")))
+                        "In Play Mode this session, once Gesture Manager has set up this avatar, makes these writes in order and opens this submenu. " +
+                        "The avatar's scene must be saved.")))
                         SetEntryState();
                 }
                 using (new EditorGUI.DisabledScope(!MenuToolEntryState.Saved))
@@ -872,7 +889,7 @@ namespace Riry.RiryTools.Editor
             Transform root = scan.Avatar.transform;
             var state = new MenuToolEntryState
             {
-                Scene = root.gameObject.scene.name, Avatar = HierarchyPath.Of(root), Menu = shownPath ?? "",
+                Avatar = MenuToolEntryState.IdOf(root.gameObject), Menu = shownPath ?? "",
                 Writes = new List<MenuToolEntryState.Write>(writes)
             };
             state.Save();

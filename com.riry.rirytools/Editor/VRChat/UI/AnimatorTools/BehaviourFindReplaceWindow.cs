@@ -138,21 +138,86 @@ namespace Riry.RiryTools.Editor
             GUI.FocusControl(null);
         }
 
+        // Apply: a prefab's controllers offer Apply to main prefab (change them) or Apply to child prefab (change copies used
+        // by a Prefab Variant); otherwise shared controllers are warned about first. Users are found by
+        // BehaviourFindReplaceUsers, the child prefab made by BehaviourFindReplaceChildPrefab.
         private void Apply()
         {
-            // Controllers that VRCFury or Modular Avatar bring in, or that live in a package, are shared assets: warn first.
-            List<string> shared = hits.Select(h => h.Controller).Distinct()
-                .Where(c => AssetDatabase.GetAssetPath(c).StartsWith("Packages/", StringComparison.Ordinal) ||
-                    hits.Any(h => h.Controller == c && (h.Label.StartsWith("VRCFury", StringComparison.Ordinal) || h.Label.StartsWith("MA ", StringComparison.Ordinal))))
-                .Select(AssetDatabase.GetAssetPath).ToList();
-            if (shared.Count > 0 && !EditorUtility.DisplayDialog("Find and Replace",
-                    "These controllers are shared assets; the change applies to every avatar and prefab that uses them:\n\n" +
-                    string.Join("\n", shared.Take(10)) + (shared.Count > 10 ? "\nand " + (shared.Count - 10) + " more" : ""), "Apply", "Cancel"))
+            bool asset = source is AnimatorController;
+            List<AnimatorController> controllers = hits.Select(h => h.Controller).Distinct().ToList();
+            var users = new List<string>();
+            foreach (AnimatorController controller in controllers)
+                users.AddRange(BehaviourFindReplaceUsers.Of(controller).Select(user => controller.name + ": " + user));
+            bool packaged = controllers.Any(c => AssetDatabase.GetAssetPath(c).StartsWith("Packages/", StringComparison.Ordinal));
+            string usedBy = users.Count > 0 ? "\n\nUsed by:\n" + Listed(users) : "";
+            List<string> prefabs = hits.Select(BehaviourFindReplaceChildPrefab.MainPrefabOf).Where(p => p != null).Distinct().ToList();
+
+            if (prefabs.Count > 0)
+            {
+                int choice = EditorUtility.DisplayDialogComplex("Find and Replace",
+                    "The controllers belong to " + Listed(prefabs) + "." + usedBy +
+                    "\n\nApply to main prefab changes the controllers. Apply to child prefab copies them and makes a child prefab next to " +
+                    "each prefab that uses the copies.", "Apply to main prefab", "Cancel", "Apply to child prefab");
+                if (choice == 1) return;
+                if (choice == 2)
+                {
+                    ApplyToChild(prefabs, asset);
+                    return;
+                }
+            }
+            else if ((users.Count > 1 || packaged) && !EditorUtility.DisplayDialog("Find and Replace",
+                         "These controllers are shared; the change applies to everything that uses them." + usedBy, "Apply", "Cancel"))
                 return;
-            List<Change> made = BehaviourFindReplace.Apply(hits, replace, repath, map, source is AnimatorController);
+
+            List<Change> made = BehaviourFindReplaceApply.Apply(hits, replace, repath, map, asset);
             if (made.Count == 0) return;
             changes = made;
             Search();
+        }
+
+        private void ApplyToChild(List<string> prefabs, bool asset)
+        {
+            var made = new List<Change>();
+            var results = new List<BehaviourFindReplaceChildPrefab.Result>();
+            try
+            {
+                foreach (string main in prefabs)
+                {
+                    List<Hit> inPrefab = hits.Where(h => BehaviourFindReplaceChildPrefab.MainPrefabOf(h) == main).ToList();
+                    BehaviourFindReplaceChildPrefab.Result result = BehaviourFindReplaceChildPrefab.Make(main, inPrefab.Select(h => h.Controller));
+                    results.Add(result);
+                    made.AddRange(BehaviourFindReplaceApply.Apply(BehaviourFindReplaceChildPrefab.Remap(inPrefab, result.Copies), replace, repath, map, asset, false));
+                }
+                List<Hit> rest = hits.Where(h => BehaviourFindReplaceChildPrefab.MainPrefabOf(h) == null).ToList();
+                if (rest.Count > 0) made.AddRange(BehaviourFindReplaceApply.Apply(rest, replace, repath, map, asset, false));
+            }
+            catch (Exception exception)
+            {
+                RiryLog.Exception(RiryLog.FindReplace, "Apply to child prefab failed" +
+                    (results.Count > 0 ? "; files already made: " + string.Join(", ", results.SelectMany(r => r.Created)) : ""), exception);
+                EditorUtility.DisplayDialog("Find and Replace", "Apply to child prefab failed: " + exception.Message, "OK");
+                return;
+            }
+            // The files made are not removed by Ctrl+Z, so the log lists them.
+            RiryLog.Info(RiryLog.FindReplace, "Changed " + made.Count + " behaviour string(s). Made " +
+                string.Join(", ", results.SelectMany(r => r.Created)) + " (Ctrl+Z does not remove these files).");
+            changes = made;
+
+            if (EditorUtility.DisplayDialog("Find and Replace", "Would you like to update the active scene with the new prefab?", "Yes", "No"))
+            {
+                int swapped = 0;
+                var skipped = new List<string>();
+                foreach (BehaviourFindReplaceChildPrefab.Result result in results)
+                    swapped += BehaviourFindReplaceChildPrefab.SwapInActiveScene(result.MainPath, result.VariantPath, skipped);
+                RiryLog.Info(RiryLog.FindReplace, "Swapped " + swapped + " instance(s) in the active scene for the child prefab, keeping their overrides" +
+                    (skipped.Count > 0 ? "; left " + skipped.Count + " nested in another prefab instance: " + string.Join(", ", skipped) : "") + ".");
+            }
+            Search();
+        }
+
+        private static string Listed(List<string> items)
+        {
+            return string.Join("\n", items.Take(10)) + (items.Count > 10 ? "\nand " + (items.Count - 10) + " more" : "");
         }
     }
 }
