@@ -52,6 +52,7 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 
 ## Checks
 
+- For each changed tool, check that the feature can be called without creating a window and that feature types contain no drawing, dialog, menu, or progress-display calls. Check that UI names identify UI types.
 - Compile check: `dotnet build` against the Unity 2021.1 reference assemblies (NuGet `Unity3D.SDK` 2021.1.14.1 for UnityEditor, `UnityEngine.Modules` 2021.3.33 for the engine modules), VRChat SDK 3.10.6 DLLs and a small shims file. Two projects: the package, and the package plus Gesture Manager 3.9.9 source and the bridge (netstandard2.1). Baseline: 10 errors from Unity 2022 APIs missing in the references (`Undo.undoRedoEvent`, `AssetDatabase.SaveAssetIfDirty`, `PrefabUtility.ApplyAddedGameObjects`, `RenderSettings.customReflectionTexture`), plus `Undo.isProcessing` in Gesture Manager's source for the bridge project. Anything else is a real error.
 - Use the cheapest check that works. No zipping or full pipeline runs.
 - `User tests.md` (owner-held, never committed): one numbered paragraph per test, only what needs Unity or VRChat to see. Update it only when instructed.
