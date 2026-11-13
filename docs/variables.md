@@ -122,7 +122,7 @@ Not stored, but named like settings keys.
 | `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets anything else uses (another slot of the avatar, Modular Avatar or VRCFury, a package, or any other file in the project), made by **Apply** before a native move and linked into that one slot. Ctrl+Z does not delete them. Tracked by `MenuToolApply.Owned`. | `VRChat/MenuTool/MenuToolApply.cs` |
 | `Assets/RiryTools/MenuTool/<avatar>/<new menu>.asset` | Menu Tool's new, empty menus planned with **Add menu** as a menu asset, made by **Apply** (unique path) and linked by a SubMenu control in the parent's menu. Ctrl+Z does not delete them. Built by `MenuToolApply.NewMenuAsset`. | `VRChat/MenuTool/MenuToolApply.cs` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows. Named by `IconCapFiles.JobFileName`. | `IconCap/IconCapFiles.cs` |
-| `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run). Named by `IconCapFiles.OldFolderPrefix`. | `IconCap/IconCapFiles.cs`, `UI/IconCapWindow.cs` |
+| `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run). Named by `IconCapFiles.OldFolderPrefix`. | `IconCap/IconCapFiles.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder. Named by `ImportPresetMarker.FileName`. | `ImportPresets/ImportPresetFolderRules.cs`, `ImportPresets/ImportPresetMarker.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
 | `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset. Named by `IconGenerator.OutputName`. | `IconCap/IconGenerator.cs` |
@@ -149,7 +149,7 @@ Not stored, but named like settings keys.
 | Name | Use | Scripts |
 |---|---|---|
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore` and `<name>.gitattributes` templates. Path is `AutoSyncGitTemplates.RootPath`. | `AutoSync/AutoSyncGitTemplates.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
-| `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack). Path is `IconCapFiles.PresetFolder`. | `IconCap/IconCapFiles.cs`, `UI/IconCapWindow.cs` |
+| `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack). Path is `IconCapFiles.PresetFolder`. | `IconCap/IconCapFiles.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset` and optional `config.json`. Path is `ImportPresetLibrary.RootPath`. | `ImportPresets/ImportPresetLibrary.cs`, `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresetWindowActions.cs` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list). Path is `ImportPresetPreferences.FilePath`. | `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresetWindows.cs` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrator/types.yml` when missing, then read from here. Path is `AvatarMigratorCopyTypes.FilePath`. | `AvatarMigrator/AvatarMigratorCopyTypes.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
@@ -258,7 +258,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/MenuMockupWindows.cs`, `VRChat/UI/ConstraintToolWindow.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ExtractAnimationWindow.cs`, `UI/IconCapWindow.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `StopAutoGame.cs` |
 
 ### Attach To
@@ -323,14 +323,14 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `IconCapRenderer.MaxSize` | `4096`: largest capture size. | `IconCap/IconCapRenderer.cs`, `UI/IconCapWindow.cs` |
+| `IconCapRenderer.MaxSize` | `4096`: largest capture size. | `IconCap/IconCapRenderer.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 | `IconCapRenderer.SensorHeight` | `24` mm: full-frame sensor for the 35, 50 and 85mm lenses. | `IconCap/IconCapRenderer.cs`, `IconCap/IconCapData.cs` |
-| `IconCapWindow.PrefixSuffixRow` / `JobRow` / `RestoreRow` | `460` / `440` / `420`: window widths below which Prefix/Suffix, the Job row's Add to job (Jobs > Current job) and Restore's buttons go on a second line. | `UI/IconCapWindow.cs` |
-| `IconCapWindow.PreviewInterval` | `0.1` s: shortest time between live preview renders. | `UI/IconCapWindow.cs` |
-| `IconCapWindow.PreviewMaxSide` / `PreviewMaxPixels` | `512` / `1024`: largest preview on screen / in pixels. | `UI/IconCapWindow.cs` |
-| `IconCapWindow.RowMargin` | `40`: scroll bar and margins left out of a job row's width; a longer row puts its folder, count and Run on a second line. | `UI/IconCapWindow.cs` |
-| `IconCapWindow.SmallThumbnail` / `LargeThumbnail` | `64` / `128`: Icon Generator source and result size (**Large previews**). | `UI/IconCapWindow.cs` |
-| `IconCapWindow.WideWidth` | `640`: window width from which the effect stack sits beside the preview. | `UI/IconCapWindow.cs` |
+| `IconCapWindow.PrefixSuffixRow` / `JobRow` / `RestoreRow` | `460` / `440` / `420`: window widths below which Prefix/Suffix, the Job row's Add to job (Jobs > Current job) and Restore's buttons go on a second line. | `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
+| `IconCapWindow.PreviewInterval` | `0.1` s: shortest time between live preview renders. | `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
+| `IconCapWindow.PreviewMaxSide` / `PreviewMaxPixels` | `512` / `1024`: largest preview on screen / in pixels. | `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
+| `IconCapWindow.RowMargin` | `40`: scroll bar and margins left out of a job row's width; a longer row puts its folder, count and Run on a second line. | `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
+| `IconCapWindow.SmallThumbnail` / `LargeThumbnail` | `64` / `128`: Icon Generator source and result size (**Large previews**). | `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
+| `IconCapWindow.WideWidth` | `640`: window width from which the effect stack sits beside the preview. | `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 
 ### Menu Tool
 

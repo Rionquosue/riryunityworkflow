@@ -17,7 +17,7 @@
 4. **UI folders.** Every file that draws UI is in its assembly's `UI/` folder, in a subfolder with the same name as the tool's logic or category folder (`UI/AutoSync/`, `UI/Debug/`, `UI/Utilities/`). Main Menu, the Tools menu bar and the right click menu (and the VRChat assembly's menu entries) sit directly in `UI/` so they are easy to find and edit.
 5. **Components.** Code reused by several tools, or by several subtools of one tool, goes in that assembly's `Components/` folder. Shared drawing code goes in `UI/Components/`.
 6. **One job per script.** Each script does one job, so no script becomes too large to maintain. Example: a tool that enumerates the avatar hierarchy into a searchable index, then applies changes based on a search of that index, has one script for the index and search, and another for applying the changes.
-7. **Names.** File names match the main type they hold. A class split over several files uses `Type.Role.cs` (`BlendshapeSyncWindow.UI.cs`). Every type and file carries its tool's code prefix (below).
+7. **Names.** File names match the main type they hold. A class split over several files uses `Type.Role.cs` (`BlendshapeSyncWindow.UI.cs`). Every type and file carries its tool's code prefix (below). Exception: a type Unity stores by name in users' assets keeps its name (`IconGenerator`, a ScriptableObject saved as `.asset` files).
 8. **Moves.** Always move a file's `.meta` with it (`git mv` both) so its GUID is kept. New files get a `.meta` with a fresh GUID. The namespace is `Riry.RiryTools.Editor` in every folder and does not follow the folder.
 
 ### Tool names
@@ -184,7 +184,9 @@ com.riry.rirytools/
     │   │   └── GuidToolsWindow.cs
     │   ├── IconCap/
     │   │   ├── IconCapEffectStackGUI.cs
-    │   │   └── IconCapWindow.cs
+    │   │   ├── IconCapNamePrompt.cs
+    │   │   ├── IconCapWindow.cs
+    │   │   └── IconCapWindow.UI.cs
     │   ├── ImportPresets/
     │   │   ├── ImportPresetExtractAnimationWindow.cs
     │   │   ├── ImportPresetFolderWindow.UI.cs
