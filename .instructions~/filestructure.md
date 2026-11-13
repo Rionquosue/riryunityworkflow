@@ -95,7 +95,10 @@ com.riry.rirytools/
     │   └── types.yml
     ├── BlendshapeSync/
     │   ├── BlendshapeSyncJob.cs
-    │   └── BlendshapeSyncJobs.cs
+    │   ├── BlendshapeSyncJobs.cs
+    │   ├── BlendshapeSyncWindow.Checks.cs
+    │   ├── BlendshapeSyncWindow.Plan.cs
+    │   └── BlendshapeSyncWindow.Sync.cs
     ├── Components/
     │   ├── FuzzyMatch.cs
     │   ├── GestureManagerNotFoundException.cs
@@ -153,9 +156,10 @@ com.riry.rirytools/
     │   │   ├── AvatarMigratorSdkNoticeWindow.cs
     │   │   └── AvatarMigratorWindow.cs
     │   ├── BlendshapeSync/
+    │   │   ├── BlendshapeSyncJobList.cs
     │   │   ├── BlendshapeSyncJobWindow.cs
-    │   │   ├── BlendshapeSyncWindow.UI.cs
-    │   │   └── BlendshapeSyncWindow.cs
+    │   │   ├── BlendshapeSyncWindow.cs
+    │   │   └── BlendshapeSyncWindow.UI.cs
     │   ├── Components/
     │   │   └── RiryToolGUI.cs
     │   ├── Debug/

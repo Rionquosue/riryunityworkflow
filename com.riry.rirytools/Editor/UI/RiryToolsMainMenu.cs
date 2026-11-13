@@ -442,4 +442,4 @@ namespace Riry.RiryTools.Editor
 //   TopMargin / SubTabGap    2 px above the main tabs (and Constraint Tool window's); 8 px between them and a tab's sub-tabs
 //                            (Constraint Tool, Import Presets).
 //   AutoSync tab             Sync toggle (AutoSyncGitActions.ToggleSync) above Configuration.
-//   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
+//   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSync/BlendshapeSyncJobList.cs): the running jobs, and Add Job.

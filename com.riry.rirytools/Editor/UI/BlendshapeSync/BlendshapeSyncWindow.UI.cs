@@ -6,7 +6,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// What the Blendshape Sync window draws. Its menu entry is in RiryToolsMenuBar.cs;
-    /// state and actions are in Editor/UI/BlendshapeSyncWindow.cs. A glossary is at
+    /// state is in BlendshapeSyncWindow.cs, actions in Editor/BlendshapeSync/. A glossary is at
     /// the bottom.
     /// </summary>
     internal sealed partial class BlendshapeSyncWindow
@@ -146,55 +146,11 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: BlendshapeSyncWindow (both files are one partial class)
+// GLOSSARY: Blendshape Sync window: drawing
+// BlendshapeSyncWindow is one partial class: UI/BlendshapeSync/BlendshapeSyncWindow(.UI).cs and BlendshapeSync/BlendshapeSyncWindow.*.cs, BlendshapeSyncJob.cs.
 // ============================================================================
 //
-// FIELDS (Editor/BlendshapeSyncWindow.cs; [S] = serialized, survives script reloads)
-//   master              [S] SkinnedMeshRenderer  Renderer whose weights are copied.
-//   children            [S] List<ChildEntry>     Child rows; the last one is always empty.
-//   runAutomatically    [S] bool                 Sync every Interval seconds.
-//   caseSensitive       [S] bool                 "Case-sensitive": exact names, including case.
-//   originals           [S] List<OriginalState>  Weights captured before the first change; keptOriginals (the live list)
-//                       is put back after any Undo/Redo, so an undone setting never drops newer snapshots.
-//   plans                   List<ChildPlan>      Name-to-index links, rebuilt when dirty.
-//   planDirty               bool                 The plan must be rebuilt.
-//   planError               string               Why the plan cannot be used, shown as a warning.
-//   result                  string               Outcome of the last pass, shown at the bottom.
-//   busy                    bool                 A pass is running; the UI is disabled.
-//   nextTick                double               Time of the next automatic pass.
-//   lastAmbiguity / ambiguous / dialogPending    Ambiguous-name dialog state.
-//   scroll                  Vector2              Scroll position of the child list.
-//   Interval                const double         Seconds between automatic passes (0.5).
-//   SyncUndoName / RestoreUndoName  const string Undo names; also identify own Undo steps.
-//   SettingsUndo         "Blendshape Sync settings": Undo name of the job's edits (master, children, Remove, manual
-//                        links, Run automatically, Case-sensitive, the Main Menu's Auto); undoing one saves the jobs.
-//
-// TYPES
-//   ChildEntry      Renderer, Expanded (Manual link foldout), Links.
-//   ManualLink      Source (name on the master), Destination (name on the child).
-//   OriginalState   Renderer, Mesh, Names, Weights captured for "Set All to Original".
-//   ChildPlan / IndexLink / WeightChange   Internal planning and change records.
-//
-// UI METHODS (this file)
+// BlendshapeSyncWindow (this part)
 //   Open()                     Opens the window (called from RiryToolsMenuBar).
 //   OnGUI()                    Master field, child rows, toggles, buttons and messages.
 //   DrawManualLinks(child)     Source/Destination rows for one child.
-//
-// ACTIONS AND HELPERS (Editor/BlendshapeSyncWindow.cs)
-//   CanAssign(renderer, index) Refuses invalid or duplicate renderers (shows a notification).
-//   CaptureOriginal(renderer)  Stores a renderer's weights once, for restoring.
-//   EnsureChildRow() / EnsureLinkRow(child)  Keep one empty row at the end.
-//   InvalidatePlan()           Marks the plan dirty and repaints.
-//   GetPauseReason()           Why syncing is paused (Play Mode, animation preview, Animator editing).
-//   SyncNow()                  Copies the master's weights to every child (one Undo step).
-//   RestoreOriginals()         Restores every captured weight and stops automatic sync.
-//   loggedPause         The pause reason last logged: a job that pauses logs why once (RiryLog), since jobs run unseen.
-//   CrossJobError / Reaches / LoopError  Across jobs: a renderer may be a child in one job only, and no job may sync a
-//                              renderer that (through any jobs) syncs its master. Checked on assigning (CanAssign) and in
-//                              BuildPlan, which pauses the job with the reason.
-//   BuildPlan() / TryBuildLinks(...)  Match blendshape names to indices.
-//   EditorTick()               Runs automatic passes.
-//   OnUndoRedo(undo) / IsOwnUndo(undo)  Stops automatic sync when this job's own pass is undone (its name and a group in
-//                                   ownGroups); another job's pass leaves it running.
-//   ownGroups                        [NonSerialized] Undo groups this job's passes made.
-//   ApplyChanges joinHeld            While a control is held (a slider drag), the sync joins that Undo step instead of its own.

@@ -15,7 +15,7 @@ namespace Riry.RiryTools.Editor
     /// are saved per scene, for this user, in UserSettings/RiryTools/BlendshapeSync/
     /// &lt;scene GUID&gt;.json and come back when the scene opens. Jobs of an unsaved
     /// scene or of Prefab Mode last until it closes. The list is in the Main Menu's
-    /// Blendshape Sync tab and the popup in Editor/UI/BlendshapeSyncJobWindow.cs.
+    /// Blendshape Sync tab and the popup in Editor/UI/BlendshapeSync/BlendshapeSyncJobWindow.cs.
     /// </summary>
     [InitializeOnLoad]
     internal static class BlendshapeSyncJobs
@@ -199,3 +199,17 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Blendshape Sync jobs
+// The Tools > RiryTools > Blendshape Sync entry (Add Job) is in Editor/UI/RiryToolsMenuBar.cs.
+// ============================================================================
+//
+// BlendshapeSyncJobs (this file)
+//   All() / Add() / Remove(job)  The jobs: Blendshape Sync windows kept running unseen (HideAndDontSave).
+//   SaveSoon()                   Popup edits: SaveAll once no edit came for SaveDelay (1 s), not on every GUI event.
+//   SaveAll() / Load(scene)      UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json, one file per scene;
+//                                loaded when the scene opens, saved when it is saved or closes, at a script
+//                                reload and on quit. A closing scene's jobs end with it.
+//   Save(scene) keeps saved jobs whose master is not found (Read), and never replaces a file it cannot read. Load warns
+//   once about jobs and children it could not restore.

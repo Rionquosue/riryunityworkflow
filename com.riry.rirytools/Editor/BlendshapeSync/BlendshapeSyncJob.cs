@@ -7,7 +7,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// What the job list and saving need from a Blendshape Sync window running as a
-    /// job (Editor/BlendshapeSyncJobs.cs). The window's own behaviour is unchanged.
+    /// job (BlendshapeSyncJobs.cs). The window's own behaviour is unchanged.
     /// </summary>
     internal sealed partial class BlendshapeSyncWindow
     {
@@ -141,3 +141,13 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Blendshape Sync job part
+// BlendshapeSyncWindow is one partial class: UI/BlendshapeSync/BlendshapeSyncWindow(.UI).cs and BlendshapeSync/BlendshapeSyncWindow.*.cs, BlendshapeSyncJob.cs.
+// ============================================================================
+//
+// BlendshapeSyncWindow, job part (this file)
+//   JobNumber, Master, ChildCount, Auto, HasOriginals, Problem, RunSync(), RunRestore().
+//   SavedJob / SavedChild / Save() / Load(saved, master) / Find(id)  Renderers saved as GlobalObjectId strings.
+//   missingChildren     [S] Saved children not found on Load; saved again with the job, so they are never dropped.

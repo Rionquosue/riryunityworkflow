@@ -137,7 +137,7 @@ Not stored, but named like settings keys.
 | `<model>_ROOT.prefab` | Constraint Tool Train prefab variant. Suffix is `ConstraintTrainPrefabs.RootSuffix`. | `VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export. Built by `ImportPresetBetterFBX.FbxPathFor`. | `ImportPresets/ImportPresetBetterFBX.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control. Path is `GuidToolRemapLedger.RelativePath`. | `GuidTools/GuidToolRemapLedger.cs`, `GuidTools/GuidToolRegenerate.cs` |
-| `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds). | `BlendshapeSyncJobs.cs`, `BlendshapeSyncJob.cs`, `UI/BlendshapeSyncWindow.cs`, `UI/BlendshapeSyncJobWindow.cs` |
+| `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds). | `BlendshapeSync/BlendshapeSyncJobs.cs`, `BlendshapeSync/BlendshapeSyncJob.cs`, `UI/BlendshapeSync/BlendshapeSyncJobWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**). Deleted when empty. | `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar. | `VRChat/MenuTool/MenuToolPlan.cs` |
 
@@ -258,7 +258,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/MenuMockupWindows.cs`, `VRChat/UI/ConstraintToolWindow.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSyncWindow.UI.cs`, `UI/CleanAnimationKeysWindow.cs`, `UI/ExtractAnimationWindow.cs`, `UI/IconCapWindow.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/CleanAnimationKeysWindow.cs`, `UI/ExtractAnimationWindow.cs`, `UI/IconCapWindow.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `StopAutoGame.cs` |
 
 ### Attach To
@@ -285,9 +285,9 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `BlendshapeSyncJobList.WideRow` | `570`: window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line. | `UI/BlendshapeSyncJobWindow.cs` |
-| `BlendshapeSyncWindow.Interval` | `0.5` s: automatic sync period. | `UI/BlendshapeSyncWindow.cs`, `UI/BlendshapeSyncWindow.UI.cs`, `BlendshapeSyncJob.cs` |
-| `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights`: Undo names; also mark the tool's own Undo steps. | `UI/BlendshapeSyncWindow.cs`, `UI/BlendshapeSyncWindow.UI.cs` |
+| `BlendshapeSyncJobList.WideRow` | `570`: window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line. | `UI/BlendshapeSync/BlendshapeSyncJobList.cs` |
+| `BlendshapeSyncWindow.Interval` | `0.5` s: automatic sync period. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `BlendshapeSync/BlendshapeSyncJob.cs` |
+| `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights`: Undo names; also mark the tool's own Undo steps. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `BlendshapeSync/BlendshapeSyncWindow.Sync.cs` |
 | `CleanAnimationKeys.BoneValueDecimalPlaces` | `3`: rounding for bone endpoint comparison. | `AnimatorTools/CleanAnimationKeys.cs` |
 | `CleanAnimationKeys.DisplayName` | `Clean Animation Keys`: dialog, window and Undo name. | `AnimatorTools/CleanAnimationKeys.cs`, `UI/CleanAnimationKeysWindow.cs` |
 | `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys`: UI Toolkit name of the **Clean Keys** button. | `UI/CleanAnimationKeysWindow.cs` |
