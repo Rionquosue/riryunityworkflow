@@ -2,13 +2,7 @@
 
 These are organized by tool, with a sub section for features and bugs. Once these bugs are fixed or removed, please remove the associated line.
 
-Please reference "filestructure.md" for a glossary of where each tool is located and important segments of that code to more quickly locate affected code.
-
-### GUID Tool
-
-    #### Bugs
-
-    #### Features
+Please reference "filestructure.md" for where each tool is located (Tool names table and Script locations).
 
 ### Main menu
 
@@ -22,7 +16,7 @@ Please reference "filestructure.md" for a glossary of where each tool is located
 
     #### Features
     
-### Auto Sync
+### AutoSync
 
     #### Bugs
 
@@ -46,7 +40,7 @@ Please reference "filestructure.md" for a glossary of where each tool is located
 
     #### Features
     
-### Constraint tool
+### Constraint Tool
 
     #### Bugs
 
@@ -58,7 +52,7 @@ Please reference "filestructure.md" for a glossary of where each tool is located
 
     #### Features
     
-### Icon Cap
+### IconCap
 
     #### Bugs
 
@@ -78,19 +72,13 @@ Please reference "filestructure.md" for a glossary of where each tool is located
     
 ### Debug Tools
 
-    #### Reload domain
+    #### Refresh Scripts
     
         ##### Bugs
         
         ##### Features
         
     #### Find Null references
-    
-        ##### Bugs
-        
-        ##### Features
-            
-    #### Reload Domain
     
         ##### Bugs
         

@@ -8,7 +8,7 @@ All items should have a single window built for them. The main menu will embed o
 
 All naming conventions should be consistent across the board. Any names that do not match up should be reviewed.
 
-Consistent names should all be simple and descriptive of what that tool is used for. Such as "GUID Tool" being a tool that will find and repair missing GUID's, regenerate all GUID's for a selected object, or regenerate all GUID's within a specific directory. "GUID Tool" is simple and descriptive, the rest of the buttons and conventions as sub-tools of this should follow suit.
+Consistent names should all be simple and descriptive of what that tool is used for. Such as "GUID Tools" being a tool that will find and repair missing GUID's, regenerate all GUID's for a selected object, or regenerate all GUID's within a specific directory. "GUID Tools" is simple and descriptive, the rest of the buttons and conventions as sub-tools of this should follow suit.
 
 If an item requires fixed height or width to be usable, it should not be docked in the Main Menu and instead be moved to a window-call button within the appropriate category. Such as "Tools" "Debug" or "Animator Tools"
 
@@ -17,12 +17,12 @@ If an item requires fixed height or width to be usable, it should not be docked 
 **Hierarchy**
 
     * Avatar Migration Assistant
-    * Blendshape sync
-    * Constraint tool >
+    * Blendshape Sync
+    * Constraint Tool >
         * Train
         * Bezier
         * Insertable prop
-    * GUID Tool
+    * GUID Tools
     * Menu Tool
 
 **Project folder**
@@ -43,7 +43,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
 **Tools > RiryTools**
 
     * Main Menu
-    * Autosync >
+    * AutoSync >
         * Configure
         * [ ] Sync now
     * [ ] Stop Auto Game
@@ -51,10 +51,10 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * Animator Tools >
         * Clean Animation Keys
         * Find and Replace
-    * Avatar tools >
+    * Avatar Tools >
         * Avatar Migration Assistant
         * Blendshape Sync
-        * Menu Tools
+        * Menu Tool
     * Utilities >
         * GUID Rebuild tool
         * GUID Repair tool
@@ -65,8 +65,8 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Extract Animation
         * Import Preset Library
     * Debug Tools >
-        * Reload Domain
-        * Menu mockup
+        * Refresh Scripts
+        * Menu Mockup
         * [ ] Stop all tool scripts
     * Documentation
 
@@ -116,7 +116,7 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Avatar Migration Assistant |  |  |  |  |  |
-| Menu tool |  |  |  |  |  |
+| Menu Tool |  |  |  |  |  |
 | Blendshape Sync |  |  |  |  |  |
 
 ---
@@ -177,7 +177,7 @@ Where [] contains the currently active tab.
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | Import Presets | [Debug Tools] |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Reload Domain |  |  |  |  |  |
+| Refresh Scripts |  |  |  |  |  |
 | Find Null references |  |  |  |  |  |
 | Menu Mockup |  |  |  |  |  |
 | ☐ Stop all tool scripts |  |  |  |  |  |
