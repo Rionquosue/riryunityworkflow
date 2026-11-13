@@ -60,5 +60,3 @@ overrides until saved:
   connects the scene object to it. Save the scene afterwards.
 
 You can also do all of this directly in Prefab Mode.
-
-Reference: [design/constraint-train.md](../design/constraint-train.md)

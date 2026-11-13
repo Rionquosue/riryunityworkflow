@@ -26,5 +26,3 @@ to remove those curves too.
 
 Click **Clean**. The summary shows how many curves were removed. **Edit > Undo**
 restores every animation at once.
-
-Reference: [design/clean-animation-keys.md](../design/clean-animation-keys.md)

@@ -18,7 +18,7 @@ Constraint Tool: one window with a tab per subtool, all built on VRChat constrai
 - Bezier: rigs a bone chain to one cubic Bezier curve (two anchors, two handles) so moving the handles bends the chain, with optional twist and stretch.
 - Insertable prop: generates a draw, drop and reinsert system for a prop and its socket (a dagger and sheath, for example): grabbed by a PhysBone, slides back in when released near the socket, otherwise drops. Needs VRChat SDK 3.10.6 or newer.
 
-## GUID Tool
+## GUID Tools
 
 GUID Tools: regenerate GUIDs for selected assets and folders' contents while keeping every reference to them intact (folder GUIDs never change), and repair missing GUID references, using a permanent ledger of replaced GUIDs kept in ProjectSettings and its Git history. Also offers Check for Broken References when an opened scene or prefab points at missing assets.
 

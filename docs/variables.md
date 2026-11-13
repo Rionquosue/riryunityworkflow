@@ -32,8 +32,8 @@ Example:
   Toolkit element names.
 - **Settings keys:** `RiryTools.<Tool>.<Setting>`.
 - **Folders:** `<Library|Logs|Documents>/RiryTools/<Tool>`, built by
-  `RiryToolsPaths.cs`. The project folder is `Assets/RiryTools`
-  (`RiryToolsProjectFolder.cs`).
+  `Components/RiryToolsPaths.cs`. The project folder is `Assets/RiryTools`
+  (`Components/RiryToolsProjectFolder.cs`).
 - **Code:** namespace `Riry.RiryTools.Editor`. `Riry` is the author and
   `RiryTools` the product.
 - **Tool names:**
@@ -119,25 +119,25 @@ Not stored, but named like settings keys.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Tool Train clips, `_ROOT` prefab variants. Path is `RiryToolsProjectFolder.AssetPath`. | `Components/RiryToolsProjectFolder.cs`, `VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs`, `VRChat/ConstraintTools/InsertableProp/InsertablePropAnimator.cs` |
-| `Assets/RiryTools/InsertableProps/IP_<id>_<first 8 of the controller GUID>/` | Insertable prop clips: one folder per pair and controller, replaced in place on Generate. Built by `InsertablePropAnimator.ClipFolderPath`. | `VRChat/ConstraintTools/InsertableProp/InsertablePropAnimator.cs`, `VRChat/UI/ConstraintTools/InsertablePropWindow.cs` |
-| `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets anything else uses (another slot of the avatar, Modular Avatar or VRCFury, a package, or any other file in the project), made by **Apply** before a native move and linked into that one slot. Ctrl+Z does not delete them. Tracked by `MenuToolApply.Owned`. | `VRChat/MenuTool/MenuToolApply.cs` |
-| `Assets/RiryTools/MenuTool/<avatar>/<new menu>.asset` | Menu Tool's new, empty menus planned with **Add menu** as a menu asset, made by **Apply** (unique path) and linked by a SubMenu control in the parent's menu. Ctrl+Z does not delete them. Built by `MenuToolApply.NewMenuAsset`. | `VRChat/MenuTool/MenuToolApply.cs` |
+| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
 | `<export folder>/.iconcap.json` | IconCap jobs of the folder (entries with camera, objects as GlobalObjectIds, settings, effect stack); hidden on Windows. Named by `IconCapFiles.JobFileName`. | `IconCap/IconCapFiles.cs` |
 | `<export folder>/OLD_<n>/` | Icons a job's **Run** replaced, moved here without their `.meta` (one folder per Run). Named by `IconCapFiles.OldFolderPrefix`. | `IconCap/IconCapFiles.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 | `<folder>/ImportPreset.md` | Import preset rules for a folder. Named by `ImportPresetMarker.FileName`. | `ImportPresets/ImportPresetFolderRules.cs`, `ImportPresets/ImportPresetMarker.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
-| `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset. Named by `IconGenerator.OutputName`. | `IconCap/IconGenerator.cs` |
-| `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits. | `AutoSync/AutoSyncGitLargeFiles.cs` |
-| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches. Path is `GuidToolReferenceCache.CacheDirectoryPath`. | `GuidTools/GuidToolReferenceCache.cs`, `UI/GuidTools/GuidToolClearReferenceCache.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
-| `Library/RiryTools/GuidTools/` | `restore` and `restore-meta` while a Git backup is written. | `GuidTools/GuidToolReferenceRepair.cs` |
-| `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx`. | `ImportPresets/ImportPresetOwnedFiles.cs`, `ImportPresets/ImportPresetAnimations.cs`, `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs` |
-| `Logs/RiryTools/GuidTools/` | `guid-tools.log` and `archive/guid-tools_<UTC time>.log`. Path is `GuidToolRegenerate.LogDirectoryPath`. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolLog.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
 | `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` go under `<migrated folder>/Packages/`); never overwritten. Built by `AvatarMigratorMigratedFolder.Destination`. | `AvatarMigrator/AvatarMigratorMigratedFolder.cs`, `AvatarMigrator/AvatarMigratorRetargetAnim.cs` |
 | `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git. Built by `ImportPresetAnimationExtraction.PathFor`. | `ImportPresets/ImportPresetAnimationExtraction.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs` |
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips (or the model's Destination). Folder named by `ImportPresetAnimations.FolderName`. | `ImportPresets/ImportPresetAnimations.cs` |
 | `<model>_ROOT.prefab` | Constraint Tool Train prefab variant. Suffix is `ConstraintTrainPrefabs.RootSuffix`. | `VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export. Built by `ImportPresetBetterFBX.FbxPathFor`. | `ImportPresets/ImportPresetBetterFBX.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
+| `Assets/RiryTools/` | Files unpacked from the package's `ProjectFolder~`, Constraint Tool Train clips, `_ROOT` prefab variants. Path is `RiryToolsProjectFolder.AssetPath`. | `Components/RiryToolsProjectFolder.cs`, `VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs`, `VRChat/ConstraintTools/InsertableProp/InsertablePropAnimator.cs` |
+| `Assets/RiryTools/InsertableProps/IP_<id>_<first 8 of the controller GUID>/` | Insertable prop clips: one folder per pair and controller, replaced in place on Generate. Built by `InsertablePropAnimator.ClipFolderPath`. | `VRChat/ConstraintTools/InsertableProp/InsertablePropAnimator.cs`, `VRChat/UI/ConstraintTools/InsertablePropWindow.cs` |
+| `Assets/RiryTools/MenuTool/<avatar>/<menu>.asset` | Menu Tool's copies of menu assets anything else uses (another slot of the avatar, Modular Avatar or VRCFury, a package, or any other file in the project), made by **Apply** before a native move and linked into that one slot. Ctrl+Z does not delete them. Tracked by `MenuToolApply.Owned`. | `VRChat/MenuTool/MenuToolApply.cs` |
+| `Assets/RiryTools/MenuTool/<avatar>/<new menu>.asset` | Menu Tool's new, empty menus planned with **Add menu** as a menu asset, made by **Apply** (unique path) and linked by a SubMenu control in the parent's menu. Ctrl+Z does not delete them. Built by `MenuToolApply.NewMenuAsset`. | `VRChat/MenuTool/MenuToolApply.cs` |
+| `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits. | `AutoSync/AutoSyncGitLargeFiles.cs` |
+| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches. Path is `GuidToolReferenceCache.CacheDirectoryPath`. | `GuidTools/GuidToolReferenceCache.cs`, `UI/GuidTools/GuidToolClearReferenceCache.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
+| `Library/RiryTools/GuidTools/` | `restore` and `restore-meta` while a Git backup is written. | `GuidTools/GuidToolReferenceRepair.cs` |
+| `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx`. | `ImportPresets/ImportPresetOwnedFiles.cs`, `ImportPresets/ImportPresetAnimations.cs`, `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs` |
+| `Logs/RiryTools/GuidTools/` | `guid-tools.log` and `archive/guid-tools_<UTC time>.log`. Path is `GuidToolRegenerate.LogDirectoryPath`. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolLog.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control. Path is `GuidToolRemapLedger.RelativePath`. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds). | `BlendshapeSync/BlendshapeSyncJobs.cs`, `BlendshapeSync/BlendshapeSyncJob.cs`, `UI/BlendshapeSync/BlendshapeSyncJobWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**). Deleted when empty. | `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
@@ -161,12 +161,12 @@ Not stored, but named like settings keys.
 
 | Name | Use | Scripts |
 |---|---|---|
+| `.gitignore` lines | `/<path>`, pattern characters escaped; added by **Large Files**. | `AutoSync/AutoSyncGitLargeFiles.cs` |
 | Branch | The checked-out branch AutoSync commits to. | `AutoSync/AutoSyncJob.cs` |
 | Commit contents | The saved `.unity` and `.prefab` files and their `.meta` files. | `AutoSync/AutoSyncJob.cs` |
 | Commit title | Time of the save, `yyyy-MM-dd'T'HH:mm:sszzz` (`2026-10-30T14:05:12+01:00`). Format is `AutoSync.TimeFormat`. | `AutoSync/AutoSync.cs` |
 | Default templates | `Unity.gitignore` and `Unity.gitattributes`. Name is `AutoSyncGitTemplates.DefaultName`. | `AutoSync/AutoSyncGitTemplates.cs`, `AutoSync/AutoSyncGitActions.cs` |
 | Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset. | `AutoSync/AutoSyncJob.cs` |
-| `.gitignore` lines | `/<path>`, pattern characters escaped; added by **Large Files**. | `AutoSync/AutoSyncGitLargeFiles.cs` |
 | LFS query | HTTP(S): `POST <remote>.git/info/lfs/objects/batch` (or `remote.<name>.lfsurl`, `lfs.url`), one all-zero object. SSH: `git-lfs-authenticate <path> download` with `core.sshCommand` or `ssh`. | `AutoSync/AutoSyncGitLfsQuery.cs` |
 | Reflog message | `RiryTools AutoSync: drop large files`. | `AutoSync/AutoSyncGitLargeFiles.cs` |
 | Remote | The one chosen in Configuration; **Add Remote** adds `origin` (`AutoSyncGitRemotes.DefaultName`). | `AutoSync/AutoSyncGitRemotes.cs`, `AutoSync/AutoSyncJob.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
@@ -207,16 +207,16 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `GitRunner.TimedOut` | `-1`: exit code reported for a timed-out or cancelled command. | `Components/GitRunner.cs` |
-| `AutoSyncJob.PushTimeoutMs` | `600000`: push timeout, long enough to sign in. | `AutoSync/AutoSyncJob.cs` |
-| `AutoSyncJob.TimeoutMs` | `120000`: timeout per Git command. | `AutoSync/AutoSyncJob.cs` |
 | `AutoSyncGitLargeFiles.ProxyLimitBytes` | 100 MiB: Cloudflare's proxied upload limit, used for the ! button and held pushes. | `AutoSync/AutoSyncGitLargeFiles.cs` |
 | `AutoSyncGitLfsQuery.TimeoutMs` | `30000`: LFS query timeout. | `AutoSync/AutoSyncGitLfsQuery.cs` |
-| `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/`: the **Download Git** link. | `Components/GitNotInstalledException.cs`, `AutoSync/AutoSyncGitActions.cs` |
-| `GitState.CacheSeconds` | `5.0`: how long Git and repository state is cached. | `Components/GitState.cs` |
 | `AutoSyncGitTemplates.DefaultAttributes` | Built-in LFS template text, saved as `UnityLFS`. | `AutoSync/AutoSyncGitTemplates.cs` |
 | `AutoSyncGitTemplates.UnityAttributesUrl` | The gitattributes project's `Unity.gitattributes`: default `.gitattributes` template, saved as `Unity`. | `AutoSync/AutoSyncGitTemplates.cs` |
 | `AutoSyncGitTemplates.UnityIgnoreUrl` | GitHub's `Unity.gitignore`: default `.gitignore` template, saved as `Unity`. | `AutoSync/AutoSyncGitTemplates.cs` |
+| `AutoSyncJob.PushTimeoutMs` | `600000`: push timeout, long enough to sign in. | `AutoSync/AutoSyncJob.cs` |
+| `AutoSyncJob.TimeoutMs` | `120000`: timeout per Git command. | `AutoSync/AutoSyncJob.cs` |
+| `GitNotInstalledException.DownloadUrl` | `https://git-scm.com/install/`: the **Download Git** link. | `Components/GitNotInstalledException.cs`, `AutoSync/AutoSyncGitActions.cs` |
+| `GitRunner.TimedOut` | `-1`: exit code reported for a timed-out or cancelled command. | `Components/GitRunner.cs` |
+| `GitState.CacheSeconds` | `5.0`: how long Git and repository state is cached. | `Components/GitState.cs` |
 | `GuidToolBrokenReferenceMonitor.Threshold` / `WindowSeconds` | `3` in `30.0` s: missing-reference log lines that trigger the prompt. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
 | `ScriptLoadGuard.CaptureSeconds` | `5.0`: errors this long before a prefab opens count as suspects. | `Debug/ScriptLoadGuard.cs` |
 | `ScriptLoadGuard.RecentLimit` | `50`: logged errors kept. | `Debug/ScriptLoadGuard.cs` |
@@ -226,10 +226,10 @@ Moving or renaming a file must move its `.meta` with it.
 | Name | Use | Scripts |
 |---|---|---|
 | `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB: log rotation and archive trim. | `GuidTools/GuidToolLog.cs` |
-| `GuidToolReferenceRepair.MaxNameMatches` | `5`: name matches offered per old name. | `GuidTools/GuidToolReferenceRepair.cs` |
-| `GuidToolReferenceRepair.Title` | `Broken References`: window and dialog title. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolBrokenReferenceMonitor.cs`, `GuidTools/GuidToolBrokenReferenceSaveGuard.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`, `UI/GuidTools/GuidToolBrokenSaveWindow.cs` |
 | `GuidToolReferenceCache.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1`: cache file format. | `GuidTools/GuidToolReferenceCache.cs` |
 | `GuidToolReferenceCache.CacheNameLength` | `40`: readable part of a cache file name. | `GuidTools/GuidToolReferenceCache.cs` |
+| `GuidToolReferenceRepair.MaxNameMatches` | `5`: name matches offered per old name. | `GuidTools/GuidToolReferenceRepair.cs` |
+| `GuidToolReferenceRepair.Title` | `Broken References`: window and dialog title. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolBrokenReferenceMonitor.cs`, `GuidTools/GuidToolBrokenReferenceSaveGuard.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`, `UI/GuidTools/GuidToolBrokenSaveWindow.cs` |
 | `GuidToolRegenerate.GuidLength` | `32`: hex digits in a GUID. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs`, `GuidTools/GuidToolRegenerate.Patch.cs`, `GuidTools/GuidToolReferenceCache.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs` |
 | `GuidToolRegenerate.MaxDirectoryDepth` | `64`: stops symbolic link loops. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs` |
 | `GuidToolRegenerate.ScanBlockSize` | 256 KiB: read block for scanning. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
@@ -277,10 +277,10 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `AvatarMigratorMatchObjects.TieEpsilon` | `1e-7`: candidates this close in distance are a tie (left unmatched). | `AvatarMigrator/AvatarMigratorMatchObjects.cs` |
 | `AvatarMigratorCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig`: names treated as the armature, besides the parent of the hips. | `AvatarMigrator/AvatarMigratorCopyRun.TypeRules.cs` |
 | `AvatarMigratorCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints`: the VRChat SDK's constraint converter, found by name. | `AvatarMigrator/AvatarMigratorCopyRun.UpgradeConstraints.cs` |
 | `AvatarMigratorCopyRun.ScaleDecimals` | `8`: decimal places of every scale-corrected value. | `AvatarMigrator/AvatarMigratorCopyRun.CorrectScale.cs` |
+| `AvatarMigratorMatchObjects.TieEpsilon` | `1e-7`: candidates this close in distance are a tie (left unmatched). | `AvatarMigrator/AvatarMigratorMatchObjects.cs` |
 | `AvatarMigratorSettings.DefaultTolerance` | `0.001`: structure match distance in avatar-root space. | `AvatarMigrator/AvatarMigratorSettings.cs`, `AvatarMigrator/AvatarMigratorMatchObjects.cs` |
 
 ### Blendshape Sync and Clean Animation Keys
@@ -338,8 +338,8 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `MenuToolBudgetCount.MaxBits` / `MaxParameters` | `256` / `8192`: VRChat's synced bits and custom expression parameters. | `VRChat/MenuTool/MenuToolBudget.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolAddMenuDialog.Size` / `ControlSize` | `380` x `112` / `380` x `200`: Menu Tool's Add menu and Add New Control dialogs (fixed size, centred on the main window). | `VRChat/UI/MenuTool/MenuToolAddMenuDialog.cs` |
+| `MenuToolBudgetCount.MaxBits` / `MaxParameters` | `256` / `8192`: VRChat's synced bits and custom expression parameters. | `VRChat/MenuTool/MenuToolBudget.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolCompressor.BatchTime` | `0.1` s: VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time). | `VRChat/MenuTool/MenuToolCompressor.cs` |
 | `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect: VRCFury's limit for compression. | `VRChat/MenuTool/MenuToolCompressor.cs`, `VRChat/MenuTool/MenuToolBudget.cs` |
 | `MenuToolScanner.MaxControls` | `8`: controls per menu (VRChat's limit); more are paged by VRCFury, otherwise flagged. | `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolPlanner.cs`, `VRChat/MenuTool/MenuToolPreviewMenus.cs` |
