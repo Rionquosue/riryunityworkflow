@@ -127,16 +127,16 @@ Not stored, but named like settings keys.
 | `.gitignore`, `.gitattributes` | Copied from a template by **Sync** (new repository) and **Configuration**. Built by `AutoSyncGitActions.CopyTemplate`. | `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs` |
 | `<Icon Generator folder>/<prefix><source name><suffix>.png` | Icon Generator outputs, beside the asset. Named by `IconGenerator.OutputName`. | `IconCap/IconGenerator.cs` |
 | `Library/RiryTools/AutoSync/rewrite-index` | Temporary index while **Large Files** rewrites commits. | `AutoSync/AutoSyncGitLargeFiles.cs` |
-| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches. Path is `GuidToolRegenerate.CacheDirectoryPath`. | `GuidTools/GuidToolReferenceCache.cs`, `GuidTools/GuidToolRegenerate.cs`, `UI/GuidToolsWindow.cs` |
+| `Library/RiryTools/GuidReferenceCache/` | `<name>_<hash>.rguiddb` reference caches. Path is `GuidToolReferenceCache.CacheDirectoryPath`. | `GuidTools/GuidToolReferenceCache.cs`, `UI/GuidTools/GuidToolClearReferenceCache.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
 | `Library/RiryTools/GuidTools/` | `restore` and `restore-meta` while a Git backup is written. | `GuidTools/GuidToolReferenceRepair.cs` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx`. | `ImportPresets/ImportPresetOwnedFiles.cs`, `ImportPresets/ImportPresetAnimations.cs`, `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ExtractAnimationWindow.cs` |
-| `Logs/RiryTools/GuidTools/` | `guid-tools.log` and `archive/guid-tools_<UTC time>.log`. Path is `GuidToolRegenerate.LogDirectoryPath`. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidToolsWindow.cs` |
+| `Logs/RiryTools/GuidTools/` | `guid-tools.log` and `archive/guid-tools_<UTC time>.log`. Path is `GuidToolRegenerate.LogDirectoryPath`. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolLog.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
 | `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` go under `<migrated folder>/Packages/`); never overwritten. Built by `AvatarMigratorMigratedFolder.Destination`. | `AvatarMigrator/AvatarMigratorMigratedFolder.cs`, `AvatarMigrator/AvatarMigratorRetargetAnim.cs` |
 | `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git. Built by `ImportPresetAnimationExtraction.PathFor`. | `ImportPresets/ImportPresetAnimationExtraction.cs`, `UI/ExtractAnimationWindow.cs` |
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips (or the model's Destination). Folder named by `ImportPresetAnimations.FolderName`. | `ImportPresets/ImportPresetAnimations.cs` |
 | `<model>_ROOT.prefab` | Constraint Tool Train prefab variant. Suffix is `ConstraintTrainPrefabs.RootSuffix`. | `VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs` |
 | `<name>.fbx` beside `<name>.blend` | Better FBX export. Built by `ImportPresetBetterFBX.FbxPathFor`. | `ImportPresets/ImportPresetBetterFBX.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
-| `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control. Path is `GuidToolRemapLedger.RelativePath`. | `GuidTools/GuidToolRemapLedger.cs`, `GuidTools/GuidToolRegenerate.cs` |
+| `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control. Path is `GuidToolRemapLedger.RelativePath`. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds). | `BlendshapeSync/BlendshapeSyncJobs.cs`, `BlendshapeSync/BlendshapeSyncJob.cs`, `UI/BlendshapeSync/BlendshapeSyncJobWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**). Deleted when empty. | `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar. | `VRChat/MenuTool/MenuToolPlan.cs` |
@@ -223,16 +223,16 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB: log rotation and archive trim. | `GuidTools/GuidToolRegenerate.cs` |
+| `GuidToolLog.ActiveLogLimit` / `ArchiveLimit` | 10 MiB / 100 MiB: log rotation and archive trim. | `GuidTools/GuidToolLog.cs` |
 | `GuidToolReferenceRepair.MaxNameMatches` | `5`: name matches offered per old name. | `GuidTools/GuidToolReferenceRepair.cs` |
-| `GuidToolReferenceRepair.Title` | `Broken References`: window and dialog title. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolBrokenReferenceMonitor.cs`, `UI/BrokenReferenceWindow.cs` |
-| `GuidToolRegenerate.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1`: cache file format. | `GuidTools/GuidToolRegenerate.cs` |
-| `GuidToolRegenerate.CacheNameLength` | `40`: readable part of a cache file name. | `GuidTools/GuidToolRegenerate.cs` |
-| `GuidToolRegenerate.GuidLength` | `32`: hex digits in a GUID. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs` |
-| `GuidToolRegenerate.MaxDirectoryDepth` | `64`: stops symbolic link loops. | `GuidTools/GuidToolRegenerate.cs` |
-| `GuidToolRegenerate.ScanBlockSize` | 256 KiB: read block for scanning. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolReferenceRepair.cs` |
-| `GuidToolRegenerate.TextExtensions` | List of files scanned for references. | `GuidTools/GuidToolRegenerate.cs` |
-| `GuidToolRegenerate.UnitySerializedExtensions` | List of files that must be text to be patched. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/BrokenReferenceWindow.cs` |
+| `GuidToolReferenceRepair.Title` | `Broken References`: window and dialog title. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolBrokenReferenceMonitor.cs`, `GuidTools/GuidToolBrokenReferenceSaveGuard.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`, `UI/GuidTools/GuidToolBrokenSaveWindow.cs` |
+| `GuidToolReferenceCache.CacheExtension` / `CacheMagic` / `CacheVersion` | `.rguiddb` / `RGIX` / `1`: cache file format. | `GuidTools/GuidToolReferenceCache.cs` |
+| `GuidToolReferenceCache.CacheNameLength` | `40`: readable part of a cache file name. | `GuidTools/GuidToolReferenceCache.cs` |
+| `GuidToolRegenerate.GuidLength` | `32`: hex digits in a GUID. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs`, `GuidTools/GuidToolRegenerate.Patch.cs`, `GuidTools/GuidToolReferenceCache.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs` |
+| `GuidToolRegenerate.MaxDirectoryDepth` | `64`: stops symbolic link loops. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs` |
+| `GuidToolRegenerate.ScanBlockSize` | 256 KiB: read block for scanning. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
+| `GuidToolRegenerate.TextExtensions` | List of files scanned for references. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs` |
+| `GuidToolRegenerate.UnitySerializedExtensions` | List of files that must be text to be patched. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolRegenerate.Scan.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
 | `GuidToolRemapLedger.MaxChain` | `64`: longest old-to-new GUID chain followed. | `GuidTools/GuidToolRemapLedger.cs` |
 
 ### Import Presets and Better FBX

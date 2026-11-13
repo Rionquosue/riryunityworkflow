@@ -13,25 +13,25 @@ namespace Riry.RiryTools.Editor
     /// Lists every missing GUID in a set of files with every replacement found for
     /// it and how each was found; the user picks one (a single one is pre-selected)
     /// or any other asset. A missing GUID with nothing chosen is shown in red. State
-    /// and actions; the drawing is in Editor/UI/BrokenReferenceWindow.UI.cs.
+    /// and actions; the drawing is in Editor/UI/GuidToolBrokenReferenceWindow.UI.cs.
     /// </summary>
-    internal sealed partial class BrokenReferenceWindow : EditorWindow
+    internal sealed partial class GuidToolBrokenReferenceWindow : EditorWindow
     {
         private List<string> files = new List<string>();
         private string reason = "";
-        private RepairPlan plan;
+        private GuidToolRepairPlan plan;
         // Missing GUID to the chosen candidate index; Other (the list's length) uses others.
         private readonly Dictionary<string, int> choices = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Dictionary<string, Object> others = new Dictionary<string, Object>(StringComparer.Ordinal);
         // Restores whose Break detected button is open.
-        private readonly HashSet<RepairCandidate> expanded = new HashSet<RepairCandidate>();
+        private readonly HashSet<GuidToolRepairCandidate> expanded = new HashSet<GuidToolRepairCandidate>();
         // Candidates already searched, kept between the passes after each Apply.
-        private RepairCache cache = new RepairCache();
+        private GuidToolRepairCache cache = new GuidToolRepairCache();
         private Vector2 scroll;
 
         internal static void Open(List<string> files, string reason)
         {
-            BrokenReferenceWindow window = GetWindow<BrokenReferenceWindow>(true, GuidToolReferenceRepair.Title);
+            GuidToolBrokenReferenceWindow window = GetWindow<GuidToolBrokenReferenceWindow>(true, GuidToolReferenceRepair.Title);
             window.minSize = new Vector2(520f, 360f);
             window.files = files;
             window.reason = reason;
@@ -66,7 +66,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>Scans and collects candidates; the next pass after Apply keeps the cache, a new scan does not.</summary>
         private void Rescan(bool nextPass = false)
         {
-            if (!nextPass) cache = new RepairCache();
+            if (!nextPass) cache = new GuidToolRepairCache();
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
@@ -113,16 +113,16 @@ namespace Riry.RiryTools.Editor
         // A missing GUID with exactly one candidate starts with it chosen.
         private void PreselectSingles()
         {
-            foreach (KeyValuePair<string, List<RepairCandidate>> entry in plan.Candidates)
+            foreach (KeyValuePair<string, List<GuidToolRepairCandidate>> entry in plan.Candidates)
             {
                 if (entry.Value.Count == 1 && !choices.ContainsKey(entry.Key)) choices[entry.Key] = 0;
             }
         }
 
-        private RepairCandidate Chosen(string guid)
+        private GuidToolRepairCandidate Chosen(string guid)
         {
             int index;
-            List<RepairCandidate> candidates;
+            List<GuidToolRepairCandidate> candidates;
             if (!choices.TryGetValue(guid, out index) || !plan.Candidates.TryGetValue(guid, out candidates) ||
                 index < 0 || index >= candidates.Count)
                 return null;
@@ -132,7 +132,7 @@ namespace Riry.RiryTools.Editor
         private bool OtherChosen(string guid)
         {
             int index;
-            List<RepairCandidate> candidates;
+            List<GuidToolRepairCandidate> candidates;
             return choices.TryGetValue(guid, out index) && plan.Candidates.TryGetValue(guid, out candidates) &&
                 index == candidates.Count;
         }
@@ -143,7 +143,7 @@ namespace Riry.RiryTools.Editor
             var redirects = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (string missing in plan.Missing.Keys)
             {
-                RepairCandidate chosen = Chosen(missing);
+                GuidToolRepairCandidate chosen = Chosen(missing);
                 string guid = chosen != null && !chosen.IsRestore ? chosen.TargetGuid : null;
                 Object other;
                 long localId;
@@ -154,27 +154,27 @@ namespace Riry.RiryTools.Editor
             return redirects;
         }
 
-        private List<RepairCandidate> Restores()
+        private List<GuidToolRepairCandidate> Restores()
         {
-            var restores = new List<RepairCandidate>();
+            var restores = new List<GuidToolRepairCandidate>();
             foreach (string missing in plan.Missing.Keys)
             {
-                RepairCandidate chosen = Chosen(missing);
+                GuidToolRepairCandidate chosen = Chosen(missing);
                 if (chosen != null && chosen.IsRestore) restores.Add(chosen);
             }
             return restores;
         }
 
         /// <summary>Fix for a restored file's missing references: adds them to the list, with their own candidates.</summary>
-        private void FixMissingReferences(string owner, RepairCandidate restore)
+        private void FixMissingReferences(string owner, GuidToolRepairCandidate restore)
         {
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
                 // Past the third level, the references wait for the next pass, which lists them by itself.
-                if (plan.DepthOf(owner) < RepairPlan.MaxFixDepth)
+                if (plan.DepthOf(owner) < GuidToolRepairPlan.MaxFixDepth)
                     GuidToolReferenceRepair.AddDependencies(plan, owner, restore, cache, log);
-                restore.MissingDecision = BreakDecision.Fix;
+                restore.MissingDecision = GuidToolBreakDecision.Fix;
                 PreselectSingles();
             }
             finally
@@ -198,7 +198,7 @@ namespace Riry.RiryTools.Editor
                     "Close Prefab Mode without saving first, then apply the redirects.", "OK");
                 return;
             }
-            List<RepairCandidate> restores = Restores();
+            List<GuidToolRepairCandidate> restores = Restores();
             // A break without Fix (accepted, or not decided) stays broken after Apply.
             if (restores.Exists(restore => restore.Unfixed) &&
                 !EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title,
@@ -249,63 +249,34 @@ namespace Riry.RiryTools.Editor
             Rescan(true);
         }
     }
-
-    /// <summary>
-    /// The modal warning before saving with broken references. CONTINUE ANYWAY counts
-    /// down [2], [1] and saves on the third click; ABORT or closing skips the save.
-    /// </summary>
-    internal sealed class BrokenSaveWindow : EditorWindow
-    {
-        private const string Warning =
-            "SAVING WITH BROKEN GUID'S CAN CORRUPT A SCENE. Click continue anyways three times to save regardless.";
-        private const int ClicksNeeded = 3;
-        private string path;
-        private List<string> broken;
-        private Vector2 scroll;
-        private int clicksLeft = ClicksNeeded;
-        private bool confirmed;
-        private GUIStyle warningStyle;
-
-        internal static bool Confirm(string path, List<string> broken)
-        {
-            BrokenSaveWindow window = CreateInstance<BrokenSaveWindow>();
-            window.titleContent = new GUIContent(GuidToolReferenceRepair.Title);
-            window.path = path;
-            window.broken = broken;
-            Rect main = EditorGUIUtility.GetMainWindowPosition();
-            window.position = new Rect(main.center.x - 260f, main.center.y - 180f, 520f, 360f);
-            window.minSize = new Vector2(520f, 360f);
-            window.ShowModalUtility();
-            return window.confirmed;
-        }
-
-        private void OnGUI()
-        {
-            if (warningStyle == null)
-            {
-                warningStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 18, wordWrap = true };
-                warningStyle.normal.textColor = new Color(1f, 0.2f, 0.2f);
-            }
-            GUILayout.Space(8f);
-            GUILayout.Label(Warning, warningStyle);
-            GUILayout.Space(6f);
-            EditorGUILayout.LabelField(path + ": " + broken.Count + " broken asset reference(s).", EditorStyles.wordWrappedMiniLabel);
-            GUILayout.Space(4f);
-            EditorGUILayout.LabelField("Broken references:", EditorStyles.boldLabel);
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-            foreach (string line in broken) EditorGUILayout.SelectableLabel(line, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-            EditorGUILayout.EndScrollView();
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("ABORT", GUILayout.Height(30f))) Close();
-                string label = "CONTINUE ANYWAY" + (clicksLeft < ClicksNeeded ? " [" + clicksLeft + "]" : "");
-                if (GUILayout.Button(label, GUILayout.Height(30f)) && --clicksLeft == 0)
-                {
-                    confirmed = true;
-                    Close();
-                }
-            }
-            GUILayout.Space(8f);
-        }
-    }
 }
+
+// ============================================================================
+// GLOSSARY: Broken References window, fields and actions
+// Drawing is in GuidToolBrokenReferenceWindow.UI.cs; the scan and repair are in Editor/GuidTools/GuidToolReferenceRepair.cs. Git history is searched when the project is in a repository.
+// ============================================================================
+//
+// GuidToolBrokenReferenceWindow (this part)
+//   files                 List<string>  Files scanned.
+//   reason                string        Why the window opened.
+//   plan                  GuidToolRepairPlan    Missing GUIDs, their files and candidates.
+//   choices               Dictionary<string, int>  Chosen candidate per missing GUID (its list length = Other).
+//   expanded              HashSet<GuidToolRepairCandidate>  Restores whose break options are open.
+//   others                Dictionary<string, Object>  The asset picked under Other.
+//   scroll                Vector2       Scroll position.
+//   Open(files, reason)   Opens the window and scans.
+//   OpenForOpenScenes(reason)  Scans the open scenes and the prefab in Prefab Mode.
+//   OpenPaths()           Paths of the open scenes and that prefab.
+//   Rescan(nextPass)      Scans, collects candidates (reusing the cache on a next pass), pre-selects single ones.
+//   cache                 GuidToolRepairCache   Candidates already searched, kept between passes.
+//   PreselectSingles()    Chooses the candidate of each missing GUID that has exactly one.
+//   Chosen(guid) / OtherChosen(guid)  The chosen candidate, or whether Other is chosen.
+//   Redirects()           Missing GUID to chosen asset GUID.
+//   Restores()            Chosen Git restores.
+//   FixMissingReferences(owner, restore)  Adds a restored file's missing references to the list, one level deeper.
+//   ApplyRedirects()      Warns when a restore's break has no Fix (ABORT / ACCEPT BROKEN REFERENCES),
+//                         confirms, restores, rewrites, reloads, then starts the next pass with the
+//                         restored files added, until nothing is broken.
+//
+// UpdateExitPrompt() / SaveChanges(): closing with broken references
+//   listed asks ExitMessage; Save keeps the window open like Cancel.

@@ -6,8 +6,8 @@ using Object = UnityEngine.Object;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>What the Broken References window draws. State and actions are in Editor/UI/BrokenReferenceWindow.cs.</summary>
-    internal sealed partial class BrokenReferenceWindow
+    /// <summary>What the Broken References window draws. State and actions are in Editor/UI/GuidToolBrokenReferenceWindow.cs.</summary>
+    internal sealed partial class GuidToolBrokenReferenceWindow
     {
         private static readonly Color Unresolved = new Color(1f, 0.35f, 0.35f);
         private static readonly Color BreakColor = new Color(1f, 0.6f, 0.1f);
@@ -33,8 +33,8 @@ namespace Riry.RiryTools.Editor
             scroll = EditorGUILayout.BeginScrollView(scroll);
             foreach (string missing in new List<string>(plan.Missing.Keys))
             {
-                List<RepairCandidate> candidates;
-                if (!plan.Candidates.TryGetValue(missing, out candidates)) candidates = new List<RepairCandidate>();
+                List<GuidToolRepairCandidate> candidates;
+                if (!plan.Candidates.TryGetValue(missing, out candidates)) candidates = new List<GuidToolRepairCandidate>();
                 bool resolved = Redirects().ContainsKey(missing) || Chosen(missing) != null && Chosen(missing).IsRestore;
                 Color previous = GUI.backgroundColor;
                 if (!resolved) GUI.backgroundColor = Unresolved;
@@ -63,7 +63,7 @@ namespace Riry.RiryTools.Editor
         }
 
         // One choice: what it is, every way it was found, and for a restore, what it would break.
-        private void DrawCandidate(string missing, int index, RepairCandidate candidate)
+        private void DrawCandidate(string missing, int index, GuidToolRepairCandidate candidate)
         {
             int chosen;
             bool on = choices.TryGetValue(missing, out chosen) && chosen == index;
@@ -88,7 +88,7 @@ namespace Riry.RiryTools.Editor
                         "the restored file by its GUID.", EditorStyles.wordWrappedMiniLabel);
                 if (candidate.MissingReferences.Count == 0 && candidate.GuidInUseBy == null) return;
                 // Past the second level of fixes, what this restore breaks stays broken until the next run.
-                bool recursive = plan.DepthOf(missing) >= RepairPlan.MaxFixDepth;
+                bool recursive = plan.DepthOf(missing) >= GuidToolRepairPlan.MaxFixDepth;
                 Color previous = GUI.backgroundColor;
                 GUI.backgroundColor = recursive ? RecursiveColor : BreakColor;
                 bool open = expanded.Contains(candidate);
@@ -123,19 +123,19 @@ namespace Riry.RiryTools.Editor
         }
 
         // A break with Fix (when one exists) and Accept break; the chosen one is pressed in.
-        private static void DrawBreak(string problem, string fixLabel, BreakDecision decision, Action fix,
-            Action<BreakDecision> decide)
+        private static void DrawBreak(string problem, string fixLabel, GuidToolBreakDecision decision, Action fix,
+            Action<GuidToolBreakDecision> decide)
         {
-            EditorGUILayout.HelpBox(problem, decision == BreakDecision.Undecided ? MessageType.Warning : MessageType.None);
+            EditorGUILayout.HelpBox(problem, decision == GuidToolBreakDecision.Undecided ? MessageType.Warning : MessageType.None);
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.Space(EditorGUI.indentLevel * 15f);
-                if (fix != null && GUILayout.Toggle(decision == BreakDecision.Fix, "Fix: " + fixLabel, EditorStyles.miniButtonLeft) &&
-                    decision != BreakDecision.Fix)
+                if (fix != null && GUILayout.Toggle(decision == GuidToolBreakDecision.Fix, "Fix: " + fixLabel, EditorStyles.miniButtonLeft) &&
+                    decision != GuidToolBreakDecision.Fix)
                     fix();
-                if (GUILayout.Toggle(decision == BreakDecision.Accept, "Accept break",
-                        fix != null ? EditorStyles.miniButtonRight : EditorStyles.miniButton) && decision != BreakDecision.Accept)
-                    decide(BreakDecision.Accept);
+                if (GUILayout.Toggle(decision == GuidToolBreakDecision.Accept, "Accept break",
+                        fix != null ? EditorStyles.miniButtonRight : EditorStyles.miniButton) && decision != GuidToolBreakDecision.Accept)
+                    decide(GuidToolBreakDecision.Accept);
             }
         }
 
@@ -164,13 +164,11 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Broken References window
-// Opened from the GUID Tools window (Check for Broken References and Repair Missing GUID
-// References), Project right-click > RiryTools > Repair Missing GUID References (RiryToolsRightClickMenu.cs),
-// and the GuidToolBrokenReferenceMonitor prompt. Git history is searched when the project is in a repository.
+// GLOSSARY: Broken References window, drawing
+// Opened from the GUID Tools window (Check for Broken References and Repair Missing GUID References), Project right-click > RiryTools > Repair Missing GUID References (RiryToolsRightClickMenu.cs), and the GuidToolBrokenReferenceMonitor prompt. Fields and actions are in GuidToolBrokenReferenceWindow.cs.
 // ============================================================================
 //
-// UI (this file)
+// GuidToolBrokenReferenceWindow (this part)
 //   Unresolved            Color   Red tint for a missing GUID with nothing chosen.
 //   OnGUI()               Reason, files, Rescan, one box per missing GUID, Apply.
 //   BreakColor / RecursiveColor  Orange "Break detected" and red "RECURSIVE BREAK DETECTED" buttons.
@@ -180,48 +178,3 @@ namespace Riry.RiryTools.Editor
 //   DrawBreak(problem, fixLabel, decision, fix, decide)  A break with Fix and Accept break.
 //   DrawOther(missing, index)  "Other:" with any asset.
 //
-// FIELDS AND ACTIONS (Editor/GuidTools/BrokenReferenceWindow.cs)
-//   files                 List<string>  Files scanned.
-//   reason                string        Why the window opened.
-//   plan                  RepairPlan    Missing GUIDs, their files and candidates.
-//   choices               Dictionary<string, int>  Chosen candidate per missing GUID (its list length = Other).
-//   expanded              HashSet<RepairCandidate>  Restores whose break options are open.
-//   others                Dictionary<string, Object>  The asset picked under Other.
-//   scroll                Vector2       Scroll position.
-//   Open(files, reason)   Opens the window and scans.
-//   OpenForOpenScenes(reason)  Scans the open scenes and the prefab in Prefab Mode.
-//   OpenPaths()           Paths of the open scenes and that prefab.
-//   Rescan(nextPass)      Scans, collects candidates (reusing the cache on a next pass), pre-selects single ones.
-//   cache                 RepairCache   Candidates already searched, kept between passes.
-//   PreselectSingles()    Chooses the candidate of each missing GUID that has exactly one.
-//   Chosen(guid) / OtherChosen(guid)  The chosen candidate, or whether Other is chosen.
-//   Redirects()           Missing GUID to chosen asset GUID.
-//   Restores()            Chosen Git restores.
-//   FixMissingReferences(owner, restore)  Adds a restored file's missing references to the list, one level deeper.
-//   ApplyRedirects()      Warns when a restore's break has no Fix (ABORT / ACCEPT BROKEN REFERENCES),
-//                         confirms, restores, rewrites, reloads, then starts the next pass with the
-//                         restored files added, until nothing is broken.
-//
-// RepairPlan / RepairCandidate / BreakDecision (Editor/GuidTools/GuidToolReferenceRepair.cs)
-//   RepairPlan: Files, References (file to offsets), Missing (GUID to files), Candidates, LastKnownPaths.
-//   RepairCandidate: TargetGuid or a restore (Commit, RepoPath), Path, Sources, and the restore's
-//     breaks: MissingReferences and GuidInUseBy, each with a BreakDecision (Undecided, Fix, Accept). PathTaken is not
-//     a break: Destination is a free name beside the taken path (GuidToolReferenceRepair.FreePath), so nothing is
-//     overwritten and the references follow the restored file by its GUID; Restore refuses a destination that exists.
-// RepairPlan.Depth / DepthOf(guid) / MaxFixDepth (2): levels shown per pass; a restore at the third
-//   level that breaks something is a recursive break, and its references come in the next pass.
-// RepairCache: Candidates and LastKnownPaths searched so far.
-// GuidToolReferenceRepair: Scan(files, log), Suggest(plan, guids, log), AddDependencies(plan, owner, restore, log),
-//   Apply(plan, redirects, restores, log), SelectedFiles(), IsMissing(guid), FindGuidReferences(bytes), RepairSelected(),
-//   LastKnownNames(guids) (file names from the remap ledger and .meta Git history).
-// UpdateExitPrompt() / SaveChanges() (BrokenReferenceWindow.cs): closing with broken references
-//   listed asks ExitMessage; Save keeps the window open like Cancel.
-// BrokenReferenceSaveGuard / BrokenSaveWindow (BrokenReferenceWindow.cs): interrupt saving a scene or
-//   Prefab Mode prefab with broken asset references (FindBroken: empty references whose GUID is missing),
-//   listing each as "<last known name> in <object > component > field> (GUID:...)";
-//   CONTINUE ANYWAY needs three clicks ([2], [1]). Skipped while GuidToolBrokenReferenceMonitor.Loading.
-// GuidToolBrokenReferenceMonitor.Loading: true from EditorSceneManager.sceneOpening until two editor updates after the
-//   scene opens (StartLoading; loadNumber keeps an earlier load from ending a later one).
-// GuidToolBrokenReferenceMonitor (BrokenReferenceWindow.cs): offers the window every time a file opens with
-//   missing GUIDs (PromptOnOpen; Do Not Show Again turns it off for that file, OffKey), and once per session when
-//   Unity logs several missing-prefab or broken-reference messages.

@@ -41,17 +41,17 @@ namespace Riry.RiryTools.Editor
             GUILayout.Space(4f);
             if (GUILayout.Button("Check for Broken References", GUILayout.Height(24f)))
             {
-                BrokenReferenceWindow.OpenForOpenScenes("Checked from the GUID Tools window.");
+                GuidToolBrokenReferenceWindow.OpenForOpenScenes("Checked from the GUID Tools window.");
                 RiryToolGUI.ExitAfterModal();
             }
             if (GUILayout.Button("Delete GUID Reference Cache", GUILayout.Height(24f)))
             {
-                GuidToolReferenceCache.DeleteWithConfirmation();
+                GuidToolClearReferenceCache.Run();
                 RiryToolGUI.ExitAfterModal();
             }
 
             GUILayout.Space(6f);
-            EditorGUILayout.LabelField("Cache: " + GuidToolRegenerate.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Cache: " + GuidToolReferenceCache.CacheDirectoryPath, EditorStyles.wordWrappedMiniLabel);
             EditorGUILayout.LabelField("Logs: " + GuidToolRegenerate.LogDirectoryPath, EditorStyles.wordWrappedMiniLabel);
         }
 
@@ -82,8 +82,8 @@ namespace Riry.RiryTools.Editor
 //                                            and Packages files before writing; RenameGuidNamedFiles renames
 //                                            UserSettings/RiryTools files named by an old GUID afterwards.
 //   GuidToolReferenceRepair.RepairSelected()          Broken References window for the selection.
-//   GuidToolReferenceCache.DeleteWithConfirmation()  Deletes Library/RiryTools/GuidToolReferenceCache.
+//   GuidToolClearReferenceCache.Run()       Asks, then deletes Library/RiryTools/GuidReferenceCache (Editor/UI/GuidTools/GuidToolClearReferenceCache.cs).
 //
 // Locations shown
-//   Library/RiryTools/GuidToolReferenceCache   GuidToolRegenerate.CacheDirectoryPath
+//   Library/RiryTools/GuidReferenceCache   GuidToolReferenceCache.CacheDirectoryPath
 //   Logs/RiryTools/GuidTools               GuidToolRegenerate.LogDirectoryPath

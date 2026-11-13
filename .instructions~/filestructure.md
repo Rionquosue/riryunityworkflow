@@ -117,9 +117,16 @@ com.riry.rirytools/
     │   └── ScriptLoadGuard.cs
     ├── GuidTools/
     │   ├── GuidToolBrokenReferenceMonitor.cs
+    │   ├── GuidToolBrokenReferenceSaveGuard.cs
+    │   ├── GuidToolBytes.cs
+    │   ├── GuidToolLog.cs
+    │   ├── GuidToolMetaHistoryParser.cs
     │   ├── GuidToolReferenceCache.cs
     │   ├── GuidToolReferenceRepair.cs
     │   ├── GuidToolRegenerate.cs
+    │   ├── GuidToolRegenerate.Patch.cs
+    │   ├── GuidToolRegenerate.Rollback.cs
+    │   ├── GuidToolRegenerate.Scan.cs
     │   └── GuidToolRemapLedger.cs
     ├── IconCap/
     │   ├── Shaders/
@@ -169,8 +176,11 @@ com.riry.rirytools/
     │   │   ├── MenuMockupWindows.cs
     │   │   └── ScriptLoadFailureWindow.cs
     │   ├── GuidTools/
-    │   │   ├── GuidToolBrokenReferenceWindow.UI.cs
     │   │   ├── GuidToolBrokenReferenceWindow.cs
+    │   │   ├── GuidToolBrokenReferenceWindow.UI.cs
+    │   │   ├── GuidToolBrokenSaveWindow.cs
+    │   │   ├── GuidToolClearReferenceCache.cs
+    │   │   ├── GuidToolRegenerate.Prompts.cs
     │   │   └── GuidToolsWindow.cs
     │   ├── IconCap/
     │   │   ├── IconCapEffectStackGUI.cs

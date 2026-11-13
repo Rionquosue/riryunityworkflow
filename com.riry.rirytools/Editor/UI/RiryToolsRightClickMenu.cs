@@ -136,7 +136,7 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Save Import Preset (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
 //   Assets/RiryTools/Extract Animation (2003) -> ExtractAnimationWindow.Open with the selected model (Editor/UI/ExtractAnimationWindow.cs);
 //                                                      enabled only for a model with embedded animations
-//   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidToolReferenceRepair.RepairSelected -> BrokenReferenceWindow (Editor/UI/BrokenReferenceWindow.UI.cs)
+//   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidToolReferenceRepair.RepairSelected -> GuidToolBrokenReferenceWindow (Editor/UI/GuidToolBrokenReferenceWindow.UI.cs)
 //   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //   Assets/RiryTools/Animator Tools/Find And Replace (2006) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
