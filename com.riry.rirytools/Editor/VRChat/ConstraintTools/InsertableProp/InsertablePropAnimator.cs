@@ -456,15 +456,15 @@ namespace Riry.RiryTools.Editor
                 Type position = typeof(VRCPositionConstraint);
                 Type rotation = typeof(VRCRotationConstraint);
                 float[] prop = { Seat, Entry, Hand, Drop };
-                for (int s = 0; s < 4; s++) Set(clip, rig.Prop, parent, ConstraintTrainPlanner.SourceWeightProperty(s), prop[s], length);
+                for (int s = 0; s < 4; s++) Set(clip, rig.Prop, parent, ConstraintToolSources.SourceWeightProperty(s), prop[s], length);
                 Set(clip, rig.Prop, parent, "SmoothingFactor", smoothing, length);
                 // The PhysBone's root and end: at the seat's grip, or the dropped prop's.
                 float seat = onSeat ? 1f : 0f;
-                Set(clip, rig.Anchor, parent, ConstraintTrainPlanner.SourceWeightProperty(0), seat, length);
-                Set(clip, rig.Anchor, parent, ConstraintTrainPlanner.SourceWeightProperty(1), 1f - seat, length);
+                Set(clip, rig.Anchor, parent, ConstraintToolSources.SourceWeightProperty(0), seat, length);
+                Set(clip, rig.Anchor, parent, ConstraintToolSources.SourceWeightProperty(1), 1f - seat, length);
                 Set(clip, rig.Anchor, parent, "FreezeToWorld", held ? 1f : 0f, length);
-                Set(clip, rig.End, position, ConstraintTrainPlanner.SourceWeightProperty(0), seat, length);
-                Set(clip, rig.End, position, ConstraintTrainPlanner.SourceWeightProperty(1), 1f - seat, length);
+                Set(clip, rig.End, position, ConstraintToolSources.SourceWeightProperty(0), seat, length);
+                Set(clip, rig.End, position, ConstraintToolSources.SourceWeightProperty(1), 1f - seat, length);
                 Set(clip, rig.End, position, "IsActive", held ? 0f : 1f, length);
                 if (rig.World != null)
                 {
@@ -475,8 +475,8 @@ namespace Riry.RiryTools.Editor
                     bool followerFree = dynamicBody && !held;
                     Set(clip, rig.Follower, typeof(Rigidbody), "m_IsKinematic", followerFree ? 0f : 1f, length);
                     Set(clip, rig.Follower, parent, "IsActive", followerFree ? 0f : 1f, length);
-                    Set(clip, rig.Follower, parent, ConstraintTrainPlanner.SourceWeightProperty(0), held ? 0f : 1f, length);
-                    Set(clip, rig.Follower, parent, ConstraintTrainPlanner.SourceWeightProperty(1), held ? 1f : 0f, length);
+                    Set(clip, rig.Follower, parent, ConstraintToolSources.SourceWeightProperty(0), held ? 0f : 1f, length);
+                    Set(clip, rig.Follower, parent, ConstraintToolSources.SourceWeightProperty(1), held ? 1f : 0f, length);
                 }
                 if (rig.Drop != null)
                 {
@@ -491,15 +491,15 @@ namespace Riry.RiryTools.Editor
             private AnimationClip HandFrame(string name, int source)
             {
                 var clip = new AnimationClip();
-                for (int s = 0; s < 4; s++) Set(clip, rig.HandFrame, typeof(VRCRotationConstraint), ConstraintTrainPlanner.SourceWeightProperty(s), s == source ? 1f : 0f, 1f / 60f);
+                for (int s = 0; s < 4; s++) Set(clip, rig.HandFrame, typeof(VRCRotationConstraint), ConstraintToolSources.SourceWeightProperty(s), s == source ? 1f : 0f, 1f / 60f);
                 return Save(name, clip);
             }
 
             private AnimationClip HandAim(string name, float sheath)
             {
                 var clip = new AnimationClip();
-                Set(clip, rig.Hand, typeof(VRCRotationConstraint), ConstraintTrainPlanner.SourceWeightProperty(0), 1f - sheath, 1f / 60f);
-                Set(clip, rig.Hand, typeof(VRCRotationConstraint), ConstraintTrainPlanner.SourceWeightProperty(1), sheath, 1f / 60f);
+                Set(clip, rig.Hand, typeof(VRCRotationConstraint), ConstraintToolSources.SourceWeightProperty(0), 1f - sheath, 1f / 60f);
+                Set(clip, rig.Hand, typeof(VRCRotationConstraint), ConstraintToolSources.SourceWeightProperty(1), sheath, 1f / 60f);
                 return Save(name, clip);
             }
 

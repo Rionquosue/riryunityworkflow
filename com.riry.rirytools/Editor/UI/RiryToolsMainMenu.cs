@@ -16,9 +16,8 @@ namespace Riry.RiryTools.Editor
     internal sealed class RiryToolsMainMenu : EditorWindow
     {
         // Set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs when the VRChat SDK is in the project.
-        internal static Func<EditorWindow> CreateConstraintTrain;
-        internal static Func<EditorWindow> CreateConstraintBezier;
-        internal static Func<EditorWindow> CreateConstraintInsertable;
+        // The Constraint Tool window, which draws its own Train, Bezier and Insertable prop sub-tabs.
+        internal static Func<EditorWindow> CreateConstraintTool;
         internal static Func<EditorWindow> CreateMenuTool;
         internal static Func<EditorWindow> CreateFindReplace;
 
@@ -28,9 +27,7 @@ namespace Riry.RiryTools.Editor
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
-        // Constraint Tool's sub-tabs, as in its own window (Editor/VRChat/UI/ConstraintToolWindow.cs).
         private static readonly string[] AnimatorTabs = { "Find and Replace" };
-        private static readonly string[] ConstraintTabs = { "Train", "Bezier", "Insertable prop" };
         private static readonly string[] ImportTabs =
         {
             "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
@@ -65,7 +62,6 @@ namespace Riry.RiryTools.Editor
         private static GUIStyle activeTabLabel;
 
         [SerializeField] private int tab;
-        [SerializeField] private int constraintTab;
         [SerializeField] private int importTab;
         // The current tab's scroll position; back to the top when the tab changes.
         [SerializeField] private Vector2 tabScroll;
@@ -147,14 +143,12 @@ namespace Riry.RiryTools.Editor
                     BlendshapeSyncJobList.Draw();
                     break;
                 case "Constraint Tool":
-                    if (CreateConstraintTrain == null)
+                    // The Constraint Tool window draws its own sub-tabs (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs).
+                    if (CreateConstraintTool == null)
                     {
                         EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Tool").Message, MessageType.Info);
                         break;
                     }
-                    EditorGUILayout.Space(SubTabGap);
-                    constraintTab = TabStrip(this, constraintTab, ConstraintTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
-                    EditorGUILayout.Space(4f);
                     Draw(Active());
                     break;
                 case "Menu Tool":
@@ -209,10 +203,7 @@ namespace Riry.RiryTools.Editor
                 case "AutoSync": return Host("Configuration", () => CreateInstance<AutoSyncGitConfigureWindow>(), window => ((AutoSyncGitConfigureWindow)window).Reload());
                 case "Animator Tools": return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
-                case "Constraint Tool":
-                    if (CreateConstraintTrain == null) return null;
-                    if (constraintTab == 2) return Host("Insertable prop", CreateConstraintInsertable, null);
-                    return constraintTab == 1 ? Host("Bezier", CreateConstraintBezier, null) : Host("Train", CreateConstraintTrain, null);
+                case "Constraint Tool": return CreateConstraintTool == null ? null : Host("Constraint Tool", CreateConstraintTool, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
                 case "Menu Tool": return CreateMenuTool == null ? null : Host("Menu Tool", CreateMenuTool, null);
                 case "Import Presets":
@@ -370,7 +361,6 @@ namespace Riry.RiryTools.Editor
             string name = Current;
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
-                : name == "Constraint Tool" ? ConstraintTabs[Mathf.Clamp(constraintTab, 0, ConstraintTabs.Length - 1)]
                 : name == "Blendshape Sync" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
@@ -408,10 +398,9 @@ namespace Riry.RiryTools.Editor
 //                            the Script Load Guard toggle (ScriptLoadGuard.Enabled, the same way).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train, Bezier and Insertable prop,
-//                            hosted under those names, like its own window (Editor/VRChat/UI/ConstraintToolWindow.cs).
-//   CreateConstraintTrain / CreateConstraintBezier / CreateConstraintInsertable  Set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK
-//                            (the tab says so).
+//   Constraint Tool tab      CreateConstraintTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK,
+//                            and the tab says so) makes the hosted ConstraintToolWindow, which draws its own Train, Bezier and
+//                            Insertable prop sub-tabs (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or

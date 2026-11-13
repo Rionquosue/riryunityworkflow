@@ -66,12 +66,7 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         internal void UseSelection(Transform active, Transform[] selected)
         {
-            Transform end = null;
-            foreach (Transform candidate in selected)
-            {
-                if (candidate != active && candidate.IsChildOf(active) && (end == null || candidate.IsChildOf(end)))
-                    end = candidate;
-            }
+            Transform end = ConstraintToolChains.DeepestSelectedBelow(active, selected);
             // One Undo step, so a later Ctrl+Z of another setting does not bring back the old chain fields.
             Undo.RecordObject(this, SettingsUndo);
             if (active != realStart)
@@ -190,7 +185,7 @@ namespace Riry.RiryTools.Editor
             }
             Undo.IncrementCurrentGroup();
             Undo.SetCurrentGroupName(UndoName);
-            Transform created = ConstraintTrainChains.CreateChain(realBones, prefix, endpoint, UndoName);
+            Transform created = ConstraintToolChains.CreateChain(realBones, prefix, endpoint, UndoName);
             status = "Created " + created.name + " and its children.";
             return created;
         }
@@ -228,7 +223,7 @@ namespace Riry.RiryTools.Editor
         private bool TryGather(out Plan plan, out string error)
         {
             plan = new Plan();
-            if (!ConstraintTrainChains.TryCollectChain(realStart, realEnd, plan.Real, out error)) return false;
+            if (!ConstraintToolChains.TryCollectChain(realStart, realEnd, plan.Real, out error)) return false;
             error = GenerationError(plan.Real);
             if (error != null) return false;
             if (avatarRoot == null)
@@ -363,23 +358,10 @@ namespace Riry.RiryTools.Editor
 
                 var weights = new float[ConstraintTrainPlanner.SourceCount(bone, plan.Settings.ChainCount)];
                 ConstraintTrainPlanner.EvaluateWeights(plan.Settings, bone, 0f, weights);
-                // The source list is a struct: edit a copy and assign it back.
-                var sources = constraint.Sources;
-                for (int s = 0; s < weights.Length; s++)
-                {
-                    sources.Add(new VRCConstraintSource
-                    {
-                        SourceTransform = Target(plan, bone, s),
-                        Weight = weights[s],
-                        ParentPositionOffset = Vector3.zero,
-                        ParentRotationOffset = Vector3.zero
-                    });
-                }
-                constraint.Sources = sources;
-                constraint.GlobalWeight = 1f;
-                constraint.SolveInLocalSpace = false;
-                constraint.Locked = true;
-                constraint.IsActive = true;
+                var targets = new Transform[weights.Length];
+                for (int s = 0; s < weights.Length; s++) targets[s] = Target(plan, bone, s);
+                ConstraintToolSources.AddSources(constraint, targets, weights);
+                ConstraintToolSources.ApplyDefaults(constraint);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(constraint);
                 EditorUtility.SetDirty(constraint);
             }
@@ -452,7 +434,7 @@ namespace Riry.RiryTools.Editor
                 for (int s = 0; s < boneCurves.Length; s++)
                 {
                     bindings.Add(EditorCurveBinding.FloatCurve(path, typeof(VRCParentConstraint),
-                        ConstraintTrainPlanner.SourceWeightProperty(s)));
+                        ConstraintToolSources.SourceWeightProperty(s)));
                     curves.Add(boneCurves[s]);
                 }
             }

@@ -218,6 +218,9 @@ com.riry.rirytools/
     │   ├── AnimatorTools/
     │   │   └── BehaviourFindReplace.cs
     │   ├── Components/
+    │   │   ├── ConstraintToolChains.cs
+    │   │   ├── ConstraintToolObjects.cs
+    │   │   └── ConstraintToolSources.cs
     │   ├── ConstraintTools/
     │   │   ├── ConstraintBezier/
     │   │   │   └── ConstraintBezierCurve.cs
@@ -244,13 +247,14 @@ com.riry.rirytools/
     │   ├── UI/
     │   │   ├── AnimatorTools/
     │   │   │   └── BehaviourFindReplaceWindow.cs
-    │   │   ├── ConstraintBezierWindow.cs
-    │   │   ├── ConstraintBezierWindow.UI.cs
-    │   │   ├── ConstraintToolWindow.cs
-    │   │   ├── ConstraintTrainWindow.cs
-    │   │   ├── ConstraintTrainWindow.UI.cs
-    │   │   ├── InsertablePropWindow.cs
-    │   │   ├── InsertablePropWindow.UI.cs
+    │   │   ├── ConstraintTools/
+    │   │   │   ├── ConstraintBezierWindow.cs
+    │   │   │   ├── ConstraintBezierWindow.UI.cs
+    │   │   │   ├── ConstraintToolWindow.cs
+    │   │   │   ├── ConstraintTrainWindow.cs
+    │   │   │   ├── ConstraintTrainWindow.UI.cs
+    │   │   │   ├── InsertablePropWindow.cs
+    │   │   │   └── InsertablePropWindow.UI.cs
     │   │   ├── MenuToolAddMenuDialog.cs
     │   │   ├── MenuToolTrees.cs
     │   │   ├── MenuToolWindow.cs

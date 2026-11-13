@@ -9,7 +9,7 @@ namespace Riry.RiryTools.Editor
     /// by calling its OnGUI, as the Main Menu does. Opened from Tools > RiryTools > Constraint
     /// Tool and the Hierarchy's RiryTools > Constraint Tool > Train / Bezier (RiryToolsVRChatMenus.cs).
     /// </summary>
-    internal sealed class ConstraintToolWindow : EditorWindow
+    internal sealed class ConstraintToolWindow : EditorWindow, IRiryHostedTool
     {
         internal const string Title = "Constraint Tool";
         internal static readonly string[] Tabs = { "Train", "Bezier", "Insertable prop" };
@@ -21,15 +21,50 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private ConstraintTrainWindow train;
         [SerializeField] private ConstraintBezierWindow bezier;
         [SerializeField] private InsertablePropWindow insertable;
+        // The Main Menu's copy (CreateHosted): never shown on its own.
+        [SerializeField] private bool hosted;
+        // The Main Menu while this window is hosted in its Constraint Tool tab (IRiryHostedTool); null on its own.
+        [System.NonSerialized] private EditorWindow surface;
+
+        public EditorWindow Surface
+        {
+            set { surface = value; }
+        }
+
+        // Nothing is drawn outside IMGUI.
+        public void NotDrawn()
+        {
+        }
+
+        /// <summary>The Main Menu's copy (RiryToolsVRChatMenus sets RiryToolsMainMenu.CreateConstraintTool to this): never shown on its own.</summary>
+        internal static EditorWindow CreateHosted()
+        {
+            var window = CreateInstance<ConstraintToolWindow>();
+            window.hosted = true;
+            return window;
+        }
 
         /// <summary>Opens the window on that tab; a tab below 0 keeps the one it had.</summary>
         internal static ConstraintToolWindow Open(int tab)
         {
-            ConstraintToolWindow window = GetWindow<ConstraintToolWindow>(Title);
+            // Never the Main Menu's copy: GetWindow could find that one and show it as a second window drawing the same tool.
+            ConstraintToolWindow window = null;
+            foreach (ConstraintToolWindow found in Resources.FindObjectsOfTypeAll<ConstraintToolWindow>())
+            {
+                if (found.hosted) continue;
+                window = found;
+                break;
+            }
+            if (window == null)
+            {
+                window = CreateInstance<ConstraintToolWindow>();
+                window.titleContent = new GUIContent(Title);
+            }
             window.minSize = new Vector2(420f, 500f);
             window.wantsMouseMove = true;
             if (tab >= 0) window.tab = tab;
             window.Show();
+            window.Focus();
             return window;
         }
 
@@ -88,10 +123,19 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
-            wantsMouseMove = true;
-            // As in the Main Menu, so the strip's top outline is not hidden under the window's own tab.
-            GUILayout.Space(RiryToolsMainMenu.TopMargin);
-            tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs);
+            if (surface != null)
+            {
+                // Hosted: sub-tabs under the Main Menu's tabs, sized to the Main Menu and clear of its tab scroll view's scrollbar.
+                EditorGUILayout.Space(RiryToolsMainMenu.SubTabGap);
+                tab = RiryToolsMainMenu.TabStrip(surface, tab, Tabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+            }
+            else
+            {
+                wantsMouseMove = true;
+                // As in the Main Menu, so the strip's top outline is not hidden under the window's own tab.
+                GUILayout.Space(RiryToolsMainMenu.TopMargin);
+                tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs);
+            }
             EditorGUILayout.Space(4f);
             RiryToolsMainMenu.Call(Current, "OnGUI");
         }
@@ -128,7 +172,11 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Constraint Tool window
 // ============================================================================
 //
-// ConstraintToolWindow        The "Constraint Tool" window (Title); minSize 420 x 500.
+// ConstraintToolWindow        The "Constraint Tool" window (Title); minSize 420 x 500. Also hosted in the Main Menu's
+//                             Constraint Tool tab (CreateHosted; Surface is then the Main Menu, and the sub-tabs are drawn
+//                             under its tabs, SubTabGap below them). Tabs is the one list of the sub-tabs.
+//   hosted                    [SerializeField] The Main Menu's copy; Open never picks it (GetWindow could show it as a
+//                             second window drawing the same tool).
 //   Tabs                      Train (TrainTab 0, ConstraintTrainWindow), Bezier (BezierTab 1, ConstraintBezierWindow) and
 //                             Insertable prop (InsertableTab 2, InsertablePropWindow),
 //                             drawn with RiryToolsMainMenu.TabStrip below RiryToolsMainMenu.TopMargin.

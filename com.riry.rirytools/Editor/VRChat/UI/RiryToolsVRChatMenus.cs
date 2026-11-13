@@ -12,15 +12,13 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class RiryToolsVRChatMenus
     {
-        // The Main Menu's Constraint Tool tab hosts these windows (its Train, Bezier and Insertable prop sub-tabs), and
-        // its Menu Tool tab the Menu Tool's Parameter budget (its Menu manager opens the Menu Tool window).
+        // The Main Menu's Constraint Tool tab hosts the Constraint Tool window (with its Train, Bezier and Insertable prop
+        // sub-tabs), and its Menu Tool tab the Menu Tool's Parameter budget (its Menu manager opens the Menu Tool window).
         static RiryToolsVRChatMenus()
         {
             RiryToolsMainMenu.CreateMenuTool = MenuToolWindow.CreateHosted;
             RiryToolsMainMenu.CreateFindReplace = BehaviourFindReplaceWindow.CreateHosted;
-            RiryToolsMainMenu.CreateConstraintTrain = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintTrainWindow>();
-            RiryToolsMainMenu.CreateConstraintBezier = () => UnityEngine.ScriptableObject.CreateInstance<ConstraintBezierWindow>();
-            RiryToolsMainMenu.CreateConstraintInsertable = () => UnityEngine.ScriptableObject.CreateInstance<InsertablePropWindow>();
+            RiryToolsMainMenu.CreateConstraintTool = ConstraintToolWindow.CreateHosted;
         }
 
         [MenuItem(RiryToolsMenuBar.ConstraintTool, false, 2030)]

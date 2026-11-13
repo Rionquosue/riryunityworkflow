@@ -57,12 +57,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>The active object becomes the chain start; the deepest selected object below it the end.</summary>
         internal void UseSelection(Transform active, Transform[] selected)
         {
-            Transform end = null;
-            foreach (Transform candidate in selected)
-            {
-                if (candidate != active && candidate.IsChildOf(active) && (end == null || candidate.IsChildOf(end)))
-                    end = candidate;
-            }
+            Transform end = ConstraintToolChains.DeepestSelectedBelow(active, selected);
             Undo.RecordObject(this, SettingsUndo);
             if (active != chainStart) chainEnd = null;
             chainStart = active;
@@ -218,7 +213,7 @@ namespace Riry.RiryTools.Editor
                 List<Transform> nodes = bones;
                 if (target == Target.MechanismChain)
                 {
-                    Transform first = ConstraintTrainChains.CreateChain(bones, MechanismPrefix, false, UndoName);
+                    Transform first = ConstraintToolChains.CreateChain(bones, MechanismPrefix, false, UndoName);
                     nodes = new List<Transform> { first };
                     while (nodes.Count < count) nodes.Add(nodes[nodes.Count - 1].GetChild(0));
                     for (int i = 0; i < count; i++)
@@ -269,34 +264,15 @@ namespace Riry.RiryTools.Editor
 
         private static Transform CreateEmpty(string name, Transform parent, int layer)
         {
-            var created = new GameObject(name);
-            created.layer = layer;
-            Undo.RegisterCreatedObjectUndo(created, UndoName);
-            created.transform.SetParent(parent, false);
-            return created.transform;
+            return ConstraintToolObjects.CreateEmpty(name, parent, layer, UndoName);
         }
 
         /// <summary>Sources at these weights with no offsets, then the settings every rig constraint shares.</summary>
         private static void Finish(VRCConstraintBase constraint, Transform[] sources, float[] weights)
         {
-            // The source list is a struct: edit a copy and assign it back.
-            var list = constraint.Sources;
-            for (int s = 0; s < sources.Length; s++)
-            {
-                list.Add(new VRCConstraintSource
-                {
-                    SourceTransform = sources[s],
-                    Weight = weights[s],
-                    ParentPositionOffset = Vector3.zero,
-                    ParentRotationOffset = Vector3.zero
-                });
-            }
-            constraint.Sources = list;
-            constraint.GlobalWeight = 1f;
-            constraint.SolveInLocalSpace = false;
+            ConstraintToolSources.AddSources(constraint, sources, weights);
+            ConstraintToolSources.ApplyDefaults(constraint);
             constraint.FreezeToWorld = false;
-            constraint.Locked = true;
-            constraint.IsActive = true;
             PrefabUtility.RecordPrefabInstancePropertyModifications(constraint);
             EditorUtility.SetDirty(constraint);
         }

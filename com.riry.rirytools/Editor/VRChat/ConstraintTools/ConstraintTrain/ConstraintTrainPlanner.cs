@@ -297,14 +297,5 @@ namespace Riry.RiryTools.Editor
             float value = (curve.Evaluate(u) - start) / (end - start);
             return float.IsNaN(value) ? u : Mathf.Clamp01(value);
         }
-
-        /// <summary>Animated property for one VRC constraint source weight.</summary>
-        internal static string SourceWeightProperty(int source)
-        {
-            // VRC constraints keep 16 keyable sources, then an overflow list.
-            return source < 16
-                ? "Sources.source" + source + ".Weight"
-                : "Sources.overflowList.Array.data[" + (source - 16) + "].Weight";
-        }
     }
 }

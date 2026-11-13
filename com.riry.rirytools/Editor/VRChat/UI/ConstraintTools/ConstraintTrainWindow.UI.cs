@@ -52,7 +52,7 @@ namespace Riry.RiryTools.Editor
 
             string error;
             if (realStart == null || realEnd == null) return;
-            if (!ConstraintTrainChains.TryCollectChain(realStart, realEnd, realBones, out error))
+            if (!ConstraintToolChains.TryCollectChain(realStart, realEnd, realBones, out error))
             {
                 EditorGUILayout.HelpBox(error, MessageType.Warning);
                 return;
@@ -254,11 +254,13 @@ namespace Riry.RiryTools.Editor
 //
 // OTHER FILES
 //   ConstraintTrainChains (Editor/VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainChains.cs)
-//     RestPrefix, ChainPrefix(c), EndpointSuffix, TryCollectChain, TryFollowChain,
-//     FindExisting, AnimationPathError, FindSharedTarget, FindAvatarRoot, CreateChain.
+//     RestPrefix, ChainPrefix(c), TryFollowChain, FindExisting, AnimationPathError, FindSharedTarget, FindAvatarRoot.
+//   Shared with Bezier and Insertable prop (Editor/VRChat/Components/)
+//     ConstraintToolChains: EndpointSuffix, TryCollectChain, DeepestSelectedBelow, CreateChain.
+//     ConstraintToolSources: SourceWeightProperty, AddSources, ApplyDefaults. ConstraintToolObjects: CreateEmpty.
 //   ConstraintTrainPlanner (Editor/VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPlanner.cs)
 //     MaxChains, Settings, DefaultTrainEnd, DefaultChainEnds, Validate, SourceCount, ChainSource,
-//     EvaluateWeights, BreakTimes, Shape, DescribeSource, BuildCurves, SourceWeightProperty.
+//     EvaluateWeights, BreakTimes, Shape, DescribeSource, BuildCurves.
 //   ConstraintTrainPrefabs (Editor/VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs)
 //     Changes, Collect(bone, end, isConstraint) (only chains added beside the start and constraints on the real chain
 //     or inside those chains; TrainScope), Describe (names for the Apply dialog), IsGeneratedChain, ApplyToSource

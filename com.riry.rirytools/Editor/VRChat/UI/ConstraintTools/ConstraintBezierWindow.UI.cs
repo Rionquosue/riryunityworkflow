@@ -45,7 +45,7 @@ namespace Riry.RiryTools.Editor
                 new GUIContent("End", "Last bone of the chain: the curve ends here (Anchor End)."), chainEnd, typeof(Transform), true));
             if (chainStart == null || chainEnd == null) return;
             string error;
-            if (!ConstraintTrainChains.TryCollectChain(chainStart, chainEnd, bones, out error))
+            if (!ConstraintToolChains.TryCollectChain(chainStart, chainEnd, bones, out error))
             {
                 EditorGUILayout.HelpBox(error, MessageType.Warning);
                 return;

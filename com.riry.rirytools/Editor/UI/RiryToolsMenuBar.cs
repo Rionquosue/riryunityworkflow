@@ -205,7 +205,7 @@ namespace Riry.RiryTools.Editor
 //                                                      (Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs); without the VRChat SDK it still
 //                                                      opens, after the VRC SDK not detected popup
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSync/BlendshapeSyncJobWindow.cs)
-//   Tools/RiryTools/Constraint Tool (2030), menu key T -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintToolWindow.cs, entry in
+//   Tools/RiryTools/Constraint Tool (2030), menu key T -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs): Train and Bezier tabs, on the one used last;
 //                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidTools/GuidToolsWindow.cs)
@@ -233,6 +233,6 @@ namespace Riry.RiryTools.Editor
 // OTHER UI OUTSIDE MENUS
 //   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/AnimatorTools/CleanAnimationKeysButton.cs)
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadFailureWindow.cs
-//   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTrainWindow.UI.cs,
-//                                                      its Bezier tab Editor/VRChat/UI/ConstraintBezierWindow.UI.cs
+//   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs,
+//                                                      its Bezier tab Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.
