@@ -665,7 +665,7 @@ namespace Riry.RiryTools.Editor
             }
             float treeHeight = Mathf.Clamp(Shown.position.height * 0.28f, 140f, 420f);
             managerTree.OnGUI(GUILayoutUtility.GetRect(0f, 100000f, treeHeight, treeHeight));
-            EditorGUILayout.LabelField("Drag a row by its ≡ handle, or right-click it for Move to…. Changes are planned until Apply.", EditorStyles.centeredGreyMiniLabel);
+            EditorGUILayout.LabelField("Drag a row by its ≡ handle, or right-click it for Move to….", EditorStyles.centeredGreyMiniLabel);
             // The rest scrolls, so a short window (the Main Menu) still reaches the radial and the last clicked control.
             managerScroll = EditorGUILayout.BeginScrollView(managerScroll);
             DrawPlan();

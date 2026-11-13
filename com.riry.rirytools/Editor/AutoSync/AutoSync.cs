@@ -181,16 +181,15 @@ namespace Riry.RiryTools.Editor
             reported = cause.Message;
         }
 
-        // One line per pass that committed: what, and whether and where it was pushed.
+        // A repeating job: a pass that committed and pushed logs nothing. Only a pass that could not push says so.
         private static void Describe(AutoSyncJob.Outcome outcome)
         {
             if (outcome == null || outcome.Committed.Count == 0) return;
             string line = "Committed " + outcome.Committed.Count + " save(s) (" + string.Join(", ", outcome.Committed) + ")";
-            if (outcome.PushedTo != null) RiryLog.Info(RiryLog.AutoSync, line + " and pushed to " + outcome.PushedTo + ".");
-            else if (outcome.Detached)
+            if (outcome.PushedTo != null) return;
+            if (outcome.Detached)
                 RiryLog.Warn(RiryLog.AutoSync, line + " but did not push: HEAD is detached. Check out a branch to push them.");
-            else if (outcome.Held != null) RiryLog.Info(RiryLog.AutoSync, line + "; the push is held (files over 100 MiB).");
-            else RiryLog.Info(RiryLog.AutoSync, line + ".");
+            else if (outcome.Held != null) RiryLog.Warn(RiryLog.AutoSync, line + "; the push is held (files over 100 MiB).");
         }
 
         /// <summary>

@@ -182,6 +182,8 @@ namespace Riry.RiryTools.Editor
             }
             Undo.CollapseUndoOperations(group);
             foreach (AnimatorController controller in made.Select(c => c.Hit.Controller).Distinct()) EditorUtility.SetDirty(controller);
+            RiryLog.Info(RiryLog.FindReplace, "Changed " + made.Count + " behaviour string(s) in " +
+                made.Select(c => c.Hit.Controller).Distinct().Count() + " controller(s).");
             return made;
         }
 
@@ -218,7 +220,10 @@ namespace Riry.RiryTools.Editor
                     if (layer != null && layer.CanWrite) layer.SetValue(tool, hit.Layer);
                     if (crumb != null) foreach (AnimatorStateMachine machine in hit.Machines.Skip(1)) crumb.Invoke(tool, new object[] { machine });
                 }
-                catch (Exception) { }
+                catch (Exception exception)
+                {
+                    RiryLog.Exception(RiryLog.FindReplace, "Could not show " + hit.Owner.name + " in the Animator window", exception, hit.Controller);
+                }
             }
             Selection.activeObject = hit.Owner;
             if (tool == null) return;

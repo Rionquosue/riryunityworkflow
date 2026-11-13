@@ -145,6 +145,8 @@ namespace Riry.RiryTools.Editor
                 }
             }
             Undo.CollapseUndoOperations(group);
+            RiryLog.Info(RiryLog.AttachTo, "Snapped " + Names(targets.Select(each => each.name)).Replace("\n", ", ") + " to " + bone.name +
+                (move ? " and moved them under it." : "."), bone);
         }
 
         /// <summary>True when the object is inside a prefab instance and is not its outermost root, so it can't be reparented.</summary>

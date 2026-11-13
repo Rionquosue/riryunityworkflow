@@ -140,6 +140,7 @@ namespace Riry.RiryTools.Editor
             EditorApplication.RepaintProjectWindow();
             string summary = "Removed " + removedCurves + " curves from " + cleaned + (cleaned == 1 ? " animation." : " animations.") +
                 (skipped > 0 ? " Skipped " + skipped + " imported or read-only " + (skipped == 1 ? "animation." : "animations.") : "");
+            RiryLog.Info(RiryLog.CleanKeys, summary);
             if (failures.Count > 0)
                 throw new InvalidOperationException(summary + "\n\nCould not clean " + failures.Count + " animation(s); they were left as they were:\n" +
                     string.Join("\n", failures));

@@ -85,8 +85,7 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField("Found components" + (searched ? " (" + hits.Count + ")" : ""), EditorStyles.boldLabel);
             foundScroll = EditorGUILayout.BeginScrollView(foundScroll, EditorStyles.helpBox, GUILayout.MinHeight(160f));
-            if (!searched) EditorGUILayout.LabelField("Search to list behaviour strings.", EditorStyles.miniLabel);
-            else if (hits.Count == 0) EditorGUILayout.LabelField("Nothing found.", EditorStyles.miniLabel);
+            if (searched && hits.Count == 0) EditorGUILayout.LabelField("Nothing found.", EditorStyles.miniLabel);
             foreach (Hit hit in hits)
             {
                 if (GUILayout.Button(hit.Label + "  =  " + hit.Value, EditorStyles.linkLabel)) BehaviourFindReplace.Reveal(hit);
@@ -95,7 +94,6 @@ namespace Riry.RiryTools.Editor
 
             EditorGUILayout.LabelField("Changed components", EditorStyles.boldLabel);
             changedScroll = EditorGUILayout.BeginScrollView(changedScroll, EditorStyles.helpBox, GUILayout.MinHeight(160f));
-            if (changes.Count == 0) EditorGUILayout.LabelField("The last Apply's changes are listed here.", EditorStyles.miniLabel);
             foreach (Change change in changes)
             {
                 if (GUILayout.Button(change.Hit.Label + "  :  " + change.Before + "  →  " + change.After, EditorStyles.linkLabel)) BehaviourFindReplace.Reveal(change.Hit);
@@ -142,6 +140,15 @@ namespace Riry.RiryTools.Editor
 
         private void Apply()
         {
+            // Controllers that VRCFury or Modular Avatar bring in, or that live in a package, are shared assets: warn first.
+            List<string> shared = hits.Select(h => h.Controller).Distinct()
+                .Where(c => AssetDatabase.GetAssetPath(c).StartsWith("Packages/", StringComparison.Ordinal) ||
+                    hits.Any(h => h.Controller == c && (h.Label.StartsWith("VRCFury", StringComparison.Ordinal) || h.Label.StartsWith("MA ", StringComparison.Ordinal))))
+                .Select(AssetDatabase.GetAssetPath).ToList();
+            if (shared.Count > 0 && !EditorUtility.DisplayDialog("Find and Replace",
+                    "These controllers are shared assets; the change applies to every avatar and prefab that uses them:\n\n" +
+                    string.Join("\n", shared.Take(10)) + (shared.Count > 10 ? "\nand " + (shared.Count - 10) + " more" : ""), "Apply", "Cancel"))
+                return;
             List<Change> made = BehaviourFindReplace.Apply(hits, replace, repath, map, source is AnimatorController);
             if (made.Count == 0) return;
             changes = made;

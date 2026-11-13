@@ -78,6 +78,8 @@ namespace Riry.RiryTools.Editor
                 }
                 reports.Add(scene);
             }
+            int hits = reports.Sum(r => r.Hits.Count);
+            RiryLog.Info(RiryLog.FindNullReferences, reports.Count + " report(s), " + hits + " empty or missing reference(s).");
             return reports;
         }
 

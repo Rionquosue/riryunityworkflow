@@ -16,6 +16,8 @@ namespace Riry.RiryTools.Editor
         internal const string AvatarMigration = "Avatar Migration";
         internal const string BlendshapeSync = "Blendshape Sync";
         internal const string CleanKeys = "Clean Animation Keys";
+        internal const string FindNullReferences = "Find Null references";
+        internal const string FindReplace = "Find and Replace";
         internal const string ConstraintTool = "Constraint Tool";
         internal const string GuidTools = "GUID Tools";
         internal const string IconCap = "IconCap";

@@ -25,6 +25,7 @@ namespace Riry.RiryTools.Editor
                 if (AutoSync.Enabled)
                 {
                     AutoSync.Enabled = false;
+                    RiryLog.Info(RiryLog.AutoSync, "Sync turned off.");
                     return;
                 }
                 GitState.RequireGit();
@@ -53,6 +54,7 @@ namespace Riry.RiryTools.Editor
                     EditorUtility.DisplayDialog("Sync", exception.Message + "\n\nSync is on without Git LFS.", "OK");
                 }
                 AutoSync.Enabled = true;
+                RiryLog.Info(RiryLog.AutoSync, "Sync turned on.");
             });
         }
 

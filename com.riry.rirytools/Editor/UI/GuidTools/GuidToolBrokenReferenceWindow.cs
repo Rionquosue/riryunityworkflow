@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// Lists every missing GUID in a set of files with every replacement found for
     /// it and how each was found; the user picks one (a single one is pre-selected)
     /// or any other asset. A missing GUID with nothing chosen is shown in red. State
-    /// and actions; the drawing is in Editor/UI/GuidToolBrokenReferenceWindow.UI.cs.
+    /// and actions; the drawing is in Editor/UI/GuidTools/GuidToolBrokenReferenceWindow.UI.cs.
     /// </summary>
     internal sealed partial class GuidToolBrokenReferenceWindow : EditorWindow
     {
