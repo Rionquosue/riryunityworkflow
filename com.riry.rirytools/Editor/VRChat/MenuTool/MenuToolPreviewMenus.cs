@@ -12,45 +12,6 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// A radial menu preview the Menu Tool draws: implemented by the Gesture Manager bridge
-    /// (Editor/VRChat/MenuTool/GestureManager), which only compiles when Gesture Manager is installed.
-    /// </summary>
-    internal interface IMenuToolRadial : IDisposable
-    {
-        /// <summary>Shows a menu tree; values of parameters it already had are kept.</summary>
-        void Show(VRCExpressionsMenu root, VRCExpressionParameters parameters);
-
-        /// <summary>Opens the menus from the root down to the last one.</summary>
-        void Navigate(IList<VRCExpressionsMenu> path);
-
-        /// <summary>The menus open now, from the root ("" at Gesture Manager's own main page).</summary>
-        List<VRCExpressionsMenu> Path { get; }
-
-        /// <summary>
-        /// Draws it: rect in GUI coordinates of the current OnGUI (for the mouse), local the same spot in root's coordinates
-        /// (where the element is placed).
-        /// </summary>
-        void Draw(Rect rect, Rect local, VisualElement root);
-
-        /// <summary>Takes it off the window (another tab is shown).</summary>
-        void Hide();
-
-        float Value(string parameter);
-
-        /// <summary>Sets every parameter of the menu back to its default.</summary>
-        void ResetValues();
-
-        /// <summary>Every parameter write the preview makes: name and value.</summary>
-        event Action<string, float> Written;
-
-        /// <summary>
-        /// A right-click on a slice: the control it shows, or null for a slice that shows none (Back, Quick Actions,
-        /// Gesture Manager's own pages). The click never presses the slice.
-        /// </summary>
-        event Action<VRCExpressionsMenu.Control> ContextClicked;
-    }
-
-    /// <summary>
     /// The in-memory menus a preview shows: one VRCExpressionsMenu per submenu of the planned layout, and the parameters,
     /// never saved (HideAndDontSave) and destroyed with Dispose. With VRCFury installed, menus over 8 controls are paged
     /// into "Next" submenus as VRCFury does. Signature describes everything the radial shows, so a rebuilt preview that
@@ -62,10 +23,10 @@ namespace Riry.RiryTools.Editor
 
         internal VRCExpressionsMenu Root;
         internal VRCExpressionParameters Parameters;
-        internal readonly Dictionary<VRCExpressionsMenu, MenuEntry> EntryOf = new Dictionary<VRCExpressionsMenu, MenuEntry>();
-        internal readonly Dictionary<MenuEntry, VRCExpressionsMenu> MenuOf = new Dictionary<MenuEntry, VRCExpressionsMenu>();
+        internal readonly Dictionary<VRCExpressionsMenu, MenuToolEntry> EntryOf = new Dictionary<VRCExpressionsMenu, MenuToolEntry>();
+        internal readonly Dictionary<MenuToolEntry, VRCExpressionsMenu> MenuOf = new Dictionary<MenuToolEntry, VRCExpressionsMenu>();
         // The planned entry each control shows (VRCFury's "Next" page controls have none).
-        internal readonly Dictionary<VRCExpressionsMenu.Control, MenuEntry> EntryOfControl = new Dictionary<VRCExpressionsMenu.Control, MenuEntry>();
+        internal readonly Dictionary<VRCExpressionsMenu.Control, MenuToolEntry> EntryOfControl = new Dictionary<VRCExpressionsMenu.Control, MenuToolEntry>();
         private readonly List<Object> made = new List<Object>();
         private readonly StringBuilder signature = new StringBuilder();
 
@@ -75,7 +36,7 @@ namespace Riry.RiryTools.Editor
             get { return signature.ToString(); }
         }
 
-        internal static MenuToolPreviewMenus Build(MenuEntry root, MenuScan scan)
+        internal static MenuToolPreviewMenus Build(MenuToolEntry root, MenuToolScan scan)
         {
             var menus = new MenuToolPreviewMenus();
             menus.Root = menus.Menu(root, scan.VrcfuryInstalled);
@@ -106,8 +67,8 @@ namespace Riry.RiryTools.Editor
             for (int i = 0; i < made.Count; i++) mine[fresh.made[i]] = made[i];
             EntryOf.Clear();
             MenuOf.Clear();
-            foreach (KeyValuePair<VRCExpressionsMenu, MenuEntry> pair in fresh.EntryOf) EntryOf[(VRCExpressionsMenu)mine[pair.Key]] = pair.Value;
-            foreach (KeyValuePair<MenuEntry, VRCExpressionsMenu> pair in fresh.MenuOf) MenuOf[pair.Key] = (VRCExpressionsMenu)mine[pair.Value];
+            foreach (KeyValuePair<VRCExpressionsMenu, MenuToolEntry> pair in fresh.EntryOf) EntryOf[(VRCExpressionsMenu)mine[pair.Key]] = pair.Value;
+            foreach (KeyValuePair<MenuToolEntry, VRCExpressionsMenu> pair in fresh.MenuOf) MenuOf[pair.Key] = (VRCExpressionsMenu)mine[pair.Value];
             // Controls stand at the same index in the same menu.
             EntryOfControl.Clear();
             for (int i = 0; i < made.Count; i++)
@@ -115,7 +76,7 @@ namespace Riry.RiryTools.Editor
                 if (!(made[i] is VRCExpressionsMenu menu) || !(fresh.made[i] is VRCExpressionsMenu theirs)) continue;
                 for (int j = 0; j < theirs.controls.Count; j++)
                 {
-                    if (fresh.EntryOfControl.TryGetValue(theirs.controls[j], out MenuEntry entry)) EntryOfControl[menu.controls[j]] = entry;
+                    if (fresh.EntryOfControl.TryGetValue(theirs.controls[j], out MenuToolEntry entry)) EntryOfControl[menu.controls[j]] = entry;
                 }
             }
             return true;
@@ -131,7 +92,7 @@ namespace Riry.RiryTools.Editor
             return made;
         }
 
-        private VRCExpressionsMenu Menu(MenuEntry entry, bool paginate)
+        private VRCExpressionsMenu Menu(MenuToolEntry entry, bool paginate)
         {
             VRCExpressionsMenu menu = Make<VRCExpressionsMenu>(string.IsNullOrEmpty(entry.Name) ? "Root" : entry.Name);
             menu.controls = new List<VRCExpressionsMenu.Control>();
@@ -156,7 +117,7 @@ namespace Riry.RiryTools.Editor
             return menu;
         }
 
-        private VRCExpressionsMenu.Control Control(MenuEntry entry, bool paginate)
+        private VRCExpressionsMenu.Control Control(MenuToolEntry entry, bool paginate)
         {
             signature.Append("C|").Append(entry.Name).Append('|').Append(entry.Icon != null ? entry.Icon.GetInstanceID() : 0).Append('|')
                 .Append(entry.Type).Append('|').Append(entry.Parameter).Append('|').Append(entry.Value.ToString("R")).Append('|')
@@ -191,12 +152,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool preview
+// GLOSSARY: Menu Tool preview menus
+// The radial it feeds is IMenuToolRadial.cs, implemented by the Gesture Manager bridge.
 // ============================================================================
 //
-// IMenuToolRadial            The radial preview: Show(root, parameters), Navigate(path), Path, Draw(rect, local, root), Hide, Value,
-//                            Written (each parameter write), ContextClicked (a right-clicked slice's control, null for one that
-//                            shows none). Implemented by GestureManagerRadial (GestureManager/ folder).
 // MenuToolPreviewMenus (this file)
 //   CreateRadial             Set by the Gesture Manager bridge when Gesture Manager is installed; null otherwise.
 //   Build(root, scan)        In-memory VRCExpressionsMenu per submenu of the planned layout (EntryOf / MenuOf map both ways;

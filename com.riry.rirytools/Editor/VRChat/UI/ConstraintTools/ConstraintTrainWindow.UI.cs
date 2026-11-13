@@ -220,7 +220,7 @@ namespace Riry.RiryTools.Editor
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
 //
-// MENU ENTRIES (Editor/VRChat/RiryToolsVRChatMenus.cs; the window is Editor/VRChat/ConstraintToolWindow.cs)
+// MENU ENTRIES (Editor/VRChat/UI/RiryToolsVRChatMenus.cs; the window is Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs)
 //   Tools/RiryTools/Constraint Tool              -> ConstraintToolWindow.OpenFromTools(): the tab used last
 //   GameObject/RiryTools/Constraint Tool/Train   -> ConstraintToolWindow.OpenTrainFromHierarchy(): this tab, UseSelection
 //

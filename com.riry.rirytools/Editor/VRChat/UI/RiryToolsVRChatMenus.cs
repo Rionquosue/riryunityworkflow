@@ -66,9 +66,9 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: VRChat menu entries
-//   Tools/RiryTools/Constraint Tool (2030)       -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/ConstraintToolWindow.cs):
+//   Tools/RiryTools/Constraint Tool (2030)       -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs):
 //                                                      the Constraint Tool window on the tab used last
-//   Tools/RiryTools/Menu Tool (2066), menu key E -> MenuToolWindow.Open (Editor/VRChat/MenuTool/MenuToolWindow.cs): its own
+//   Tools/RiryTools/Menu Tool (2066), menu key E -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs): its own
 //                                                      window; the Main Menu's Menu Tool tab hosts its Parameter budget
 //                                                      (CreateMenuTool = MenuToolWindow.CreateHosted); its Menu manager opens
 //                                                      this window

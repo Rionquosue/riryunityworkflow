@@ -218,8 +218,8 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/Utilities/StopAutoGame.cs)
 //   Tools/RiryTools/Script Load Guard (2061)  [check mark] -> ScriptLoadGuard.Enabled (Editor/Debug/ScriptLoadGuard.cs)
-//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/Debug/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
-//   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuToolWindow.cs, entry in
+//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/Debug/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/Debug/)
+//   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
 //                                                      found" popup (this file)
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser

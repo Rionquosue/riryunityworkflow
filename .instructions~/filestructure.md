@@ -235,15 +235,24 @@ com.riry.rirytools/
     │   ├── MenuTool/
     │   │   ├── GestureManager/
     │   │   │   ├── GestureManagerEntryState.cs
+    │   │   │   ├── GestureManagerMenuPath.cs
     │   │   │   ├── GestureManagerRadial.cs
     │   │   │   └── Riry.RiryTools.Editor.GestureManager.asmdef
+    │   │   ├── IMenuToolRadial.cs
     │   │   ├── MenuToolApply.cs
+    │   │   ├── MenuToolAvatarKeys.cs
     │   │   ├── MenuToolBudget.cs
+    │   │   ├── MenuToolCompressor.cs
     │   │   ├── MenuToolEntryState.cs
     │   │   ├── MenuToolModel.cs
     │   │   ├── MenuToolPlan.cs
-    │   │   ├── MenuToolPreview.cs
-    │   │   └── MenuToolScanner.cs
+    │   │   ├── MenuToolPlanner.cs
+    │   │   ├── MenuToolPreviewMenus.cs
+    │   │   ├── MenuToolScanner.cs
+    │   │   ├── MenuToolScanner.ModularAvatar.cs
+    │   │   ├── MenuToolScanner.Native.cs
+    │   │   ├── MenuToolScanner.VRCFury.cs
+    │   │   └── MenuToolVrcfuryMenu.cs
     │   ├── UI/
     │   │   ├── AnimatorTools/
     │   │   │   └── BehaviourFindReplaceWindow.cs
@@ -255,9 +264,12 @@ com.riry.rirytools/
     │   │   │   ├── ConstraintTrainWindow.UI.cs
     │   │   │   ├── InsertablePropWindow.cs
     │   │   │   └── InsertablePropWindow.UI.cs
-    │   │   ├── MenuToolAddMenuDialog.cs
-    │   │   ├── MenuToolTrees.cs
-    │   │   ├── MenuToolWindow.cs
+    │   │   ├── MenuTool/
+    │   │   │   ├── MenuToolAddMenuDialog.cs
+    │   │   │   ├── MenuToolBudgetTree.cs
+    │   │   │   ├── MenuToolIcons.cs
+    │   │   │   ├── MenuToolManagerTree.cs
+    │   │   │   └── MenuToolWindow.cs
     │   │   └── RiryToolsVRChatMenus.cs
     │   ├── AssemblyInfo.cs
     │   └── Riry.RiryTools.Editor.VRChat.asmdef

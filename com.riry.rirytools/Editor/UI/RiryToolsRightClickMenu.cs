@@ -143,7 +143,7 @@ namespace Riry.RiryTools.Editor
 //
 // HIERARCHY RIGHT-CLICK (also in the GameObject menu)
 //   GameObject/RiryTools/Attach To (19)         -> AttachToWindow.Open (Editor/UI/Utilities/AttachToWindow.cs): the Attach To popup;
-//                                                      enabled when scene objects are selected (AttachTo.Selected, Editor/AttachTo.cs)
+//                                                      enabled when scene objects are selected (AttachTo.Selected, Editor/Utilities/AttachTo.cs)
 //   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy (entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs)
 //   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy (same file); both use the selection
 //                                                      as the chain; without the VRChat SDK -> "VRCSDK not found" popup (this file)

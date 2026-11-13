@@ -49,7 +49,7 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>Applies every move of the plan; insideUndoStep runs last, inside the same undo step (the window clears its plan there).</summary>
-        internal static Report Apply(GameObject target, MenuPlan plan, Action insideUndoStep)
+        internal static Report Apply(GameObject target, MenuToolPlan plan, Action insideUndoStep)
         {
             var report = new Report();
             var expected = new List<Expected>();
@@ -60,36 +60,36 @@ namespace Riry.RiryTools.Editor
             Undo.SetCurrentGroupName(UndoName);
             try
             {
-                foreach (PlannedMove move in plan.Moves.ToList())
+                foreach (MenuToolPlannedMove move in plan.Moves.ToList())
                 {
-                    MenuScan scan = MenuToolScanner.Scan(target);
-                    var single = new MenuPlan { Moves = new List<PlannedMove> { move } };
-                    MenuToolPlanner.Planned(scan, single, out List<MoveCheck> checks);
-                    MoveCheck check = checks[0];
+                    MenuToolScan scan = MenuToolScanner.Scan(target);
+                    var single = new MenuToolPlan { Moves = new List<MenuToolPlannedMove> { move } };
+                    MenuToolPlanner.Planned(scan, single, out List<MenuToolMoveCheck> checks);
+                    MenuToolMoveCheck check = checks[0];
                     if (!check.Ok)
                     {
                         report.Problems.Add((move.IsAdd ? "New menu " + check.After : move.IsAddControl ? "New control " + check.After : move.From) + ": " +
-                            string.Join(" ", check.Errors.Concat(check.Edit == MoveEdit.Ambiguous ? new[] { "No source chosen." } : new string[0])));
+                            string.Join(" ", check.Errors.Concat(check.Edit == MenuToolMoveEdit.Ambiguous ? new[] { "No source chosen." } : new string[0])));
                         continue;
                     }
                     // The scan's own entries (the planner works on a copy) for the ownership references.
-                    MenuEntry destination = scan.Root.Find(move.To ?? "");
+                    MenuToolEntry destination = scan.Root.Find(move.To ?? "");
                     if (move.IsAdd)
                     {
                         expected.Add(new Expected { Path = check.After, Type = VRCExpressionsMenu.Control.ControlType.SubMenu, Parameters = new string[0] });
-                        if (check.Edit == MoveEdit.NewMenuAsset) NewMenuAsset(scan, destination, move.NewMenu.Trim(), Index(scan, ref references), report);
+                        if (check.Edit == MenuToolMoveEdit.NewMenuAsset) NewMenuAsset(scan, destination, move.NewMenu.Trim(), Index(scan, ref references), report);
                         else NewMaItem(scan, destination, move.NewMenu.Trim());
                         report.Applied++;
                         continue;
                     }
                     if (move.IsAddControl)
                     {
-                        var control = new MenuEntry { Name = move.NewControl.Trim(), Type = (VRCExpressionsMenu.Control.ControlType)move.ControlType };
+                        var control = new MenuToolEntry { Name = move.NewControl.Trim(), Type = (VRCExpressionsMenu.Control.ControlType)move.ControlType };
                         MenuToolPlanner.ControlOf(move, control);
                         expected.Add(new Expected { Path = check.After, Type = control.Type, Icon = control.Icon,
-                            Parameters = check.Edit == MoveEdit.NewControlVrcfury ? null : control.Parameters().ToArray() });
-                        if (check.Edit == MoveEdit.NewControlAsset) NewControlAsset(scan, destination, control, Index(scan, ref references), report);
-                        else if (check.Edit == MoveEdit.NewControlMa) NewControlMa(scan, destination, control);
+                            Parameters = check.Edit == MenuToolMoveEdit.NewControlVrcfury ? null : control.Parameters().ToArray() });
+                        if (check.Edit == MenuToolMoveEdit.NewControlAsset) NewControlAsset(scan, destination, control, Index(scan, ref references), report);
+                        else if (check.Edit == MenuToolMoveEdit.NewControlMa) NewControlMa(scan, destination, control);
                         else NewRule(scan.Avatar.gameObject, RiryToolsTypes.Named(VrcfuryType), ToggleType, rule =>
                         {
                             string into = MenuToolVrcfuryMenu.PathOf(destination);
@@ -108,7 +108,7 @@ namespace Riry.RiryTools.Editor
                         report.Applied++;
                         continue;
                     }
-                    MenuEntry entry = scan.Root.Find(move.From);
+                    MenuToolEntry entry = scan.Root.Find(move.From);
                     if (move.AssignIcon)
                     {
                         Texture2D icon = move.IconTexture;
@@ -120,16 +120,16 @@ namespace Riry.RiryTools.Editor
                     expected.Add(new Expected { Path = check.After, Type = entry.Type, Icon = entry.Icon, Parameters = entry.Parameters().ToArray() });
                     switch (check.Edit)
                     {
-                        case MoveEdit.NativeAssets:
+                        case MenuToolMoveEdit.NativeAssets:
                             MoveNative(scan, entry, destination, move.Index, Index(scan, ref references), report);
                             break;
-                        case MoveEdit.VrcfuryRule:
+                        case MenuToolMoveEdit.VrcfuryRule:
                             // Paths as VRCFury reads them: a slash inside a name written "\/".
                             string from = MenuToolVrcfuryMenu.PathOf(entry), into = MenuToolVrcfuryMenu.PathOf(destination);
                             AddRule(scan, from, (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name), move.Index, entry.Parent == destination);
                             break;
-                        case MoveEdit.MaReparent: Reparent(entry, destination, move.Index); break;
-                        case MoveEdit.MaRetarget: Retarget(scan, entry, destination); break;
+                        case MenuToolMoveEdit.MaReparent: Reparent(entry, destination, move.Index); break;
+                        case MenuToolMoveEdit.MaRetarget: Retarget(scan, entry, destination); break;
                     }
                     report.Applied++;
                 }
@@ -140,10 +140,10 @@ namespace Riry.RiryTools.Editor
                 Undo.CollapseUndoOperations(group);
             }
 
-            MenuScan after = MenuToolScanner.Scan(target);
+            MenuToolScan after = MenuToolScanner.Scan(target);
             foreach (Expected item in expected)
             {
-                MenuEntry found = after.Root.Find(item.Path);
+                MenuToolEntry found = after.Root.Find(item.Path);
                 if (found == null) report.Problems.Add(item.Path + " is not where it was moved to.");
                 else if (found.Type != item.Type || found.Icon != item.Icon || item.Parameters != null && !found.Parameters().SequenceEqual(item.Parameters))
                     report.Problems.Add(item.Path + " changed type, icon or parameters while moving.");
@@ -156,17 +156,17 @@ namespace Riry.RiryTools.Editor
         }
 
         // The project search, once per Apply, for every native menu of the avatar.
-        private static ReferenceIndex Index(MenuScan scan, ref ReferenceIndex references)
+        private static ReferenceIndex Index(MenuToolScan scan, ref ReferenceIndex references)
         {
             if (references == null) references = new ReferenceIndex(new[] { scan.Root }.Concat(scan.Root.Descendants())
-                .Where(e => e.Origin == MenuOrigin.Native).SelectMany(e => new[] { e.OwnerMenu, e.SubMenuAsset })
+                .Where(e => e.Origin == MenuToolOrigin.Native).SelectMany(e => new[] { e.OwnerMenu, e.SubMenuAsset })
                 .Concat(new[] { scan.Avatar.expressionsMenu }).Where(m => m != null).Select(m => AssetDatabase.GetAssetPath(m)));
             return references;
         }
 
         // ---- Native ----------------------------------------------------------------
 
-        private static void MoveNative(MenuScan scan, MenuEntry entry, MenuEntry destination, int at, ReferenceIndex index, Report report)
+        private static void MoveNative(MenuToolScan scan, MenuToolEntry entry, MenuToolEntry destination, int at, ReferenceIndex index, Report report)
         {
             var uses = new MenuUses(scan, index);
             // Each menu through the slot on the moved entry's path (its submenu, or the root), so a menu shown twice only
@@ -188,7 +188,7 @@ namespace Riry.RiryTools.Editor
 
         // Add menu as a menu asset: a new empty menu in Assets/RiryTools/MenuTool/<avatar>/, linked by a SubMenu control at the end
         // of the parent's menu (made safe to change first).
-        private static void NewMenuAsset(MenuScan scan, MenuEntry parent, string name, ReferenceIndex index, Report report)
+        private static void NewMenuAsset(MenuToolScan scan, MenuToolEntry parent, string name, ReferenceIndex index, Report report)
         {
             VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), parent, report);
             string folder = "Assets/RiryTools/MenuTool/" + Safe(scan.Avatar.name);
@@ -213,7 +213,7 @@ namespace Riry.RiryTools.Editor
         }
 
         // Add New Control in a menu asset: the control at the end of the parent's menu (made safe to change first).
-        private static void NewControlAsset(MenuScan scan, MenuEntry parent, MenuEntry control, ReferenceIndex index, Report report)
+        private static void NewControlAsset(MenuToolScan scan, MenuToolEntry parent, MenuToolEntry control, ReferenceIndex index, Report report)
         {
             VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), parent, report);
             Undo.RecordObject(holder, UndoName);
@@ -231,17 +231,17 @@ namespace Riry.RiryTools.Editor
         }
 
         // Assign Menu Icon through the chosen owner.
-        private static void SetIcon(MenuScan scan, MenuEntry entry, Texture2D icon, MoveEdit edit, ReferenceIndex index, Report report)
+        private static void SetIcon(MenuToolScan scan, MenuToolEntry entry, Texture2D icon, MenuToolMoveEdit edit, ReferenceIndex index, Report report)
         {
             switch (edit)
             {
-                case MoveEdit.IconAsset:
+                case MenuToolMoveEdit.IconAsset:
                     VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), entry.Parent, report);
                     Undo.RecordObject(holder, UndoName);
                     holder.controls[entry.OwnerIndex].icon = icon;
                     EditorUtility.SetDirty(holder);
                     break;
-                case MoveEdit.IconMa:
+                case MenuToolMoveEdit.IconMa:
                     var item = new SerializedObject(entry.MaItem);
                     item.FindProperty("Control.icon").objectReferenceValue = icon;
                     item.ApplyModifiedProperties();
@@ -261,7 +261,7 @@ namespace Riry.RiryTools.Editor
         /// copy when anything else uses it (MenuUses.Shared), relinked in that slot only (its holding menu made safe the
         /// same way first).
         /// </summary>
-        private static VRCExpressionsMenu Owned(MenuScan scan, MenuUses uses, MenuEntry slot, Report report)
+        private static VRCExpressionsMenu Owned(MenuToolScan scan, MenuUses uses, MenuToolEntry slot, Report report)
         {
             VRCExpressionsMenu menu = slot.Parent == null ? scan.Avatar.expressionsMenu : slot.SubMenuAsset;
             if (!uses.Shared(menu, slot)) return menu;
@@ -288,7 +288,7 @@ namespace Riry.RiryTools.Editor
                 slot.OwnerMenu = holder;
             }
             // The controls of this slot now live in the copy; the same menu shown elsewhere keeps the original.
-            foreach (MenuEntry child in slot.Children.Where(e => e.OwnerMenu == menu)) child.OwnerMenu = copy;
+            foreach (MenuToolEntry child in slot.Children.Where(e => e.OwnerMenu == menu)) child.OwnerMenu = copy;
             uses.Copied(menu, copy, slot);
             return copy;
         }
@@ -368,18 +368,18 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         private sealed class MenuUses
         {
-            private readonly MenuScan scan;
+            private readonly MenuToolScan scan;
             private readonly HashSet<string> own = new HashSet<string>();
             private readonly ReferenceIndex index;
-            private readonly HashSet<MenuEntry> copiedSlots = new HashSet<MenuEntry>();
+            private readonly HashSet<MenuToolEntry> copiedSlots = new HashSet<MenuToolEntry>();
 
-            internal MenuUses(MenuScan scan, ReferenceIndex index)
+            internal MenuUses(MenuToolScan scan, ReferenceIndex index)
             {
                 this.scan = scan;
                 this.index = index;
                 string holder = HolderFile(scan.Avatar);
                 if (holder.Length > 0) own.Add(holder);
-                foreach (MenuEntry entry in new[] { scan.Root }.Concat(scan.Root.Descendants()).Where(e => e.Origin == MenuOrigin.Native))
+                foreach (MenuToolEntry entry in new[] { scan.Root }.Concat(scan.Root.Descendants()).Where(e => e.Origin == MenuToolOrigin.Native))
                 {
                     if (entry.OwnerMenu != null) own.Add(AssetDatabase.GetAssetPath(entry.OwnerMenu));
                     if (entry.SubMenuAsset != null) own.Add(AssetDatabase.GetAssetPath(entry.SubMenuAsset));
@@ -387,16 +387,16 @@ namespace Riry.RiryTools.Editor
                 if (scan.Avatar.expressionsMenu != null) own.Add(AssetDatabase.GetAssetPath(scan.Avatar.expressionsMenu));
             }
 
-            internal bool Shared(VRCExpressionsMenu menu, MenuEntry slot)
+            internal bool Shared(VRCExpressionsMenu menu, MenuToolEntry slot)
             {
                 string path = AssetDatabase.GetAssetPath(menu);
                 if (path.StartsWith("Packages/", StringComparison.Ordinal)) return true;
                 // Another slot of this avatar shows the same menu (and was not given its own copy yet).
-                MenuEntry[] slots = new[] { scan.Root }.Concat(scan.Root.Descendants())
+                MenuToolEntry[] slots = new[] { scan.Root }.Concat(scan.Root.Descendants())
                     .Where(e => e.IsSubMenu && (e.Parent == null ? scan.Avatar.expressionsMenu == menu : e.SubMenuAsset == menu) && !copiedSlots.Contains(e)).ToArray();
                 if (slots.Any(e => e != slot)) return true;
                 // A Modular Avatar or VRCFury contribution uses it (an installer's menu, an item's submenu, a Full Controller menu).
-                if (scan.Root.Descendants().Any(e => e.Origin != MenuOrigin.Native && (e.OwnerMenu == menu || e.SubMenuAsset == menu))) return true;
+                if (scan.Root.Descendants().Any(e => e.Origin != MenuToolOrigin.Native && (e.OwnerMenu == menu || e.SubMenuAsset == menu))) return true;
                 // Another avatar in an open scene reaches it.
                 foreach (VRCAvatarDescriptor other in Object.FindObjectsOfType<VRCAvatarDescriptor>(true))
                 {
@@ -407,7 +407,7 @@ namespace Riry.RiryTools.Editor
                 return index.Referencing(path).Any(file => !own.Contains(file) && !index.Made.Contains(file));
             }
 
-            internal void Copied(VRCExpressionsMenu menu, VRCExpressionsMenu copy, MenuEntry slot)
+            internal void Copied(VRCExpressionsMenu menu, VRCExpressionsMenu copy, MenuToolEntry slot)
             {
                 copiedSlots.Add(slot);
                 index.Made.Add(AssetDatabase.GetAssetPath(copy));
@@ -446,7 +446,7 @@ namespace Riry.RiryTools.Editor
 
         // ---- VRCFury -----------------------------------------------------------------
 
-        private static void AddRule(MenuScan scan, string from, string to, int index, bool sameMenu)
+        private static void AddRule(MenuToolScan scan, string from, string to, int index, bool sameMenu)
         {
             GameObject avatar = scan.Avatar.gameObject;
             Type vrcfury = RiryToolsTypes.Named(VrcfuryType);
@@ -497,19 +497,19 @@ namespace Riry.RiryTools.Editor
         // Add menu as a Modular Avatar Menu Item: a new object named after the menu with a SubMenu item whose items are its own
         // children, last under the parent's children object; for any other parent, under the avatar with a Menu Installer
         // targeting the parent's menu (none for the root menu).
-        private static void NewMaItem(MenuScan scan, MenuEntry parent, string name)
+        private static void NewMaItem(MenuToolScan scan, MenuToolEntry parent, string name)
         {
-            NewMaObject(scan, parent, new MenuEntry { Name = name });
+            NewMaObject(scan, parent, new MenuToolEntry { Name = name });
         }
 
         // Add New Control as a Modular Avatar Menu Item, placed as NewMaItem places a new menu.
-        private static void NewControlMa(MenuScan scan, MenuEntry parent, MenuEntry control)
+        private static void NewControlMa(MenuToolScan scan, MenuToolEntry parent, MenuToolEntry control)
         {
             NewMaObject(scan, parent, control);
         }
 
         // The new object for an MA item: SubMenu (children) for a new menu, else the control's fields.
-        private static void NewMaObject(MenuScan scan, MenuEntry parent, MenuEntry control)
+        private static void NewMaObject(MenuToolScan scan, MenuToolEntry parent, MenuToolEntry control)
         {
             string name = control.Name;
             Type itemType = RiryToolsTypes.Named(MaItemType), installerType = RiryToolsTypes.Named(MaInstallerType);
@@ -544,7 +544,7 @@ namespace Riry.RiryTools.Editor
             item.ApplyModifiedProperties();
         }
 
-        private static void Reparent(MenuEntry entry, MenuEntry destination, int index)
+        private static void Reparent(MenuToolEntry entry, MenuToolEntry destination, int index)
         {
             Transform item = entry.MaItem.transform;
             Transform parent = destination.MaChildrenSource.transform;
@@ -557,7 +557,7 @@ namespace Riry.RiryTools.Editor
             else if (index < 0) item.SetAsLastSibling();
         }
 
-        private static void Retarget(MenuScan scan, MenuEntry entry, MenuEntry destination)
+        private static void Retarget(MenuToolScan scan, MenuToolEntry entry, MenuToolEntry destination)
         {
             var serialized = new SerializedObject(entry.MaInstaller);
             SerializedProperty target = serialized.FindProperty("installTargetMenu");

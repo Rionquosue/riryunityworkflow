@@ -113,9 +113,9 @@ namespace Riry.RiryTools.Editor
             }
             var target = from as GameObject;
             if (target == null) return controllers;
-            MenuScan scan = MenuToolScanner.Scan(target);
+            MenuToolScan scan = MenuToolScanner.Scan(target);
             if (scan == null) return controllers;
-            foreach (ControllerUsage usage in scan.Controllers)
+            foreach (MenuToolControllerUsage usage in scan.Controllers)
             {
                 var controller = usage.Controller as AnimatorController;
                 if (controller == null || controllers.ContainsKey(controller)) continue;

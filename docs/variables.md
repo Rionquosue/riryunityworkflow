@@ -63,7 +63,7 @@ Per user, shared by every project.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `com.vrcfury.parameterCompressor` | VRCFury's own Parameter Compressor setting (int: 0 Compress, 1 Ask, 2 Fail; unset means Compress). Menu Tool reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset). | `VRChat/MenuTool/MenuToolBudget.cs` |
+| `com.vrcfury.parameterCompressor` | VRCFury's own Parameter Compressor setting (int: 0 Compress, 1 Ask, 2 Fail; unset means Compress). Menu Tool reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset). | `VRChat/MenuTool/MenuToolCompressor.cs` |
 | `RiryTools.AttachTo.AddedBones` | Bones added with **Add bone** (string of HumanBodyBones names, comma separated; default `""`), listed after `AttachTo.CommonBones`. **Remove** takes one off. Read through `AttachTo.AddedBonesKey`. | `Utilities/AttachTo.cs` |
 | `RiryTools.AvatarMigrator.Settings` | Avatar Migration Assistant settings as JSON: per-entry options, sub-options, ignore children and migrated folder. Unset means `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty. | `AvatarMigrator/AvatarMigratorSettings.cs` |
 | `RiryTools.BetterFbx.BlenderPath` | Path to the Blender executable for Better FBX (string; `""` means detect). Read through `ImportPresetBetterFBX.BlenderPath`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
@@ -93,7 +93,7 @@ Until the editor quits; survives script reloads.
 | `RiryTools.AutoSync.LargeFileNoticeShown` | Remote URLs, one per line, whose **Push Held** notice was shown this session. | `AutoSync/AutoSync.cs` |
 | `RiryTools.AutoSync.Pending` | Saves not yet committed when scripts reloaded: one save per line, title then paths, tab-separated. | `AutoSync/AutoSync.cs` |
 | `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Scene`, `Avatar` (hierarchy path), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order). Set by Set as entry state; replayed in Play Mode once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state. | `VRChat/MenuTool/MenuToolEntryState.cs`, `VRChat/MenuTool/GestureManager/GestureManagerEntryState.cs` |
-| `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved. | `VRChat/MenuTool/MenuToolPlan.cs` |
+| `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved. | `VRChat/MenuTool/MenuToolAvatarKeys.cs` |
 | `RiryTools.RefreshScripts.Reopen` | JSON of the RiryTools windows to reopen after **Refresh Scripts** reloads scripts (assembly-qualified type names, positions); erased once read. | `Utilities/RefreshScripts.cs` |
 | `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Debug/ScriptLoadFailureWindow.cs` |
 | `RiryTools.StopAutoGame.FocusedWindows` | Comma-separated instance IDs of the windows focused when Play Mode started. | `Utilities/StopAutoGame.cs` |
@@ -109,8 +109,8 @@ Not stored, but named like settings keys.
 | Name | Use | Scripts |
 |---|---|---|
 | `RiryTools.MenuMockup.Type` | Drag and drop data key: a component type dragged into the Menu Mockup Edit window. | `UI/Debug/MenuMockupEditWindow.cs` |
-| `RiryTools.MenuTool.AddMenuName` | GUI control name of the name field in Menu Tool's Add menu dialog, so it gets keyboard focus. | `VRChat/UI/MenuToolAddMenuDialog.cs` |
-| `RiryTools.MenuTool.Entry` | Drag and drop data key: the menu entry path dragged in the Menu manager tree. | `VRChat/UI/MenuToolTrees.cs` |
+| `RiryTools.MenuTool.AddMenuName` | GUI control name of the name field in Menu Tool's Add menu dialog, so it gets keyboard focus. | `VRChat/UI/MenuTool/MenuToolAddMenuDialog.cs` |
+| `RiryTools.MenuTool.Entry` | Drag and drop data key: the menu entry path dragged in the Menu manager tree. | `VRChat/UI/MenuTool/MenuToolManagerTree.cs` |
 | Window `[SerializeField]` fields | Survive script reloads while the window is open. Each window file lists them in its glossary. | Every window under `UI/` and `VRChat/UI/` |
 
 ## Files and folders
@@ -140,8 +140,8 @@ Not stored, but named like settings keys.
 | `<name>.fbx` beside `<name>.blend` | Better FBX export. Built by `ImportPresetBetterFBX.FbxPathFor`. | `ImportPresets/ImportPresetBetterFBX.cs`, `ImportPresets/ImportPresetPostprocessor.cs` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control. Path is `GuidToolRemapLedger.RelativePath`. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
 | `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds). | `BlendshapeSync/BlendshapeSyncJobs.cs`, `BlendshapeSync/BlendshapeSyncJob.cs`, `UI/BlendshapeSync/BlendshapeSyncJobWindow.cs` |
-| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**). Deleted when empty. | `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuToolWindow.cs` |
-| `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar. | `VRChat/MenuTool/MenuToolPlan.cs` |
+| `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**). Deleted when empty. | `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar. | `VRChat/MenuTool/MenuToolAvatarKeys.cs` |
 
 ### In the user's Documents folder
 
@@ -257,10 +257,10 @@ Moving or renaming a file must move its `.meta` with it.
 | Name | Use | Scripts |
 |---|---|---|
 | `RiryLog.Format` | `[RiryTools/<tool>] <message>` on every Console line. Tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, IconCap, Import Presets, Menu Mockup, Menu Tool, Project Folder, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it. | `Components/RiryLog.cs` |
-| `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/Debug/MenuMockupPreview.cs`, `VRChat/UI/ConstraintTools/ConstraintToolWindow.cs`, `VRChat/UI/MenuToolWindow.cs` |
+| `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/Debug/MenuMockupPreview.cs`, `VRChat/UI/ConstraintTools/ConstraintToolWindow.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
-| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/Components/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs`, `VRChat/UI/ConstraintTools/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
+| Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/Components/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs`, `VRChat/UI/ConstraintTools/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `Utilities/StopAutoGame.cs` |
 
 ### Attach To
@@ -338,15 +338,15 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `BudgetCount.MaxBits` / `MaxParameters` | `256` / `8192`: VRChat's synced bits and custom expression parameters. | `VRChat/MenuTool/MenuToolBudget.cs`, `VRChat/UI/MenuToolWindow.cs` |
-| `MenuToolAddMenuDialog.Size` / `ControlSize` | `380` x `112` / `380` x `200`: Menu Tool's Add menu and Add New Control dialogs (fixed size, centred on the main window). | `VRChat/UI/MenuToolAddMenuDialog.cs` |
-| `MenuToolCompressor.BatchTime` | `0.1` s: VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time). | `VRChat/MenuTool/MenuToolBudget.cs` |
-| `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect: VRCFury's limit for compression. | `VRChat/MenuTool/MenuToolBudget.cs` |
-| `MenuToolScanner.MaxControls` | `8`: controls per menu (VRChat's limit); more are paged by VRCFury, otherwise flagged. | `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolPreview.cs` |
-| `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19`: the target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces. | `VRChat/UI/MenuToolWindow.cs` |
-| `MenuToolWindow.IconPicker` | `0x52694963`: control ID of the Assign Menu Icon object picker. | `VRChat/UI/MenuToolWindow.cs` |
-| `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760`: Menu Tool's own window; the Menu manager asks for this width in the Main Menu too. | `VRChat/UI/MenuToolWindow.cs` |
-| Writes box height (`MenuToolWindow.DrawBits`) | `120` px: the Writes foldout's scroll box, with every parameter write since the window opened or Reset menu state, one row each. | `VRChat/UI/MenuToolWindow.cs` |
+| `MenuToolBudgetCount.MaxBits` / `MaxParameters` | `256` / `8192`: VRChat's synced bits and custom expression parameters. | `VRChat/MenuTool/MenuToolBudget.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `MenuToolAddMenuDialog.Size` / `ControlSize` | `380` x `112` / `380` x `200`: Menu Tool's Add menu and Add New Control dialogs (fixed size, centred on the main window). | `VRChat/UI/MenuTool/MenuToolAddMenuDialog.cs` |
+| `MenuToolCompressor.BatchTime` | `0.1` s: VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time). | `VRChat/MenuTool/MenuToolCompressor.cs` |
+| `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect: VRCFury's limit for compression. | `VRChat/MenuTool/MenuToolCompressor.cs`, `VRChat/MenuTool/MenuToolBudget.cs` |
+| `MenuToolScanner.MaxControls` | `8`: controls per menu (VRChat's limit); more are paged by VRCFury, otherwise flagged. | `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolPlanner.cs`, `VRChat/MenuTool/MenuToolPreviewMenus.cs` |
+| `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19`: the target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `MenuToolWindow.IconPicker` | `0x52694963`: control ID of the Assign Menu Icon object picker. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760`: Menu Tool's own window; the Menu manager asks for this width in the Main Menu too. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| Writes box height (`MenuToolWindow.DrawBits`) | `120` px: the Writes foldout's scroll box, with every parameter write since the window opened or Reset menu state, one row each. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 
 ## Menu paths
 

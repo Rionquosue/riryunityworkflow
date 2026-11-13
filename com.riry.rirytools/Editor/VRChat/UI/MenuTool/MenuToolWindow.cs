@@ -46,13 +46,13 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private TreeViewState budgetState = new TreeViewState();
         [SerializeField] private TreeViewState managerState = new TreeViewState();
 
-        [NonSerialized] private MenuScan scan;
+        [NonSerialized] private MenuToolScan scan;
         // Serialized so Ctrl+Z puts a plan change back (ChangePlan records it); savedPlan is the file's content as last read
         // or written, so an undo only writes the file when it changed the plan.
-        [SerializeField] private MenuPlan plan = new MenuPlan();
+        [SerializeField] private MenuToolPlan plan = new MenuToolPlan();
         [NonSerialized] private string savedPlan = "";
-        [NonSerialized] private MenuEntry planned;
-        [NonSerialized] private List<MoveCheck> checks = new List<MoveCheck>();
+        [NonSerialized] private MenuToolEntry planned;
+        [NonSerialized] private List<MenuToolMoveCheck> checks = new List<MenuToolMoveCheck>();
         [NonSerialized] private MenuToolBudget.Result exact;
         [NonSerialized] private bool stale = true;
         // A plan change waiting for the next Layout pass (changes mid-event would unbalance the layout).
@@ -61,17 +61,17 @@ namespace Riry.RiryTools.Editor
         // When and for what the exact comparison ran (kept across rescans, which its own test builds trigger).
         [NonSerialized] private GameObject exactFor;
         [NonSerialized] private string exactTime = "";
-        [NonSerialized] private BudgetTree budgetTree;
+        [NonSerialized] private MenuToolBudgetTree budgetTree;
         // The target the budget tree was last built for: rescans of the same target keep its rows' collapsed state.
         [NonSerialized] private GameObject budgetTreeFor;
-        [NonSerialized] private ManagerTree managerTree;
+        [NonSerialized] private MenuToolManagerTree managerTree;
         [NonSerialized] private SearchField search;
         [NonSerialized] private IMenuToolRadial radial;
         [NonSerialized] private MenuToolPreviewMenus preview;
         [NonSerialized] private string shownPath = "";
         // The Menu manager's scroll view on screen, from the last Repaint: the radial is only drawn while wholly inside it.
         [NonSerialized] private Rect managerView;
-        [NonSerialized] private MenuEntry lastClicked;
+        [NonSerialized] private MenuToolEntry lastClicked;
         // Every parameter write since the window opened or Reset menu state, in order.
         [NonSerialized] private readonly List<MenuToolEntryState.Write> writes = new List<MenuToolEntryState.Write>();
         [SerializeField] private bool showWrites;
@@ -205,10 +205,10 @@ namespace Riry.RiryTools.Editor
             stale = false;
             replan = false;
             if (exactFor != target) exact = null;
-            if (budgetTree == null) budgetTree = new BudgetTree(budgetState);
+            if (budgetTree == null) budgetTree = new MenuToolBudgetTree(budgetState);
             if (managerTree == null)
             {
-                managerTree = new ManagerTree(managerState) { Move = AddMove, Clicked = Clicked, ContextMove = MoveToMenu };
+                managerTree = new MenuToolManagerTree(managerState) { Move = AddMove, Clicked = Clicked, ContextMove = MoveToMenu };
                 search = new SearchField();
             }
             try
@@ -221,7 +221,7 @@ namespace Riry.RiryTools.Editor
                 scan = null;
                 return;
             }
-            plan = MenuPlan.Load(PlanRoot);
+            plan = MenuToolPlan.Load(PlanRoot);
             savedPlan = plan.Json;
             // Every row starts open for a new target (or a first build with nothing saved); a rescan keeps what was collapsed.
             bool fresh = target != budgetTreeFor && !(budgetTreeFor == null && budgetState.expandedIDs.Count > 0);
@@ -267,16 +267,16 @@ namespace Riry.RiryTools.Editor
 
         private void AddMove(string from, string to, int index)
         {
-            ChangePlan("Plan a move", moves => moves.Add(new PlannedMove { From = from, To = to ?? "", Index = index }));
+            ChangePlan("Plan a move", moves => moves.Add(new MenuToolPlannedMove { From = from, To = to ?? "", Index = index }));
         }
 
         /// <summary>
         /// Every plan change: the plan file is read again first (another Menu Tool view may have changed it), the window is
         /// recorded for Undo, the change made and the file written; the layout is rebuilt on the next Layout pass.
         /// </summary>
-        private void ChangePlan(string undoName, Action<List<PlannedMove>> change)
+        private void ChangePlan(string undoName, Action<List<MenuToolPlannedMove>> change)
         {
-            plan = MenuPlan.Load(PlanRoot);
+            plan = MenuToolPlan.Load(PlanRoot);
             Undo.RecordObject(this, "Menu Tool: " + undoName);
             change(plan.Moves);
             plan.Save();
@@ -285,7 +285,7 @@ namespace Riry.RiryTools.Editor
             Shown.Repaint();
         }
 
-        private static bool Same(PlannedMove a, PlannedMove b)
+        private static bool Same(MenuToolPlannedMove a, MenuToolPlannedMove b)
         {
             return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu && a.NewControl == b.NewControl &&
                 a.AssignIcon == b.AssignIcon && a.Icon == b.Icon;
@@ -294,18 +294,18 @@ namespace Riry.RiryTools.Editor
         // Every submenu of the planned layout, the root first: its path and how menus show it ("Root › A › B").
         private IEnumerable<KeyValuePair<string, string>> Submenus()
         {
-            foreach (MenuEntry menu in new[] { planned }.Concat(planned.Descendants()).Where(e => e.IsSubMenu))
+            foreach (MenuToolEntry menu in new[] { planned }.Concat(planned.Descendants()).Where(e => e.IsSubMenu))
                 yield return new KeyValuePair<string, string>(menu.Path, menu.Parent == null ? "Root" : "Root › " + menu.Path.Replace("/", " › "));
         }
 
-        private void MoveToMenu(MenuEntry entry)
+        private void MoveToMenu(MenuToolEntry entry)
         {
             var menu = new GenericMenu();
             AddMoveItems(menu, entry);
             menu.ShowAsContext();
         }
 
-        private void AddMoveItems(GenericMenu menu, MenuEntry entry)
+        private void AddMoveItems(GenericMenu menu, MenuToolEntry entry)
         {
             int before = menu.GetItemCount();
             if (planned != entry.Parent)
@@ -318,16 +318,16 @@ namespace Riry.RiryTools.Editor
         }
 
         // The submenus under a parent that the entry can move into: not itself or anything under it.
-        private static IEnumerable<MenuEntry> MoveDestinations(MenuEntry parent, MenuEntry entry)
+        private static IEnumerable<MenuToolEntry> MoveDestinations(MenuToolEntry parent, MenuToolEntry entry)
         {
             return parent.Children.Where(e => e.IsSubMenu && e != entry && !MenuToolScanner.IsUnder(e, entry));
         }
 
         // One level of Move to…: a submenu with submenus of its own expands, its own name first, then a separator and its
         // submenus; one without is a single item.
-        private void AddMoveSegment(GenericMenu menu, MenuEntry entry, MenuEntry parent, string prefix)
+        private void AddMoveSegment(GenericMenu menu, MenuToolEntry entry, MenuToolEntry parent, string prefix)
         {
-            foreach (MenuEntry destination in MoveDestinations(parent, entry))
+            foreach (MenuToolEntry destination in MoveDestinations(parent, entry))
             {
                 string name = destination.Name.Replace("/", "∕");
                 string to = destination.Path;
@@ -351,7 +351,7 @@ namespace Riry.RiryTools.Editor
         // that shows none (Back, Quick Actions, a "Next" page).
         private void OnRadialContext(VRCExpressionsMenu.Control control)
         {
-            MenuEntry entry = null;
+            MenuToolEntry entry = null;
             if (control != null && preview != null) preview.EntryOfControl.TryGetValue(control, out entry);
             var menu = new GenericMenu();
             if (entry != null) AddMoveItems(menu, entry);
@@ -383,11 +383,11 @@ namespace Riry.RiryTools.Editor
                 EditorGUIUtility.GetObjectPickerControlID() != iconPickerId) return;
             iconPickerId = 0;
             var texture = EditorGUIUtility.GetObjectPickerObject() as Texture2D;
-            MenuEntry entry = planned != null ? planned.Find(iconFor) : null;
+            MenuToolEntry entry = planned != null ? planned.Find(iconFor) : null;
             if (texture == null || entry == null || entry.Icon == texture) return;
             string guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(texture));
             string path = iconFor;
-            ChangePlan("Plan a menu icon", moves => moves.Add(new PlannedMove { From = path, AssignIcon = true, Icon = guid }));
+            ChangePlan("Plan a menu icon", moves => moves.Add(new MenuToolPlannedMove { From = path, AssignIcon = true, Icon = guid }));
         }
 
         // Add New Control: the dialog asks for the control's fields and its parent (into chosen first).
@@ -395,7 +395,7 @@ namespace Riry.RiryTools.Editor
         {
             string[] names = scan != null ? scan.Params.Keys.OrderBy(n => n, StringComparer.Ordinal).ToArray() : new string[0];
             MenuToolAddMenuDialog.OpenControl(Submenus().ToList(), into, names, made =>
-                ChangePlan("Plan a new control", moves => moves.Add(new PlannedMove
+                ChangePlan("Plan a new control", moves => moves.Add(new MenuToolPlannedMove
                 {
                     To = made.Parent, NewControl = made.Name, ControlType = (int)made.Type, Parameter = made.Parameter, Value = made.Value,
                     Icon = made.Icon != null ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(made.Icon)) : ""
@@ -406,7 +406,7 @@ namespace Riry.RiryTools.Editor
         private void AddMenu(string into = null)
         {
             MenuToolAddMenuDialog.Open(Submenus().ToList(), into ?? shownPath, (name, parent) =>
-                ChangePlan("Plan a new menu", moves => moves.Add(new PlannedMove { To = parent, NewMenu = name })));
+                ChangePlan("Plan a new menu", moves => moves.Add(new MenuToolPlannedMove { To = parent, NewMenu = name })));
             RiryToolGUI.ExitAfterModal();
         }
 
@@ -536,10 +536,10 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Compression comparison: " + label, EditorStyles.boldLabel);
             if (!scan.VrcfuryInstalled) EditorGUILayout.HelpBox("VRCFury is not installed, so the compressor column is an estimate of what VRCFury's Parameter Compressor would do.", MessageType.None);
             Row("", "Compression off", "Compression on", "Change", true);
-            Row("Custom parameters", shown.Off.Total, shown.On.Total, "of " + BudgetCount.MaxParameters);
+            Row("Custom parameters", shown.Off.Total, shown.On.Total, "of " + MenuToolBudgetCount.MaxParameters);
             Row("Synced", shown.Off.Synced, shown.On.Synced, "");
             Row("Local", shown.Off.Local, shown.On.Local, "");
-            Row("Synced bits", shown.Off.Bits, shown.On.Bits, "of " + BudgetCount.MaxBits);
+            Row("Synced bits", shown.Off.Bits, shown.On.Bits, "of " + MenuToolBudgetCount.MaxBits);
             Row("Bits left", shown.Off.BitsLeft, shown.On.BitsLeft, "");
             Row("Parameters left", shown.Off.ParametersLeft, shown.On.ParametersLeft, "");
             if (estimate.Note.Length > 0) EditorGUILayout.HelpBox(estimate.Note, MessageType.Warning);
@@ -587,10 +587,10 @@ namespace Riry.RiryTools.Editor
 
         private void DrawShared()
         {
-            List<ParamEntry> shared = scan.Params.Values.Where(p => p.Blocks.Count > 1 || p.TypeConflict).OrderBy(p => p.Name).ToList();
+            List<MenuToolParamEntry> shared = scan.Params.Values.Where(p => p.Blocks.Count > 1 || p.TypeConflict).OrderBy(p => p.Name).ToList();
             showShared = EditorGUILayout.Foldout(showShared, "Shared parameters (" + shared.Count + ", each counted once)", true);
             if (!showShared) return;
-            foreach (ParamEntry param in shared)
+            foreach (MenuToolParamEntry param in shared)
             {
                 string types = param.TypeConflict ? string.Join(" / ", param.DeclaredTypes) + " (types differ)" : param.Type.ToString();
                 var content = new GUIContent(param.Name + ": " + types + (param.Synced ? ", " + param.Bits + " bits" : ", local") + "  —  " + string.Join(", ", param.Blocks));
@@ -609,11 +609,11 @@ namespace Riry.RiryTools.Editor
         {
             showBlocks = EditorGUILayout.Foldout(showBlocks, "Content blocks (" + scan.Blocks.Count + ")", true);
             if (!showBlocks) return;
-            List<MenuEntry> all = scan.Root.Descendants().ToList();
+            List<MenuToolEntry> all = scan.Root.Descendants().ToList();
             foreach (string block in scan.Blocks)
             {
                 EditorGUILayout.LabelField(block, EditorStyles.boldLabel);
-                foreach (MenuEntry entry in all.Where(e => e.Block == block && !e.IsSubMenu && scan.InFilter(e.Source)))
+                foreach (MenuToolEntry entry in all.Where(e => e.Block == block && !e.IsSubMenu && scan.InFilter(e.Source)))
                 {
                     using (new EditorGUILayout.HorizontalScope())
                     {
@@ -683,10 +683,10 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Planned moves (" + plan.Moves.Count + ")", EditorStyles.boldLabel);
             float height = Mathf.Min(160f, 44f * checks.Count);
             planScroll = EditorGUILayout.BeginScrollView(planScroll, GUILayout.Height(height));
-            PlannedMove remove = null;
+            MenuToolPlannedMove remove = null;
             for (int i = 0; i < checks.Count; i++)
             {
-                MoveCheck check = checks[i];
+                MenuToolMoveCheck check = checks[i];
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     string status = check.Ok ? "✓" : "✕";
@@ -696,18 +696,18 @@ namespace Riry.RiryTools.Editor
                     if (check.Candidates.Count > 1)
                     {
                         // Unchosen (ambiguous): a "Choose a source" entry first, so a choice is always explicit.
-                        bool unchosen = check.Edit == MoveEdit.Ambiguous;
+                        bool unchosen = check.Edit == MenuToolMoveEdit.Ambiguous;
                         List<string> options = check.Candidates.Select(MenuToolPlanner.Describe).ToList();
-                        if (unchosen) options.Insert(0, MenuToolPlanner.Describe(MoveEdit.Ambiguous));
+                        if (unchosen) options.Insert(0, MenuToolPlanner.Describe(MenuToolMoveEdit.Ambiguous));
                         int current = unchosen ? 0 : Mathf.Max(0, check.Candidates.IndexOf(check.Edit));
                         int picked = EditorGUILayout.Popup(current, options.ToArray(), GUILayout.Width(200f));
                         if (picked != current && !(unchosen && picked == 0))
                         {
                             string choice = check.Candidates[unchosen ? picked - 1 : picked].ToString();
-                            PlannedMove chosen = check.Move;
+                            MenuToolPlannedMove chosen = check.Move;
                             ChangePlan("Choose a source", moves =>
                             {
-                                PlannedMove move = moves.FirstOrDefault(m => Same(m, chosen));
+                                MenuToolPlannedMove move = moves.FirstOrDefault(m => Same(m, chosen));
                                 if (move != null) move.Choice = choice;
                             });
                         }
@@ -721,7 +721,7 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.EndScrollView();
             if (remove != null)
             {
-                PlannedMove removed = remove;
+                MenuToolPlannedMove removed = remove;
                 ChangePlan("Remove a planned move", moves =>
                 {
                     int at = moves.FindIndex(m => Same(m, removed));
@@ -747,9 +747,9 @@ namespace Riry.RiryTools.Editor
 
         private void DrawBreadcrumbs()
         {
-            MenuEntry at = planned.Find(shownPath) ?? planned;
-            var chain = new List<MenuEntry>();
-            for (MenuEntry entry = at; entry != null; entry = entry.Parent) chain.Insert(0, entry);
+            MenuToolEntry at = planned.Find(shownPath) ?? planned;
+            var chain = new List<MenuToolEntry>();
+            for (MenuToolEntry entry = at; entry != null; entry = entry.Parent) chain.Insert(0, entry);
             using (new EditorGUILayout.HorizontalScope())
             {
                 for (int i = 0; i < chain.Count; i++)
@@ -809,12 +809,12 @@ namespace Riry.RiryTools.Editor
             }
             // Follow the radial: a submenu opened there is selected in the list and the breadcrumbs.
             List<VRCExpressionsMenu> path = radial.Path;
-            MenuEntry entry;
+            MenuToolEntry entry;
             string now = path.Count > 0 && preview != null && preview.EntryOf.TryGetValue(path[path.Count - 1], out entry) ? entry.Path : "";
             if (now != shownPath && Event.current.type == EventType.Repaint && path.Count > 0)
             {
                 shownPath = now;
-                MenuEntry opened = planned.Find(now);
+                MenuToolEntry opened = planned.Find(now);
                 if (opened != null && opened.Parent != null) managerTree.Select(opened);
                 Shown.Repaint();
             }
@@ -822,13 +822,13 @@ namespace Riry.RiryTools.Editor
 
         private void DrawBits()
         {
-            MenuEntry entry = lastClicked;
+            MenuToolEntry entry = lastClicked;
             EditorGUILayout.LabelField("Last clicked: " + (entry == null ? "nothing yet" : entry.Path + " (" + MenuToolIcons.TypeName(entry.Type) + ")"), EditorStyles.boldLabel);
             if (entry != null)
             {
                 foreach (string name in entry.Parameters())
                 {
-                    ParamEntry param = scan.Param(name);
+                    MenuToolParamEntry param = scan.Param(name);
                     string kind = param == null ? "built-in" : param.Type + (param.Synced ? ", synced, " + param.Bits + (param.Bits == 1 ? " bit" : " bits") : ", local, 0 bits") +
                         (param.Estimated ? ", estimated name" : "");
                     float value = radial != null ? radial.Value(name) : 0f;
@@ -899,7 +899,7 @@ namespace Riry.RiryTools.Editor
             {
                 writes.Add(new MenuToolEntryState.Write { Name = write.Key, Value = write.Value });
                 // The control that wrote it: in the submenu shown first, else anywhere.
-                MenuEntry at = planned != null ? planned.Find(shownPath) ?? planned : null;
+                MenuToolEntry at = planned != null ? planned.Find(shownPath) ?? planned : null;
                 if (at == null) continue;
                 lastClicked = at.Children.FirstOrDefault(child => child.Parameters().Contains(write.Key))
                     ?? planned.Descendants().FirstOrDefault(child => !child.IsSubMenu && child.Parameters().Contains(write.Key)) ?? lastClicked;
@@ -907,7 +907,7 @@ namespace Riry.RiryTools.Editor
             pendingWrites.Clear();
         }
 
-        private void Clicked(MenuEntry entry)
+        private void Clicked(MenuToolEntry entry)
         {
             if (entry == null) return;
             lastClicked = entry;
@@ -915,13 +915,13 @@ namespace Riry.RiryTools.Editor
         }
 
         // Opens a submenu of the planned layout in the radial (the root and each submenu down to it).
-        private void Navigate(MenuEntry submenu)
+        private void Navigate(MenuToolEntry submenu)
         {
             if (submenu == null) return;
             shownPath = submenu.Path;
             if (radial == null || preview == null) return;
             var chain = new List<VRCExpressionsMenu>();
-            for (MenuEntry at = submenu; at != null; at = at.Parent)
+            for (MenuToolEntry at = submenu; at != null; at = at.Parent)
             {
                 VRCExpressionsMenu menu;
                 if (preview.MenuOf.TryGetValue(at, out menu)) chain.Insert(0, menu);
@@ -969,7 +969,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Menu Tool window
-// The menu entry, Tools > RiryTools > Menu Tool, is in Editor/VRChat/RiryToolsVRChatMenus.cs; the Main Menu hosts it as a tab.
+// The menu entry, Tools > RiryTools > Menu Tool, is in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; the Main Menu hosts it as a tab.
 // ============================================================================
 //
 // MenuToolWindow (this file)
@@ -987,17 +987,17 @@ namespace Riry.RiryTools.Editor
 //                            ("t:VRCAvatarDescriptor": Hierarchy objects with a VRC Avatar Descriptor), applied when the
 //                            picker closes (pickerId); dragging in and Use selection still take any object.
 //   Refresh / MarkStale      Rescans (MenuToolScanner) on the next Layout after a change (hierarchy, project, Undo, Rescan),
-//                            loads the plan (MenuPlan), rebuilds the trees and the preview (Replan). The budget tree opens
+//                            loads the plan (MenuToolPlan), rebuilds the trees and the preview (Replan). The budget tree opens
 //                            every row only for a new target (budgetTreeFor); a rescan keeps collapsed rows collapsed.
 //   Replan                   Planned layout (MenuToolPlanner), the list, the preview menus and the radial (never for the
 //                            hosted copy), staying in the submenu shown before. Preview menus that show the same (Adopt) are
 //                            kept and the radial is left as it is.
 //   Parameter budget tab     DrawSummary: compression off / on / change (custom parameters, synced, local, synced bits, bits
 //                            and parameters left), Estimated / Exact / Unavailable; the estimate's Note (VRCFury cannot fit
-//                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). BudgetTree; Shared
+//                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). MenuToolBudgetTree; Shared
 //                            parameters (types differ in red); Content blocks (each control's path, bindings, Select);
 //                            Notes.
-//   Menu manager tab         Search, Discard plan, Add menu, Apply (disabled until every move checks out); ManagerTree; then, in
+//   Menu manager tab         Search, Discard plan, Add menu, Apply (disabled until every move checks out); MenuToolManagerTree; then, in
 //                            a scroll view (managerScroll; managerView its screen rect), DrawPlan
 //                            (before -> after, edit, choice popup when several sources fit, errors, warnings, remove);
 //                            DrawBreadcrumbs; DrawRadial (Gesture Manager, or how to get it; only when it fits and is wholly in
@@ -1019,7 +1019,7 @@ namespace Riry.RiryTools.Editor
 //   AddControl               MenuToolAddMenuDialog.OpenControl with the avatar's parameter names; plans a NewControl move.
 //   DrawRadial (Used)        Not placed on an event the list used up (a row drag): GetRect gives placeholder rects then.
 //   AddMenu                  The Add menu button (between Discard plan and Apply): MenuToolAddMenuDialog with every submenu, the
-//                            radial's shown submenu chosen first; Add plans a PlannedMove with NewMenu (ChangePlan).
+//                            radial's shown submenu chosen first; Add plans a MenuToolPlannedMove with NewMenu (ChangePlan).
 //   Clicked / Navigate / OnWritten  List selection opens that submenu in the radial; the radial's submenu selects the list
 //                            row; a write marks the control that made it as last clicked.
 //   ApplyPlan / Discard      Confirmed. Apply runs MenuToolApply (one undo step, the plan cleared inside it, so undoing Apply
