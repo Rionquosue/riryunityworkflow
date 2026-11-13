@@ -95,6 +95,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: SCRIPT CAUSING FAILED LOAD window
+// Script Load Guard (a Debug tool): the logic is in Editor/Debug/ScriptLoadGuard.cs.
 // ============================================================================
 //
 // ScriptLoadFailureWindow (this file)
@@ -105,11 +106,3 @@ namespace Riry.RiryTools.Editor
 //   pending           Action   The button's action, run after the window closes.
 //   scroll            Vector2  Scroll position.
 //
-// ScriptLoadGuard (Editor/Debug/ScriptLoadGuard.cs)
-//   Current           Failure  Path, Expected and Loaded object counts, Suspects, Errors.
-//   Guarded()         Paths whose saving is blocked (kept for the session).
-//   IsGuarded(path) / SetGuarded(path, guarded) / Override(path)
-//   LoadFailed(expected, loaded)  None, or fewer than half, of the objects loaded.
-//   CountSerializedObjects(path)  GameObjects and prefab instances in a scene or prefab file.
-//   Suspects(stackTrace)          First stack frame outside Unity, .NET and this package.
-// ScriptLoadSaveBlocker (ScriptLoadGuard.cs): removes blocked files from every save.

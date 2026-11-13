@@ -93,7 +93,7 @@ Until the editor quits; survives script reloads.
 | `RiryTools.AutoSync.Pending` | Saves not yet committed when scripts reloaded: one save per line, title then paths, tab-separated. | `AutoSync/AutoSync.cs` |
 | `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Scene`, `Avatar` (hierarchy path), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order). Set by Set as entry state; replayed in Play Mode once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state. | `VRChat/MenuTool/MenuToolEntryState.cs`, `VRChat/MenuTool/GestureManager/GestureManagerEntryState.cs` |
 | `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved. | `VRChat/MenuTool/MenuToolPlan.cs` |
-| `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Components/ScriptLoadFailureWindow.cs` |
+| `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Debug/ScriptLoadFailureWindow.cs` |
 | `RiryTools.StopAutoGame.FocusedWindows` | Comma-separated instance IDs of the windows focused when Play Mode started. | `StopAutoGame.cs` |
 | `RiryTools.StopAutoGame.GameViewWasOpen` | Bool: a Game view existed before Play Mode. | `StopAutoGame.cs` |
 | `RiryTools.StopAutoGame.Missing.<what>` | Bool: the warning about a reflection lookup this Unity version lacks was already logged this session. | `StopAutoGame.cs` |
@@ -106,7 +106,7 @@ Not stored, but named like settings keys.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `RiryTools.MenuMockup.Type` | Drag and drop data key: a component type dragged into the Menu Mockup Edit window. | `UI/MenuMockupWindows.cs` |
+| `RiryTools.MenuMockup.Type` | Drag and drop data key: a component type dragged into the Menu Mockup Edit window. | `UI/Debug/MenuMockupEditWindow.cs` |
 | `RiryTools.MenuTool.AddMenuName` | GUI control name of the name field in Menu Tool's Add menu dialog, so it gets keyboard focus. | `VRChat/UI/MenuToolAddMenuDialog.cs` |
 | `RiryTools.MenuTool.Entry` | Drag and drop data key: the menu entry path dragged in the Menu manager tree. | `VRChat/UI/MenuToolTrees.cs` |
 | Window `[SerializeField]` fields | Survive script reloads while the window is open. Each window file lists them in its glossary. | Every window under `UI/` and `VRChat/UI/` |
@@ -153,7 +153,7 @@ Not stored, but named like settings keys.
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset` and optional `config.json`. Path is `ImportPresetLibrary.RootPath`. | `ImportPresets/ImportPresetLibrary.cs`, `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresets/ImportPresetFolderWindow.cs`, `UI/ImportPresets/ImportPresetSaveWindow.cs` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list). Path is `ImportPresetPreferences.FilePath`. | `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrator/types.yml` when missing, then read from here. Path is `AvatarMigratorCopyTypes.FilePath`. | `AvatarMigrator/AvatarMigratorCopyTypes.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
-| `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them). Path is `MenuMockup.Folder`. | `MenuMockup.cs`, `UI/MenuMockupWindows.cs` |
+| `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them). Path is `MenuMockup.Folder`. | `Debug/MenuMockup.cs`, `UI/Debug/MenuMockupComponentsWindow.cs`, `UI/Debug/MenuMockupNameWindow.cs` |
 
 ## Git names (AutoSync)
 
@@ -255,7 +255,7 @@ Moving or renaming a file must move its `.meta` with it.
 | Name | Use | Scripts |
 |---|---|---|
 | `RiryLog.Format` | `[RiryTools/<tool>] <message>` on every Console line. Tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, IconCap, Import Presets, Menu Mockup, Menu Tool, Project Folder, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it. | `Components/RiryLog.cs` |
-| `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/MenuMockupWindows.cs`, `VRChat/UI/ConstraintToolWindow.cs`, `VRChat/UI/MenuToolWindow.cs` |
+| `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/Debug/MenuMockupPreview.cs`, `VRChat/UI/ConstraintToolWindow.cs`, `VRChat/UI/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
 | Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |

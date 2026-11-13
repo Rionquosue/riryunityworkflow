@@ -114,7 +114,11 @@ com.riry.rirytools/
     ├── Debug/
     │   ├── FindNullReferences.cs
     │   ├── MenuMockup.cs
-    │   └── ScriptLoadGuard.cs
+    │   ├── MenuMockupFile.cs
+    │   ├── MenuMockupModel.cs
+    │   ├── MenuMockupTypes.cs
+    │   ├── ScriptLoadGuard.cs
+    │   └── ScriptLoadGuardSaveBlocker.cs
     ├── GuidTools/
     │   ├── GuidToolBrokenReferenceMonitor.cs
     │   ├── GuidToolBrokenReferenceSaveGuard.cs
@@ -173,7 +177,11 @@ com.riry.rirytools/
     │   │   └── RiryToolGUI.cs
     │   ├── Debug/
     │   │   ├── FindNullReferencesWindow.cs
-    │   │   ├── MenuMockupWindows.cs
+    │   │   ├── MenuMockupComponentsWindow.cs
+    │   │   ├── MenuMockupEditWindow.cs
+    │   │   ├── MenuMockupNameWindow.cs
+    │   │   ├── MenuMockupPreview.cs
+    │   │   ├── MenuMockupTextWindow.cs
     │   │   └── ScriptLoadFailureWindow.cs
     │   ├── GuidTools/
     │   │   ├── GuidToolBrokenReferenceWindow.cs

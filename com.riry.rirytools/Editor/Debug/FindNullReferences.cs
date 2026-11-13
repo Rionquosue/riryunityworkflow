@@ -15,7 +15,7 @@ namespace Riry.RiryTools.Editor
     /// Find Null references: reads the Console's NullReferenceException entries, shows where each was thrown (the first
     /// frame in a project or package file), and scans the open scenes' components of the types that error's frames were
     /// handed for empty or missing references. If the log gives nothing, it scans every component in the open scenes.
-    /// Runs once; its popup is Editor/UI/FindNullReferencesWindow.cs.
+    /// Runs once; its popup is Editor/UI/Debug/FindNullReferencesWindow.cs.
     /// </summary>
     internal static class FindNullReferences
     {

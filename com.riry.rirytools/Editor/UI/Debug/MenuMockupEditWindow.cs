@@ -16,7 +16,7 @@ namespace Riry.RiryTools.Editor
     /// other blocks aside to show where it goes. Double-click a block to edit its text;
     /// right-click it (or the empty window) for its layout, Auto size and Delete. Every
     /// change can be undone (Edit > Undo). The aspect ratio of the mockup is shown at
-    /// the top. The model and file format are in Editor/MenuMockup.cs.
+    /// the top. The model and file format are in Editor/Debug/MenuMockup*.cs.
     /// </summary>
     internal sealed class MenuMockupEditWindow : EditorWindow
     {
@@ -29,7 +29,7 @@ namespace Riry.RiryTools.Editor
         private const float MinBlockSize = 12f;
         private static readonly Vector2 NewBlockSize = new Vector2(80f, 20f);
 
-        [SerializeField] private List<MockupBlock> blocks = new List<MockupBlock>();
+        [SerializeField] private List<MenuMockupBlock> blocks = new List<MenuMockupBlock>();
         [SerializeField] private string savePath;
 
         private Label ratio;
@@ -57,10 +57,10 @@ namespace Riry.RiryTools.Editor
 
         // Moving a block, or placing a new one from Components (newType).
         private VisualElement pressed;
-        private MockupBlock pressedBlock;
+        private MenuMockupBlock pressedBlock;
         private Vector2 pressPosition;
         private VisualElement dragged;
-        private MockupBlock draggedBlock;
+        private MenuMockupBlock draggedBlock;
         private Vector2 grabOffset;
         private string newType;
         private Target pending;
@@ -69,7 +69,7 @@ namespace Riry.RiryTools.Editor
         private double animateUntil;
 
         // Resizing with a side handle: 0 left, 1 right, 2 top, 3 bottom.
-        private MockupBlock resizing;
+        private MenuMockupBlock resizing;
         private VisualElement resizingElement;
         private int resizeSide;
         private Vector2 resizeStart;
@@ -88,18 +88,18 @@ namespace Riry.RiryTools.Editor
             get { return savePath; }
         }
 
-        internal MockupBlock Block(int id)
+        internal MenuMockupBlock Block(int id)
         {
-            return MockupModel.Find(blocks, id);
+            return MenuMockupModel.Find(blocks, id);
         }
 
-        private MockupBlock Root
+        private MenuMockupBlock Root
         {
             get
             {
-                MockupBlock root = MockupModel.Find(blocks, 0);
+                MenuMockupBlock root = MenuMockupModel.Find(blocks, 0);
                 if (root != null) return root;
-                root = new MockupBlock { Id = 0, Type = MockupTypes.Window, Padding = 4 };
+                root = new MenuMockupBlock { Id = 0, Type = MenuMockupTypes.Window, Padding = 4 };
                 blocks.Insert(0, root);
                 return root;
             }
@@ -174,15 +174,15 @@ namespace Riry.RiryTools.Editor
         {
             if (canvas == null) return;
             canvas.Clear();
-            MockupBlock root = Root;
+            MenuMockupBlock root = Root;
             canvas.userData = root;
             Style(canvas, root);
             canvas.style.width = StyleKeyword.Auto;
             canvas.style.height = StyleKeyword.Auto;
-            foreach (MockupBlock child in MockupModel.Children(blocks, 0)) canvas.Add(Build(child));
+            foreach (MenuMockupBlock child in MenuMockupModel.Children(blocks, 0)) canvas.Add(Build(child));
         }
 
-        private VisualElement Build(MockupBlock block)
+        private VisualElement Build(MenuMockupBlock block)
         {
             var element = new VisualElement { userData = block };
             Style(element, block);
@@ -193,7 +193,7 @@ namespace Riry.RiryTools.Editor
             Color border = new Color(0.5f, 0.5f, 0.5f, 0.6f);
             element.style.borderLeftColor = element.style.borderRightColor = element.style.borderTopColor = element.style.borderBottomColor = border;
 
-            bool tabs = block.Type == MockupTypes.Tabs;
+            bool tabs = block.Type == MenuMockupTypes.Tabs;
             // A Tabs block's strip stays clickable: a tab shows its blocks.
             VisualElement preview = tabs ? MenuMockupPreview.TabStrip(block, tab => ShowTab(block, tab)) : MenuMockupPreview.Create(block);
             if (preview != null)
@@ -212,10 +212,10 @@ namespace Riry.RiryTools.Editor
                 StyleContent(holder, block);
                 element.Add(holder);
             }
-            foreach (MockupBlock child in MockupModel.Children(blocks, block.Id))
+            foreach (MenuMockupBlock child in MenuMockupModel.Children(blocks, block.Id))
             {
                 // In a Tabs block, only the blocks on its shown tab.
-                if (tabs && MockupTypes.TabOf(block, child) != Mathf.Clamp(block.ActiveTab, 0, MockupTypes.TabNames(block).Count - 1)) continue;
+                if (tabs && MenuMockupTypes.TabOf(block, child) != Mathf.Clamp(block.ActiveTab, 0, MenuMockupTypes.TabNames(block).Count - 1)) continue;
                 holder.Add(Build(child));
             }
             for (int side = 0; side < 4; side++) element.Add(Handle(element, block, side));
@@ -226,7 +226,7 @@ namespace Riry.RiryTools.Editor
             return element;
         }
 
-        private void ShowTab(MockupBlock block, int tab)
+        private void ShowTab(MenuMockupBlock block, int tab)
         {
             if (block.ActiveTab == tab) return;
             Record("Show tab");
@@ -237,9 +237,9 @@ namespace Riry.RiryTools.Editor
         // Marks a Tabs block's content area: drops there go into the Tabs block, on its shown tab.
         private sealed class TabsContent
         {
-            internal readonly MockupBlock Block;
+            internal readonly MenuMockupBlock Block;
 
-            internal TabsContent(MockupBlock block)
+            internal TabsContent(MenuMockupBlock block)
             {
                 Block = block;
             }
@@ -248,16 +248,16 @@ namespace Riry.RiryTools.Editor
         private const string TabsContentName = "mockup-tabs-content";
 
         // The block a container element holds blocks for: a block, the window, or a Tabs block's content area.
-        private static MockupBlock BlockOf(VisualElement container)
+        private static MenuMockupBlock BlockOf(VisualElement container)
         {
             var content = container.userData as TabsContent;
-            return content != null ? content.Block : (MockupBlock)container.userData;
+            return content != null ? content.Block : (MenuMockupBlock)container.userData;
         }
 
-        private static void Style(VisualElement element, MockupBlock block)
+        private static void Style(VisualElement element, MenuMockupBlock block)
         {
             // A Tabs block itself is always a column (strip, then content); its direction is its content area's.
-            bool tabs = block.Type == MockupTypes.Tabs && element.userData is MockupBlock && block.Id != 0;
+            bool tabs = block.Type == MenuMockupTypes.Tabs && element.userData is MenuMockupBlock && block.Id != 0;
             element.style.flexDirection = tabs || block.Direction != "row" ? FlexDirection.Column : FlexDirection.Row;
             element.style.justifyContent = tabs ? Justify.FlexStart : JustifyOf(block.Justify);
             element.style.alignItems = tabs ? Align.Stretch : AlignOf(block.Align);
@@ -267,7 +267,7 @@ namespace Riry.RiryTools.Editor
             element.style.height = block.Height >= 0 ? new StyleLength(block.Height) : new StyleLength(StyleKeyword.Auto);
         }
 
-        private static void StyleContent(VisualElement content, MockupBlock block)
+        private static void StyleContent(VisualElement content, MenuMockupBlock block)
         {
             content.style.flexDirection = block.Direction == "row" ? FlexDirection.Row : FlexDirection.Column;
             content.style.justifyContent = JustifyOf(block.Justify);
@@ -305,7 +305,7 @@ namespace Riry.RiryTools.Editor
 
         // ---- Side handles ---------------------------------------------------
 
-        private VisualElement Handle(VisualElement element, MockupBlock block, int side)
+        private VisualElement Handle(VisualElement element, MenuMockupBlock block, int side)
         {
             var handle = new VisualElement();
             handle.style.position = Position.Absolute;
@@ -356,7 +356,7 @@ namespace Riry.RiryTools.Editor
 
         // ---- Moving blocks --------------------------------------------------
 
-        private void OnBlockDown(PointerDownEvent evt, VisualElement element, MockupBlock block)
+        private void OnBlockDown(PointerDownEvent evt, VisualElement element, MenuMockupBlock block)
         {
             if (evt.button != 0) return;
             evt.StopPropagation();
@@ -404,7 +404,7 @@ namespace Riry.RiryTools.Editor
             {
                 Target target = TargetAt(evt.position) ?? placed;
                 Record("Move");
-                MockupModel.PlaceShown(blocks, draggedBlock, BlockOf(target.Parent).Id, target.Index);
+                MenuMockupModel.PlaceShown(blocks, draggedBlock, BlockOf(target.Parent).Id, target.Index);
                 EndDrag();
                 Rebuild();
             }
@@ -487,7 +487,7 @@ namespace Riry.RiryTools.Editor
             if (picked == null) return null;
             if (placeholder != null && (picked == placeholder || placeholder.Contains(picked))) return placed;
             VisualElement element = picked;
-            while (element != null && element != canvas && !(element.userData is MockupBlock) && !(element.userData is TabsContent)) element = element.parent;
+            while (element != null && element != canvas && !(element.userData is MenuMockupBlock) && !(element.userData is TabsContent)) element = element.parent;
             if (element == null) return null;
             if (element == canvas) return new Target(canvas, IndexAt(canvas, at));
             if (element.userData is TabsContent) return new Target(element, IndexAt(element, at));
@@ -500,7 +500,7 @@ namespace Riry.RiryTools.Editor
             if (along < 0.25f) return new Target(parent, index);
             if (along > 0.75f) return new Target(parent, index + 1);
             // The middle of a Tabs block: its content area.
-            VisualElement inside = ((MockupBlock)element.userData).Type == MockupTypes.Tabs ? element.Q<VisualElement>(TabsContentName) ?? element : element;
+            VisualElement inside = ((MenuMockupBlock)element.userData).Type == MenuMockupTypes.Tabs ? element.Q<VisualElement>(TabsContentName) ?? element : element;
             return new Target(inside, IndexAt(inside, at));
         }
 
@@ -521,7 +521,7 @@ namespace Riry.RiryTools.Editor
             var children = new List<VisualElement>();
             foreach (VisualElement child in container.Children())
             {
-                if (child.userData is MockupBlock) children.Add(child);
+                if (child.userData is MenuMockupBlock) children.Add(child);
             }
             return children;
         }
@@ -532,7 +532,7 @@ namespace Riry.RiryTools.Editor
             foreach (VisualElement child in container.Children())
             {
                 if (child == element) return index;
-                if (child.userData is MockupBlock) index++;
+                if (child.userData is MenuMockupBlock) index++;
             }
             return index;
         }
@@ -579,8 +579,8 @@ namespace Riry.RiryTools.Editor
             DragAndDrop.AcceptDrag();
             Target target = TargetAt(evt.mousePosition) ?? placed ?? new Target(canvas, BlockChildren(canvas).Count);
             Record("Add " + type);
-            MockupBlock block = MockupModel.Create(blocks, type);
-            MockupModel.PlaceShown(blocks, block, BlockOf(target.Parent).Id, target.Index);
+            MenuMockupBlock block = MenuMockupModel.Create(blocks, type);
+            MenuMockupModel.PlaceShown(blocks, block, BlockOf(target.Parent).Id, target.Index);
             EndDrag();
             Rebuild();
         }
@@ -589,8 +589,8 @@ namespace Riry.RiryTools.Editor
         internal void Append(string type)
         {
             Record("Add " + type);
-            MockupBlock block = MockupModel.Create(blocks, type);
-            MockupModel.Place(blocks, block, 0, int.MaxValue);
+            MenuMockupBlock block = MenuMockupModel.Create(blocks, type);
+            MenuMockupModel.Place(blocks, block, 0, int.MaxValue);
             Rebuild();
         }
 
@@ -601,7 +601,7 @@ namespace Riry.RiryTools.Editor
 
         // ---- Right-click layout menu ------------------------------------------
 
-        private void Menu(ContextualMenuPopulateEvent evt, MockupBlock block)
+        private void Menu(ContextualMenuPopulateEvent evt, MenuMockupBlock block)
         {
             // Only the block under the pointer, not the blocks around it.
             evt.StopPropagation();
@@ -625,11 +625,11 @@ namespace Riry.RiryTools.Editor
                 Rebuild();
             }, action => block.Width >= 0 || block.Height >= 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             // A block inside a Tabs block can go to another of its tabs.
-            MockupBlock owner = MockupModel.Find(blocks, block.Parent);
-            if (block.Id != 0 && owner != null && owner.Type == MockupTypes.Tabs)
+            MenuMockupBlock owner = MenuMockupModel.Find(blocks, block.Parent);
+            if (block.Id != 0 && owner != null && owner.Type == MenuMockupTypes.Tabs)
             {
-                List<string> names = MockupTypes.TabNames(owner);
-                int on = MockupTypes.TabOf(owner, block);
+                List<string> names = MenuMockupTypes.TabNames(owner);
+                int on = MenuMockupTypes.TabOf(owner, block);
                 for (int i = 0; i < names.Count; i++)
                 {
                     int tab = i;
@@ -645,11 +645,11 @@ namespace Riry.RiryTools.Editor
             if (block.Id == 0) return;
             // A Tabs block holds blocks on tabs not shown: the entry says how many go with it.
             int inside = Descendants(block.Id);
-            string delete = block.Type == MockupTypes.Tabs && inside > 0 ? "Delete (with the " + inside + (inside == 1 ? " block" : " blocks") + " on its tabs)" : "Delete";
+            string delete = block.Type == MenuMockupTypes.Tabs && inside > 0 ? "Delete (with the " + inside + (inside == 1 ? " block" : " blocks") + " on its tabs)" : "Delete";
             evt.menu.AppendAction(delete, action =>
             {
                 Record("Delete");
-                MockupModel.Delete(blocks, block);
+                MenuMockupModel.Delete(blocks, block);
                 Rebuild();
             });
         }
@@ -657,7 +657,7 @@ namespace Riry.RiryTools.Editor
         private int Descendants(int id)
         {
             int count = 0;
-            foreach (MockupBlock child in MockupModel.Children(blocks, id)) count += 1 + Descendants(child.Id);
+            foreach (MenuMockupBlock child in MenuMockupModel.Children(blocks, id)) count += 1 + Descendants(child.Id);
             return count;
         }
 
@@ -687,7 +687,7 @@ namespace Riry.RiryTools.Editor
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
-                MockupFile.Save(path, blocks, canvas.layout.width, canvas.layout.height);
+                MenuMockupFile.Save(path, blocks, canvas.layout.width, canvas.layout.height);
                 savePath = path;
                 RiryLog.Info(RiryLog.MenuMockup, "Saved " + path);
             }
@@ -698,7 +698,7 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        internal void Load(string path, List<MockupBlock> loaded, float width, float height)
+        internal void Load(string path, List<MenuMockupBlock> loaded, float width, float height)
         {
             Record("Load");
             blocks = loaded;
@@ -711,409 +711,20 @@ namespace Riry.RiryTools.Editor
         internal void New()
         {
             Record("New");
-            blocks = new List<MockupBlock>();
+            blocks = new List<MenuMockupBlock>();
             savePath = null;
             Rebuild();
-        }
-    }
-
-    /// <summary>
-    /// Components: a button per block type, clicked to add it at the bottom of Edit or
-    /// dragged into place, with New, Save Mockup
-    /// and Load. New starts an empty mockup. Save names a new mockup (Documents/RiryTools/Mockups/&lt;name&gt;.yml) and
-    /// updates the file once it has one; Load opens a saved mockup in Edit.
-    /// </summary>
-    internal sealed class MenuMockupComponentsWindow : EditorWindow
-    {
-        private string pressedType;
-        private Vector2 pressPosition;
-
-        internal static void Open(MenuMockupEditWindow edit)
-        {
-            MenuMockupComponentsWindow window = GetWindow<MenuMockupComponentsWindow>(true, "Components");
-            window.minSize = new Vector2(180f, 300f);
-            Rect beside = edit.position;
-            window.position = new Rect(beside.xMax + 8f, beside.y, 200f, Mathf.Max(beside.height, 420f));
-            window.Show();
-        }
-
-        private static MenuMockupEditWindow Edit()
-        {
-            return HasOpenInstances<MenuMockupEditWindow>() ? GetWindow<MenuMockupEditWindow>(true, "Edit") : MenuMockupEditWindow.Open();
-        }
-
-        private void CreateGUI()
-        {
-            var buttons = new VisualElement();
-            buttons.style.flexDirection = FlexDirection.Row;
-            buttons.style.flexShrink = 0;
-            var create = new Button(() => Edit().New()) { text = "New" };
-            create.style.flexGrow = 1;
-            var save = new Button(Save) { text = "Save Mockup" };
-            save.style.flexGrow = 1;
-            var load = new Button(Load) { text = "Load" };
-            load.style.flexGrow = 1;
-            buttons.Add(create);
-            buttons.Add(save);
-            buttons.Add(load);
-            rootVisualElement.Add(buttons);
-
-            var list = new ScrollView();
-            list.style.flexGrow = 1;
-            foreach (MockupTypes.Kind kind in MockupTypes.All)
-            {
-                string type = kind.Name;
-                // Drawn as a button; its own pointer handling tells a click from a drag.
-                var item = new Label(type);
-                item.AddToClassList(Button.ussClassName);
-                item.tooltip = "Click to add it at the bottom of Edit, or drag it into place.";
-                item.RegisterCallback<PointerDownEvent>(evt =>
-                {
-                    if (evt.button != 0) return;
-                    pressedType = type;
-                    pressPosition = evt.position;
-                    item.CapturePointer(evt.pointerId);
-                });
-                item.RegisterCallback<PointerMoveEvent>(evt =>
-                {
-                    if (pressedType != type || (evt.pressedButtons & 1) == 0) return;
-                    if (((Vector2)evt.position - pressPosition).magnitude < 4f) return;
-                    pressedType = null;
-                    if (item.HasPointerCapture(evt.pointerId)) item.ReleasePointer(evt.pointerId);
-                    DragAndDrop.PrepareStartDrag();
-                    DragAndDrop.objectReferences = new UnityEngine.Object[0];
-                    DragAndDrop.SetGenericData(MenuMockupEditWindow.DragKey, type);
-                    DragAndDrop.StartDrag(type);
-                });
-                item.RegisterCallback<PointerUpEvent>(evt =>
-                {
-                    if (item.HasPointerCapture(evt.pointerId)) item.ReleasePointer(evt.pointerId);
-                    bool clicked = pressedType == type && item.worldBound.Contains(evt.position);
-                    pressedType = null;
-                    if (clicked) Edit().Append(type);
-                });
-                list.Add(item);
-            }
-            rootVisualElement.Add(list);
-        }
-
-        // A named mockup is updated; a new one asks for a name first.
-        private void Save()
-        {
-            MenuMockupEditWindow edit = Edit();
-            if (!string.IsNullOrEmpty(edit.SavePath)) edit.Save(edit.SavePath);
-            else MenuMockupNameWindow.Open(edit);
-        }
-
-        private void Load()
-        {
-            Directory.CreateDirectory(MenuMockup.Folder);
-            string path = EditorUtility.OpenFilePanel("Load", MenuMockup.Folder, MenuMockup.FileExtension);
-            if (string.IsNullOrEmpty(path)) return;
-            try
-            {
-                float width, height;
-                List<MockupBlock> loaded = MockupFile.Load(path, out width, out height);
-                Edit().Load(path, loaded, width, height);
-            }
-            catch (Exception exception)
-            {
-                RiryLog.Exception(RiryLog.MenuMockup, "Could not load " + path, exception);
-                EditorUtility.DisplayDialog("Load", "Could not load " + path + ":\n" + exception.Message, "OK");
-            }
-        }
-    }
-
-    /// <summary>Double-click in Edit: the block's texts, applied as you type.</summary>
-    internal sealed class MenuMockupTextWindow : EditorWindow
-    {
-        private MenuMockupEditWindow owner;
-        private int blockId;
-
-        internal static void Open(MenuMockupEditWindow owner, MockupBlock block, Vector2 screenPoint)
-        {
-            var window = CreateInstance<MenuMockupTextWindow>();
-            window.owner = owner;
-            window.blockId = block.Id;
-            window.titleContent = new GUIContent("Edit Text");
-            window.position = new Rect(screenPoint.x, screenPoint.y, 320f, 80f);
-            window.ShowAuxWindow();
-        }
-
-        private void OnGUI()
-        {
-            MockupBlock block = owner != null ? owner.Block(blockId) : null;
-            if (block == null)
-            {
-                Close();
-                return;
-            }
-            MockupTypes.Kind kind = MockupTypes.Find(block.Type);
-            EditorGUILayout.LabelField(block.Type, EditorStyles.boldLabel);
-            if (kind.LabelName == null && kind.ContentName == null)
-            {
-                EditorGUILayout.LabelField("This block has no text.");
-                return;
-            }
-            string label = block.Label, content = block.Content;
-            if (kind.LabelName != null) label = EditorGUILayout.TextField(kind.LabelName, label);
-            if (kind.ContentName != null) content = EditorGUILayout.TextField(kind.ContentName, content);
-            if (label == block.Label && content == block.Content) return;
-            owner.Record("Edit Text");
-            block.Label = label;
-            block.Content = content;
-            owner.Rebuild();
-        }
-    }
-
-    /// <summary>Save Mockup for a mockup without a name: asks for one.</summary>
-    internal sealed class MenuMockupNameWindow : EditorWindow
-    {
-        private MenuMockupEditWindow owner;
-        private string mockupName = "";
-        private string error;
-
-        internal static void Open(MenuMockupEditWindow owner)
-        {
-            var window = CreateInstance<MenuMockupNameWindow>();
-            window.owner = owner;
-            window.titleContent = new GUIContent("Save Mockup");
-            Rect over = owner.position;
-            // Tall enough for the name problem's HelpBox above the buttons, with a little to spare.
-            window.position = new Rect(over.center.x - 150f, over.center.y - 62f, 300f, 124f);
-            window.minSize = window.maxSize = new Vector2(300f, 124f);
-            window.ShowModalUtility();
-        }
-
-        private void OnGUI()
-        {
-            mockupName = EditorGUILayout.TextField("Name", mockupName);
-            // A name problem shows only after Save was clicked with it.
-            if (error != null) EditorGUILayout.HelpBox(error, MessageType.Warning);
-            GUILayout.FlexibleSpace();
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Cancel", GUILayout.Width(80f))) Close();
-                if (GUILayout.Button("Save", GUILayout.Width(80f))) { Save(); RiryToolGUI.ExitAfterModal(); }
-            }
-        }
-
-        private void Save()
-        {
-            string chosen = mockupName.Trim();
-            error = ImportPresetLibrary.ValidateName(chosen);
-            if (error != null || owner == null) return;
-            string path = Path.Combine(MenuMockup.Folder, chosen + "." + MenuMockup.FileExtension);
-            if (File.Exists(path) && !EditorUtility.DisplayDialog("Save Mockup", chosen + "." + MenuMockup.FileExtension +
-                    " exists. Replace it?", "Replace", "Cancel"))
-                return;
-            owner.Save(path);
-            Close();
-        }
-    }
-
-    /// <summary>What each block type looks like in Edit: the Unity control it stands for.</summary>
-    internal static class MenuMockupPreview
-    {
-        internal const string Name = "mockup-preview";
-
-        internal static VisualElement Create(MockupBlock block)
-        {
-            string label = block.Label, content = block.Content;
-            switch (block.Type)
-            {
-                case "Label": return new Label(content);
-                case "Text Box": return new TextField(label) { value = content };
-                case "Asset Selector": return new ObjectField(label) { objectType = AssetType(content) };
-                case "Fuzzy Search Box": return new ToolbarSearchField { value = content };
-                case "Popup Button":
-                    List<string> options = Split(content);
-                    if (options.Count == 0) options.Add("");
-                    return new DropdownField(label, options, 0);
-                case "Toggle Button": return new Toggle(label) { value = IsOn(content) };
-                case "Radio Button": return new RadioButton(label) { value = IsOn(content) };
-                case "Click Button": return new Button { text = content };
-                case "Slider":
-                    float amount;
-                    if (!float.TryParse(content, NumberStyles.Float, CultureInfo.InvariantCulture, out amount)) amount = 0.5f;
-                    return new Slider(label, 0f, 1f) { value = amount };
-                case "Number Field": return new TextField(label) { value = content };
-                case "Color Field":
-                    Color color;
-                    if (!ColorUtility.TryParseHtmlString(content, out color)) color = Color.white;
-                    return new ColorField(label) { value = color };
-                case "Foldout": return new Foldout { text = content, value = true };
-                case "Help Box": return new HelpBox(content, HelpType(label));
-                case "Progress Bar": return Progress(content);
-                case "Toolbar":
-                    var toolbar = new Toolbar();
-                    foreach (string button in Split(content)) toolbar.Add(new ToolbarButton { text = button });
-                    return toolbar;
-                case "Scroll View":
-                    var scroll = new ScrollView(ScrollViewMode.Vertical) { verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible };
-                    scroll.style.minHeight = 40;
-                    return scroll;
-                case "Image": return ImageBox(content);
-                case "Separator":
-                    var line = new VisualElement();
-                    line.style.height = 1;
-                    line.style.marginTop = line.style.marginBottom = 4;
-                    line.style.backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0.8f);
-                    return line;
-                case "Space":
-                    var space = new VisualElement();
-                    space.style.height = 8;
-                    return space;
-                default: return null;
-            }
-        }
-
-        /// <summary>
-        /// A Tabs block's strip, drawn like the Main Menu's tab strip (RiryToolsMainMenu.TabStrip): flat cells of equal
-        /// width, at least TabMinWidth, wrapping onto more rows, the shown tab lighter and bold, a hover tint, a TabBorder
-        /// outline. Clicking a tab calls select.
-        /// </summary>
-        internal static VisualElement TabStrip(MockupBlock block, Action<int> select)
-        {
-            bool dark = EditorGUIUtility.isProSkin;
-            List<string> names = MockupTypes.TabNames(block);
-            int active = Mathf.Clamp(block.ActiveTab, 0, names.Count - 1);
-            var strip = new VisualElement();
-            strip.style.flexDirection = FlexDirection.Row;
-            strip.style.flexWrap = Wrap.Wrap;
-            strip.style.borderLeftWidth = strip.style.borderTopWidth = RiryToolsMainMenu.TabBorder;
-            strip.style.borderLeftColor = strip.style.borderTopColor = RiryToolsMainMenu.TabSeparator;
-            strip.style.marginBottom = 4;
-            for (int i = 0; i < names.Count; i++)
-            {
-                int tab = i;
-                bool on = i == active;
-                Color color = on ? (dark ? RiryToolsMainMenu.DarkActiveTab : RiryToolsMainMenu.LightActiveTab)
-                    : (dark ? RiryToolsMainMenu.DarkTab : RiryToolsMainMenu.LightTab);
-                Color hover = dark ? color + new Color(RiryToolsMainMenu.HoverTint, RiryToolsMainMenu.HoverTint, RiryToolsMainMenu.HoverTint, 0f)
-                    : color - new Color(RiryToolsMainMenu.HoverTint / 2f, RiryToolsMainMenu.HoverTint / 2f, RiryToolsMainMenu.HoverTint / 2f, 0f);
-                var cell = new Label(names[i]);
-                cell.style.flexGrow = 1;
-                cell.style.flexBasis = RiryToolsMainMenu.TabMinWidth;
-                cell.style.minHeight = RiryToolsMainMenu.TabMinHeight;
-                cell.style.unityTextAlign = TextAnchor.MiddleCenter;
-                cell.style.whiteSpace = WhiteSpace.Normal;
-                cell.style.fontSize = 12;
-                cell.style.unityFontStyleAndWeight = on ? FontStyle.Bold : FontStyle.Normal;
-                cell.style.paddingLeft = cell.style.paddingRight = 4;
-                cell.style.paddingTop = cell.style.paddingBottom = 3;
-                cell.style.backgroundColor = color;
-                cell.style.borderRightWidth = cell.style.borderBottomWidth = RiryToolsMainMenu.TabBorder;
-                cell.style.borderRightColor = cell.style.borderBottomColor = RiryToolsMainMenu.TabSeparator;
-                if (!on)
-                {
-                    cell.RegisterCallback<PointerEnterEvent>(evt => cell.style.backgroundColor = hover);
-                    cell.RegisterCallback<PointerLeaveEvent>(evt => cell.style.backgroundColor = color);
-                }
-                cell.RegisterCallback<PointerDownEvent>(evt =>
-                {
-                    if (evt.button != 0) return;
-                    // A tab click is not the start of a block drag.
-                    evt.StopPropagation();
-                    select(tab);
-                });
-                strip.Add(cell);
-            }
-            // Every tab as tall as the tallest, as in the Main Menu's strip.
-            strip.RegisterCallback<GeometryChangedEvent>(evt =>
-            {
-                float tallest = 0f;
-                foreach (VisualElement cell in strip.Children()) tallest = Mathf.Max(tallest, cell.resolvedStyle.height);
-                foreach (VisualElement cell in strip.Children())
-                {
-                    if (Mathf.Abs(cell.resolvedStyle.minHeight.value - tallest) > 0.5f) cell.style.minHeight = tallest;
-                }
-            });
-            return strip;
-        }
-
-        private static List<string> Split(string text)
-        {
-            var parts = new List<string>();
-            foreach (string part in text.Split(','))
-            {
-                if (part.Trim().Length > 0) parts.Add(part.Trim());
-            }
-            return parts;
-        }
-
-        private static bool IsOn(string text)
-        {
-            string value = text.Trim().ToLowerInvariant();
-            return value == "on" || value == "true" || value == "1" || value == "yes";
-        }
-
-        private static HelpBoxMessageType HelpType(string text)
-        {
-            switch (text.Trim().ToLowerInvariant())
-            {
-                case "warning": return HelpBoxMessageType.Warning;
-                case "error": return HelpBoxMessageType.Error;
-                default: return HelpBoxMessageType.Info;
-            }
-        }
-
-        // "Texture2D" or another UnityEngine type name; Object when not found.
-        private static Type AssetType(string name)
-        {
-            name = name.Trim();
-            if (name.Length > 0)
-            {
-                foreach (System.Reflection.Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (!assembly.GetName().Name.StartsWith("UnityEngine", StringComparison.Ordinal)) continue;
-                    Type type = assembly.GetType("UnityEngine." + name);
-                    if (type != null && typeof(UnityEngine.Object).IsAssignableFrom(type)) return type;
-                }
-            }
-            return typeof(UnityEngine.Object);
-        }
-
-        private static VisualElement Progress(string title)
-        {
-            var bar = new VisualElement();
-            bar.style.height = 18;
-            bar.style.backgroundColor = new Color(0f, 0f, 0f, 0.25f);
-            var fill = new VisualElement();
-            fill.style.position = Position.Absolute;
-            fill.style.left = fill.style.top = fill.style.bottom = 0;
-            fill.style.width = Length.Percent(60);
-            fill.style.backgroundColor = new Color(0.25f, 0.55f, 1f, 0.7f);
-            bar.Add(fill);
-            var text = new Label(title);
-            text.style.unityTextAlign = TextAnchor.MiddleCenter;
-            text.style.flexGrow = 1;
-            bar.Add(text);
-            return bar;
-        }
-
-        private static VisualElement ImageBox(string caption)
-        {
-            var box = new VisualElement();
-            box.style.minHeight = 48;
-            box.style.justifyContent = Justify.Center;
-            box.style.backgroundColor = new Color(0f, 0f, 0f, 0.15f);
-            var text = new Label(caption);
-            text.style.unityTextAlign = TextAnchor.MiddleCenter;
-            box.Add(text);
-            return box;
         }
     }
 }
 
 // ============================================================================
-// GLOSSARY: Menu Mockup windows
-// The model and file format are in Editor/MenuMockup.cs; the menu entry is in RiryToolsMenuBar.cs.
+// GLOSSARY: Menu Mockup Edit window
+// Menu Mockup (a Debug tool): the model and file format are in Editor/Debug/MenuMockup*.cs; the menu entry is in Editor/UI/RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // MenuMockupEditWindow ("Edit"): the mockup
-//   blocks / savePath        The blocks (MockupBlock, flat list) and the file Save updates (null until named or loaded).
+//   blocks / savePath        The blocks (MenuMockupBlock, flat list) and the file Save updates (null until named or loaded).
 //   ratio / canvas / overlay  Aspect ratio label at the top; the mockup (root block); the layer the dragged block moves on.
 //   HoverSeconds (0.5) / SlideMs (150)  Hover time before the gap moves; slide time of the blocks around it.
 //   Rebuild() / Build(block) / Style(element, block)  Draw the blocks from the model.
@@ -1129,15 +740,7 @@ namespace Riry.RiryTools.Editor
 //                           (TabsContentName, userData TabsContent; StyleContent gives it the block's direction, justify and
 //                           align, the block itself staying a column) with only the blocks on its shown tab (ActiveTab);
 //                           ShowTab switches it (undoable). TargetAt drops into the content area; BlockOf reads the block of
-//                           any container; MockupModel.PlaceShown puts a dropped block on the shown tab. Delete says how many
+//                           any container; MenuMockupModel.PlaceShown puts a dropped block on the shown tab. Delete says how many
 //                           blocks a Tabs block holds on its tabs (Descendants).
 //   Record(action) / OnUndoRedo()  Undo.RecordObject before each change; Undo and Redo draw the blocks again.
-//   Save(path) / Load(path, blocks, width, height) / New()  Through MockupFile; New empties the mockup and its name.
-//
-// MenuMockupComponentsWindow ("Components"): New, Save Mockup and Load, then a button per block type:
-//                           click to add it at the bottom of Edit, or drag it into place.
-// MenuMockupTextWindow ("Edit Text"): the block's Label and Content, named per type (MockupTypes.Kind).
-// MenuMockupNameWindow ("Save Mockup"): asks for the name of a new mockup; a name problem shows after Save.
-// MenuMockupPreview        The Unity control each block type stands for; TabStrip(block, select) a Tabs block's strip,
-//                           styled from RiryToolsMainMenu's tab constants so it matches the Main Menu, every tab as tall as
-//                           the tallest.
+//   Save(path) / Load(path, blocks, width, height) / New()  Through MenuMockupFile; New empties the mockup and its name.

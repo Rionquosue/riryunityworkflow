@@ -212,11 +212,11 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ImportPresetExtractAnimationWindow.Open (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
-//   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/FindNullReferencesWindow.cs)
+//   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/Debug/FindNullReferencesWindow.cs)
 //   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
 //   Tools/RiryTools/Script Load Guard (2061)  [check mark] -> ScriptLoadGuard.Enabled (Editor/Debug/ScriptLoadGuard.cs)
-//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
+//   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/Debug/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
 //   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
 //                                                      found" popup (this file)
@@ -230,7 +230,7 @@ namespace Riry.RiryTools.Editor
 //
 // OTHER UI OUTSIDE MENUS
 //   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/AnimatorTools/CleanAnimationKeysButton.cs)
-//   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Components/ScriptLoadFailureWindow.cs
+//   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadFailureWindow.cs
 //   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTrainWindow.UI.cs,
 //                                                      its Bezier tab Editor/VRChat/UI/ConstraintBezierWindow.UI.cs
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.

@@ -14,7 +14,7 @@ namespace Riry.RiryTools.Editor
     /// holds (for example a package script that makes a scene load empty), names the
     /// script that logged errors during the load, blocks saving it so the good file
     /// is not overwritten, and holds the editor in a modal window until it is resolved.
-    /// The window is in Editor/UI/Components/ScriptLoadFailureWindow.cs. Like Stop Auto Game, it
+    /// The window is in Editor/UI/Debug/ScriptLoadFailureWindow.cs. Like Stop Auto Game, it
     /// can be turned off: its menu toggle is in Editor/UI/RiryToolsMenuBar.cs and the Main Menu's
     /// Tools tab has the same toggle.
     /// </summary>
@@ -218,26 +218,17 @@ namespace Riry.RiryTools.Editor
             return suspects;
         }
     }
-
-    /// <summary>Blocks saving a scene or prefab whose load failed, so the file on disk stays intact.</summary>
-    internal sealed class ScriptLoadSaveBlocker : AssetModificationProcessor
-    {
-        private static string[] OnWillSaveAssets(string[] paths)
-        {
-            var allowed = new List<string>();
-            foreach (string path in paths)
-            {
-                if (!ScriptLoadGuard.IsGuarded(path))
-                {
-                    allowed.Add(path);
-                    continue;
-                }
-                RiryLog.Error(RiryLog.ScriptLoadGuard, "SCRIPT CAUSING FAILED LOAD: saving " + path +
-                    " was blocked because it did not load correctly; the file on disk was kept.", AssetDatabase.LoadMainAssetAtPath(path));
-                EditorApplication.delayCall += ScriptLoadFailureWindow.Open;
-            }
-            return allowed.ToArray();
-        }
-    }
-
 }
+
+// ============================================================================
+// GLOSSARY: Script Load Guard
+// The window is Editor/UI/Debug/ScriptLoadFailureWindow.cs; saves are blocked by ScriptLoadGuardSaveBlocker.cs.
+// ============================================================================
+//
+// ScriptLoadGuard (this file)
+//   Current           Failure  Path, Expected and Loaded object counts, Suspects, Errors.
+//   Guarded()         Paths whose saving is blocked (kept for the session).
+//   IsGuarded(path) / SetGuarded(path, guarded) / Override(path)
+//   LoadFailed(expected, loaded)  None, or fewer than half, of the objects loaded.
+//   CountSerializedObjects(path)  GameObjects and prefab instances in a scene or prefab file.
+//   Suspects(stackTrace)          First stack frame outside Unity, .NET and this package.
