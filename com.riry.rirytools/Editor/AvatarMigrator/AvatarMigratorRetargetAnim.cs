@@ -17,7 +17,7 @@ namespace Riry.RiryTools.Editor
     /// duplicates with Undo. The original files are never changed. Paths that resolve to no
     /// source object are listed in Manual matching first.
     /// </summary>
-    internal sealed partial class AvatarAnimationRetarget
+    internal sealed partial class AvatarMigratorRetargetAnim
     {
         /// <summary>One controller in use: where its paths start on each avatar, and how to point the target at its duplicate.</summary>
         private sealed class Use
@@ -28,7 +28,7 @@ namespace Riry.RiryTools.Editor
             internal Action<RuntimeAnimatorController> Assign;
         }
 
-        private readonly AvatarMigrationMap map;
+        private readonly AvatarMigratorMatchObjects map;
         private readonly AvatarMigratorSettings settings;
         private readonly AvatarMigratorRunReport report;
         private readonly HashSet<Transform> includedPrefabs;
@@ -37,7 +37,7 @@ namespace Riry.RiryTools.Editor
         private readonly Dictionary<Object, Object> duplicates = new Dictionary<Object, Object>();
         private Dictionary<string, Transform> chosenTargets = new Dictionary<string, Transform>(StringComparer.Ordinal);
 
-        private AvatarAnimationRetarget(AvatarMigrationMap map, AvatarMigratorSettings settings, HashSet<Transform> includedPrefabs, AvatarMigratorRunReport report)
+        private AvatarMigratorRetargetAnim(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, HashSet<Transform> includedPrefabs, AvatarMigratorRunReport report)
         {
             this.map = map;
             this.settings = settings;
@@ -46,20 +46,20 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>Retargets the target's animations; false when cancelled in Manual matching (nothing changed).</summary>
-        internal static bool Run(AvatarMigrationMap map, AvatarMigratorSettings settings, HashSet<Transform> includedPrefabs, AvatarMigratorRunReport report)
+        internal static bool Run(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, HashSet<Transform> includedPrefabs, AvatarMigratorRunReport report)
         {
-            var retarget = new AvatarAnimationRetarget(map, settings, includedPrefabs, report);
+            var retarget = new AvatarMigratorRetargetAnim(map, settings, includedPrefabs, report);
             retarget.Collect();
             var unresolved = new List<string>(retarget.Unresolved());
             if (unresolved.Count > 0)
             {
                 Dictionary<string, Transform> chosen;
-                if (!AvatarMigrationMatchWindow.Review(map, false, unresolved, out chosen)) return false;
+                if (!AvatarMigratorMatchWindow.Review(map, false, unresolved, out chosen)) return false;
                 retarget.chosenTargets = chosen;
             }
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName(AvatarMigrationAssistant.Title + ": Retarget animations");
+            Undo.SetCurrentGroupName(AvatarMigratorWindow.Title + ": Retarget animations");
             try
             {
                 retarget.Step("Retargeting controllers", retarget.RetargetControllers);
@@ -76,7 +76,7 @@ namespace Riry.RiryTools.Editor
 
         private void Step(string name, Action step)
         {
-            EditorUtility.DisplayProgressBar(AvatarMigrationAssistant.Title, name, 0.5f);
+            EditorUtility.DisplayProgressBar(AvatarMigratorWindow.Title, name, 0.5f);
             try
             {
                 step();
@@ -134,7 +134,7 @@ namespace Riry.RiryTools.Editor
                     }
                 }
             }
-            var scope = new AvatarPrefabScope(targetRoot);
+            var scope = new AvatarMigratorPrefabScope(targetRoot);
             foreach (Animator animator in targetRoot.GetComponentsInChildren<Animator>(true))
             {
                 if (animator.runtimeAnimatorController == null) continue;
@@ -146,7 +146,7 @@ namespace Riry.RiryTools.Editor
                     Controller = animator.runtimeAnimatorController, SourceRoot = map.SourceOf(animator.transform), TargetRoot = animator.transform,
                     Assign = duplicate =>
                     {
-                        Undo.RecordObject(owner, AvatarMigrationAssistant.Title);
+                        Undo.RecordObject(owner, AvatarMigratorWindow.Title);
                         owner.runtimeAnimatorController = duplicate;
                     }
                 });
@@ -408,10 +408,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant animations (AvatarMigratorRetargetAnim.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant animations (AvatarMigratorRetargetAnim.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
-// AvatarAnimationRetarget (this file; VRCFury in AvatarMigratorVRCFuryMover.cs)
+// AvatarMigratorRetargetAnim (this file; VRCFury in AvatarMigratorRetargetAnim.VRCFuryMover.cs)
 //   Run(map, settings, includedPrefabs, report)  Collect, list unresolved paths in Manual matching (Cancel: nothing
 //                        changed), then one Undo group: RetargetControllers, RetargetVrcFury, SaveAssets.
 //   Collect()            Descriptor baseAnimationLayers and specialAnimationLayers not set to default (paths from the avatar

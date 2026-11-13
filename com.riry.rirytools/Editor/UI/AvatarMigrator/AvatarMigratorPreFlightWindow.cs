@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     /// (SkinnedMeshRenderers, MeshRenderers, the VRC constraint upgrade). Continue runs the
     /// copy with the answers; Abort stops with nothing changed.
     /// </summary>
-    internal sealed class AvatarMigrationPreFlightChecks : EditorWindow
+    internal sealed class AvatarMigratorPreFlightWindow : EditorWindow
     {
         private sealed class Question
         {
@@ -34,11 +34,11 @@ namespace Riry.RiryTools.Editor
         private Vector2 scroll;
 
         /// <summary>Shows the check and waits; false when aborted.</summary>
-        internal static bool Run(AvatarMigrationMap map, AvatarMigratorSettings settings, HashSet<Transform> ignored, out AvatarMigratorPreFlightAnswers answers)
+        internal static bool Run(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, HashSet<Transform> ignored, out AvatarMigratorPreFlightAnswers answers)
         {
             answers = new AvatarMigratorPreFlightAnswers();
-            var check = CreateInstance<AvatarMigrationPreFlightChecks>();
-            check.titleContent = new GUIContent(AvatarMigrationAssistant.Title + ": before copying");
+            var check = CreateInstance<AvatarMigratorPreFlightWindow>();
+            check.titleContent = new GUIContent(AvatarMigratorWindow.Title + ": before copying");
             check.Test(map, settings, ignored);
             if (check.issues.Count == 0 && check.questions.Count == 0)
             {
@@ -54,17 +54,17 @@ namespace Riry.RiryTools.Editor
             return true;
         }
 
-        private void Test(AvatarMigrationMap map, AvatarMigratorSettings settings, HashSet<Transform> ignored)
+        private void Test(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, HashSet<Transform> ignored)
         {
             Transform source = map.SourceRoot;
-            var scope = new AvatarPrefabScope(source);
+            var scope = new AvatarMigratorPrefabScope(source);
             Func<Transform, bool> inScope = t => !ignored.Contains(t) && scope.ChildPrefabRoot(t) == null;
 
             // Types that need the VRChat SDK.
-            if (!AvatarMigrationAssistant.SdkPresent)
+            if (!AvatarMigratorWindow.SdkPresent)
             {
                 var skipped = new List<string>();
-                foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+                foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
                 {
                     if (type.NeedsSdk && settings.Type(type).Enabled) skipped.Add(type.Label);
                 }
@@ -74,12 +74,12 @@ namespace Riry.RiryTools.Editor
 
             // Unpacked prefabs, found through their skinned meshes.
             var repackProblems = new List<string>();
-            List<AvatarRepack.Group> repack = AvatarRepack.Plan(map, inScope, repackProblems);
+            List<AvatarMigratorRepack.Group> repack = AvatarMigratorRepack.Plan(map, inScope, repackProblems);
             foreach (string problem in repackProblems) issues.Add(problem);
             if (repack.Count > 0)
             {
                 var models = new List<string>();
-                foreach (AvatarRepack.Group group in repack)
+                foreach (AvatarMigratorRepack.Group group in repack)
                     models.Add(AnimationUtility.CalculateTransformPath(group.SourceRoot, source) + " (" + System.IO.Path.GetFileName(group.ModelPath) + ")");
                 questions.Add(new Question
                 {
@@ -95,9 +95,9 @@ namespace Riry.RiryTools.Editor
             Func<Transform, bool> repacked = t => repack.Exists(group => t == group.SourceRoot || t.IsChildOf(group.SourceRoot));
 
             // Components on objects that have no match and will not be created.
-            foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+            foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
             {
-                AvatarTypeSettings typeSettings = settings.Type(type);
+                AvatarMigratorTypeSettings typeSettings = settings.Type(type);
                 if (!typeSettings.Enabled || typeSettings.CreateMissing || type.Rule == AvatarMigratorCopyTypes.PrefabsRule ||
                     type.Rule == AvatarMigratorCopyTypes.TransformsRule || type.Rule == AvatarMigratorCopyTypes.SkinnedMeshRenderersRule) continue;
                 int count = 0;
@@ -120,7 +120,7 @@ namespace Riry.RiryTools.Editor
                     "separately. Turn on Prefabs to copy them.");
             foreach (Transform prefab in prefabs)
             {
-                if (!ignored.Contains(prefab) && AvatarPrefabScope.Asset(prefab) == null)
+                if (!ignored.Contains(prefab) && AvatarMigratorPrefabScope.Asset(prefab) == null)
                     issues.Add("Prefab " + AnimationUtility.CalculateTransformPath(prefab, source) + " has a missing prefab asset and will not be copied. " +
                         "Restore the asset, or copy it by hand.");
             }
@@ -178,7 +178,7 @@ namespace Riry.RiryTools.Editor
                     Text = "Copy MeshRenderers with their MeshFilters? (" + meshCount + " found.)",
                     Apply = (answers, yes) => answers.CopyMeshRenderers = yes
                 });
-            if (AvatarMigrationAssistant.SdkPresent && UnityConstraintCount(source, settings, inScope) > 0)
+            if (AvatarMigratorWindow.SdkPresent && UnityConstraintCount(source, settings, inScope) > 0)
                 questions.Add(new Question
                 {
                     Text = "Upgrade to VRCConstraints on target?",
@@ -199,7 +199,7 @@ namespace Riry.RiryTools.Editor
         private static int UnityConstraintCount(Transform root, AvatarMigratorSettings settings, Func<Transform, bool> inScope)
         {
             int count = 0;
-            foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+            foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
             {
                 if (type.Rule != AvatarMigratorCopyTypes.UnityConstraintRule || !settings.Type(type).Enabled) continue;
                 foreach (Type componentType in type.Types)
@@ -215,7 +215,7 @@ namespace Riry.RiryTools.Editor
 
         private static bool AnyConstraintEnabled(AvatarMigratorSettings settings)
         {
-            foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+            foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
             {
                 bool constraint = type.Rule == AvatarMigratorCopyTypes.UnityConstraintRule ||
                     type.TypeNames.Exists(name => name.StartsWith(AvatarMigratorCopyTypes.VrcConstraintPrefix, StringComparison.Ordinal));
@@ -278,16 +278,16 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant up-front check (AvatarMigrationPreFlightChecks.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant up-front check (AvatarMigratorPreFlightWindow.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorPreFlightAnswers       CopySkinnedMeshRenderers, CopyChangedBounds, RepackPrefabs, CopyMeshRenderers, UpgradeConstraints.
-// AvatarMigrationPreFlightChecks (this file)
+// AvatarMigratorPreFlightWindow (this file)
 //   Run(map, settings, ignored, out answers)  Modal; skipped when there is nothing to say. Possible issues (each with what
 //                              to do): VRChat types without the SDK; components on unmatched objects with Create missing
 //                              objects off; child prefabs with Prefabs off or a missing asset; humanoid bones out of rest
 //                              pose (RestPose) when constraints are copied; unpacked prefabs that can't be placed again.
-//                              Questions (Yes/No, default No): place unpacked prefabs as child prefabs (AvatarRepack.Plan;
+//                              Questions (Yes/No, default No): place unpacked prefabs as child prefabs (AvatarMigratorRepack.Plan;
 //                              default Yes), SkinnedMeshRenderer settings, old bounds for changed meshes (shown and applied
 //                              only while the settings question is Yes: Question.Visible / Shown), MeshRenderers,
 //                              "Upgrade to VRCConstraints on target?". Continue / Abort.

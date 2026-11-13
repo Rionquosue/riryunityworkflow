@@ -34,7 +34,7 @@ namespace Riry.RiryTools.Editor
                 if (string.IsNullOrEmpty(picked)) return null;
                 string asset = IconCapFiles.AssetPath(picked);
                 if (asset != null) return asset;
-                if (!EditorUtility.DisplayDialog(AvatarMigrationAssistant.Title, "Pick a folder inside Assets.", "Pick again", "Cancel")) return null;
+                if (!EditorUtility.DisplayDialog(AvatarMigratorWindow.Title, "Pick a folder inside Assets.", "Pick again", "Cancel")) return null;
             }
         }
 
@@ -59,7 +59,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant migrated folder (AvatarMigratorMigratedFolder.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant migrated folder (AvatarMigratorMigratedFolder.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorMigratedFolder (this file)

@@ -37,7 +37,7 @@ namespace Riry.RiryTools.Editor
                 if (box != null || sphere != null || capsule != null)
                 {
                     if (IsOne(own)) continue;
-                    Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+                    Undo.RecordObject(target, AvatarMigratorWindow.Title);
                     if (box != null)
                     {
                         box.center = ScaleVector(box.center, own);
@@ -59,7 +59,7 @@ namespace Riry.RiryTools.Editor
                 var parent = target as ParentConstraint;
                 if (parent != null)
                 {
-                    Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+                    Undo.RecordObject(target, AvatarMigratorWindow.Title);
                     var from = (ParentConstraint)source;
                     for (int i = 0; i < parent.sourceCount && i < from.sourceCount; i++)
                     {
@@ -73,7 +73,7 @@ namespace Riry.RiryTools.Editor
                 if (position != null)
                 {
                     if (IsOne(parentFactor)) continue;
-                    Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+                    Undo.RecordObject(target, AvatarMigratorWindow.Title);
                     position.translationOffset = ScaleVector(position.translationOffset, parentFactor);
                     position.translationAtRest = ScaleVector(position.translationAtRest, parentFactor);
                     continue;
@@ -123,14 +123,10 @@ namespace Riry.RiryTools.Editor
             }
             if (target.GetType().FullName == VrcParent)
             {
-                List<SerializedProperty> fromSources = VrcSources(new SerializedObject(source));
-                List<SerializedProperty> toSources = VrcSources(to);
-                for (int i = 0; i < fromSources.Count && i < toSources.Count; i++)
+                foreach (VrcSourcePair pair in VrcSourcePairs(new SerializedObject(source), to))
                 {
-                    Transform sourceBone = OriginalTransform(fromSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform);
-                    Transform targetBone = toSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform;
-                    Vector3 factor = Factor(sourceBone, targetBone);
-                    SerializedProperty offset = toSources[i].FindPropertyRelative("ParentPositionOffset");
+                    Vector3 factor = Factor(pair.SourceBone, pair.TargetBone);
+                    SerializedProperty offset = pair.Target.FindPropertyRelative("ParentPositionOffset");
                     if (!IsOne(factor) && offset != null) offset.vector3Value = ScaleVector(offset.vector3Value, factor);
                 }
             }
@@ -168,7 +164,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant scale (AvatarMigratorCorrectScale.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant scale (AvatarMigratorCopyRun.CorrectScale.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorCopyRun (this part)

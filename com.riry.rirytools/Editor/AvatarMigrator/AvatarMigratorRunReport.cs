@@ -18,7 +18,7 @@ namespace Riry.RiryTools.Editor
         internal readonly List<string> NotCopied = new List<string>();
         internal readonly List<string> ReferencesCleared = new List<string>();
         internal readonly List<string> Failures = new List<string>();
-        // Unpacked prefabs placed again as child prefabs (AvatarMigratorRepackPrefabs.cs).
+        // Unpacked prefabs placed again as child prefabs (AvatarMigratorCopyRun.RepackPrefabs.cs).
         internal readonly List<string> Repacked = new List<string>();
         // Their instance roots, which the window ticks for Retarget animations.
         internal readonly List<GameObject> RepackedRoots = new List<GameObject>();
@@ -58,10 +58,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant report (AvatarMigratorRunReport.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant report (AvatarMigratorRunReport.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorRunReport            Counts (Copied, CreatedObjects, CopiedPrefabs, PrefabsAlreadyThere, SkippedIdentical) and lines:
 //                            PossibleIssues ("Possible issues with:", to investigate), NotCopied, ReferencesCleared,
 //                            Failures, FilesCreated (feature 15: files on disk are not covered by Undo). Summary / Text().
-// AvatarRunReportWindow      Show(report): logs the text, then a popup with the summary and each section; Close. minSize 420 x 260.
+// AvatarMigratorRunReportWindow      Show(report): logs the text, then a popup with the summary and each section; Close. minSize 420 x 260.

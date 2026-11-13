@@ -11,33 +11,33 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// One Avatar Migration Assistant run: copies the chosen component types from the
     /// source avatar to the target in run order (AvatarMigratorCopyTypes.All), then re-points
-    /// references (AvatarMigratorRepointReferences.cs), corrects rotation (AvatarMigratorCorrectRotation.cs) and
-    /// scale (AvatarMigratorCorrectScale.cs), and drops duplicates of components the target already had.
+    /// references (AvatarMigratorCopyRun.RepointReferences.cs), corrects rotation (AvatarMigratorCopyRun.CorrectRotation.cs) and
+    /// scale (AvatarMigratorCopyRun.CorrectScale.cs), and drops duplicates of components the target already had.
     /// The whole run is one Undo group; the source is never written to. Every step has its
     /// own try/catch, so one failure is logged and the rest goes on. Split into parts by
     /// what they do: this file runs the steps and copies components generically.
     /// </summary>
     internal sealed partial class AvatarMigratorCopyRun
     {
-        private readonly AvatarMigrationMap map;
+        private readonly AvatarMigratorMatchObjects map;
         private readonly AvatarMigratorSettings settings;
         private readonly AvatarMigratorPreFlightAnswers answers;
         private readonly Transform sourceRoot;
         private readonly Transform targetRoot;
         private readonly HashSet<Transform> ignored;
-        private readonly AvatarPrefabScope scope;
-        private readonly AvatarPrefabScope targetScope;
+        private readonly AvatarMigratorPrefabScope scope;
+        private readonly AvatarMigratorPrefabScope targetScope;
 
         // Source component to the target component it was copied into.
         private readonly Dictionary<Component, Component> copied = new Dictionary<Component, Component>();
         // Components this run added to the target.
         private readonly List<Component> made = new List<Component>();
-        // Objects of the temporary constraint copy, to the source objects they copy (AvatarMigratorUpgradeConstraints.cs).
+        // Objects of the temporary constraint copy, to the source objects they copy (AvatarMigratorCopyRun.UpgradeConstraints.cs).
         private readonly Dictionary<Object, Object> alias = new Dictionary<Object, Object>();
 
         private readonly AvatarMigratorRunReport report = new AvatarMigratorRunReport();
 
-        private AvatarMigratorCopyRun(AvatarMigrationMap map, AvatarMigratorSettings settings, AvatarMigratorPreFlightAnswers answers, HashSet<Transform> ignored)
+        private AvatarMigratorCopyRun(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, AvatarMigratorPreFlightAnswers answers, HashSet<Transform> ignored)
         {
             this.map = map;
             this.settings = settings;
@@ -45,12 +45,12 @@ namespace Riry.RiryTools.Editor
             this.ignored = ignored;
             sourceRoot = map.SourceRoot;
             targetRoot = map.TargetRoot;
-            scope = new AvatarPrefabScope(sourceRoot);
-            targetScope = new AvatarPrefabScope(targetRoot);
+            scope = new AvatarMigratorPrefabScope(sourceRoot);
+            targetScope = new AvatarMigratorPrefabScope(targetRoot);
         }
 
         /// <summary>Runs the copy and shows the report. Returns the report.</summary>
-        internal static AvatarMigratorRunReport Execute(AvatarMigrationMap map, AvatarMigratorSettings settings, AvatarMigratorPreFlightAnswers answers,
+        internal static AvatarMigratorRunReport Execute(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, AvatarMigratorPreFlightAnswers answers,
             HashSet<Transform> ignored)
         {
             var run = new AvatarMigratorCopyRun(map, settings, answers, ignored);
@@ -62,16 +62,16 @@ namespace Riry.RiryTools.Editor
         {
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName(AvatarMigrationAssistant.Title);
-            Undo.RegisterFullObjectHierarchyUndo(targetRoot.gameObject, AvatarMigrationAssistant.Title);
+            Undo.SetCurrentGroupName(AvatarMigratorWindow.Title);
+            Undo.RegisterFullObjectHierarchyUndo(targetRoot.gameObject, AvatarMigratorWindow.Title);
             try
             {
                 // First, so the placed prefabs' objects are in the map for every step after.
                 if (answers.RepackPrefabs) Step("Placing unpacked prefabs as child prefabs", RepackPrefabs);
-                foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+                foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
                 {
-                    AvatarTypeSettings typeSettings = settings.Type(type);
-                    if (typeSettings.Enabled && type.Available && (!type.NeedsSdk || AvatarMigrationAssistant.SdkPresent))
+                    AvatarMigratorTypeSettings typeSettings = settings.Type(type);
+                    if (typeSettings.Enabled && type.Available && (!type.NeedsSdk || AvatarMigratorWindow.SdkPresent))
                         Step(type.Label, () => CopyStep(type, typeSettings));
                     // Active state, tag and layer (Transforms sub-options) have their place after Cameras.
                     if (type.Rule == AvatarMigratorCopyTypes.CamerasRule) Step("Active state, tag and layer", CopyActiveTagLayer);
@@ -96,7 +96,7 @@ namespace Riry.RiryTools.Editor
         // One step: logged and reported on failure, the run goes on.
         private void Step(string name, Action step)
         {
-            EditorUtility.DisplayProgressBar(AvatarMigrationAssistant.Title, name, 0.5f);
+            EditorUtility.DisplayProgressBar(AvatarMigratorWindow.Title, name, 0.5f);
             try
             {
                 step();
@@ -109,7 +109,7 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private void CopyStep(AvatarCopyType type, AvatarTypeSettings typeSettings)
+        private void CopyStep(AvatarMigratorCopyType type, AvatarMigratorTypeSettings typeSettings)
         {
             switch (type.Rule)
             {
@@ -140,7 +140,7 @@ namespace Riry.RiryTools.Editor
         // ---- Generic copying ------------------------------------------------------
 
         /// <summary>Copies every source component of the type, after clearing the target's when Replace is on.</summary>
-        private void CopyComponents(AvatarCopyType type, AvatarTypeSettings typeSettings, Type componentType)
+        private void CopyComponents(AvatarMigratorCopyType type, AvatarMigratorTypeSettings typeSettings, Type componentType)
         {
             if (typeSettings.Replace) ClearTarget(componentType);
             foreach (Component source in sourceRoot.GetComponentsInChildren(componentType, true))
@@ -176,7 +176,7 @@ namespace Riry.RiryTools.Editor
                 }
                 made.Add(destination);
             }
-            else Undo.RecordObject(destination, AvatarMigrationAssistant.Title);
+            else Undo.RecordObject(destination, AvatarMigratorWindow.Title);
             if (!ComponentUtility.CopyComponent(source) || !ComponentUtility.PasteComponentValues(destination))
             {
                 report.NotCopied.Add(Describe(source) + ": its values could not be copied.");
@@ -191,7 +191,7 @@ namespace Riry.RiryTools.Editor
                 var targetRenderer = target.GetComponent<ParticleSystemRenderer>();
                 if (sourceRenderer != null && targetRenderer != null && ComponentUtility.CopyComponent(sourceRenderer))
                 {
-                    Undo.RecordObject(targetRenderer, AvatarMigrationAssistant.Title);
+                    Undo.RecordObject(targetRenderer, AvatarMigratorWindow.Title);
                     ComponentUtility.PasteComponentValues(targetRenderer);
                     copied[sourceRenderer] = targetRenderer;
                 }
@@ -241,7 +241,7 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// False for objects the copiers leave alone: ignored ones, and objects inside a child
-        /// prefab instance, which is copied whole by the Prefabs step instead (AvatarMigratorCopyPrefabs.cs).
+        /// prefab instance, which is copied whole by the Prefabs step instead (AvatarMigratorCopyRun.Prefabs.cs).
         /// </summary>
         private bool InScope(Transform source)
         {
@@ -269,7 +269,7 @@ namespace Riry.RiryTools.Editor
             {
                 Transform step = missing[i];
                 var created = new GameObject(step.name);
-                Undo.RegisterCreatedObjectUndo(created, AvatarMigrationAssistant.Title);
+                Undo.RegisterCreatedObjectUndo(created, AvatarMigratorWindow.Title);
                 created.transform.SetParent(parent, false);
                 created.transform.localPosition = step.localPosition;
                 created.transform.localRotation = step.localRotation;
@@ -293,10 +293,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant run (AvatarMigratorCopyRun.cs, part of Editor/AvatarMigrationAssistant.cs)
-// The run is one partial class split by job: AvatarMigratorCopyRun.cs (steps, generic copy, objects), AvatarMigratorTypeRules.cs (per-type
-// rules), AvatarMigratorCopyPrefabs.cs (feature 11), AvatarMigratorUpgradeConstraints.cs (Unity to VRC constraints), AvatarMigratorRepointReferences.cs
-// (feature 5 and duplicates), AvatarMigratorCorrectRotation.cs (feature 7), AvatarMigratorCorrectScale.cs (feature 6).
+// GLOSSARY: Avatar Migration Assistant run (AvatarMigratorCopyRun.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
+// The run is one partial class split by job: AvatarMigratorCopyRun.cs (steps, generic copy, objects), AvatarMigratorCopyRun.TypeRules.cs (per-type
+// rules), AvatarMigratorCopyRun.Prefabs.cs (feature 11), AvatarMigratorCopyRun.UpgradeConstraints.cs (Unity to VRC constraints), AvatarMigratorCopyRun.RepointReferences.cs
+// (feature 5 and duplicates), AvatarMigratorCopyRun.CorrectRotation.cs (feature 7), AvatarMigratorCopyRun.CorrectScale.cs (feature 6).
 // ============================================================================
 //
 // AvatarMigratorCopyRun

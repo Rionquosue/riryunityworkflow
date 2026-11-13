@@ -17,11 +17,8 @@ namespace Riry.RiryTools.Editor
     internal sealed partial class AvatarMigratorCopyRun
     {
         private const string VrcAim = AvatarMigratorCopyTypes.VrcConstraintPrefix + "AimConstraint";
-        private const string VrcParent = AvatarMigratorCopyTypes.VrcConstraintPrefix + "ParentConstraint";
         // VRChat's WorldUpType.ObjectRotationUp (VRC.Dynamics.dll: SceneUp 0, ObjectUp 1, ObjectRotationUp 2, Vector 3, None 4).
         private const int VrcObjectRotationUp = 2;
-        // Sources stored as source0 to source15 before overflowList.
-        private const int VrcFlatSources = 16;
 
         private void CorrectRotation()
         {
@@ -33,7 +30,7 @@ namespace Riry.RiryTools.Editor
                 Transform sourceObject = OriginalTransform(source.transform);
                 Transform sourceParent = OriginalTransform(source.transform.parent);
                 Transform targetParent = target.transform.parent;
-                if (target is IConstraint) Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+                if (target is IConstraint) Undo.RecordObject(target, AvatarMigratorWindow.Title);
 
                 var parent = target as ParentConstraint;
                 if (parent != null)
@@ -119,16 +116,12 @@ namespace Riry.RiryTools.Editor
             }
             if (type == VrcParent)
             {
-                List<SerializedProperty> fromSources = VrcSources(from);
-                List<SerializedProperty> toSources = VrcSources(to);
-                for (int i = 0; i < fromSources.Count && i < toSources.Count; i++)
+                foreach (VrcSourcePair pair in VrcSourcePairs(from, to))
                 {
-                    Transform sourceBone = OriginalTransform(fromSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform);
-                    Transform targetBone = toSources[i].FindPropertyRelative("SourceTransform").objectReferenceValue as Transform;
-                    Quaternion delta = Delta(sourceBone, targetBone);
-                    SerializedProperty offset = toSources[i].FindPropertyRelative("ParentPositionOffset");
-                    if (offset != null) offset.vector3Value = delta * Mirror(sourceBone, targetBone, offset.vector3Value);
-                    SerializedProperty angles = toSources[i].FindPropertyRelative("ParentRotationOffset");
+                    Quaternion delta = Delta(pair.SourceBone, pair.TargetBone);
+                    SerializedProperty offset = pair.Target.FindPropertyRelative("ParentPositionOffset");
+                    if (offset != null) offset.vector3Value = delta * Mirror(pair.SourceBone, pair.TargetBone, offset.vector3Value);
+                    SerializedProperty angles = pair.Target.FindPropertyRelative("ParentRotationOffset");
                     if (angles != null) angles.vector3Value = (delta * Quaternion.Euler(angles.vector3Value)).eulerAngles;
                 }
             }
@@ -155,28 +148,6 @@ namespace Riry.RiryTools.Editor
                 property.vector3Value = delta * Mirror(sourceBone, targetBone, property.vector3Value);
         }
 
-        /// <summary>
-        /// A VRC constraint's sources: its Sources list stores the first sixteen as source0 to source15 and the
-        /// rest in overflowList, with totalLength the count (VRCConstraintSourceKeyableList in VRC.Dynamics.dll).
-        /// </summary>
-        private static List<SerializedProperty> VrcSources(SerializedObject serialized)
-        {
-            var sources = new List<SerializedProperty>();
-            SerializedProperty list = serialized.FindProperty("Sources");
-            if (list == null) return sources;
-            SerializedProperty length = list.FindPropertyRelative("totalLength");
-            SerializedProperty overflow = list.FindPropertyRelative("overflowList");
-            int count = length != null ? length.intValue : 0;
-            for (int i = 0; i < count; i++)
-            {
-                SerializedProperty item = i < VrcFlatSources
-                    ? list.FindPropertyRelative("source" + i)
-                    : overflow != null && i - VrcFlatSources < overflow.arraySize ? overflow.GetArrayElementAtIndex(i - VrcFlatSources) : null;
-                if (item != null) sources.Add(item);
-            }
-            return sources;
-        }
-
         /// <summary>The rotation from a bone's space on the source to its counterpart's on the target, in avatar-root space.</summary>
         private Quaternion Delta(Transform sourceBone, Transform targetBone)
         {
@@ -201,7 +172,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant rotation (AvatarMigratorCorrectRotation.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant rotation (AvatarMigratorCopyRun.CorrectRotation.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorCopyRun (this part)
@@ -210,6 +181,6 @@ namespace Riry.RiryTools.Editor
 //                          rotation offset (the constrained object), world up vector with ObjectRotationUp (worldUpObject),
 //                          rotation at rest (parent). Rotation and LookAt: rotation offset (object), at rest (parent).
 //                          Position: translation at rest (parent). VRC constraints: the same serialized fields
-//                          (CorrectVrcRotation; VrcSources reads source0 to source15 and overflowList).
+//                          (CorrectVrcRotation, per source through VrcSourcePairs in AvatarMigratorCopyRun.VrcSources.cs).
 //   Delta(sourceBone, targetBone)  Inverse(targetRootRot⁻¹ · targetBoneRot) · (sourceRootRot⁻¹ · sourceBoneRot).
 //   Mirror(...)            Negates the axes whose lossyScale sign differs between the two bones.

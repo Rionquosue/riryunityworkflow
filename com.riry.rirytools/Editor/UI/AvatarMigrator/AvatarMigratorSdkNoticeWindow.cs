@@ -8,19 +8,19 @@ namespace Riry.RiryTools.Editor
     /// "VRC SDK not detected! Only some tools will be available.", a Do not show again
     /// checkbox and OK. Do not show again is kept per project (EditorUserSettings).
     /// </summary>
-    internal sealed class AvatarMigrationSdkNotice : EditorWindow
+    internal sealed class AvatarMigratorSdkNoticeWindow : EditorWindow
     {
         internal const string Message = "VRC SDK not detected! Only some tools will be available.";
-        internal const string OffKey = "RiryTools.AvatarMigrationAssistant.SdkNoticeOff";
+        internal const string OffKey = "RiryTools.AvatarMigrator.SdkNoticeOff";
 
         private bool doNotShowAgain;
 
         /// <summary>Shows the popup when the SDK is missing, unless Do not show again was ticked.</summary>
         internal static void ShowIfNeeded()
         {
-            if (AvatarMigrationAssistant.SdkPresent || EditorUserSettings.GetConfigValue(OffKey) == "1") return;
-            var notice = CreateInstance<AvatarMigrationSdkNotice>();
-            notice.titleContent = new GUIContent(AvatarMigrationAssistant.Title);
+            if (AvatarMigratorWindow.SdkPresent || EditorUserSettings.GetConfigValue(OffKey) == "1") return;
+            var notice = CreateInstance<AvatarMigratorSdkNoticeWindow>();
+            notice.titleContent = new GUIContent(AvatarMigratorWindow.Title);
             Rect main = EditorGUIUtility.GetMainWindowPosition();
             notice.position = new Rect(main.center.x - 170f, main.center.y - 45f, 340f, 90f);
             notice.minSize = notice.maxSize = new Vector2(340f, 90f);
@@ -48,9 +48,9 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: VRC SDK notice (SdkNotice.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: VRC SDK notice (AvatarMigratorSdkNoticeWindow.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
-// AvatarMigrationSdkNotice (this file)
+// AvatarMigratorSdkNoticeWindow (this file)
 //   ShowIfNeeded()   When the tool is opened (menu entry or Main Menu tab) without the VRChat SDK: Message, a
 //                    Do not show again checkbox and OK. Ticked and OK: OffKey (EditorUserSettings) is set to 1.

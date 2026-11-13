@@ -26,7 +26,7 @@ namespace Riry.RiryTools.Editor
         private bool constraintsConverted;
         private bool conversionFailed;
 
-        private void CopyUpgradedConstraints(AvatarCopyType type, AvatarTypeSettings typeSettings)
+        private void CopyUpgradedConstraints(AvatarMigratorCopyType type, AvatarMigratorTypeSettings typeSettings)
         {
             if (!ConvertOnCopy())
             {
@@ -61,7 +61,7 @@ namespace Riry.RiryTools.Editor
         }
 
         // Whether the source object had a Unity constraint of this type (converted on the copy).
-        private static bool WasConverted(Transform source, AvatarCopyType type)
+        private static bool WasConverted(Transform source, AvatarMigratorCopyType type)
         {
             foreach (Type unityType in type.Types)
             {
@@ -90,7 +90,7 @@ namespace Riry.RiryTools.Editor
             copy.hideFlags = HideFlags.HideAndDontSave;
             // Recorded in the run's Undo group, with its removal (RemoveConstraintCopy), so whatever the
             // converter records on the copy undoes and redoes with it: one Ctrl+Z undoes the whole run.
-            Undo.RegisterCreatedObjectUndo(constraintHolder, AvatarMigrationAssistant.Title);
+            Undo.RegisterCreatedObjectUndo(constraintHolder, AvatarMigratorWindow.Title);
             Transform[] from = sourceRoot.GetComponentsInChildren<Transform>(true);
             Transform[] to = copy.GetComponentsInChildren<Transform>(true);
             for (int i = 0; i < from.Length && i < to.Length; i++)
@@ -149,7 +149,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant constraint upgrade (AvatarMigratorUpgradeConstraints.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant constraint upgrade (AvatarMigratorCopyRun.UpgradeConstraints.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorCopyRun (this part)

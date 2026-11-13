@@ -64,7 +64,7 @@ Per user, shared by every project.
 |---|---|---|
 | `com.vrcfury.parameterCompressor` | VRCFury's own Parameter Compressor setting (int: 0 Compress, 1 Ask, 2 Fail; unset means Compress). Menu Tool reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset). | `VRChat/MenuTool/MenuToolBudget.cs` |
 | `RiryTools.AttachTo.AddedBones` | Bones added with **Add bone** (string of HumanBodyBones names, comma separated; default `""`), listed after `AttachTo.CommonBones`. **Remove** takes one off. Read through `AttachTo.AddedBonesKey`. | `AttachTo.cs` |
-| `RiryTools.AvatarMigrationAssistant.Settings` | Avatar Migration Assistant settings as JSON: per-entry options, sub-options, ignore children and migrated folder. Unset means `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty. | `AvatarMigrationAssistant/AvatarMigratorSettings.cs` |
+| `RiryTools.AvatarMigrator.Settings` | Avatar Migration Assistant settings as JSON: per-entry options, sub-options, ignore children and migrated folder. Unset means `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty. | `AvatarMigrator/AvatarMigratorSettings.cs` |
 | `RiryTools.BetterFbx.BlenderPath` | Path to the Blender executable for Better FBX (string; `""` means detect). Read through `ImportPresetBetterFBX.BlenderPath`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresetWindows.cs` |
 | `RiryTools.BetterFbx.Options` | Better FBX export options (string; default `""`). Read through `ImportPresetBetterFBX.Options`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresetWindows.cs` |
 | `RiryTools.ScriptLoadGuard.Enabled` | Turns Script Load Guard on or off (bool; default `true`). Read through `ScriptLoadGuard.Enabled`. | `Debug/ScriptLoadGuard.cs`, `UI/RiryToolsMenuBar.cs` |
@@ -79,7 +79,7 @@ Per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Enabled` | The **Sync** toggle (`1` / `0`; default `0`). Read through `AutoSync.Enabled`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/RiryToolsMainMenu.cs`, `UI/RiryToolsMenuBar.cs` |
 | `RiryTools.AutoSync.LargeFileNoticeOff` | Remote URLs, one per line, where the large file notice's **Do Not Show Again** was chosen. Unset by default. | `AutoSync/AutoSync.cs` |
 | `RiryTools.AutoSync.Remote` | The **Remote** AutoSync pushes to (a remote name). Unset means `origin`, else the first remote. Read through `AutoSyncGitRemotes.Selected`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
-| `RiryTools.AvatarMigrationAssistant.SdkNoticeOff` | `1` once **Do not show again** is chosen on the VRC SDK not detected popup. Unset by default. | `UI/Components/SdkNotice.cs`, `UI/AvatarMigrationAssistant.cs` |
+| `RiryTools.AvatarMigrator.SdkNoticeOff` | `1` once **Do not show again** is chosen on the VRC SDK not detected popup. Unset by default. | `UI/AvatarMigrator/AvatarMigratorSdkNoticeWindow.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
 | `RiryTools.GuidTools.BrokenPromptOff` | Scene and prefab paths, one per line, where the broken reference prompt's **Do Not Show Again** was chosen. Unset by default. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
 
 ### SessionState
@@ -131,7 +131,7 @@ Not stored, but named like settings keys.
 | `Library/RiryTools/GuidTools/` | `restore` and `restore-meta` while a Git backup is written. | `GuidTools/GuidToolReferenceRepair.cs` |
 | `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx`. | `ImportPresets/ImportPresetOwnedFiles.cs`, `ImportPresets/ImportPresetAnimations.cs`, `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ExtractAnimationWindow.cs` |
 | `Logs/RiryTools/GuidTools/` | `guid-tools.log` and `archive/guid-tools_<UTC time>.log`. Path is `GuidToolRegenerate.LogDirectoryPath`. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidToolsWindow.cs` |
-| `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` go under `<migrated folder>/Packages/`); never overwritten. Built by `AvatarMigratorMigratedFolder.Destination`. | `AvatarMigrationAssistant/AvatarMigratorMigratedFolder.cs`, `AvatarMigrationAssistant/AvatarMigratorRetargetAnim.cs` |
+| `<migrated folder>/<original path without Assets/>` | Avatar Migration Assistant's duplicated controllers and clips (files from `Packages/` go under `<migrated folder>/Packages/`); never overwritten. Built by `AvatarMigratorMigratedFolder.Destination`. | `AvatarMigrator/AvatarMigratorMigratedFolder.cs`, `AvatarMigrator/AvatarMigratorRetargetAnim.cs` |
 | `<model folder>/.<Model>_ani-extract.json~` | Extract Animation settings; no `.meta`, hidden on Windows, staged in Git. Built by `ImportPresetAnimationExtraction.PathFor`. | `ImportPresets/ImportPresetAnimationExtraction.cs`, `UI/ExtractAnimationWindow.cs` |
 | `<model folder>/Animations/<Model>_<Clip>.anim` | Extracted clips (or the model's Destination). Folder named by `ImportPresetAnimations.FolderName`. | `ImportPresets/ImportPresetAnimations.cs` |
 | `<model>_ROOT.prefab` | Constraint Tool Train prefab variant. Suffix is `ConstraintTrainPrefabs.RootSuffix`. | `VRChat/ConstraintTools/ConstraintTrain/ConstraintTrainPrefabs.cs` |
@@ -152,7 +152,7 @@ Not stored, but named like settings keys.
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack). Path is `IconCapFiles.PresetFolder`. | `IconCap/IconCapFiles.cs`, `UI/IconCapWindow.cs` |
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset` and optional `config.json`. Path is `ImportPresetLibrary.RootPath`. | `ImportPresets/ImportPresetLibrary.cs`, `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresetWindowActions.cs` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list). Path is `ImportPresetPreferences.FilePath`. | `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresetWindows.cs` |
-| `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrationAssistant/types.yml` when missing, then read from here. Path is `AvatarMigratorCopyTypes.FilePath`. | `AvatarMigrationAssistant/AvatarMigratorCopyTypes.cs`, `UI/AvatarMigrationAssistant.cs` |
+| `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrator/types.yml` when missing, then read from here. Path is `AvatarMigratorCopyTypes.FilePath`. | `AvatarMigrator/AvatarMigratorCopyTypes.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them). Path is `MenuMockup.Folder`. | `MenuMockup.cs`, `UI/MenuMockupWindows.cs` |
 
 ## Git names (AutoSync)
@@ -186,7 +186,7 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `0756bf5a933b437db4405f7a01a55498` | GUID of `AvatarMigrationAssistant/types.yml.meta`: Avatar Migration Assistant's type list template, found by GUID (`AvatarMigratorCopyTypes.TemplateGuid`). | `AvatarMigrationAssistant/AvatarMigratorCopyTypes.cs` |
+| `0756bf5a933b437db4405f7a01a55498` | GUID of `AvatarMigrator/types.yml.meta`: Avatar Migration Assistant's type list template, found by GUID (`AvatarMigratorCopyTypes.TemplateGuid`). | `AvatarMigrator/AvatarMigratorCopyTypes.cs` |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced. All tools except the VRChat window. | `Riry.RiryTools.Editor.asmdef` |
 | Assembly `Riry.RiryTools.Editor.GestureManager` | `GestureManagerRadial`, built against Gesture Manager 3.9.9. Editor only; references Gesture Manager's assemblies, `VRCSDK3A.dll` and `VRCSDKBase.dll`; needs `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_GESTURE_MANAGER`. | `VRChat/MenuTool/GestureManager/Riry.RiryTools.Editor.GestureManager.asmdef` |
 | Assembly `Riry.RiryTools.Editor.VRChat` | Constraint Tool window (Train, Bezier and Insertable prop tabs), Menu Tool, and their menus. Editor only; needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll`. | `VRChat/Riry.RiryTools.Editor.VRChat.asmdef` |
@@ -275,11 +275,11 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `AvatarMigrationMap.TieEpsilon` | `1e-7`: candidates this close in distance are a tie (left unmatched). | `AvatarMigrationAssistant/AvatarMigratorMatchObjects.cs` |
-| `AvatarMigratorCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig`: names treated as the armature, besides the parent of the hips. | `AvatarMigrationAssistant/AvatarMigratorTypeRules.cs` |
-| `AvatarMigratorCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints`: the VRChat SDK's constraint converter, found by name. | `AvatarMigrationAssistant/AvatarMigratorUpgradeConstraints.cs` |
-| `AvatarMigratorCopyRun.ScaleDecimals` | `8`: decimal places of every scale-corrected value. | `AvatarMigrationAssistant/AvatarMigratorCorrectScale.cs` |
-| `AvatarMigratorSettings.DefaultTolerance` | `0.001`: structure match distance in avatar-root space. | `AvatarMigrationAssistant/AvatarMigratorSettings.cs`, `AvatarMigrationAssistant/AvatarMigratorMatchObjects.cs` |
+| `AvatarMigratorMatchObjects.TieEpsilon` | `1e-7`: candidates this close in distance are a tie (left unmatched). | `AvatarMigrator/AvatarMigratorMatchObjects.cs` |
+| `AvatarMigratorCopyRun.ArmatureNames` | `armature`, `skeleton`, `root`, `rig`: names treated as the armature, besides the parent of the hips. | `AvatarMigrator/AvatarMigratorCopyRun.TypeRules.cs` |
+| `AvatarMigratorCopyRun.ConverterClass` / `ConverterMethod` | `AvatarDynamicsSetup` / `DoConvertUnityConstraints`: the VRChat SDK's constraint converter, found by name. | `AvatarMigrator/AvatarMigratorCopyRun.UpgradeConstraints.cs` |
+| `AvatarMigratorCopyRun.ScaleDecimals` | `8`: decimal places of every scale-corrected value. | `AvatarMigrator/AvatarMigratorCopyRun.CorrectScale.cs` |
+| `AvatarMigratorSettings.DefaultTolerance` | `0.001`: structure match distance in avatar-root space. | `AvatarMigrator/AvatarMigratorSettings.cs`, `AvatarMigrator/AvatarMigratorMatchObjects.cs` |
 
 ### Blendshape Sync and Clean Animation Keys
 

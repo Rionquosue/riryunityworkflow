@@ -18,7 +18,7 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>The source objects to leave out.</summary>
-        internal static HashSet<Transform> Resolve(AvatarMigrationMap map, List<GameObject> entries, bool includeChildren)
+        internal static HashSet<Transform> Resolve(AvatarMigratorMatchObjects map, List<GameObject> entries, bool includeChildren)
         {
             var ignored = new HashSet<Transform>();
             foreach (GameObject entry in entries)
@@ -40,7 +40,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant ignore list (AvatarMigratorIgnoreList.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant ignore list (AvatarMigratorIgnoreList.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorIgnoreList (this file)

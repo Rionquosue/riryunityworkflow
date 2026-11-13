@@ -15,7 +15,7 @@ namespace Riry.RiryTools.Editor
     /// (old path to new path) and VRCFury does the rest; any other VRCFury feature has its
     /// clips duplicated into the migrated folder and repathed.
     /// </summary>
-    internal sealed partial class AvatarAnimationRetarget
+    internal sealed partial class AvatarMigratorRetargetAnim
     {
         private const string VrcFuryType = "VF.Model.VRCFury";
         private const string RewriteList = "rewriteBindings";
@@ -147,10 +147,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant VRCFury (AvatarMigratorVRCFuryMover.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant VRCFury (AvatarMigratorRetargetAnim.VRCFuryMover.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
-// AvatarAnimationRetarget (this part)
+// AvatarMigratorRetargetAnim (this part)
 //   RetargetVrcFury()   In each child prefab the user included: each VF.Model.VRCFury whose clips (its own, and its
 //                       controllers') have paths not on the new avatar that the map can rebuild.
 //   HasRuleFields       Whether the rewrite rules have from/to; without them Repair removes its copy, keeps the original

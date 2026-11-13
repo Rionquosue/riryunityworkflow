@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// a namespace), so VRChat, DynamicBone, FinalIK and other optional types are simply
     /// left out when they are not in the project.
     /// </summary>
-    internal sealed class AvatarCopyType
+    internal sealed class AvatarMigratorCopyType
     {
         internal string Id = "";
         internal string Label = "";
@@ -63,7 +63,7 @@ namespace Riry.RiryTools.Editor
 
     /// <summary>
     /// The type list, read from Documents/RiryTools/migrator/types.yml. That file is a copy of
-    /// the package's template (Editor/AvatarMigrationAssistant/types.yml, every type from
+    /// the package's template (Editor/AvatarMigrator/types.yml, every type from
     /// Pumkin's Avatar Tools sorted by kind), made when it is missing; users edit the copy.
     /// Entries with a built-in place run in the order of feature 3 (RunOrder), the rest after
     /// them in file order.
@@ -107,7 +107,7 @@ namespace Riry.RiryTools.Editor
         };
 
         private static readonly Dictionary<string, Type> Cache = new Dictionary<string, Type>(StringComparer.Ordinal);
-        private static List<AvatarCopyType> all;
+        private static List<AvatarMigratorCopyType> all;
         private static DateTime loadedStamp;
         // The last read problem: All runs on every draw, so one problem is logged once, not every repaint.
         private static string lastProblem;
@@ -118,7 +118,7 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>Every entry, in run order; read again when the file changes.</summary>
-        internal static List<AvatarCopyType> All
+        internal static List<AvatarMigratorCopyType> All
         {
             get
             {
@@ -136,14 +136,14 @@ namespace Riry.RiryTools.Editor
                     if (exception.Message != lastProblem)
                         RiryLog.Warn(RiryLog.AvatarMigration, "Could not read " + FilePath + ": " + exception.Message);
                     lastProblem = exception.Message;
-                    if (all == null) all = new List<AvatarCopyType>();
+                    if (all == null) all = new List<AvatarMigratorCopyType>();
                 }
                 return all;
             }
         }
 
         /// <summary>The first entry with a built-in rule, or null.</summary>
-        internal static AvatarCopyType WithRule(string rule)
+        internal static AvatarMigratorCopyType WithRule(string rule)
         {
             return All.Find(type => type.Rule == rule);
         }
@@ -159,11 +159,11 @@ namespace Riry.RiryTools.Editor
 
         // ---- Reading the file -------------------------------------------------------
 
-        private static List<AvatarCopyType> Read(string path)
+        private static List<AvatarMigratorCopyType> Read(string path)
         {
-            var entries = new List<AvatarCopyType>();
-            var root = YamlLite.Parse(File.ReadAllLines(path)) as List<KeyValuePair<string, object>>;
-            var categories = root != null ? YamlLite.Get(root, "categories") as List<KeyValuePair<string, object>> : null;
+            var entries = new List<AvatarMigratorCopyType>();
+            var root = AvatarMigratorYaml.Parse(File.ReadAllLines(path)) as List<KeyValuePair<string, object>>;
+            var categories = root != null ? AvatarMigratorYaml.Get(root, "categories") as List<KeyValuePair<string, object>> : null;
             if (categories == null) return entries;
             foreach (KeyValuePair<string, object> category in categories)
             {
@@ -173,17 +173,17 @@ namespace Riry.RiryTools.Editor
                 {
                     var map = item as List<KeyValuePair<string, object>>;
                     if (map == null) continue;
-                    var entry = new AvatarCopyType
+                    var entry = new AvatarMigratorCopyType
                     {
                         Category = category.Key,
-                        Id = YamlLite.Text(map, "id"),
-                        Label = YamlLite.Text(map, "label"),
-                        Common = YamlLite.Flag(map, "common"),
-                        DefaultEnabled = YamlLite.Flag(map, "enabled"),
-                        NeedsSdk = YamlLite.Flag(map, "sdk"),
-                        Rule = YamlLite.Text(map, "rule")
+                        Id = AvatarMigratorYaml.Text(map, "id"),
+                        Label = AvatarMigratorYaml.Text(map, "label"),
+                        Common = AvatarMigratorYaml.Flag(map, "common"),
+                        DefaultEnabled = AvatarMigratorYaml.Flag(map, "enabled"),
+                        NeedsSdk = AvatarMigratorYaml.Flag(map, "sdk"),
+                        Rule = AvatarMigratorYaml.Text(map, "rule")
                     };
-                    var names = YamlLite.Get(map, "types") as List<object>;
+                    var names = AvatarMigratorYaml.Get(map, "types") as List<object>;
                     if (names != null)
                     {
                         foreach (object name in names)
@@ -197,13 +197,13 @@ namespace Riry.RiryTools.Editor
                 }
             }
             // Built-in places first, in feature 3's order; the rest keep their file order.
-            var ordered = new List<AvatarCopyType>();
+            var ordered = new List<AvatarMigratorCopyType>();
             foreach (string id in RunOrder)
             {
-                AvatarCopyType found = entries.Find(entry => entry.Id == id);
+                AvatarMigratorCopyType found = entries.Find(entry => entry.Id == id);
                 if (found != null) ordered.Add(found);
             }
-            foreach (AvatarCopyType entry in entries)
+            foreach (AvatarMigratorCopyType entry in entries)
             {
                 if (!ordered.Contains(entry)) ordered.Add(entry);
             }
@@ -263,130 +263,6 @@ namespace Riry.RiryTools.Editor
                     if (type != null) yield return type;
                 }
             }
-        }
-    }
-
-    /// <summary>
-    /// The small part of YAML the type list uses: maps ("key: value", "key:" with an indented
-    /// block), lists ("- value", "- key: value" starting a map) and # comments. Maps keep
-    /// their order as lists of key/value pairs.
-    /// </summary>
-    internal static class YamlLite
-    {
-        private struct Line
-        {
-            internal int Indent;
-            internal string Text;
-        }
-
-        internal static object Parse(string[] raw)
-        {
-            var lines = new List<Line>();
-            foreach (string text in raw)
-            {
-                string line = StripComment(text).TrimEnd();
-                if (line.Trim().Length == 0) continue;
-                lines.Add(new Line { Indent = line.Length - line.TrimStart().Length, Text = line.Trim() });
-            }
-            int index = 0;
-            return lines.Count == 0 ? null : Block(lines, ref index, lines[0].Indent);
-        }
-
-        private static string StripComment(string line)
-        {
-            bool quoted = false;
-            for (int i = 0; i < line.Length; i++)
-            {
-                if (line[i] == '"' || line[i] == '\'') quoted = !quoted;
-                if (line[i] == '#' && !quoted && (i == 0 || char.IsWhiteSpace(line[i - 1]))) return line.Substring(0, i);
-            }
-            return line;
-        }
-
-        private static bool IsList(Line line)
-        {
-            return line.Text == "-" || line.Text.StartsWith("- ", StringComparison.Ordinal);
-        }
-
-        private static bool IsKey(string text)
-        {
-            int colon = text.IndexOf(':');
-            return colon > 0 && (colon == text.Length - 1 || text[colon + 1] == ' ');
-        }
-
-        private static object Block(List<Line> lines, ref int index, int indent)
-        {
-            if (IsList(lines[index]))
-            {
-                var list = new List<object>();
-                while (index < lines.Count && lines[index].Indent == indent && IsList(lines[index]))
-                {
-                    string rest = lines[index].Text.Substring(1).Trim();
-                    if (rest.Length == 0)
-                    {
-                        index++;
-                        list.Add(index < lines.Count && lines[index].Indent > indent ? Block(lines, ref index, lines[index].Indent) : null);
-                    }
-                    else if (IsKey(rest))
-                    {
-                        // "- key: value" starts a map two columns in.
-                        lines[index] = new Line { Indent = indent + 2, Text = rest };
-                        list.Add(Block(lines, ref index, indent + 2));
-                    }
-                    else
-                    {
-                        list.Add(Unquote(rest));
-                        index++;
-                    }
-                }
-                return list;
-            }
-            var map = new List<KeyValuePair<string, object>>();
-            while (index < lines.Count && lines[index].Indent == indent && !IsList(lines[index]))
-            {
-                string text = lines[index].Text;
-                int colon = text.IndexOf(':');
-                if (colon <= 0)
-                {
-                    index++;
-                    continue;
-                }
-                string key = Unquote(text.Substring(0, colon).Trim());
-                string value = text.Substring(colon + 1).Trim();
-                index++;
-                object child = null;
-                if (value.Length > 0) child = Unquote(value);
-                else if (index < lines.Count && (lines[index].Indent > indent || (lines[index].Indent == indent && IsList(lines[index]))))
-                    child = Block(lines, ref index, lines[index].Indent);
-                map.Add(new KeyValuePair<string, object>(key, child));
-            }
-            return map;
-        }
-
-        private static string Unquote(string text)
-        {
-            if (text.Length >= 2 && ((text[0] == '"' && text[text.Length - 1] == '"') || (text[0] == '\'' && text[text.Length - 1] == '\'')))
-                return text.Substring(1, text.Length - 2);
-            return text;
-        }
-
-        internal static object Get(List<KeyValuePair<string, object>> map, string key)
-        {
-            foreach (KeyValuePair<string, object> pair in map)
-            {
-                if (pair.Key == key) return pair.Value;
-            }
-            return null;
-        }
-
-        internal static string Text(List<KeyValuePair<string, object>> map, string key)
-        {
-            return Get(map, key) as string ?? "";
-        }
-
-        internal static bool Flag(List<KeyValuePair<string, object>> map, string key)
-        {
-            return string.Equals(Text(map, key), "true", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

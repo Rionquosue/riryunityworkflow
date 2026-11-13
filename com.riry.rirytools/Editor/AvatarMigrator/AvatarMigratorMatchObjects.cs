@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>How a source object was matched to its target counterpart.</summary>
-    internal enum AvatarMatchMethod
+    internal enum AvatarMigratorMatchMethod
     {
         None,
         NamePath,
@@ -21,11 +21,11 @@ namespace Riry.RiryTools.Editor
 
     /// <summary>One source object and its counterpart on the target (null when unmatched).</summary>
     [Serializable]
-    internal sealed class AvatarMatch
+    internal sealed class AvatarMigratorMatch
     {
         public Transform Source;
         public Transform Target;
-        public AvatarMatchMethod Method;
+        public AvatarMigratorMatchMethod Method;
         // The source path from the avatar root, "" for the root.
         public string SourcePath = "";
     }
@@ -43,37 +43,37 @@ namespace Riry.RiryTools.Editor
     /// whose parent is unmatched stays unmatched.
     /// </summary>
     [Serializable]
-    internal sealed class AvatarMigrationMap
+    internal sealed class AvatarMigratorMatchObjects
     {
         // Two candidates closer to each other than this count as equally close.
         private const float TieEpsilon = 1e-7f;
 
         public Transform SourceRoot;
         public Transform TargetRoot;
-        public List<AvatarMatch> Matches = new List<AvatarMatch>();
+        public List<AvatarMigratorMatch> Matches = new List<AvatarMigratorMatch>();
         public float Tolerance = AvatarMigratorSettings.DefaultTolerance;
 
-        [NonSerialized] private Dictionary<Transform, AvatarMatch> bySource;
+        [NonSerialized] private Dictionary<Transform, AvatarMigratorMatch> bySource;
         // Humanoid look-up, made on first use: the source's bones (empty unless both avatars are humanoid).
         [NonSerialized] private Dictionary<Transform, HumanBodyBones> sourceBones;
         [NonSerialized] private Animator targetAnimator;
 
-        internal static AvatarMigrationMap Build(Transform sourceRoot, Transform targetRoot, float tolerance)
+        internal static AvatarMigratorMatchObjects Build(Transform sourceRoot, Transform targetRoot, float tolerance)
         {
-            var map = new AvatarMigrationMap { SourceRoot = sourceRoot, TargetRoot = targetRoot, Tolerance = tolerance };
+            var map = new AvatarMigratorMatchObjects { SourceRoot = sourceRoot, TargetRoot = targetRoot, Tolerance = tolerance };
             // GetComponentsInChildren lists parents before their children.
             foreach (Transform source in sourceRoot.GetComponentsInChildren<Transform>(true))
             {
-                var match = new AvatarMatch { Source = source, SourcePath = AnimationUtility.CalculateTransformPath(source, sourceRoot) };
+                var match = new AvatarMigratorMatch { Source = source, SourcePath = AnimationUtility.CalculateTransformPath(source, sourceRoot) };
                 map.Matches.Add(match);
                 map.Index()[source] = match;
                 if (source == sourceRoot)
                 {
                     match.Target = targetRoot;
-                    match.Method = AvatarMatchMethod.NamePath;
+                    match.Method = AvatarMigratorMatchMethod.NamePath;
                     continue;
                 }
-                AvatarMatchMethod method;
+                AvatarMigratorMatchMethod method;
                 match.Target = map.AutoMatch(source, map.TargetOf(source.parent), out method);
                 match.Method = method;
             }
@@ -87,15 +87,15 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         /// <param name="takenByOther">Whether a target object already belongs to another source object, for the mesh
         /// match; null uses the map's matches (Manual matching passes its rows' current choices).</param>
-        internal Transform AutoMatch(Transform source, Transform parentTarget, out AvatarMatchMethod method,
+        internal Transform AutoMatch(Transform source, Transform parentTarget, out AvatarMigratorMatchMethod method,
             Func<Transform, bool> takenByOther = null)
         {
-            method = AvatarMatchMethod.None;
+            method = AvatarMigratorMatchMethod.None;
             if (source == null || parentTarget == null || TargetRoot == null) return null;
             Transform found = TargetRoot.Find(AnimationUtility.CalculateTransformPath(source, SourceRoot));
             if (found != null)
             {
-                method = AvatarMatchMethod.NamePath;
+                method = AvatarMigratorMatchMethod.NamePath;
                 return found;
             }
             if (sourceBones == null)
@@ -111,7 +111,7 @@ namespace Riry.RiryTools.Editor
                 found = ByHumanoid(source, SourceRoot, sourceBones, targetAnimator);
                 if (found != null)
                 {
-                    method = AvatarMatchMethod.Humanoid;
+                    method = AvatarMigratorMatchMethod.Humanoid;
                     return found;
                 }
             }
@@ -121,20 +121,20 @@ namespace Riry.RiryTools.Editor
                 found = ByMesh(renderer, parentTarget, takenByOther ?? (child => Matches.Exists(match => match.Target == child && match.Source != source)));
                 if (found != null)
                 {
-                    method = AvatarMatchMethod.Mesh;
+                    method = AvatarMigratorMatchMethod.Mesh;
                     return found;
                 }
             }
             found = ByStructure(source, SourceRoot, parentTarget, TargetRoot, Tolerance);
-            if (found != null) method = AvatarMatchMethod.Structure;
+            if (found != null) method = AvatarMigratorMatchMethod.Structure;
             return found;
         }
 
-        private Dictionary<Transform, AvatarMatch> Index()
+        private Dictionary<Transform, AvatarMigratorMatch> Index()
         {
             if (bySource != null) return bySource;
-            bySource = new Dictionary<Transform, AvatarMatch>();
-            foreach (AvatarMatch match in Matches)
+            bySource = new Dictionary<Transform, AvatarMigratorMatch>();
+            foreach (AvatarMigratorMatch match in Matches)
             {
                 if (match.Source != null) bySource[match.Source] = match;
             }
@@ -142,45 +142,45 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>The source object's match, or null when it is not under the source root.</summary>
-        internal AvatarMatch MatchOf(Transform source)
+        internal AvatarMigratorMatch MatchOf(Transform source)
         {
-            AvatarMatch match;
+            AvatarMigratorMatch match;
             return source != null && Index().TryGetValue(source, out match) ? match : null;
         }
 
         /// <summary>The target counterpart of a source object, or null when it is unmatched.</summary>
         internal Transform TargetOf(Transform source)
         {
-            AvatarMatch match = MatchOf(source);
+            AvatarMigratorMatch match = MatchOf(source);
             return match != null ? match.Target : null;
         }
 
         /// <summary>Adds an object the run made on the target for a source object.</summary>
         internal void AddCreated(Transform source, Transform target)
         {
-            AvatarMatch match = MatchOf(source);
+            AvatarMigratorMatch match = MatchOf(source);
             if (match == null)
             {
-                match = new AvatarMatch { Source = source, SourcePath = AnimationUtility.CalculateTransformPath(source, SourceRoot) };
+                match = new AvatarMigratorMatch { Source = source, SourcePath = AnimationUtility.CalculateTransformPath(source, SourceRoot) };
                 Matches.Add(match);
                 Index()[source] = match;
             }
             match.Target = target;
-            match.Method = AvatarMatchMethod.Created;
+            match.Method = AvatarMigratorMatchMethod.Created;
         }
 
         /// <summary>The source object matched to a target object, or null.</summary>
         internal Transform SourceOf(Transform target)
         {
             if (target == null) return null;
-            foreach (AvatarMatch match in Matches)
+            foreach (AvatarMigratorMatch match in Matches)
             {
                 if (match.Target == target) return match.Source;
             }
             return null;
         }
 
-        internal List<AvatarMatch> Unmatched()
+        internal List<AvatarMigratorMatch> Unmatched()
         {
             return Matches.FindAll(match => match.Target == null);
         }
@@ -241,7 +241,7 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         private Transform ByMesh(SkinnedMeshRenderer source, Transform targetParent, Func<Transform, bool> takenByOther)
         {
-            if (sourceBody == null) sourceBody = AvatarRepack.BodyModel(SourceRoot) ?? "";
+            if (sourceBody == null) sourceBody = AvatarMigratorRepack.BodyModel(SourceRoot) ?? "";
             if (source.sharedMesh == null || sourceBody.Length == 0 || AssetDatabase.GetAssetPath(source.sharedMesh) != sourceBody) return null;
             var candidates = new List<SkinnedMeshRenderer>();
             foreach (Transform child in targetParent)
@@ -350,12 +350,12 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant object map (AvatarMigratorMatchObjects.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant object map (AvatarMigratorMatchObjects.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
-// AvatarMatchMethod        None, NamePath, Humanoid, Structure, Manual, Created, Mesh: how a source object found its target.
-// AvatarMatch              Source, Target (null when unmatched), Method, SourcePath (from the avatar root).
-// AvatarMigrationMap (this file)
+// AvatarMigratorMatchMethod        None, NamePath, Humanoid, Structure, Manual, Created, Mesh: how a source object found its target.
+// AvatarMigratorMatch              Source, Target (null when unmatched), Method, SourcePath (from the avatar root).
+// AvatarMigratorMatchObjects (this file)
 //   Build(source, target, tolerance)  Every source Transform, parents first: name path, then humanoid slot plus the
 //                            names below it (both avatars humanoid), then for a SkinnedMeshRenderer object its mesh
 //                            (ByMesh, only for a mesh from the old avatar's body model: same mesh name, else bone or

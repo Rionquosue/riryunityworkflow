@@ -7,12 +7,12 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Avatar Migration Assistant settings, kept for this user in EditorPrefs as JSON
-    /// (RiryTools.AvatarMigrationAssistant.Settings), like Pumkin's Avatar Tools' SettingsContainer.
+    /// (RiryTools.AvatarMigrator.Settings), like Pumkin's Avatar Tools' SettingsContainer.
     /// </summary>
     [Serializable]
     internal sealed class AvatarMigratorSettings
     {
-        internal const string PrefsKey = "RiryTools.AvatarMigrationAssistant.Settings";
+        internal const string PrefsKey = "RiryTools.AvatarMigrator.Settings";
         internal const float DefaultTolerance = 0.001f;
 
         // Feature 1: how far apart, in avatar-root space, a structure match may be.
@@ -21,7 +21,7 @@ namespace Riry.RiryTools.Editor
         public bool ManualMatching;
 
         // Feature 3: one entry per component type (AvatarMigratorCopyTypes.All), and the Common/All list.
-        public List<AvatarTypeSettings> Types = new List<AvatarTypeSettings>();
+        public List<AvatarMigratorTypeSettings> Types = new List<AvatarMigratorTypeSettings>();
         public bool ShowAll;
 
         // Transforms.
@@ -57,11 +57,11 @@ namespace Riry.RiryTools.Editor
         public string MigratedFolder = "";
 
         /// <summary>The settings of a component type, made with its defaults on first use.</summary>
-        internal AvatarTypeSettings Type(AvatarCopyType type)
+        internal AvatarMigratorTypeSettings Type(AvatarMigratorCopyType type)
         {
-            AvatarTypeSettings found = Types.Find(entry => entry.Id == type.Id);
+            AvatarMigratorTypeSettings found = Types.Find(entry => entry.Id == type.Id);
             if (found != null) return found;
-            found = new AvatarTypeSettings { Id = type.Id, Enabled = type.DefaultEnabled, CreateMissing = true };
+            found = new AvatarMigratorTypeSettings { Id = type.Id, Enabled = type.DefaultEnabled, CreateMissing = true };
             Types.Add(found);
             return found;
         }
@@ -69,7 +69,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>Whether the entry with a built-in rule is in the list and ticked.</summary>
         internal bool RuleEnabled(string rule)
         {
-            AvatarCopyType type = AvatarMigratorCopyTypes.WithRule(rule);
+            AvatarMigratorCopyType type = AvatarMigratorCopyTypes.WithRule(rule);
             return type != null && Type(type).Enabled;
         }
 
@@ -98,7 +98,7 @@ namespace Riry.RiryTools.Editor
     }
 
     [Serializable]
-    internal sealed class AvatarTypeSettings
+    internal sealed class AvatarMigratorTypeSettings
     {
         public string Id = "";
         public bool Enabled;
@@ -110,10 +110,10 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant settings (AvatarMigratorSettings.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant settings (AvatarMigratorSettings.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
-// AvatarMigratorSettings (this file): EditorPrefs RiryTools.AvatarMigrationAssistant.Settings (JSON)
+// AvatarMigratorSettings (this file): EditorPrefs RiryTools.AvatarMigrator.Settings (JSON)
 //   StructureTolerance   Feature 1 structure match distance in avatar-root space (default 0.001).
 //   ManualMatching       Feature 2: open Manual matching on every run with every row listed.
 //   Types / Type(type) / RuleEnabled(rule) / ShowAll  Feature 3 per-entry settings (starting as the entry's "enabled"),
@@ -122,4 +122,4 @@ namespace Riry.RiryTools.Editor
 //   IgnoreChildren       Feature 13: ignored objects' children are ignored too.
 //   MigratedFolder       Feature 10: the root folder for migrated files (AvatarMigratorMigratedFolder.cs).
 //   Load() / Save()
-// AvatarTypeSettings     Per component type: Enabled, CreateMissing (feature 4), Replace (feature 12; off adds).
+// AvatarMigratorTypeSettings     Per component type: Enabled, CreateMissing (feature 4), Replace (feature 12; off adds).

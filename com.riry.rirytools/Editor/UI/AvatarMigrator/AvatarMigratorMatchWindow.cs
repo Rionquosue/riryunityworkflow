@@ -16,13 +16,13 @@ namespace Riry.RiryTools.Editor
     /// set above it, so the objects below a parent matched by hand fill in by themselves
     /// and can still be corrected.
     /// </summary>
-    internal sealed class AvatarMigrationMatchWindow : EditorWindow
+    internal sealed class AvatarMigratorMatchWindow : EditorWindow
     {
         private const string Title = "Manual matching";
 
         private sealed class Row
         {
-            internal AvatarMatch Match;
+            internal AvatarMigratorMatch Match;
             // Set instead of Match for an animation path that resolves to no source object.
             internal string AnimationPath;
             internal string Original = "";
@@ -30,10 +30,10 @@ namespace Riry.RiryTools.Editor
             // True once the user typed or picked in this row; the row is then manual.
             internal bool Edited;
             // How the row's current path was found when it is not edited.
-            internal AvatarMatchMethod Auto;
+            internal AvatarMigratorMatchMethod Auto;
         }
 
-        private AvatarMigrationMap map;
+        private AvatarMigratorMatchObjects map;
         private readonly List<Row> rows = new List<Row>();
         private readonly Dictionary<Transform, Row> rowOf = new Dictionary<Transform, Row>();
         private bool accepted;
@@ -44,14 +44,14 @@ namespace Riry.RiryTools.Editor
         /// Shows the rows and waits. True when Continue was clicked: the map holds the edits
         /// and animationTargets each listed animation path's chosen target (null for none).
         /// </summary>
-        internal static bool Review(AvatarMigrationMap map, bool everyRow, IList<string> animationPaths,
+        internal static bool Review(AvatarMigratorMatchObjects map, bool everyRow, IList<string> animationPaths,
             out Dictionary<string, Transform> animationTargets)
         {
             animationTargets = new Dictionary<string, Transform>(StringComparer.Ordinal);
-            var window = CreateInstance<AvatarMigrationMatchWindow>();
+            var window = CreateInstance<AvatarMigratorMatchWindow>();
             window.titleContent = new GUIContent(Title);
             window.map = map;
-            foreach (AvatarMatch match in map.Matches)
+            foreach (AvatarMigratorMatch match in map.Matches)
             {
                 if (match.Source == map.SourceRoot || (!everyRow && match.Target != null)) continue;
                 string path = map.TargetPath(match.Target);
@@ -80,7 +80,7 @@ namespace Riry.RiryTools.Editor
                 }
                 if (!row.Edited && path == row.Original) continue;
                 row.Match.Target = target;
-                row.Match.Method = target == null ? AvatarMatchMethod.None : row.Edited ? AvatarMatchMethod.Manual : row.Auto;
+                row.Match.Method = target == null ? AvatarMigratorMatchMethod.None : row.Edited ? AvatarMigratorMatchMethod.Manual : row.Auto;
             }
             return true;
         }
@@ -100,7 +100,7 @@ namespace Riry.RiryTools.Editor
             foreach (Row row in rows)
             {
                 if (row.Match == null || row.Edited) continue;
-                AvatarMatchMethod method;
+                AvatarMigratorMatchMethod method;
                 Transform own = row.Match.Source;
                 // Taken: the current choice of any other row, as edited in this window.
                 Transform found = map.AutoMatch(own, CurrentTarget(own.parent), out method,
@@ -205,8 +205,8 @@ namespace Riry.RiryTools.Editor
             if (row.Match == null || row.Edited) return path.Length > 0 ? "Manual" : "None";
             switch (row.Auto)
             {
-                case AvatarMatchMethod.NamePath: return "Name path";
-                case AvatarMatchMethod.Mesh: return "Mesh";
+                case AvatarMigratorMatchMethod.NamePath: return "Name path";
+                case AvatarMigratorMatchMethod.Mesh: return "Mesh";
                 default: return row.Match.Method.ToString();
             }
         }
@@ -214,14 +214,14 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Manual matching window (ManualMatching.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Manual matching window (AvatarMigratorMatchWindow.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
-// AvatarMigrationMatchWindow (this file)
+// AvatarMigratorMatchWindow (this file)
 //   Review(map, everyRow, animationPaths, out animationTargets)  Modal. Rows: source path, target path (red when not on
 //                        the target), object picker (target hierarchy only), Matched by (Name path, Humanoid, Structure,
 //                        Manual, None). everyRow: manual mode, every row; else only unmatched rows. Continue (disabled
 //                        while a path is red) writes the edits into the map; Cancel returns false with nothing changed.
 //   Animation paths      Listed with "(animation path)"; their chosen targets come back in animationTargets.
-//   Rematch()            After each edit: AvatarMigrationMap.AutoMatch again for every row not edited, with the targets
+//   Rematch()            After each edit: AvatarMigratorMatchObjects.AutoMatch again for every row not edited, with the targets
 //                        now set above it; Matched by shows the method it found. Edited rows are Manual.

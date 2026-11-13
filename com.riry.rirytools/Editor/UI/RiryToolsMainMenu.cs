@@ -193,7 +193,7 @@ namespace Riry.RiryTools.Editor
                     {
                         if (!GUILayout.Button(tool, GUILayout.Height(28f))) continue;
                         if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
-                        else EditorApplication.delayCall += AvatarMigrationAssistant.OpenPopup;
+                        else EditorApplication.delayCall += AvatarMigratorWindow.OpenPopup;
                     }
                     if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
                     // Reloads scripts on the next frame (Unity 2022.3 has no button for it).

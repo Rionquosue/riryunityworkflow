@@ -17,14 +17,14 @@ namespace Riry.RiryTools.Editor
         private static readonly string[] ArmatureNames = { "armature", "skeleton", "root", "rig" };
 
         // The root Animator is copied only with that option on.
-        private bool TypeRuleAllows(AvatarCopyType type, Component source)
+        private bool TypeRuleAllows(AvatarMigratorCopyType type, Component source)
         {
             if (type.Rule == AvatarMigratorCopyTypes.AnimatorsRule && source.transform == sourceRoot && !settings.RootAnimator) return false;
             return true;
         }
 
         // A Camera is copied only onto an object without one.
-        private static bool TargetRuleAllows(AvatarCopyType type, Component source, Transform target)
+        private static bool TargetRuleAllows(AvatarMigratorCopyType type, Component source, Transform target)
         {
             if (type.Rule == AvatarMigratorCopyTypes.CamerasRule && target.GetComponent<Camera>() != null) return false;
             return true;
@@ -63,7 +63,7 @@ namespace Riry.RiryTools.Editor
         /// come out right whatever base scale each avatar has. The root, its direct children
         /// and the armature are left alone.
         /// </summary>
-        private void CopyTransforms(AvatarTypeSettings typeSettings)
+        private void CopyTransforms(AvatarMigratorTypeSettings typeSettings)
         {
             if (!settings.TransformPosition && !settings.TransformRotation && !settings.TransformScale) return;
             foreach (Transform source in sourceRoot.GetComponentsInChildren<Transform>(true))
@@ -75,7 +75,7 @@ namespace Riry.RiryTools.Editor
                     report.NotCopied.Add("Transform of " + AnimationUtility.CalculateTransformPath(source, sourceRoot) + ": no match on the target.");
                     continue;
                 }
-                Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+                Undo.RecordObject(target, AvatarMigratorWindow.Title);
                 if (settings.TransformPosition) target.position = targetRoot.TransformPoint(sourceRoot.InverseTransformPoint(source.position));
                 if (settings.TransformRotation) target.rotation = targetRoot.rotation * (Quaternion.Inverse(sourceRoot.rotation) * source.rotation);
                 if (settings.TransformScale && target.parent != null)
@@ -101,7 +101,7 @@ namespace Riry.RiryTools.Editor
                 if (source == sourceRoot || !InScope(source)) continue;
                 Transform target = map.TargetOf(source);
                 if (target == null || target == targetRoot) continue;
-                Undo.RecordObject(target.gameObject, AvatarMigrationAssistant.Title);
+                Undo.RecordObject(target.gameObject, AvatarMigratorWindow.Title);
                 if (settings.TransformTagLayer)
                 {
                     target.gameObject.layer = source.gameObject.layer;
@@ -122,7 +122,7 @@ namespace Riry.RiryTools.Editor
         // ---- Renderers ------------------------------------------------------------
 
         /// <summary>MeshRenderers that have a MeshFilter, copied with it.</summary>
-        private void CopyMeshRenderers(AvatarTypeSettings typeSettings)
+        private void CopyMeshRenderers(AvatarMigratorTypeSettings typeSettings)
         {
             if (typeSettings.Replace) ClearTarget(typeof(MeshRenderer));
             foreach (MeshRenderer source in sourceRoot.GetComponentsInChildren<MeshRenderer>(true))
@@ -166,7 +166,7 @@ namespace Riry.RiryTools.Editor
                         "model or prefab; check that the mesh is on the new avatar.");
                     continue;
                 }
-                Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+                Undo.RecordObject(target, AvatarMigratorWindow.Title);
                 if (answers.CopySkinnedMeshRenderers)
                 {
                     if (settings.SkinnedSettings)
@@ -345,7 +345,7 @@ namespace Riry.RiryTools.Editor
                 target = Undo.AddComponent(targetRoot.gameObject, descriptorType);
                 made.Add(target);
             }
-            else Undo.RecordObject(target, AvatarMigrationAssistant.Title);
+            else Undo.RecordObject(target, AvatarMigratorWindow.Title);
 
             var names = new List<string>();
             if (settings.DescriptorViewpoint) names.Add("ViewPosition");
@@ -371,7 +371,7 @@ namespace Riry.RiryTools.Editor
             if (settings.DescriptorAvatarScale)
             {
                 Vector3 before = targetRoot.localScale;
-                Undo.RecordObject(targetRoot, AvatarMigrationAssistant.Title);
+                Undo.RecordObject(targetRoot, AvatarMigratorWindow.Title);
                 targetRoot.localScale = sourceRoot.localScale;
                 SerializedProperty view = to.FindProperty("ViewPosition");
                 if (view != null && before.y != 0f)
@@ -505,7 +505,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Avatar Migration Assistant type rules (AvatarMigratorTypeRules.cs, part of Editor/AvatarMigrationAssistant.cs)
+// GLOSSARY: Avatar Migration Assistant type rules (AvatarMigratorCopyRun.TypeRules.cs, window: Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs)
 // ============================================================================
 //
 // AvatarMigratorCopyRun (this part)

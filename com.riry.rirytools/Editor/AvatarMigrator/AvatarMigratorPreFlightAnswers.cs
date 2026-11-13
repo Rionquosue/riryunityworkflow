@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
         internal bool CopySkinnedMeshRenderers;
         // Bounds of renderers whose mesh is a different one on the target.
         internal bool CopyChangedBounds;
-        // Unpacked prefabs placed again as child prefabs of their models (AvatarMigratorRepackPrefabs.cs).
+        // Unpacked prefabs placed again as child prefabs of their models (AvatarMigratorCopyRun.RepackPrefabs.cs).
         internal bool RepackPrefabs;
         internal bool CopyMeshRenderers;
         internal bool UpgradeConstraints;

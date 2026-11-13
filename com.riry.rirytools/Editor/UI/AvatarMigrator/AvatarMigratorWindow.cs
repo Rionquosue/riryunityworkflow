@@ -11,16 +11,16 @@ namespace Riry.RiryTools.Editor
     /// Avatar Migration Assistant: copies components and settings from an old avatar
     /// (source) to a new one (target), and retargets the new one's animations; the source
     /// and the original files are never changed. This is the main window; its parts are in
-    /// Editor/AvatarMigrationAssistant/, named by what they do. Copy: the object map
+    /// Editor/AvatarMigrator/, named by what they do. Copy: the object map
     /// (AvatarMigratorMatchObjects.cs), Manual matching when anything is unmatched or on every run with
-    /// Manual matching on (ManualMatching.cs), the up-front check (AvatarMigrationPreFlightChecks.cs), the
+    /// Manual matching on (AvatarMigratorMatchWindow.cs), the up-front check (AvatarMigratorPreFlightWindow.cs), the
     /// run (AvatarMigratorCopyRun.cs and its parts) and its report (AvatarMigratorRunReport.cs). Retarget animations:
-    /// AvatarMigratorRetargetAnim.cs, AvatarMigratorVRCFuryMover.cs and AvatarMigratorMigratedFolder.cs. Without the VRChat
+    /// AvatarMigratorRetargetAnim.cs, AvatarMigratorRetargetAnim.VRCFuryMover.cs and AvatarMigratorMigratedFolder.cs. Without the VRChat
     /// SDK it still runs with the VRChat parts left out; opening it then shows the VRC SDK
-    /// notice (SdkNotice.cs). Opened from Tools > RiryTools > Avatar Migration Assistant
+    /// notice (AvatarMigratorSdkNoticeWindow.cs). Opened from Tools > RiryTools > Avatar Migration Assistant
     /// and the Main Menu's Tools tab (in its own window).
     /// </summary>
-    internal sealed class AvatarMigrationAssistant : EditorWindow
+    internal sealed class AvatarMigratorWindow : EditorWindow
     {
         internal const string Title = "Avatar Migration Assistant";
         // The VRChat Avatars SDK is in the project when this type is.
@@ -37,7 +37,7 @@ namespace Riry.RiryTools.Editor
         // Feature 9: the target's child prefabs included in Retarget animations.
         [SerializeField] private List<GameObject> includedPrefabs = new List<GameObject>();
         // The map of the last run, used again by Retarget animations for the same avatars.
-        [SerializeField] private AvatarMigrationMap lastMap;
+        [SerializeField] private AvatarMigratorMatchObjects lastMap;
         [SerializeField] private bool foldMatching = true;
         [SerializeField] private bool foldCopy = true;
         [SerializeField] private bool foldIgnore;
@@ -50,19 +50,19 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
-            AvatarMigrationAssistant window = GetWindow<AvatarMigrationAssistant>(Title);
+            AvatarMigratorWindow window = GetWindow<AvatarMigratorWindow>(Title);
             window.minSize = new Vector2(420f, 360f);
             window.Show();
-            EditorApplication.delayCall += AvatarMigrationSdkNotice.ShowIfNeeded;
+            EditorApplication.delayCall += AvatarMigratorSdkNoticeWindow.ShowIfNeeded;
         }
 
         /// <summary>The Main Menu's Tools tab: the tool in its own floating window.</summary>
         internal static void OpenPopup()
         {
-            AvatarMigrationAssistant window = GetWindow<AvatarMigrationAssistant>(true, Title);
+            AvatarMigratorWindow window = GetWindow<AvatarMigratorWindow>(true, Title);
             window.minSize = new Vector2(420f, 360f);
             window.Show();
-            EditorApplication.delayCall += AvatarMigrationSdkNotice.ShowIfNeeded;
+            EditorApplication.delayCall += AvatarMigratorSdkNoticeWindow.ShowIfNeeded;
         }
 
         private AvatarMigratorSettings Settings
@@ -162,7 +162,7 @@ namespace Riry.RiryTools.Editor
             Settings.ShowAll = GUI.Toolbar(toolbar, Settings.ShowAll ? 1 : 0, ListNames) == 1;
             // Grouped by category (the file's kinds of type); each category folds.
             var categories = new List<string>();
-            foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+            foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
             {
                 if ((type.Common || Settings.ShowAll) && !categories.Contains(type.Category)) categories.Add(type.Category);
             }
@@ -177,7 +177,7 @@ namespace Riry.RiryTools.Editor
                 }
                 if (!open) continue;
                 EditorGUI.indentLevel++;
-                foreach (AvatarCopyType type in AvatarMigratorCopyTypes.All)
+                foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
                 {
                     if (type.Category == category && (type.Common || Settings.ShowAll)) DrawType(type);
                 }
@@ -186,9 +186,9 @@ namespace Riry.RiryTools.Editor
             EditorGUI.indentLevel--;
         }
 
-        private void DrawType(AvatarCopyType type)
+        private void DrawType(AvatarMigratorCopyType type)
         {
-            AvatarTypeSettings typeSettings = Settings.Type(type);
+            AvatarMigratorTypeSettings typeSettings = Settings.Type(type);
             bool sdkMissing = type.NeedsSdk && !SdkPresent;
             bool available = type.Available && !sdkMissing;
             string label = type.Label + (sdkMissing ? " (VRC SDK not detected)" : !type.Available ? " (not in project)" : "");
@@ -305,7 +305,7 @@ namespace Riry.RiryTools.Editor
             }
             if (target != null)
             {
-                if (targetPrefabs == null) targetPrefabs = new AvatarPrefabScope(target.transform).OutermostChildPrefabs();
+                if (targetPrefabs == null) targetPrefabs = new AvatarMigratorPrefabScope(target.transform).OutermostChildPrefabs();
                 if (targetPrefabs.Count > 0) EditorGUILayout.LabelField("Child prefabs on the target", EditorStyles.boldLabel);
                 foreach (Transform prefab in targetPrefabs)
                 {
@@ -351,13 +351,13 @@ namespace Riry.RiryTools.Editor
         // ---- Running ----------------------------------------------------------------
 
         // Features 1 and 2: the map, confirmed in Manual matching when needed; null when cancelled.
-        private AvatarMigrationMap BuildMap()
+        private AvatarMigratorMatchObjects BuildMap()
         {
-            AvatarMigrationMap map = AvatarMigrationMap.Build(source.transform, target.transform, Settings.StructureTolerance);
+            AvatarMigratorMatchObjects map = AvatarMigratorMatchObjects.Build(source.transform, target.transform, Settings.StructureTolerance);
             if (Settings.ManualMatching || map.Unmatched().Count > 0)
             {
                 Dictionary<string, Transform> unused;
-                if (!AvatarMigrationMatchWindow.Review(map, Settings.ManualMatching, null, out unused)) return null;
+                if (!AvatarMigratorMatchWindow.Review(map, Settings.ManualMatching, null, out unused)) return null;
             }
             return map;
         }
@@ -365,7 +365,7 @@ namespace Riry.RiryTools.Editor
         private void Run()
         {
             if (Problem() != null) return;
-            AvatarMigrationMap map = BuildMap();
+            AvatarMigratorMatchObjects map = BuildMap();
             if (map == null)
             {
                 Finish("Cancelled. Nothing was changed.");
@@ -374,7 +374,7 @@ namespace Riry.RiryTools.Editor
             AvatarMigratorIgnoreList.DropEmpty(ignore);
             HashSet<Transform> ignored = AvatarMigratorIgnoreList.Resolve(map, ignore, Settings.IgnoreChildren);
             AvatarMigratorPreFlightAnswers answers;
-            if (!AvatarMigrationPreFlightChecks.Run(map, Settings, ignored, out answers))
+            if (!AvatarMigratorPreFlightWindow.Run(map, Settings, ignored, out answers))
             {
                 Finish("Aborted. Nothing was changed.");
                 return;
@@ -388,14 +388,14 @@ namespace Riry.RiryTools.Editor
             }
             targetPrefabs = null;
             Finish(report.Summary);
-            AvatarRunReportWindow.Open(report);
+            AvatarMigratorRunReportWindow.Open(report);
         }
 
         // Feature 8: needs the map, so features 1 and 2 run first when there is none for these avatars.
         private void Retarget()
         {
             if (Problem() != null) return;
-            AvatarMigrationMap map = lastMap != null && lastMap.SourceRoot == source.transform && lastMap.TargetRoot == target.transform
+            AvatarMigratorMatchObjects map = lastMap != null && lastMap.SourceRoot == source.transform && lastMap.TargetRoot == target.transform
                 ? lastMap
                 : BuildMap();
             if (map == null)
@@ -414,14 +414,14 @@ namespace Riry.RiryTools.Editor
                 if (prefab != null && prefab.transform.IsChildOf(target.transform)) included.Add(prefab.transform);
             }
             var report = new AvatarMigratorRunReport();
-            if (!AvatarAnimationRetarget.Run(map, Settings, included, report))
+            if (!AvatarMigratorRetargetAnim.Run(map, Settings, included, report))
             {
                 Finish("Cancelled. Nothing was changed.");
                 return;
             }
             lastMap = map;
             Finish("Animations retargeted: " + report.FilesCreated.Count + " file" + (report.FilesCreated.Count == 1 ? "" : "s") + " created.");
-            AvatarRunReportWindow.Open(report);
+            AvatarMigratorRunReportWindow.Open(report);
         }
 
         private void Finish(string result)
@@ -435,18 +435,18 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 // GLOSSARY: Avatar Migration Assistant window
 // The menu entry, Tools > RiryTools > Avatar Migration Assistant (menu key N), is in RiryToolsMenuBar.cs;
-// the Main Menu's Tools tab opens it in its own window (OpenPopup). Its parts are in Editor/AvatarMigrationAssistant/:
-//   AvatarMigratorMatchObjects.cs (1, the object map), ManualMatching.cs (2), types.yml (3 and 14, the type list, read in this file),
+// the Main Menu's Tools tab opens it in its own window (OpenPopup). Its parts are in Editor/AvatarMigrator/:
+//   AvatarMigratorMatchObjects.cs (1, the object map), AvatarMigratorMatchWindow.cs (2), types.yml (3 and 14, the type list, read in this file),
 //   AvatarMigratorSettings.cs (EditorPrefs),
-//   AvatarMigrationPreFlightChecks.cs (everything up front), AvatarMigratorCopyRun.cs (the run, 4 and 15), AvatarMigratorTypeRules.cs, AvatarMigratorCopyPrefabs.cs (11),
-//   AvatarMigratorUpgradeConstraints.cs, AvatarMigratorRepointReferences.cs (5 and 12), AvatarMigratorCorrectRotation.cs (7), AvatarMigratorCorrectScale.cs (6), AvatarMigratorIgnoreList.cs (13),
-//   AvatarMigratorRepackPrefabs.cs (unpacked prefabs placed again as child prefabs),
-//   AvatarMigratorRunReport.cs, AvatarMigratorRetargetAnim.cs (8), AvatarMigratorVRCFuryMover.cs (9), AvatarMigratorMigratedFolder.cs (10),
-//   SdkNotice.cs (the VRC SDK not detected popup).
+//   AvatarMigratorPreFlightWindow.cs (everything up front), AvatarMigratorCopyRun.cs (the run, 4 and 15), AvatarMigratorCopyRun.TypeRules.cs, AvatarMigratorCopyRun.Prefabs.cs (11),
+//   AvatarMigratorCopyRun.UpgradeConstraints.cs, AvatarMigratorCopyRun.RepointReferences.cs (5 and 12), AvatarMigratorCopyRun.CorrectRotation.cs (7), AvatarMigratorCopyRun.CorrectScale.cs (6), AvatarMigratorIgnoreList.cs (13),
+//   AvatarMigratorCopyRun.RepackPrefabs.cs (unpacked prefabs placed again as child prefabs),
+//   AvatarMigratorRunReport.cs, AvatarMigratorRetargetAnim.cs (8), AvatarMigratorRetargetAnim.VRCFuryMover.cs (9), AvatarMigratorMigratedFolder.cs (10),
+//   AvatarMigratorSdkNoticeWindow.cs (the VRC SDK not detected popup).
 // ============================================================================
 //
-// AvatarMigrationAssistant (this file)
-//   SdkPresent               The VRChat SDK, found by type name. Without it, Open shows AvatarMigrationSdkNotice and the
+// AvatarMigratorWindow (this file)
+//   SdkPresent               The VRChat SDK, found by type name. Without it, Open shows AvatarMigratorSdkNoticeWindow and the
 //                            VRChat types are shown as not available; the rest still runs.
 //   Source / Target          Scene avatars (old and new); copying an avatar onto itself, or onto one inside it, is blocked.
 //   Matching                 Structure tolerance, Manual matching.
@@ -456,17 +456,17 @@ namespace Riry.RiryTools.Editor
 //   Ignore list              Objects on either avatar (not the roots), Include children.
 //   Animations               Migrated folder (Browse), Include child prefab per target child prefab, Retarget animations.
 //   Copy / Run()             Map (BuildMap: features 1 and 2), ignore list, up-front check, the run, the report popup.
-//   Retarget()               The last run's map for the same avatars, else BuildMap; the migrated folder; AvatarAnimationRetarget.
+//   Retarget()               The last run's map for the same avatars, else BuildMap; the migrated folder; AvatarMigratorRetargetAnim.
 //   Open() / OpenPopup()     The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window); both show the
 //                            VRC SDK notice when the SDK is missing.
 //   [SerializeField]         source, target, lastRun, ignore, includedPrefabs, lastMap, the fold states, openTypes, scroll.
 //   DropLastMap()            Undo.undoRedoPerformed: forgets lastMap, so Retarget rebuilds the map after Undo or Redo.
 //
 // ---- Type list (this file) ----
-// AvatarMigrationAssistant/types.yml  The template: every type from Pumkin's Avatar Tools, sorted by kind into categories;
+// AvatarMigrator/types.yml  The template: every type from Pumkin's Avatar Tools, sorted by kind into categories;
 //                       each entry has id, label, common, enabled, sdk, rule and types.
 // Documents/RiryTools/migrator/types.yml  The copy the tool reads (made from the template when missing); users edit it.
-// AvatarCopyType        One entry: Id, Label, Category, Common, DefaultEnabled, NeedsSdk, Rule, TypeNames; Types (found in
+// AvatarMigratorCopyType        One entry: Id, Label, Category, Common, DefaultEnabled, NeedsSdk, Rule, TypeNames; Types (found in
 //                       this project, Namespace.* expanded), Available.
 // AvatarMigratorCopyTypes
 //   All / WithRule(rule)  The entries in run order (RunOrder: feature 3's order, then the rest in file order), read again
@@ -474,4 +474,4 @@ namespace Riry.RiryTools.Editor
 //   Rules               prefabs, transforms, meshrenderers, skinnedmeshrenderers, animators, cameras, descriptor,
 //                       unityconstraint: the entries the run treats specially.
 //   Resolve / Find / FindByName  Types by name across the loaded assemblies (cached).
-// YamlLite              The YAML subset the list uses: maps, lists, "- key: value" maps, # comments.
+// AvatarMigratorYaml              The YAML subset the list uses: maps, lists, "- key: value" maps, # comments.

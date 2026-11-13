@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>The popup after a run: the summary, then each section of the report.</summary>
-    internal sealed class AvatarRunReportWindow : EditorWindow
+    internal sealed class AvatarMigratorRunReportWindow : EditorWindow
     {
         private AvatarMigratorRunReport report;
         private Vector2 scroll;
@@ -14,8 +14,8 @@ namespace Riry.RiryTools.Editor
         internal static void Open(AvatarMigratorRunReport report)
         {
             RiryLog.Info(RiryLog.AvatarMigration, report.Text());
-            var window = CreateInstance<AvatarRunReportWindow>();
-            window.titleContent = new GUIContent(AvatarMigrationAssistant.Title + ": done");
+            var window = CreateInstance<AvatarMigratorRunReportWindow>();
+            window.titleContent = new GUIContent(AvatarMigratorWindow.Title + ": done");
             window.report = report;
             Rect main = EditorGUIUtility.GetMainWindowPosition();
             window.position = new Rect(main.center.x - 320f, main.center.y - 240f, 640f, 480f);

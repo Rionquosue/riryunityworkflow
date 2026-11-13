@@ -24,7 +24,7 @@ namespace Riry.RiryTools.Editor
         private const string SyncTools = "Tools/RiryTools/AutoSync/Sync";
         private const string ConfigurationTools = "Tools/RiryTools/AutoSync/Configuration";
         // "&n" makes N its menu key (A is AutoSync's, M Main Menu's and Menu Mockup's).
-        private const string AvatarMigrationAssistantMenu = "Tools/RiryTools/Avatar Migratio&n Assistant";
+        private const string AvatarMigratorMenu = "Tools/RiryTools/Avatar Migratio&n Assistant";
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Clean Animation Keys";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
@@ -76,8 +76,8 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConfigurationTools, false, 2001)]
         private static void ConfigurationToolsItem() { AutoSyncGitActions.OpenConfiguration(); }
 
-        [MenuItem(AvatarMigrationAssistantMenu, false, 2005)]
-        private static void AvatarMigrationAssistantItem() { AvatarMigrationAssistant.Open(); }
+        [MenuItem(AvatarMigratorMenu, false, 2005)]
+        private static void AvatarMigratorItem() { AvatarMigratorWindow.Open(); }
 
         [MenuItem(BlendshapeSync, false, 2010)]
         private static void BlendshapeSyncItem() { BlendshapeSyncJobs.Add(); }
@@ -197,8 +197,8 @@ namespace Riry.RiryTools.Editor
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/AutoSync/Sync (2000)  [check mark] -> AutoSyncGitActions.ToggleSync / AutoSync.Enabled (Editor/AutoSync/AutoSyncGitActions.cs)
 //   Tools/RiryTools/AutoSync/Configuration (2001) -> AutoSyncGitActions.OpenConfiguration -> AutoSyncGitConfigureWindow (Editor/UI/AutoSync/)
-//   Tools/RiryTools/Avatar Migration Assistant (2005), menu key N -> AvatarMigrationAssistant.Open
-//                                                      (Editor/UI/AvatarMigrationAssistant.cs); without the VRChat SDK it still
+//   Tools/RiryTools/Avatar Migration Assistant (2005), menu key N -> AvatarMigratorWindow.Open
+//                                                      (Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs); without the VRChat SDK it still
 //                                                      opens, after the VRC SDK not detected popup
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSyncJobWindow.cs)
 //   Tools/RiryTools/Clean Animation Keys (2020)     -> CleanAnimationKeysWindow.Open (Editor/UI/CleanAnimationKeysWindow.cs), empty

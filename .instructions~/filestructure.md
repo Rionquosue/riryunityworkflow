@@ -71,23 +71,27 @@ com.riry.rirytools/
     │   ├── AutoSyncJob.cs
     │   └── AutoSyncSaveProcessor.cs
     ├── AvatarMigrator/
-    │   ├── AvatarMigratorCopyPrefabs.cs
+    │   ├── AvatarMigratorCopyRun.CorrectRotation.cs
+    │   ├── AvatarMigratorCopyRun.CorrectScale.cs
     │   ├── AvatarMigratorCopyRun.cs
+    │   ├── AvatarMigratorCopyRun.Prefabs.cs
+    │   ├── AvatarMigratorCopyRun.RepackPrefabs.cs
+    │   ├── AvatarMigratorCopyRun.RepointReferences.cs
+    │   ├── AvatarMigratorCopyRun.TypeRules.cs
+    │   ├── AvatarMigratorCopyRun.UpgradeConstraints.cs
+    │   ├── AvatarMigratorCopyRun.VrcSources.cs
     │   ├── AvatarMigratorCopyTypes.cs
-    │   ├── AvatarMigratorCorrectRotation.cs
-    │   ├── AvatarMigratorCorrectScale.cs
     │   ├── AvatarMigratorIgnoreList.cs
     │   ├── AvatarMigratorMatchObjects.cs
     │   ├── AvatarMigratorMigratedFolder.cs
+    │   ├── AvatarMigratorPrefabScope.cs
     │   ├── AvatarMigratorPreFlightAnswers.cs
-    │   ├── AvatarMigratorRepackPrefabs.cs
-    │   ├── AvatarMigratorRepointReferences.cs
+    │   ├── AvatarMigratorRepack.cs
     │   ├── AvatarMigratorRetargetAnim.cs
+    │   ├── AvatarMigratorRetargetAnim.VRCFuryMover.cs
     │   ├── AvatarMigratorRunReport.cs
     │   ├── AvatarMigratorSettings.cs
-    │   ├── AvatarMigratorTypeRules.cs
-    │   ├── AvatarMigratorUpgradeConstraints.cs
-    │   ├── AvatarMigratorVRCFuryMover.cs
+    │   ├── AvatarMigratorYaml.cs
     │   └── types.yml
     ├── BlendshapeSync/
     │   ├── BlendshapeSyncJob.cs
