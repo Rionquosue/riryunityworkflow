@@ -14,7 +14,7 @@ namespace Riry.RiryTools.Editor
     /// holds (for example a package script that makes a scene load empty), names the
     /// script that logged errors during the load, blocks saving it so the good file
     /// is not overwritten, and holds the editor in a modal window until it is resolved.
-    /// The window is in Editor/UI/Debug/ScriptLoadFailureWindow.cs. Like Stop Auto Game, it
+    /// The window is in Editor/UI/Debug/ScriptLoadGuardFailureWindow.cs. Like Stop Auto Game, it
     /// can be turned off: its menu toggle is in Editor/UI/RiryToolsMenuBar.cs and the Main Menu's
     /// Tools tab has the same toggle.
     /// </summary>
@@ -82,7 +82,7 @@ namespace Riry.RiryTools.Editor
             EditorSceneManager.sceneClosed += SceneClosed;
             PrefabStage.prefabStageClosing += PrefabClosing;
             // A script reload keeps the block: the scene is still the broken one in memory.
-            if (Guarded().Count > 0) EditorApplication.delayCall += ScriptLoadFailureWindow.Open;
+            if (Guarded().Count > 0) EditorApplication.delayCall += ScriptLoadGuardFailureWindow.Open;
         }
 
         private static void LogReceived(string message, string stackTrace, LogType type)
@@ -175,7 +175,7 @@ namespace Riry.RiryTools.Editor
             RiryLog.Error(RiryLog.ScriptLoadGuard, "SCRIPT CAUSING FAILED LOAD: " + path + " has " + expected + " objects on disk but loaded " + loaded +
                 ". Saving it is blocked." + (failure.Suspects.Count > 0 ? " Suspected: " + string.Join(", ", failure.Suspects) : ""),
                 AssetDatabase.LoadMainAssetAtPath(path));
-            ScriptLoadFailureWindow.Open();
+            ScriptLoadGuardFailureWindow.Open();
         }
 
         /// <summary>A load failed when the file has objects and none, or fewer than half, loaded.</summary>
@@ -222,7 +222,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Script Load Guard
-// The window is Editor/UI/Debug/ScriptLoadFailureWindow.cs; saves are blocked by ScriptLoadGuardSaveBlocker.cs.
+// The window is Editor/UI/Debug/ScriptLoadGuardFailureWindow.cs; saves are blocked by ScriptLoadGuardSaveBlocker.cs.
 // ============================================================================
 //
 // ScriptLoadGuard (this file)

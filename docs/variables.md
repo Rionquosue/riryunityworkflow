@@ -95,7 +95,7 @@ Until the editor quits; survives script reloads.
 | `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Scene`, `Avatar` (hierarchy path), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order). Set by Set as entry state; replayed in Play Mode once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state. | `VRChat/MenuTool/MenuToolEntryState.cs`, `VRChat/MenuTool/GestureManager/GestureManagerEntryState.cs` |
 | `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved. | `VRChat/MenuTool/MenuToolAvatarKeys.cs` |
 | `RiryTools.RefreshScripts.Reopen` | JSON of the RiryTools windows to reopen after **Refresh Scripts** reloads scripts (assembly-qualified type names, positions); erased once read. | `Utilities/RefreshScripts.cs` |
-| `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Debug/ScriptLoadFailureWindow.cs` |
+| `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Debug/ScriptLoadGuardFailureWindow.cs` |
 | `RiryTools.StopAutoGame.FocusedWindows` | Comma-separated instance IDs of the windows focused when Play Mode started. | `Utilities/StopAutoGame.cs` |
 | `RiryTools.StopAutoGame.GameViewWasOpen` | Bool: a Game view existed before Play Mode. | `Utilities/StopAutoGame.cs` |
 | `RiryTools.StopAutoGame.Missing.<what>` | Bool: the warning about a reflection lookup this Unity version lacks was already logged this session. | `Utilities/StopAutoGame.cs` |

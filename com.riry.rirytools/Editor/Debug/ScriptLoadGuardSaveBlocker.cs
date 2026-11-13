@@ -24,7 +24,7 @@ namespace Riry.RiryTools.Editor
                 }
                 RiryLog.Error(RiryLog.ScriptLoadGuard, "SCRIPT CAUSING FAILED LOAD: saving " + path +
                     " was blocked because it did not load correctly; the file on disk was kept.", AssetDatabase.LoadMainAssetAtPath(path));
-                EditorApplication.delayCall += ScriptLoadFailureWindow.Open;
+                EditorApplication.delayCall += ScriptLoadGuardFailureWindow.Open;
             }
             return allowed.ToArray();
         }

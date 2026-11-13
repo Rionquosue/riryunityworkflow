@@ -183,7 +183,7 @@ com.riry.rirytools/
     │   │   ├── MenuMockupNameWindow.cs
     │   │   ├── MenuMockupPreview.cs
     │   │   ├── MenuMockupTextWindow.cs
-    │   │   └── ScriptLoadFailureWindow.cs
+    │   │   └── ScriptLoadGuardFailureWindow.cs
     │   ├── GuidTools/
     │   │   ├── GuidToolBrokenReferenceWindow.cs
     │   │   ├── GuidToolBrokenReferenceWindow.UI.cs

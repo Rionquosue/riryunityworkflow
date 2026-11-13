@@ -7,15 +7,15 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>A modal window that keeps the editor unusable until the failed load is dealt with.</summary>
-    internal sealed class ScriptLoadFailureWindow : EditorWindow
+    internal sealed class ScriptLoadGuardFailureWindow : EditorWindow
     {
         private Action pending;
         private Vector2 scroll;
 
         internal static void Open()
         {
-            if (ScriptLoadGuard.Guarded().Count == 0 || HasOpenInstances<ScriptLoadFailureWindow>()) return;
-            ScriptLoadFailureWindow window = CreateInstance<ScriptLoadFailureWindow>();
+            if (ScriptLoadGuard.Guarded().Count == 0 || HasOpenInstances<ScriptLoadGuardFailureWindow>()) return;
+            ScriptLoadGuardFailureWindow window = CreateInstance<ScriptLoadGuardFailureWindow>();
             window.titleContent = new GUIContent("SCRIPT CAUSING FAILED LOAD");
             window.minSize = new Vector2(520f, 360f);
             window.ShowModalUtility();
@@ -98,7 +98,7 @@ namespace Riry.RiryTools.Editor
 // Script Load Guard (a Debug tool): the logic is in Editor/Debug/ScriptLoadGuard.cs.
 // ============================================================================
 //
-// ScriptLoadFailureWindow (this file)
+// ScriptLoadGuardFailureWindow (this file)
 //   Open()            Shows the modal window while any file is blocked.
 //   OnGUI()           Title, counts, suspected script, errors, and the four buttons.
 //   Finish(action)    Closes the window, then runs the chosen action.

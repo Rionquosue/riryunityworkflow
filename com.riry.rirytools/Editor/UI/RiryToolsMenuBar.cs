@@ -232,7 +232,7 @@ namespace Riry.RiryTools.Editor
 //
 // OTHER UI OUTSIDE MENUS
 //   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/AnimatorTools/CleanAnimationKeysButton.cs)
-//   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadFailureWindow.cs
+//   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadGuardFailureWindow.cs
 //   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs,
 //                                                      its Bezier tab Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.
