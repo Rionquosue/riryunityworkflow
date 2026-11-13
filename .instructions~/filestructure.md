@@ -13,7 +13,7 @@
 
 1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager). Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tool lives entirely in `Editor/VRChat/`).
 2. **Logic folders.** A tool's logic is in its own folder, named after the tool (`AutoSync/`, `AvatarMigrator/`, `BlendshapeSync/`, `GuidTools/`, `IconCap/`, `ImportPresets/`, `MenuTool/`, `ConstraintTools/`).
-3. **Category folders.** A tool that is a single script with a single job does not get its own folder. It goes in a category folder: `Debug/` (debugging aids), `Utilities/` (general helpers) or `AnimatorTools/`.
+3. **Category folders.** A small tool (a single script with a single job) does not get its own folder. It goes in a category folder: `Debug/` (debugging aids), `Utilities/` (general helpers) or `AnimatorTools/`. A tool the owner places in a category keeps all its files there, even when it has several (Menu Mockup in `Debug/`, Attach To in `Utilities/`).
 4. **UI folders.** Every file that draws UI is in its assembly's `UI/` folder, in a subfolder with the same name as the tool's logic or category folder (`UI/AutoSync/`, `UI/Debug/`, `UI/Utilities/`). Main Menu, the Tools menu bar and the right click menu (and the VRChat assembly's menu entries) sit directly in `UI/` so they are easy to find and edit.
 5. **Components.** Code reused by several tools, or by several subtools of one tool, goes in that assembly's `Components/` folder. Shared drawing code goes in `UI/Components/`.
 6. **One job per script.** Each script does one job, so no script becomes too large to maintain. Example: a tool that enumerates the avatar hierarchy into a searchable index, then applies changes based on a search of that index, has one script for the index and search, and another for applying the changes.
@@ -50,7 +50,7 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 - **Main Menu:** `UI/RiryToolsMainMenu.cs`. Hosts each tool's window in a tab. VRChat tools are handed to it by `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Tools > RiryTools menu:** `UI/RiryToolsMenuBar.cs`; the VRChat entries are in `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Right click menus (Hierarchy, Project):** `UI/RiryToolsRightClickMenu.cs`.
-- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/RiryToolGUI.cs` (shared drawing and Undo for window settings).
+- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources and generated objects, shared by Train, Bezier and Insertable prop).
 - **A tool:** its logic folder and its `UI/<folder>/` window, per the table above.
 
 ## Script locations
