@@ -16,6 +16,8 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class RefreshScripts
     {
+        // The name on the Tools menu entry and the Main Menu's button.
+        internal const string DisplayName = "Refresh Scripts";
         private const string Key = "RiryTools.RefreshScripts.Reopen";
 
         [Serializable]
@@ -74,3 +76,20 @@ namespace Riry.RiryTools.Editor
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Refresh Scripts
+// The menu entry, Tools > RiryTools > Refresh Scripts, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's Tools tab
+// has the same button. Both use DisplayName and call Run().
+// ============================================================================
+//
+// RefreshScripts (this file)
+//   DisplayName          "Refresh Scripts": the menu entry's and the Main Menu button's name.
+//   Key                  SessionState RiryTools.RefreshScripts.Reopen: the windows to reopen after the reload (Reopen as JSON).
+//   Reopen               Types (assembly-qualified names) and Positions of the windows that were open.
+//   Run()                Records and closes the open RiryTools windows, imports changed files (AssetDatabase.Refresh) and
+//                        requests a script reload.
+//   OpenWindows()        RiryTools windows shown on screen (namespace Riry.RiryTools); windows hosted unseen in the Main
+//                        Menu have no host view (m_Parent) and are skipped.
+//   RefreshScripts()     [InitializeOnLoad] After the reload, reopens the recorded windows (ReopenWindows) on the next
+//                        editor update. A window whose type no longer exists (renamed or removed) is skipped.

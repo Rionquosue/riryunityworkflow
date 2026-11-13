@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
     /// Target avatar at the top, then a button per listed bone the avatar has, then Add bone.
     /// Clicking a bone attaches the objects selected when the popup opened, then closes it.
     /// </summary>
-    internal sealed class AvatarAttachWindow : EditorWindow
+    internal sealed class AttachToWindow : EditorWindow
     {
         [SerializeField] private GameObject avatar;
         [SerializeField] private List<Transform> objects = new List<Transform>();
@@ -22,7 +22,7 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
-            var window = GetWindow<AvatarAttachWindow>(true, AttachTo.UndoName);
+            var window = GetWindow<AttachToWindow>(true, AttachTo.UndoName);
             window.objects = AttachTo.Selected();
             window.avatar = AttachToAvatarTracker.LastAvatar;
             window.bones = null;
@@ -103,7 +103,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Attach To popup
 // ============================================================================
 //
-// AvatarAttachWindow       Utility window "Attach To", opened by Open() from GameObject/RiryTools/Attach To.
+// AttachToWindow       Utility window "Attach To", opened by Open() from GameObject/RiryTools/Attach To.
 //   avatar             [SerializeField] Target avatar: set to AttachToAvatarTracker.LastAvatar on open; any scene GameObject.
 //   objects            [SerializeField] The top-level scene objects selected when it opened; the ones attached.
 //   bones / bonesFor   AttachToBones.Find's result and the avatar it was found for; cleared when the hierarchy changes.

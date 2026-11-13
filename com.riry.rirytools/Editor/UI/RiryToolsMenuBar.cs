@@ -36,7 +36,7 @@ namespace Riry.RiryTools.Editor
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
         private const string FindNullReferencesMenu = "Tools/RiryTools/Find Null references";
-        private const string RefreshScriptsMenu = "Tools/RiryTools/Refresh Scripts";
+        private const string RefreshScriptsMenu = "Tools/RiryTools/" + RefreshScripts.DisplayName;
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
         private const string ScriptLoadGuardMenu = "Tools/RiryTools/Script Load Guard";
         private const string Documentation = "Tools/RiryTools/Documentation";
@@ -214,7 +214,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/Debug/FindNullReferencesWindow.cs)
 //   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)
-//   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/StopAutoGame.cs)
+//   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/Utilities/StopAutoGame.cs)
 //   Tools/RiryTools/Script Load Guard (2061)  [check mark] -> ScriptLoadGuard.Enabled (Editor/Debug/ScriptLoadGuard.cs)
 //   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/Debug/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/MenuMockupWindows.cs)
 //   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuToolWindow.cs, entry in

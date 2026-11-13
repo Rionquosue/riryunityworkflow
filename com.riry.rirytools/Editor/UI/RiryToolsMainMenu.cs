@@ -197,7 +197,7 @@ namespace Riry.RiryTools.Editor
                     }
                     if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
                     // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
-                    if (GUILayout.Button("Refresh Scripts", GUILayout.Height(28f))) RefreshScripts.Run();
+                    if (GUILayout.Button(RefreshScripts.DisplayName, GUILayout.Height(28f))) RefreshScripts.Run();
                     EditorGUILayout.Space(4f);
                     // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
                     bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",

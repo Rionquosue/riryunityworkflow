@@ -19,11 +19,11 @@ Example:
 
 | Name | Use | Scripts |
 |---|---|---|
-| `RiryTools.AttachTo.AddedBones` | Bones the user added with **Add bone**, separated by commas. | `AttachTo.cs` |
+| `RiryTools.AttachTo.AddedBones` | Bones the user added with **Add bone**, separated by commas. | `Utilities/AttachTo.cs` |
 | `RiryTools.AutoSync.Enabled` | Turns AutoSync on or off for the project (the **Sync** toggle). | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryTools.AutoSync.Remote` | The Git remote AutoSync pushes to. | `AutoSync/AutoSyncGitRemotes.cs` |
 | `RiryTools.BetterFbx.BlenderPath` | Path to the Blender executable used by the Better FBX import preset. Empty means it's detected automatically. | `ImportPresets/ImportPresetBetterFBX.cs` |
-| `RiryTools.StopAutoGame.Enabled` | Turns Stop Auto Game on or off. | `StopAutoGame.cs`, `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
+| `RiryTools.StopAutoGame.Enabled` | Turns Stop Auto Game on or off. | `Utilities/StopAutoGame.cs`, `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 
 ## Naming rules
 
@@ -50,6 +50,7 @@ Example:
   - Menu Mockup
   - Menu Tool
     - Tabs: Parameter budget and Menu manager
+  - Refresh Scripts
   - Stop Auto Game
 
   File, folder and document names follow them per ./instructions~ files.
@@ -63,12 +64,12 @@ Per user, shared by every project.
 | Name | Use | Scripts |
 |---|---|---|
 | `com.vrcfury.parameterCompressor` | VRCFury's own Parameter Compressor setting (int: 0 Compress, 1 Ask, 2 Fail; unset means Compress). Menu Tool reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset). | `VRChat/MenuTool/MenuToolBudget.cs` |
-| `RiryTools.AttachTo.AddedBones` | Bones added with **Add bone** (string of HumanBodyBones names, comma separated; default `""`), listed after `AttachTo.CommonBones`. **Remove** takes one off. Read through `AttachTo.AddedBonesKey`. | `AttachTo.cs` |
+| `RiryTools.AttachTo.AddedBones` | Bones added with **Add bone** (string of HumanBodyBones names, comma separated; default `""`), listed after `AttachTo.CommonBones`. **Remove** takes one off. Read through `AttachTo.AddedBonesKey`. | `Utilities/AttachTo.cs` |
 | `RiryTools.AvatarMigrator.Settings` | Avatar Migration Assistant settings as JSON: per-entry options, sub-options, ignore children and migrated folder. Unset means `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty. | `AvatarMigrator/AvatarMigratorSettings.cs` |
 | `RiryTools.BetterFbx.BlenderPath` | Path to the Blender executable for Better FBX (string; `""` means detect). Read through `ImportPresetBetterFBX.BlenderPath`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
 | `RiryTools.BetterFbx.Options` | Better FBX export options (string; default `""`). Read through `ImportPresetBetterFBX.Options`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
 | `RiryTools.ScriptLoadGuard.Enabled` | Turns Script Load Guard on or off (bool; default `true`). Read through `ScriptLoadGuard.Enabled`. | `Debug/ScriptLoadGuard.cs`, `UI/RiryToolsMenuBar.cs` |
-| `RiryTools.StopAutoGame.Enabled` | Turns Stop Auto Game on or off (bool; default `true`). Read through `StopAutoGame.Enabled`. | `StopAutoGame.cs`, `UI/RiryToolsMainMenu.cs`, `UI/RiryToolsMenuBar.cs` |
+| `RiryTools.StopAutoGame.Enabled` | Turns Stop Auto Game on or off (bool; default `true`). Read through `StopAutoGame.Enabled`. | `Utilities/StopAutoGame.cs`, `UI/RiryToolsMainMenu.cs`, `UI/RiryToolsMenuBar.cs` |
 
 ### EditorUserSettings
 
@@ -88,15 +89,16 @@ Until the editor quits; survives script reloads.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `RiryTools.AttachTo.LastAvatar` | Instance ID of the last avatar selected in the Hierarchy (VRCAvatarDescriptor, else humanoid Animator); fills **Target avatar**. | `AttachTo.cs`, `UI/AvatarAttachWindow.cs` |
+| `RiryTools.AttachTo.LastAvatar` | Instance ID of the last avatar selected in the Hierarchy (VRCAvatarDescriptor, else humanoid Animator); fills **Target avatar**. | `Utilities/AttachToAvatarTracker.cs`, `UI/Utilities/AttachToWindow.cs` |
 | `RiryTools.AutoSync.LargeFileNoticeShown` | Remote URLs, one per line, whose **Push Held** notice was shown this session. | `AutoSync/AutoSync.cs` |
 | `RiryTools.AutoSync.Pending` | Saves not yet committed when scripts reloaded: one save per line, title then paths, tab-separated. | `AutoSync/AutoSync.cs` |
 | `RiryTools.MenuTool.EntryState` | `MenuToolEntryState` JSON: `Scene`, `Avatar` (hierarchy path), `Menu` (submenu path), `Writes` (`Name`, `Value`, in order). Set by Set as entry state; replayed in Play Mode once Gesture Manager has set up that avatar, one write per frame, then the submenu opened; erased by Reset entry state. | `VRChat/MenuTool/MenuToolEntryState.cs`, `VRChat/MenuTool/GestureManager/GestureManagerEntryState.cs` |
 | `RiryTools.MenuTool.UnsavedAvatars` | `<instance ID>=<key>` lines: keys of avatars in scenes not saved yet; moved into `avatars.json` when the scene is saved. | `VRChat/MenuTool/MenuToolPlan.cs` |
+| `RiryTools.RefreshScripts.Reopen` | JSON of the RiryTools windows to reopen after **Refresh Scripts** reloads scripts (assembly-qualified type names, positions); erased once read. | `Utilities/RefreshScripts.cs` |
 | `RiryTools.ScriptLoadGuard.Guarded` | Newline-separated asset paths Script Load Guard is guarding. | `Debug/ScriptLoadGuard.cs`, `UI/Debug/ScriptLoadFailureWindow.cs` |
-| `RiryTools.StopAutoGame.FocusedWindows` | Comma-separated instance IDs of the windows focused when Play Mode started. | `StopAutoGame.cs` |
-| `RiryTools.StopAutoGame.GameViewWasOpen` | Bool: a Game view existed before Play Mode. | `StopAutoGame.cs` |
-| `RiryTools.StopAutoGame.Missing.<what>` | Bool: the warning about a reflection lookup this Unity version lacks was already logged this session. | `StopAutoGame.cs` |
+| `RiryTools.StopAutoGame.FocusedWindows` | Comma-separated instance IDs of the windows focused when Play Mode started. | `Utilities/StopAutoGame.cs` |
+| `RiryTools.StopAutoGame.GameViewWasOpen` | Bool: a Game view existed before Play Mode. | `Utilities/StopAutoGame.cs` |
+| `RiryTools.StopAutoGame.Missing.<what>` | Bool: the warning about a reflection lookup this Unity version lacks was already logged this session. | `Utilities/StopAutoGame.cs` |
 | `RiryTools.UnpackNoPackage` | Bool: the "package could not be located" warning was already logged this session. | `Components/RiryToolsProjectFolder.cs` |
 | `RiryTools.UnpackProblem.<message>` | Bool: this project folder copy error was already logged this session. | `Components/RiryToolsProjectFolder.cs` |
 
@@ -259,17 +261,17 @@ Moving or renaming a file must move its `.meta` with it.
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `RiryToolsProjectFolder.SourceFolderName` | `ProjectFolder~`: package folder unpacked into `Assets/RiryTools`. | `Components/RiryToolsProjectFolder.cs` |
 | Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTrainWindow.UI.cs`, `VRChat/UI/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuToolWindow.cs` |
-| `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `StopAutoGame.cs` |
+| `StopAutoGame.HandleDelayMs` | `100`: delay after Play Mode starts before focus is restored. | `Utilities/StopAutoGame.cs` |
 
 ### Attach To
 
 | Name | Use | Scripts |
 |---|---|---|
-| `AttachTo.CommonBones` | Head, Chest, Hips, Left/Right Hand, Left/Right Foot, Left/Right Upper Leg: bones listed before any added with **Add bone**. | `AttachTo.cs` |
-| `AttachTo.DialogNames` | `10`: names a dialog lists before "and n more". | `AttachTo.cs` |
-| `AttachTo.UndoName` | `Attach To`: popup title; Undo group `Attach To <bone>`. | `AttachTo.cs`, `UI/AvatarAttachWindow.cs` |
-| `AttachToBones.CentreNames` / `SidedNames` | e.g. `chest`, `head`, `hips`/`pelvis`; `hand`/`wrist`, `upperleg`/`thigh`, `foot`: name matching from a name without its side (`L`, `R`, `Left`, `Right`) to its bone. | `AttachTo.cs` |
-| `AttachToBones.IgnoredParts` | `j`, `bip`, `c`, `def`, `mixamorig`, `bone`: name parts dropped before name matching. | `AttachTo.cs` |
+| `AttachTo.CommonBones` | Head, Chest, Hips, Left/Right Hand, Left/Right Foot, Left/Right Upper Leg: bones listed before any added with **Add bone**. | `Utilities/AttachTo.cs` |
+| `AttachTo.DialogNames` | `10`: names a dialog lists before "and n more". | `Utilities/AttachTo.cs` |
+| `AttachTo.UndoName` | `Attach To`: popup title; Undo group `Attach To <bone>`. | `Utilities/AttachTo.cs`, `UI/Utilities/AttachToWindow.cs` |
+| `AttachToBones.CentreNames` / `SidedNames` | e.g. `chest`, `head`, `hips`/`pelvis`; `hand`/`wrist`, `upperleg`/`thigh`, `foot`: name matching from a name without its side (`L`, `R`, `Left`, `Right`) to its bone. | `Utilities/AttachToBones.cs` |
+| `AttachToBones.IgnoredParts` | `j`, `bip`, `c`, `def`, `mixamorig`, `bone`: name parts dropped before name matching. | `Utilities/AttachToBones.cs` |
 
 ### Avatar Migration Assistant
 
@@ -378,8 +380,7 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window: a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Refresh Scripts and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab). | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `Tools/RiryTools/Menu Mockup` | (2065) Opens the Edit and Components windows. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Menu Tool` | (2066) Written `M&enu Tool` so its menu key is E: the Menu Tool window (the Main Menu's Menu Tool tab shows its Parameter budget; its Menu manager opens this window). Without the VRChat SDK, the **VRCSDK not found** popup. Path is `RiryToolsMenuBar.MenuTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Tools/RiryTools/Refresh Scripts` | (2058) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `RefreshScripts.cs` |
-| `RiryTools.RefreshScripts.Reopen` | SessionState: JSON of the windows to reopen after the reload (type names, positions); erased once read. | `RefreshScripts.cs` |
+| `Tools/RiryTools/Refresh Scripts` | (2058) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs`, `Utilities/RefreshScripts.cs` |
 | `Tools/RiryTools/Script Load Guard` | (2061) Turns Script Load Guard on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Stop Auto Game` | (2060) Turns Stop Auto Game on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
 

@@ -209,6 +209,8 @@ com.riry.rirytools/
     │   └── RiryToolsRightClickMenu.cs
     ├── Utilities/
     │   ├── AttachTo.cs
+    │   ├── AttachToAvatarTracker.cs
+    │   ├── AttachToBones.cs
     │   ├── RefreshScripts.cs
     │   └── StopAutoGame.cs
     ├── VRChat/
