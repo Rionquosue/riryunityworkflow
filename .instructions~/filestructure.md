@@ -244,18 +244,16 @@ com.riry.rirytools/
     │   ├── UI/
     │   │   ├── AnimatorTools/
     │   │   │   └── BehaviourFindReplaceWindow.cs
-    │   │   ├── ConstraintTools/
-    │   │   │   ├── ConstraintBezierWindow.UI.cs
-    │   │   │   ├── ConstraintBezierWindow.cs
-    │   │   │   ├── ConstraintToolWindow.cs
-    │   │   │   ├── ConstraintTrainWindow.UI.cs
-    │   │   │   ├── ConstraintTrainWindow.cs
-    │   │   │   ├── InsertablePropWindow.UI.cs
-    │   │   │   └── InsertablePropWindow.cs
-    │   │   ├── MenuTool/
-    │   │   │   ├── MenuToolAddMenuDialog.cs
-    │   │   │   ├── MenuToolTrees.cs
-    │   │   │   └── MenuToolWindow.cs
+    │   │   ├── ConstraintBezierWindow.cs
+    │   │   ├── ConstraintBezierWindow.UI.cs
+    │   │   ├── ConstraintToolWindow.cs
+    │   │   ├── ConstraintTrainWindow.cs
+    │   │   ├── ConstraintTrainWindow.UI.cs
+    │   │   ├── InsertablePropWindow.cs
+    │   │   ├── InsertablePropWindow.UI.cs
+    │   │   ├── MenuToolAddMenuDialog.cs
+    │   │   ├── MenuToolTrees.cs
+    │   │   ├── MenuToolWindow.cs
     │   │   └── RiryToolsVRChatMenus.cs
     │   ├── AssemblyInfo.cs
     │   └── Riry.RiryTools.Editor.VRChat.asmdef

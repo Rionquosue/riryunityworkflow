@@ -388,7 +388,7 @@ One entry or submenu per tool.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `Assets/RiryTools/Animator Tools/Find And Replace` | (2006) The Find and Replace popup with the selected animator controller; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Assets/RiryTools/Animator Tools/Find and Replace` | (2006) The Find and Replace popup with the selected animator controller; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Assets/RiryTools/Clean Animation Keys` | (2005) Clean Animation Keys on the selected clips. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Extract Animation` | (2003) The Extract Animation window with the selected model; enabled only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Regenerate GUID` | (2000) Regenerates the selected assets' GUIDs. | `UI/RiryToolsRightClickMenu.cs` |
@@ -402,7 +402,7 @@ Also in the GameObject menu.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `GameObject/RiryTools/Animator tools/Find And Replace` | (22) The Find and Replace popup with the selected scene object; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/Animator Tools/Find and Replace` | (22) The Find and Replace popup with the selected scene object; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Attach To` | (19) The Attach To popup; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs` |
 | `GameObject/RiryTools/Constraint Tool/Bezier` | (21) The Bezier tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintBezierHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Constraint Tool/Train` | (20) The Train tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintTrainHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |

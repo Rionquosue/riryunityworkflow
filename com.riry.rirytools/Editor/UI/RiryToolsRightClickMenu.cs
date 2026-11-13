@@ -36,8 +36,8 @@ namespace Riry.RiryTools.Editor
         // ---- VRChat tools (also used by RiryToolsVRChatMenus.cs) ------------
         internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Tool/Train";
         internal const string ConstraintBezierHierarchy = "GameObject/RiryTools/Constraint Tool/Bezier";
-        internal const string FindReplaceHierarchy = "GameObject/RiryTools/Animator tools/Find And Replace";
-        internal const string FindReplaceAssets = "Assets/RiryTools/Animator Tools/Find And Replace";
+        internal const string FindReplaceHierarchy = "GameObject/RiryTools/" + RiryToolsMenuBar.FindReplaceLabel;
+        internal const string FindReplaceAssets = "Assets/RiryTools/" + RiryToolsMenuBar.FindReplaceLabel;
 
         // =====================================================================
         // Project window right-click
@@ -87,7 +87,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(CleanAnimationKeysAssets, true)]
         private static bool CleanAnimationKeysAssetsValid() { return Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0; }
 
-        // Animator Tools/Find And Replace is 2006 (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
+        // Animator Tools/Find and Replace is 2006 (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
 
         // =====================================================================
         // Hierarchy right-click (also in the GameObject menu)
@@ -99,7 +99,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(AttachToHierarchy, true)]
         private static bool AttachToValid() { return AttachTo.Selected().Count > 0; }
 
-        // Constraint Tool/Train is 20, Constraint Tool/Bezier 21 and Animator tools/Find And Replace 22
+        // Constraint Tool/Train is 20, Constraint Tool/Bezier 21 and Animator Tools/Find and Replace 22
         // (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
 
 #if !RIRYTOOLS_VRC_CONSTRAINTS
@@ -138,7 +138,7 @@ namespace Riry.RiryTools.Editor
 //                                                      enabled only for a model with embedded animations
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidToolReferenceRepair.RepairSelected -> GuidToolBrokenReferenceWindow (Editor/UI/GuidToolBrokenReferenceWindow.UI.cs)
 //   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
-//   Assets/RiryTools/Animator Tools/Find And Replace (2006) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
+//   Assets/RiryTools/Animator Tools/Find and Replace (2006) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
 //
 // HIERARCHY RIGHT-CLICK (also in the GameObject menu)
@@ -147,5 +147,5 @@ namespace Riry.RiryTools.Editor
 //   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy (entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs)
 //   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy (same file); both use the selection
 //                                                      as the chain; without the VRChat SDK -> "VRCSDK not found" popup (this file)
-//   GameObject/RiryTools/Animator tools/Find And Replace (22) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
+//   GameObject/RiryTools/Animator Tools/Find and Replace (22) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)

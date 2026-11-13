@@ -54,7 +54,9 @@ namespace Riry.RiryTools.Editor
         internal const string ConstraintTool = "Tools/RiryTools/Constraint\u00A0&Tool";
         // "&e" makes E its menu key (M is Main Menu's and Menu Mockup's).
         internal const string MenuTool = "Tools/RiryTools/M&enu Tool";
-        internal const string FindReplaceTools = "Tools/RiryTools/Animator Tools/Find and Replace";
+        // Find and Replace's place under RiryTools, the same in the Tools menu and the Project and Hierarchy right-click menus.
+        internal const string FindReplaceLabel = "Animator Tools/Find and Replace";
+        internal const string FindReplaceTools = "Tools/RiryTools/" + FindReplaceLabel;
 
         // =====================================================================
         // Tools dropdown
