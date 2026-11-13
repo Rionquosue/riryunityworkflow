@@ -7,18 +7,6 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// A tool window that draws parts of itself outside IMGUI (Menu Tool's radial preview): hosted in a tab, it is told
-    /// the window it is actually drawn in.
-    /// </summary>
-    internal interface IRiryHostedTool
-    {
-        EditorWindow Surface { set; }
-
-        /// <summary>Another tab is shown: take anything drawn outside IMGUI off the window.</summary>
-        void NotDrawn();
-    }
-
-    /// <summary>
     /// Main Menu: one dockable RiryTools window with a tab per tool, in menu order.
     /// Each tab draws the tool's own window, hosted unseen, so the tools work there as
     /// they do on their own; their own menu entries are unchanged. Documentation is a
@@ -408,7 +396,7 @@ namespace Riry.RiryTools.Editor
 //   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, Import Presets,
 //                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
-//   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the
+//   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the
 //                            hosted MenuToolWindow (MenuToolWindow.CreateHosted). It shows the Parameter budget, drawn
 //                            outside the tab scroll view (the budget scrolls itself); its Menu manager tab opens the Menu
 //                            Tool window.
@@ -421,8 +409,8 @@ namespace Riry.RiryTools.Editor
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
 //   ConstraintTabs           Constraint Tool's sub-tabs (constraintTab, [SerializeField]): Train, Bezier and Insertable prop,
-//                            hosted under those names, like its own window (Editor/VRChat/ConstraintToolWindow.cs).
-//   CreateConstraintTrain / CreateConstraintBezier / CreateConstraintInsertable  Set by Editor/VRChat/RiryToolsVRChatMenus.cs; null without the VRChat SDK
+//                            hosted under those names, like its own window (Editor/VRChat/UI/ConstraintToolWindow.cs).
+//   CreateConstraintTrain / CreateConstraintBezier / CreateConstraintInsertable  Set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK
 //                            (the tab says so).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.

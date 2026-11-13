@@ -174,6 +174,7 @@ com.riry.rirytools/
     │   │   ├── BlendshapeSyncWindow.cs
     │   │   └── BlendshapeSyncWindow.UI.cs
     │   ├── Components/
+    │   │   ├── IRiryHostedTool.cs
     │   │   └── RiryToolGUI.cs
     │   ├── Debug/
     │   │   ├── FindNullReferencesWindow.cs
