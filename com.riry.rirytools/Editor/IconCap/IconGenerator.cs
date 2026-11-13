@@ -11,7 +11,7 @@ namespace Riry.RiryTools.Editor
     /// or its Template's). Each output is named prefix + source name + suffix and saved
     /// beside the asset. Outputs are followed by GUID, so when a source is renamed its
     /// output is renamed to match, at the next Regenerate only.
-    /// Edited in IconCap's Icon Generator rollout (Editor/UI/IconCapWindow.cs).
+    /// Edited in IconCap's Icon Generator rollout (Editor/UI/IconCap/IconCapWindow.UI.cs).
     /// </summary>
     public sealed class IconGenerator : ScriptableObject
     {
@@ -142,7 +142,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Icon Generator
 // ============================================================================
 //
-// IconGenerator (this file): the asset, edited in IconCap's Icon Generator rollout (Editor/UI/IconCapWindow.cs)
+// IconGenerator (this file): the asset, edited in IconCap's Icon Generator rollout (Editor/UI/IconCap/IconCapWindow.UI.cs)
 //   Sources            Source textures, each with the GUID of its Output.
 //   Prefix / Suffix    Output name: prefix + source name + suffix + .png, beside the asset.
 //   Template           Another generator whose effect stack is used instead of Effects.

@@ -44,5 +44,3 @@ example after restoring an old copy of a file.
 
 **Delete GUID Reference Cache** in the GUID Tools window clears the speed-up cache in `Library`. Logs are
 in `Logs/RiryTools/GuidTools`.
-
-Reference: [design/guid-tools.md](../design/guid-tools.md)

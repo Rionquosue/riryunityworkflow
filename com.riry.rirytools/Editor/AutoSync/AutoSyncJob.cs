@@ -99,7 +99,7 @@ namespace Riry.RiryTools.Editor
             var list = new List<string> { "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--" };
             list.AddRange(paths);
             var files = new List<string>();
-            foreach (string file in Check(Run(list.ToArray()), "Listing the saved files").Split('\0'))
+            foreach (string file in Run(list.ToArray()).RequireSuccess("Listing the saved files").Split('\0'))
             {
                 if (file.Length > 0 && !files.Contains(file) && File.Exists(Path.Combine(ProjectRoot, file))) files.Add(file);
             }
@@ -107,7 +107,7 @@ namespace Riry.RiryTools.Editor
 
             var add = new List<string> { "add", "--" };
             add.AddRange(files);
-            Check(Run(add.ToArray()), "Staging the saved files");
+            Run(add.ToArray()).RequireSuccess("Staging the saved files");
             var diff = new List<string> { "diff", "--cached", "--quiet", "--" };
             diff.AddRange(files);
             if (Run(diff.ToArray()).Succeeded) return false;
@@ -115,7 +115,7 @@ namespace Riry.RiryTools.Editor
             // With paths, git commit takes only those paths, whatever else is staged.
             var commit = new List<string> { "commit", "--quiet", "-m", save.Title, "--" };
             commit.AddRange(files);
-            Check(Run(commit.ToArray()), "Committing " + save.Title);
+            Run(commit.ToArray()).RequireSuccess("Committing " + save.Title);
             return true;
         }
 
@@ -136,7 +136,7 @@ namespace Riry.RiryTools.Editor
             string url = AutoSyncGitRemotes.Url(ProjectRoot, Remote);
             if (AutoSyncGitRemotes.IsHttps(url))
             {
-                List<string> large = GitLargeFiles.Unpushed(ProjectRoot, Remote);
+                List<string> large = AutoSyncGitLargeFiles.Unpushed(ProjectRoot, Remote);
                 if (large.Count > 0)
                 {
                     outcome.Held = new Held { Remote = Remote, Url = url, Files = large };
@@ -147,23 +147,17 @@ namespace Riry.RiryTools.Editor
             if (!Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded) push.Add("--set-upstream");
             push.Add(Remote);
             push.Add(branch);
-            Check(AutoSyncGitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()), "Pushing " + branch + " to " + Remote);
+            GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()).RequireSuccess("Pushing " + branch + " to " + Remote);
             outcome.PushedTo = Remote + "/" + branch;
         }
 
-        private AutoSyncGitRunner.Result Run(params string[] arguments)
+        private GitRunner.Result Run(params string[] arguments)
         {
             // Objects and refs reach the disk before git reports success, so a
             // power loss right after a commit keeps it (Git 2.36+; older Git ignores this).
             var all = new List<string> { "-c", "core.fsync=committed" };
             all.AddRange(arguments);
-            return AutoSyncGitRunner.Run(ProjectRoot, environment, TimeoutMs, all.ToArray());
-        }
-
-        private static string Check(AutoSyncGitRunner.Result result, string action)
-        {
-            if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
-            return result.Output;
+            return GitRunner.Run(ProjectRoot, environment, TimeoutMs, all.ToArray());
         }
     }
 }

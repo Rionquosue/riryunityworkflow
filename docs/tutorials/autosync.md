@@ -54,5 +54,3 @@ saving, so the good file is not overwritten. Remove or update that script, then
 choose **Reload From Disk**. **Open Empty Scene** and **Quit Unity Without
 Saving** are the other ways out; **The File Loaded Correctly (Allow Saving)** is
 only for a false alarm.
-
-Reference: [design/autosync.md](../design/autosync.md)

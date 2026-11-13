@@ -4,37 +4,17 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>Finds bone chains and creates empty target chains for a constraint train.</summary>
+    /// <summary>
+    /// Train's chain rules: chain names, following a generated chain, and the checks before animating it. Collecting a
+    /// chain and creating one are shared with Bezier (Editor/VRChat/Components/ConstraintToolChains.cs).
+    /// </summary>
     internal static class ConstraintTrainChains
     {
         internal const string RestPrefix = "Rest_";
-        internal const string EndpointSuffix = "_End";
 
         internal static string ChainPrefix(int chain)
         {
             return "Phys" + (chain + 1) + "_";
-        }
-
-        /// <summary>Collects start..end, root first. End must be start or below it.</summary>
-        internal static bool TryCollectChain(Transform start, Transform end, List<Transform> chain,
-            out string error)
-        {
-            chain.Clear();
-            error = null;
-            if (start == null || end == null)
-            {
-                error = "Assign the start and end of the real bone chain.";
-                return false;
-            }
-            if (end != start && !end.IsChildOf(start))
-            {
-                error = "The chain end must be the start bone or one of its descendants.";
-                return false;
-            }
-            for (Transform bone = end; bone != start; bone = bone.parent) chain.Add(bone);
-            chain.Add(start);
-            chain.Reverse();
-            return true;
         }
 
         /// <summary>
@@ -98,7 +78,7 @@ namespace Riry.RiryTools.Editor
 
         private static bool IsEndpoint(Transform child, string realName)
         {
-            return child.name.EndsWith(EndpointSuffix, System.StringComparison.Ordinal) &&
+            return child.name.EndsWith(ConstraintToolChains.EndpointSuffix, System.StringComparison.Ordinal) &&
                 !child.name.EndsWith(realName, System.StringComparison.Ordinal);
         }
 
@@ -166,51 +146,6 @@ namespace Riry.RiryTools.Editor
                 if (current.GetComponent<Animator>() != null) root = current;
             }
             return root;
-        }
-
-        /// <summary>
-        /// Creates prefix+name empties that match each real bone's world pose. The
-        /// first is a sibling of the real start bone and the rest are nested, so
-        /// prefab instances only gain added objects and are never unpacked. The
-        /// endpoint repeats the offset between the last two real bones.
-        /// </summary>
-        internal static Transform CreateChain(IList<Transform> realBones, string prefix,
-            bool addEndpoint, string undoName)
-        {
-            Transform parent = realBones[0].parent;
-            // A parentless start would add a second root, which a prefab cannot hold.
-            if (parent == null)
-                throw new System.InvalidOperationException("The real chain start needs a parent.");
-            Transform previous = parent;
-            Transform first = null;
-            foreach (Transform real in realBones)
-            {
-                var created = new GameObject(prefix + real.name);
-                created.layer = real.gameObject.layer;
-                Undo.RegisterCreatedObjectUndo(created, undoName);
-                // Each parent already matches the real parent's pose, so local
-                // values reproduce the real world position, rotation and scale.
-                created.transform.SetParent(previous, false);
-                created.transform.localPosition = real.localPosition;
-                created.transform.localRotation = real.localRotation;
-                created.transform.localScale = real.localScale;
-                if (first == null) first = created.transform;
-                previous = created.transform;
-            }
-
-            if (addEndpoint && realBones.Count >= 2)
-            {
-                Transform last = realBones[realBones.Count - 1];
-                Transform beforeLast = realBones[realBones.Count - 2];
-                var endpoint = new GameObject(prefix + last.name + EndpointSuffix);
-                endpoint.layer = last.gameObject.layer;
-                Undo.RegisterCreatedObjectUndo(endpoint, undoName);
-                endpoint.transform.SetParent(previous, false);
-                endpoint.transform.position = previous.position + (last.position - beforeLast.position);
-                endpoint.transform.localRotation = Quaternion.identity;
-                endpoint.transform.localScale = Vector3.one;
-            }
-            return first;
         }
     }
 }

@@ -82,7 +82,7 @@ namespace Riry.RiryTools.Editor
             var scope = new HashSet<Transform> { bone };
             var real = new List<Transform>();
             string error;
-            if (end != null && ConstraintTrainChains.TryCollectChain(bone, end, real, out error)) scope.UnionWith(real);
+            if (end != null && ConstraintToolChains.TryCollectChain(bone, end, real, out error)) scope.UnionWith(real);
             if (holder == null) return scope;
             foreach (Transform child in holder)
             {

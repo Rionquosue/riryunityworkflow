@@ -15,7 +15,7 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>Counts of one parameter set, against VRChat's limits.</summary>
-    internal struct BudgetCount
+    internal struct MenuToolBudgetCount
     {
         internal const int MaxBits = 256;
         internal const int MaxParameters = 8192;
@@ -35,10 +35,10 @@ namespace Riry.RiryTools.Editor
             get { return MaxParameters - Total; }
         }
 
-        internal static BudgetCount Of(IEnumerable<ParamEntry> parameters)
+        internal static MenuToolBudgetCount Of(IEnumerable<MenuToolParamEntry> parameters)
         {
-            var count = new BudgetCount();
-            foreach (ParamEntry parameter in parameters.Where(p => p.Declared))
+            var count = new MenuToolBudgetCount();
+            foreach (MenuToolParamEntry parameter in parameters.Where(p => p.Declared))
             {
                 count.Total++;
                 if (parameter.Synced) count.Synced++;
@@ -48,9 +48,9 @@ namespace Riry.RiryTools.Editor
             return count;
         }
 
-        internal static BudgetCount Of(VRCExpressionParameters.Parameter[] parameters)
+        internal static MenuToolBudgetCount Of(VRCExpressionParameters.Parameter[] parameters)
         {
-            var count = new BudgetCount();
+            var count = new MenuToolBudgetCount();
             foreach (VRCExpressionParameters.Parameter parameter in parameters)
             {
                 if (parameter == null || string.IsNullOrEmpty(parameter.name) || MenuToolScanner.BuiltIn.Contains(parameter.name)) continue;
@@ -77,8 +77,8 @@ namespace Riry.RiryTools.Editor
 
         internal sealed class Result
         {
-            internal BudgetCount Off;
-            internal BudgetCount On;
+            internal MenuToolBudgetCount Off;
+            internal MenuToolBudgetCount On;
             internal bool Exact;
             // Why the exact comparison could not run, or "" when it did (or was not asked for).
             internal string Unavailable = "";
@@ -88,9 +88,9 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>The estimate from a scan: VRCFury's compressor solver on its parameters and assembled menu.</summary>
-        internal static Result Estimate(MenuScan scan)
+        internal static Result Estimate(MenuToolScan scan)
         {
-            var result = new Result { Off = BudgetCount.Of(scan.Params.Values) };
+            var result = new Result { Off = MenuToolBudgetCount.Of(scan.Params.Values) };
             result.On = result.Off;
             int max = MenuToolCompressor.MaxCost();
             if (result.Off.Bits <= max) return result;
@@ -161,8 +161,8 @@ namespace Riry.RiryTools.Editor
                     return result;
                 }
                 result.Exact = true;
-                result.Off = BudgetCount.Of(off);
-                result.On = BudgetCount.Of(on);
+                result.Off = MenuToolBudgetCount.Of(off);
+                result.On = MenuToolBudgetCount.Of(on);
                 var syncedOn = new HashSet<string>(on.Where(p => p != null && p.networkSynced).Select(p => p.name));
                 result.Compressed.AddRange(off.Where(p => p != null && p.networkSynced && !syncedOn.Contains(p.name)).Select(p => p.name));
                 RiryLog.Info(RiryLog.MenuTool, "Compression compared on two test builds of " + avatar.name + ": " + result.Off.Bits + " synced bits off, " +
@@ -241,244 +241,38 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>The synced bits under a menu entry: each parameter once.</summary>
-        internal static int Bits(MenuScan scan, MenuEntry entry)
+        internal static int Bits(MenuToolScan scan, MenuToolEntry entry)
         {
             return ParametersUnder(entry).Select(scan.Param).Where(p => p != null && p.Declared).Sum(p => p.Bits);
         }
 
         /// <summary>Synced Floats under a menu entry (each once), for its shading.</summary>
-        internal static int SyncedFloats(MenuScan scan, MenuEntry entry)
+        internal static int SyncedFloats(MenuToolScan scan, MenuToolEntry entry)
         {
             return ParametersUnder(entry).Select(scan.Param).Count(p => p != null && p.Declared && p.Synced && p.Type == ValueType.Float);
         }
 
-        internal static HashSet<string> ParametersUnder(MenuEntry entry)
+        internal static HashSet<string> ParametersUnder(MenuToolEntry entry)
         {
             var names = new HashSet<string>(entry.Parameters());
-            foreach (MenuEntry below in entry.Descendants()) names.UnionWith(below.Parameters());
+            foreach (MenuToolEntry below in entry.Descendants()) names.UnionWith(below.Parameters());
             return names;
         }
 
         /// <summary>Synced parameters no menu control uses: the "Animator only" block.</summary>
-        internal static List<ParamEntry> AnimatorOnly(MenuScan scan)
+        internal static List<MenuToolParamEntry> AnimatorOnly(MenuToolScan scan)
         {
             return scan.Params.Values.Where(p => p.Declared && p.Synced && p.UsedBy.Count == 0).OrderBy(p => p.Name).ToList();
-        }
-    }
-
-    /// <summary>
-    /// VRCFury's Parameter Compressor solver (ParameterCompressorSolverService and OptimizationDecision), run on a scan.
-    /// Over the limit, it tries sets of menu control types in turn (radial puppets; toggles; both; two- and four-axis
-    /// puppets; and wider mixes), each compressing the synced, standard-width parameters only those controls use (a
-    /// parameter used by several control types counts as the last of radial, toggle, two-axis, four-axis, button, submenu;
-    /// parameters a Parameter Driver adds to only with four-axis puppets). Compressed parameters are sent in batches through
-    /// number (8-bit) and bool slots, plus index bits, the slots widened until the bits are full. It keeps the first set
-    /// that fits, and a later one only if it at least halves the sync time.
-    /// </summary>
-    internal static class MenuToolCompressor
-    {
-        // VRCFury's editor setting (Tools > VRCFury): 0 Compress, 1 Ask, 2 Fail.
-        internal const string SettingKey = "com.vrcfury.parameterCompressor";
-        internal const int Compress = 0;
-        internal const int Fail = 2;
-        private const float BatchTime = 0.1f;
-
-        // Highest priority last: a parameter used by several control types counts as the last of them.
-        private static readonly ControlType[] Priority =
-        {
-            ControlType.RadialPuppet, ControlType.Toggle, ControlType.TwoAxisPuppet, ControlType.FourAxisPuppet, ControlType.Button, ControlType.SubMenu
-        };
-
-        private static readonly ControlType[][] Attempts =
-        {
-            new[] { ControlType.RadialPuppet },
-            new[] { ControlType.Toggle },
-            new[] { ControlType.RadialPuppet, ControlType.Toggle },
-            new[] { ControlType.TwoAxisPuppet, ControlType.FourAxisPuppet },
-            new[] { ControlType.RadialPuppet, ControlType.TwoAxisPuppet, ControlType.FourAxisPuppet },
-            new[] { ControlType.Toggle, ControlType.TwoAxisPuppet, ControlType.FourAxisPuppet },
-            new[] { ControlType.RadialPuppet, ControlType.Toggle, ControlType.TwoAxisPuppet, ControlType.FourAxisPuppet }
-        };
-
-        /// <summary>What to compress and how many slots carry it.</summary>
-        internal sealed class Decision
-        {
-            internal readonly List<ParamEntry> Compress = new List<ParamEntry>();
-            internal int NumberSlots;
-            internal int BoolSlots;
-
-            private int Numbers
-            {
-                get { return Compress.Count(p => p.Type != ValueType.Bool); }
-            }
-
-            private int Bools
-            {
-                get { return Compress.Count(p => p.Type == ValueType.Bool); }
-            }
-
-            internal int BatchCount
-            {
-                get { return Batches(NumberSlots, BoolSlots); }
-            }
-
-            internal int IndexBits
-            {
-                get { return IndexBitsFor(BatchCount); }
-            }
-
-            private int Batches(int numberSlots, int boolSlots)
-            {
-                return Math.Max(Chunks(Numbers, numberSlots), Chunks(Bools, boolSlots));
-            }
-
-            private static int Chunks(int count, int size)
-            {
-                return count == 0 || size <= 0 ? 0 : (count + size - 1) / size;
-            }
-
-            private static int IndexBitsFor(int batches)
-            {
-                int bits = 1;
-                while ((1 << bits) < batches + 1) bits++;
-                return bits;
-            }
-
-            private int Cost(int original, int numberSlots, int boolSlots)
-            {
-                return original + IndexBitsFor(Batches(numberSlots, boolSlots)) + numberSlots * 8 + boolSlots - Compress.Sum(p => p.Cost);
-            }
-
-            internal int FinalCost(int original)
-            {
-                return Cost(original, NumberSlots, BoolSlots);
-            }
-
-            // Widens the slots until the bits are full, keeping number and bool batches level.
-            internal void Optimize(int original, int max)
-            {
-                int bools = Bools, numbers = Numbers;
-                BoolSlots = bools > 0 ? 1 : 0;
-                NumberSlots = numbers > 0 ? 1 : 0;
-                while (true)
-                {
-                    if (NumberSlots < numbers && Cost(original, NumberSlots + 1, BoolSlots) <= max &&
-                        (bools == 0 || (float)NumberSlots / numbers < (float)BoolSlots / bools)) NumberSlots++;
-                    else if (BoolSlots < bools && Cost(original, NumberSlots, BoolSlots + 1) <= max) BoolSlots++;
-                    else break;
-                }
-            }
-        }
-
-        /// <summary>VRCFury's limit: the SDK's maximum cost (256), less 19 bits when DexProtect is installed.</summary>
-        internal static int MaxCost()
-        {
-            int max = VRCExpressionParameters.MAX_PARAMETER_COST;
-            // Some modified VRChat SDKs have a broken value.
-            if (max > 9999) max = 256;
-            if (AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == "DexProtectEditor")) max -= 19;
-            return max;
-        }
-
-        /// <summary>VRCFury's compressor setting (Compress unless set).</summary>
-        internal static int Setting()
-        {
-            return EditorPrefs.GetInt(SettingKey, Compress);
-        }
-
-        /// <summary>
-        /// The decision VRCFury would make for a scan over the limit, or null when even its most compression does not fit
-        /// (bestCost: the fewest bits it reaches).
-        /// </summary>
-        internal static Decision Solve(MenuScan scan, int original, out int bestCost)
-        {
-            int max = MaxCost();
-            var addDriven = new HashSet<string>(scan.Controllers.SelectMany(controller => controller.AddDriven));
-            Dictionary<string, ControlType> menuTypes = MenuTypes(scan.Root);
-            List<ParamEntry> parameters = scan.Params.Values.Where(p => p.Declared).ToList();
-            bestCost = original;
-            Decision best = null;
-            bool bestFits = false;
-            float bestTime = 0f;
-            foreach (ControlType[] allowed in Attempts)
-            {
-                var decision = new Decision();
-                foreach (ParamEntry parameter in parameters)
-                {
-                    if (!parameter.Synced || !parameter.StandardEncoding) continue;
-                    if (!menuTypes.TryGetValue(parameter.Name, out ControlType type) || !allowed.Contains(type)) continue;
-                    if (addDriven.Contains(parameter.Name) && !allowed.Contains(ControlType.FourAxisPuppet)) continue;
-                    decision.Compress.Add(parameter);
-                }
-                decision.Optimize(original, max);
-                int cost = decision.FinalCost(original);
-                float time = decision.BatchCount * BatchTime;
-                if (bestFits)
-                {
-                    // A more aggressive set only if it at least halves the sync time, and still fits.
-                    if (time > bestTime / 2f || cost > max) continue;
-                }
-                else if (cost >= bestCost) continue;
-                bestCost = cost;
-                best = decision;
-                bestFits = cost <= max;
-                bestTime = time;
-                if (bestFits && time <= 1f) break;
-            }
-            return bestFits ? best : null;
-        }
-
-        // Each parameter of the assembled menu and the control type it counts as (GetParamsUsedInMenu): a puppet's own
-        // parameter counts as a submenu, its axes as the puppet.
-        private static Dictionary<string, ControlType> MenuTypes(MenuEntry root)
-        {
-            var types = new Dictionary<string, ControlType>();
-            Action<string, ControlType> add = (name, type) =>
-            {
-                if (string.IsNullOrEmpty(name)) return;
-                if (types.TryGetValue(name, out ControlType old) && Array.IndexOf(Priority, type) < Array.IndexOf(Priority, old)) return;
-                types[name] = type;
-            };
-            foreach (MenuEntry control in root.Descendants())
-            {
-                switch (control.Type)
-                {
-                    case ControlType.RadialPuppet:
-                        add(control.Parameter, ControlType.SubMenu);
-                        add(Sub(control, 0), control.Type);
-                        break;
-                    case ControlType.Button:
-                    case ControlType.Toggle:
-                        add(control.Parameter, control.Type);
-                        break;
-                    case ControlType.FourAxisPuppet:
-                        add(control.Parameter, ControlType.SubMenu);
-                        for (int i = 0; i < 4; i++) add(Sub(control, i), control.Type);
-                        break;
-                    case ControlType.TwoAxisPuppet:
-                        add(control.Parameter, ControlType.SubMenu);
-                        for (int i = 0; i < 2; i++) add(Sub(control, i), control.Type);
-                        break;
-                    case ControlType.SubMenu:
-                        add(control.Parameter, ControlType.SubMenu);
-                        break;
-                }
-            }
-            return types;
-        }
-
-        private static string Sub(MenuEntry control, int index)
-        {
-            return index < control.SubParameters.Length ? control.SubParameters[index] : null;
         }
     }
 }
 
 // ============================================================================
 // GLOSSARY: Menu Tool budget
+// VRCFury's compressor solver is in MenuToolCompressor.cs.
 // ============================================================================
 //
-// BudgetCount                Total custom parameters, Synced, Local, synced Bits; MaxBits 256 and MaxParameters 8192
+// MenuToolBudgetCount                Total custom parameters, Synced, Local, synced Bits; MaxBits 256 and MaxParameters 8192
 //                            (VRChat's limits); BitsLeft / ParametersLeft. Of(scan params) or Of(built parameters).
 // MenuToolBudget (this file)
 //   Result                   Off, On, Exact, Unavailable, Note (VRCFury cannot fit the avatar, or is set to Fail), Compressed.
@@ -493,12 +287,3 @@ namespace Riry.RiryTools.Editor
 //                            Compressed: synced without the compressor, not synced with it.
 //                            Unavailable says why it could not run. A prefab asset is placed in the scene for it, then removed.
 //   Bits / SyncedFloats      Per menu entry (its subtree), each parameter once.
-// MenuToolCompressor         VRCFury's Parameter Compressor solver: SettingKey "com.vrcfury.parameterCompressor" (Compress 0,
-//                            Ask 1, Fail 2; Setting()), MaxCost (SDK MAX_PARAMETER_COST, 256 if broken, less 19 with
-//                            DexProtect), Attempts (control type sets, in VRCFury's order), Priority (a parameter used by several
-//                            types counts as the last), MenuTypes (GetParamsUsedInMenu), Solve (eligible: synced, standard
-//                            encoding, used by an allowed type, not Add-driven unless four-axis puppets are allowed; first set
-//                            that fits, a later one only if it halves the sync time; null when none fits). Decision: Compress,
-//                            NumberSlots, BoolSlots, BatchCount, IndexBits, FinalCost (original + index bits + 8 per number slot
-//                            + 1 per bool slot - compressed bits), Optimize (widens slots up to MaxCost, keeping batches level).
-//   AnimatorOnly             Synced parameters no menu control uses.

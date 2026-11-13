@@ -18,12 +18,6 @@ namespace Riry.RiryTools.Editor
         // Share of the way a smoothed constraint has moved when a slide step ends.
         internal const float SettledFraction = 0.99f;
 
-        /// <summary>Reach of the grabbed PhysBone from where it was picked up.</summary>
-        internal static float Reach()
-        {
-            return AnchorLength * (1f + MaxStretch);
-        }
-
         /// <summary>
         /// Seconds for VRChat's constraint smoothing to cover <paramref name="fraction"/> of the way:
         /// result = lerp(current, target, 1 - exp(-dt / s)), so the share left is exp(-t / s).
@@ -103,7 +97,7 @@ namespace Riry.RiryTools.Editor
 //
 // InsertablePropMath            Static math, no Unity objects; used by Editor/VRChat/InsertableProp*.cs.
 //   MaxStretch (5)              VRCPhysBoneBase.MAX_STRETCH in the 3.10.6 SDK.
-//   AnchorLength (1.7 m)        PhysBone root-to-end rest distance; Reach() = AnchorLength * (1 + MaxStretch), about 10 m.
+//   AnchorLength (1.7 m)        PhysBone root-to-end rest distance; with MaxStretch, a reach of about 10 m.
 //   EntryMargin (0.03 m)        Extra distance outside the opening for the entry point.
 //   SettledFraction (0.99)      Share of the way a smoothed step covers before the next one starts.
 //   SmoothedDuration(s, f)      Time for constraint smoothing s to cover share f: -s * ln(1 - f).

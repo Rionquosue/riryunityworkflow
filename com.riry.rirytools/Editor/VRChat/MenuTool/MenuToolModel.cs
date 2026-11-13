@@ -7,7 +7,7 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>Which authoring system a menu entry or parameter comes from.</summary>
-    internal enum MenuOrigin
+    internal enum MenuToolOrigin
     {
         Native,
         VRCFury,
@@ -19,7 +19,7 @@ namespace Riry.RiryTools.Editor
     /// built: the descriptor's menu, plus what Modular Avatar and VRCFury add, after VRCFury's own move, reorder and icon
     /// rules. Built by MenuToolScanner; nothing in it is saved.
     /// </summary>
-    internal sealed class MenuEntry
+    internal sealed class MenuToolEntry
     {
         internal string Name = "";
         internal VRCExpressionsMenu.Control.ControlType Type = VRCExpressionsMenu.Control.ControlType.SubMenu;
@@ -28,10 +28,10 @@ namespace Riry.RiryTools.Editor
         internal float Value = 1f;
         internal string[] SubParameters = new string[0];
         internal VRCExpressionsMenu.Control.Label[] Labels = new VRCExpressionsMenu.Control.Label[0];
-        internal List<MenuEntry> Children = new List<MenuEntry>();
-        internal MenuEntry Parent;
+        internal List<MenuToolEntry> Children = new List<MenuToolEntry>();
+        internal MenuToolEntry Parent;
 
-        internal MenuOrigin Origin;
+        internal MenuToolOrigin Origin;
         // The component or asset that contributes it, for "select the source".
         internal Object Source;
         // The content block it belongs to: the base avatar, an installed prefab, or a feature's object.
@@ -42,7 +42,7 @@ namespace Riry.RiryTools.Editor
         internal bool Generated;
         // A submenu the plan adds (Add menu), made on Apply by this edit (NewMenuAsset or NewMaItem, Ambiguous until
         // chosen); null for everything the sources already hold.
-        internal MoveEdit? Added;
+        internal MenuToolMoveEdit? Added;
 
         // Where it lives, for edits. Native: the menu asset holding the control and its index there.
         internal VRCExpressionsMenu OwnerMenu;
@@ -74,12 +74,12 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        internal IEnumerable<MenuEntry> Descendants()
+        internal IEnumerable<MenuToolEntry> Descendants()
         {
-            foreach (MenuEntry child in Children)
+            foreach (MenuToolEntry child in Children)
             {
                 yield return child;
-                foreach (MenuEntry below in child.Descendants()) yield return below;
+                foreach (MenuToolEntry below in child.Descendants()) yield return below;
             }
         }
 
@@ -93,7 +93,7 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        internal void Add(MenuEntry child, int index = -1)
+        internal void Add(MenuToolEntry child, int index = -1)
         {
             if (child.Parent != null) child.Parent.Children.Remove(child);
             child.Parent = this;
@@ -102,27 +102,27 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>A copy of this entry and everything under it, with no parent.</summary>
-        internal MenuEntry Clone()
+        internal MenuToolEntry Clone()
         {
-            var copy = (MenuEntry)MemberwiseClone();
+            var copy = (MenuToolEntry)MemberwiseClone();
             // MemberwiseClone shares the list: give the copy its own.
-            copy.Children = new List<MenuEntry>();
+            copy.Children = new List<MenuToolEntry>();
             copy.Parent = null;
-            foreach (MenuEntry child in Children) copy.Add(child.Clone());
+            foreach (MenuToolEntry child in Children) copy.Add(child.Clone());
             return copy;
         }
 
         /// <summary>The direct child submenu or control with this name, or null.</summary>
-        internal MenuEntry Child(string name)
+        internal MenuToolEntry Child(string name)
         {
             return Children.FirstOrDefault(child => child.Name == name);
         }
 
         /// <summary>The entry at a path under this one ("" is this one), or null.</summary>
-        internal MenuEntry Find(string path)
+        internal MenuToolEntry Find(string path)
         {
             if (string.IsNullOrEmpty(path)) return this;
-            MenuEntry at = this;
+            MenuToolEntry at = this;
             foreach (string part in path.Split('/'))
             {
                 at = at.Child(part);
@@ -133,7 +133,7 @@ namespace Riry.RiryTools.Editor
     }
 
     /// <summary>One expression parameter of the assembled avatar, counted once however many blocks declare it.</summary>
-    internal sealed class ParamEntry
+    internal sealed class MenuToolParamEntry
     {
         internal string Name = "";
         internal VRCExpressionParameters.ValueType Type;
@@ -149,7 +149,7 @@ namespace Riry.RiryTools.Editor
         internal bool Flipped;
         internal readonly List<string> Blocks = new List<string>();
         internal readonly HashSet<VRCExpressionParameters.ValueType> DeclaredTypes = new HashSet<VRCExpressionParameters.ValueType>();
-        internal readonly List<MenuEntry> UsedBy = new List<MenuEntry>();
+        internal readonly List<MenuToolEntry> UsedBy = new List<MenuToolEntry>();
         internal readonly List<Object> Sources = new List<Object>();
 
         internal bool TypeConflict
@@ -177,26 +177,26 @@ namespace Riry.RiryTools.Editor
     }
 
     /// <summary>The parameters one animator layer reads or drives.</summary>
-    internal sealed class LayerUsage
+    internal sealed class MenuToolLayerUsage
     {
         internal string Name = "";
         internal readonly List<string> Parameters = new List<string>();
     }
 
     /// <summary>An animator controller the avatar uses (descriptor layer, VRCFury Full Controller, MA Merge Animator).</summary>
-    internal sealed class ControllerUsage
+    internal sealed class MenuToolControllerUsage
     {
         internal string Name = "";
         internal Object Controller;
         internal Object Source;
-        internal readonly List<LayerUsage> Layers = new List<LayerUsage>();
+        internal readonly List<MenuToolLayerUsage> Layers = new List<MenuToolLayerUsage>();
         // Parameters a VRChat Parameter Driver in it changes with Add: VRCFury's compressor leaves them out unless it is
         // also compressing two- and four-axis puppets.
         internal readonly HashSet<string> AddDriven = new HashSet<string>();
     }
 
     /// <summary>One VRCFury Set Icon, Move Menu Item or Reorder Menu Item rule, applied in VRCFury's order after the features.</summary>
-    internal sealed class VrcfuryMenuRule
+    internal sealed class MenuToolVrcfuryMenuRule
     {
         internal string Kind = "";
         internal Component Component;
@@ -207,16 +207,16 @@ namespace Riry.RiryTools.Editor
     }
 
     /// <summary>Everything one scan found: the assembled menu, its parameters, controllers and notes.</summary>
-    internal sealed class MenuScan
+    internal sealed class MenuToolScan
     {
         internal GameObject Target;
         internal VRCAvatarDescriptor Avatar;
         // No avatar descriptor above the target: its contributions only, and placement and cost depend on the host.
         internal bool Standalone;
-        internal MenuEntry Root = new MenuEntry { Name = "" };
-        internal readonly Dictionary<string, ParamEntry> Params = new Dictionary<string, ParamEntry>();
+        internal MenuToolEntry Root = new MenuToolEntry { Name = "" };
+        internal readonly Dictionary<string, MenuToolParamEntry> Params = new Dictionary<string, MenuToolParamEntry>();
         internal readonly List<string> Blocks = new List<string>();
-        internal readonly List<ControllerUsage> Controllers = new List<ControllerUsage>();
+        internal readonly List<MenuToolControllerUsage> Controllers = new List<MenuToolControllerUsage>();
         // Unsupported generators, missing references and other things worth knowing, each once.
         internal readonly List<string> Notes = new List<string>();
         internal bool VrcfuryInstalled;
@@ -227,9 +227,9 @@ namespace Riry.RiryTools.Editor
             if (!Notes.Contains(text)) Notes.Add(text);
         }
 
-        internal ParamEntry Param(string name)
+        internal MenuToolParamEntry Param(string name)
         {
-            ParamEntry entry;
+            MenuToolParamEntry entry;
             return name != null && Params.TryGetValue(name, out entry) ? entry : null;
         }
 
@@ -249,8 +249,8 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Menu Tool model
 // ============================================================================
 //
-// MenuOrigin                 Native (the descriptor's menu and parameter assets), VRCFury or ModularAvatar.
-// MenuEntry                  A control or submenu of the assembled menu: Name, Type, Icon, Parameter, Value, SubParameters,
+// MenuToolOrigin                 Native (the descriptor's menu and parameter assets), VRCFury or ModularAvatar.
+// MenuToolEntry                  A control or submenu of the assembled menu: Name, Type, Icon, Parameter, Value, SubParameters,
 //                            Labels, Children/Parent; Origin, Source (to select), Block (content block), Estimated (worked out
 //                            from VRCFury settings), Generated (a VRCFury "Next" page), Added (a submenu the plan adds, with
 //                            the edit that makes it on Apply; planned layout only). Ownership for edits: OwnerMenu/OwnerIndex
@@ -258,13 +258,13 @@ namespace Riry.RiryTools.Editor
 //   Path / Find / Child      "A/B/C" path in the assembled menu; lookups by path or name.
 //   Parameters()             Parameter and sub-parameters, non-empty.
 //   Clone()                  Deep copy for the planned layout.
-// ParamEntry                 One parameter, counted once: Type, Synced, Saved, Default, Estimated, Declared, Width and Flipped
+// MenuToolParamEntry                 One parameter, counted once: Type, Synced, Saved, Default, Estimated, Declared, Width and Flipped
 //                            (SDK 3.10.6 bit widths), Blocks, DeclaredTypes (TypeConflict when more than one), UsedBy (menu
 //                            entries), Sources, Cost (1 Bool, Width Int/Float), Bits (Cost when synced, else 0),
 //                            StandardEncoding (what VRCFury's compressor can carry).
-// ControllerUsage / LayerUsage  An animator controller and, per layer, the parameters it reads or drives; AddDriven, the
+// MenuToolControllerUsage / MenuToolLayerUsage  An animator controller and, per layer, the parameters it reads or drives; AddDriven, the
 //                            parameters its Parameter Drivers change with Add.
-// VrcfuryMenuRule            A VRCFury SetIcon / MoveMenuItem / ReorderMenuItem rule (Kind, Component, Path, To, Position,
+// MenuToolVrcfuryMenuRule            A VRCFury SetIcon / MoveMenuItem / ReorderMenuItem rule (Kind, Component, Path, To, Position,
 //                            Icon), applied by MenuToolVrcfuryMenu in VRCFury's order.
-// MenuScan                   The scan: Target, Avatar, Standalone, Root, Params, Blocks, Controllers, Notes, VrcfuryInstalled,
+// MenuToolScan                   The scan: Target, Avatar, Standalone, Root, Params, Blocks, Controllers, Notes, VrcfuryInstalled,
 //                            ModularAvatarInstalled; InFilter(source).

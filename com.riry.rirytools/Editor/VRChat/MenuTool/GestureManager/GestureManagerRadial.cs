@@ -33,14 +33,11 @@ namespace Riry.RiryTools.Editor
     internal sealed class GestureManagerRadial : IMenuToolRadial
     {
         private const BindingFlags Members = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        private static readonly FieldInfo MenuPath = typeof(RadialMenu).GetField("_menuPath", Members);
         private static readonly FieldInfo PageMenu = typeof(RadialPage).GetField("_menu", Members);
         private static readonly FieldInfo CursorField = typeof(RadialMenu).GetField("_cursor", Members);
         // The radial's root menu (its main page has Quick Actions after Back) and the slice under the cursor.
         private static readonly FieldInfo RootMenu = typeof(RadialMenu).GetField("_menu", Members);
         private static readonly FieldInfo CursorSelection = typeof(RadialCursor).GetField("Selection", Members);
-        private static readonly MethodInfo OpenMenu = typeof(RadialMenu).GetMethod("OpenMenu", Members, null,
-            new[] { typeof(VRCExpressionsMenu), typeof(Vrc3Param), typeof(float) }, null);
         private static readonly MethodInfo OfficialRadial = typeof(ModuleVrc3).GetMethod("GetOrCreateRadial", Members, null,
             new[] { typeof(ScriptableObject), typeof(bool) }, null);
 
@@ -54,7 +51,7 @@ namespace Riry.RiryTools.Editor
         {
             get
             {
-                if (MenuPath == null || PageMenu == null || OpenMenu == null)
+                if (!GestureManagerMenuPath.Available || PageMenu == null)
                     return "This Gesture Manager version is not supported by the Menu Tool preview (built for 3.9.9).";
                 return null;
             }
@@ -153,9 +150,7 @@ namespace Riry.RiryTools.Editor
         public void Navigate(IList<VRCExpressionsMenu> path)
         {
             if (radial == null || Unsupported != null || path == null || path.Count == 0) return;
-            var pages = (IList)MenuPath.GetValue(radial);
-            pages.Clear();
-            foreach (VRCExpressionsMenu menu in path) OpenMenu.Invoke(radial, new object[] { menu, null, 0f });
+            GestureManagerMenuPath.Open(radial, path);
             RemoveRunning();
         }
 
@@ -172,7 +167,7 @@ namespace Riry.RiryTools.Editor
             {
                 var path = new List<VRCExpressionsMenu>();
                 if (radial == null || Unsupported != null) return path;
-                foreach (object page in (IList)MenuPath.GetValue(radial))
+                foreach (object page in (IList)GestureManagerMenuPath.Pages.GetValue(radial))
                 {
                     var menu = PageMenu.GetValue(page) as VRCExpressionsMenu;
                     if (menu != null) path.Add(menu);
@@ -216,7 +211,7 @@ namespace Riry.RiryTools.Editor
             if (CursorSelection == null || RootMenu == null || CursorField == null || !(CursorField.GetValue(radial) is RadialCursor cursor)) return false;
             int slice = (int)CursorSelection.GetValue(cursor);
             if (slice < 0) return false;
-            var pages = (IList)MenuPath.GetValue(radial);
+            var pages = (IList)GestureManagerMenuPath.Pages.GetValue(radial);
             if (pages.Count == 0) return true;
             var menu = PageMenu.GetValue(pages[pages.Count - 1]) as VRCExpressionsMenu;
             if (menu == null) return true;
@@ -263,7 +258,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Gesture Manager bridge (compiled only with Gesture Manager 3.9+, RIRYTOOLS_GESTURE_MANAGER)
 // ============================================================================
 //
-// GestureManagerRadial (this file): IMenuToolRadial (Editor/VRChat/MenuTool/MenuToolPreview.cs)
+// GestureManagerRadial (this file): IMenuToolRadial (Editor/VRChat/MenuTool/IMenuToolRadial.cs)
 //   static constructor       [InitializeOnLoad]: sets MenuToolPreviewMenus.CreateRadial.
 //   Show(root, parameters)   A hidden, inactive stand-in avatar (Animator + VRCAvatarDescriptor, HideAndDontSave) carries the
 //                            preview menu and parameters; one ModuleVrc3 on it (made on the first Show, never InitForAvatar'd);
@@ -272,7 +267,7 @@ namespace Riry.RiryTools.Editor
 //                            Manager's radial (GetOrCreateRadial(owner, official: true) by reflection, else the public one) is
 //                            made once, its cursor (_cursor) made invisible; later Shows Set the new root on it. Opened on the
 //                            root.
-//   Navigate / Path          RadialMenu._menuPath cleared and OpenMenu called per menu, then RemoveRunning; Path reads each
+//   Navigate / Path          GestureManagerMenuPath.Open (RadialMenu._menuPath cleared, OpenMenu per menu), then RemoveRunning; Path reads each
 //                            RadialPage._menu.
 //   RemoveRunning            Takes every VisualRunningElement (Gesture Manager's endlessly spinning icon on Buttons and Toggles)
 //                            out of the radial, which stops its animation.

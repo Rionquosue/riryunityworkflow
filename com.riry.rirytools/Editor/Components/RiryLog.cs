@@ -16,13 +16,14 @@ namespace Riry.RiryTools.Editor
         internal const string AvatarMigration = "Avatar Migration";
         internal const string BlendshapeSync = "Blendshape Sync";
         internal const string CleanKeys = "Clean Animation Keys";
+        internal const string FindNullReferences = "Find Null references";
+        internal const string FindReplace = "Find and Replace";
         internal const string ConstraintTool = "Constraint Tool";
         internal const string GuidTools = "GUID Tools";
         internal const string IconCap = "IconCap";
         internal const string ImportPresets = "Import Presets";
         internal const string MenuMockup = "Menu Mockup";
         internal const string MenuTool = "Menu Tool";
-        internal const string ProjectFolder = "Project Folder";
         internal const string ScriptLoadGuard = "Script Load Guard";
         internal const string StopAutoGame = "Stop Auto Game";
 

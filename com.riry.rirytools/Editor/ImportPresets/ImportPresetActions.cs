@@ -7,7 +7,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// What the import preset menu entries do. The entries themselves are in
-    /// Editor/UI/RiryToolsMenuBar.cs and the windows in Editor/UI/ImportPresetWindows.cs.
+    /// Editor/UI/RiryToolsMenuBar.cs and the windows in Editor/UI/ImportPresets/.
     /// </summary>
     internal static class ImportPresetActions
     {
@@ -108,3 +108,12 @@ namespace Riry.RiryTools.Editor
     }
 
 }
+
+// ============================================================================
+// GLOSSARY: Import Presets actions
+// ============================================================================
+//
+// ImportPresetActions (this file): selection helpers
+//   ChooseFolderPreset, QuickFolderPreset / ValidateChooseFolderPreset, SaveToLibrary / ValidateSaveToLibrary,
+//   OpenLibrary, SelectedFolders (selected folders, or the folder shown in the Project window), ActiveFolder,
+//   IsWritableFolder.

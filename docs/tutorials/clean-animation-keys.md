@@ -7,7 +7,7 @@ every bone and shapekey.
 
 Select the `.anim` files in the Project window, right-click, and choose
 **RiryTools > Clean Animation Keys**. They appear under **Animations**. You can
-also open **Tools > RiryTools > Clean Animation Keys** and drag clips into the
+also open **Tools > RiryTools > Animator Tools > Clean Animation Keys** and drag clips into the
 empty row, or click **Clean Keys** in the Animation window.
 
 ## 2. Protect what must stay
@@ -26,5 +26,3 @@ to remove those curves too.
 
 Click **Clean**. The summary shows how many curves were removed. **Edit > Undo**
 restores every animation at once.
-
-Reference: [design/clean-animation-keys.md](../design/clean-animation-keys.md)

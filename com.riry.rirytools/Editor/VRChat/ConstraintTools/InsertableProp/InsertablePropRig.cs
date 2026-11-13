@@ -483,11 +483,7 @@ namespace Riry.RiryTools.Editor
 
         private static Transform Create(string name, Transform parent, int layer, string undoName)
         {
-            var created = new GameObject(name);
-            created.layer = layer;
-            Undo.RegisterCreatedObjectUndo(created, undoName);
-            created.transform.SetParent(parent, false);
-            return created.transform;
+            return ConstraintToolObjects.CreateEmpty(name, parent, layer, undoName);
         }
 
         private static void SetLocalPose(Transform target, Vector3 position, Quaternion rotation)
@@ -500,24 +496,9 @@ namespace Riry.RiryTools.Editor
         private static T AddConstraint<T>(Transform target, Transform[] sources, float[] weights) where T : VRCConstraintBase
         {
             var constraint = Undo.AddComponent<T>(target.gameObject);
-            // The source list is a struct: edit a copy and assign it back.
-            var list = constraint.Sources;
-            for (int s = 0; s < sources.Length; s++)
-            {
-                list.Add(new VRCConstraintSource
-                {
-                    SourceTransform = sources[s],
-                    Weight = weights[s],
-                    ParentPositionOffset = Vector3.zero,
-                    ParentRotationOffset = Vector3.zero
-                });
-            }
-            constraint.Sources = list;
-            constraint.GlobalWeight = 1f;
-            constraint.SolveInLocalSpace = false;
+            ConstraintToolSources.AddSources(constraint, sources, weights);
+            ConstraintToolSources.ApplyDefaults(constraint);
             constraint.FreezeToWorld = false;
-            constraint.Locked = true;
-            constraint.IsActive = true;
             return constraint;
         }
 

@@ -11,10 +11,10 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Animator Tools > Find and Replace, without its window (Editor/VRChat/UI/BehaviourFindReplaceWindow.cs): finds the
+    /// Animator Tools > Find and Replace, without its window (Editor/VRChat/UI/AnimatorTools/BehaviourFindReplaceWindow.cs): finds the
     /// strings of state behaviours (case-insensitive, FuzzyMatch "contains") in an avatar's controllers (its playable
     /// layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the Menu Tool's scan finds them) or one
-    /// animator controller, replaces whole strings as one undo step, and shows a found state in the Animator window.
+    /// animator controller, and shows a found state in the Animator window. Apply is BehaviourFindReplaceApply.
     /// </summary>
     internal static class BehaviourFindReplace
     {
@@ -39,6 +39,8 @@ namespace Riry.RiryTools.Editor
             internal Kind Kind;
             // What Play Audio paths are relative to; null for a controller asset.
             internal Transform Root;
+            // The component that uses the controller (descriptor, VRCFury, Modular Avatar); null for a controller asset.
+            internal Component Source;
             internal string Label = "";
         }
 
@@ -49,12 +51,29 @@ namespace Riry.RiryTools.Editor
             internal string After = "";
         }
 
+        /// <summary>Where one behaviour sits in its controller.</summary>
+        internal sealed class Place
+        {
+            internal int Layer;
+            internal Object Owner;
+            internal List<AnimatorStateMachine> Machines;
+            internal StateMachineBehaviour Behaviour;
+        }
+
+        // A controller used by the source: its label, what Play Audio paths are relative to, and the component using it.
+        private sealed class Usage
+        {
+            internal string Label = "";
+            internal Transform Root;
+            internal Component Source;
+        }
+
         // ---- Search -------------------------------------------------------------------------------
 
         internal static List<Hit> Find(Object from, string text)
         {
             var found = new List<Hit>();
-            foreach (KeyValuePair<AnimatorController, KeyValuePair<string, Transform>> usage in Controllers(from))
+            foreach (KeyValuePair<AnimatorController, Usage> usage in Controllers(from))
             {
                 AnimatorController controller = usage.Key;
                 AnimatorControllerLayer[] layers = controller.layers;
@@ -77,8 +96,8 @@ namespace Riry.RiryTools.Editor
                             found.Add(new Hit
                             {
                                 Controller = controller, Layer = i, Machines = machines, Owner = owner, Behaviour = behaviour,
-                                Property = property.propertyPath, Value = value, Kind = kind, Root = usage.Value.Value,
-                                Label = usage.Value.Key + " > " + layers[i].name + " > " + owner.name + " > " +
+                                Property = property.propertyPath, Value = value, Kind = kind, Root = usage.Value.Root, Source = usage.Value.Source,
+                                Label = usage.Value.Label + " > " + layers[i].name + " > " + owner.name + " > " +
                                     ObjectNames.NicifyVariableName(behaviour.GetType().Name) + " > " + property.displayName
                             });
                         }
@@ -102,24 +121,40 @@ namespace Riry.RiryTools.Editor
                 Walk(child.stateMachine, new List<AnimatorStateMachine>(machines) { child.stateMachine }, visit, seen);
         }
 
-        // Each controller of the source once: its label and what Play Audio paths are relative to (null for an asset).
-        private static Dictionary<AnimatorController, KeyValuePair<string, Transform>> Controllers(Object from)
+        /// <summary>Every behaviour of a controller, in a fixed order (layers, then each state machine's own, its states', its children).</summary>
+        internal static List<Place> Places(AnimatorController controller)
         {
-            var controllers = new Dictionary<AnimatorController, KeyValuePair<string, Transform>>();
+            var places = new List<Place>();
+            AnimatorControllerLayer[] layers = controller.layers;
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i].stateMachine == null) continue;
+                int layer = i;
+                Walk(layers[i].stateMachine, new List<AnimatorStateMachine> { layers[i].stateMachine },
+                    (owner, machines, behaviour) => places.Add(new Place { Layer = layer, Owner = owner, Machines = machines, Behaviour = behaviour }),
+                    new HashSet<AnimatorStateMachine>());
+            }
+            return places;
+        }
+
+        // Each controller of the source once: its label and what Play Audio paths are relative to (null for an asset).
+        private static Dictionary<AnimatorController, Usage> Controllers(Object from)
+        {
+            var controllers = new Dictionary<AnimatorController, Usage>();
             if (from is AnimatorController asset)
             {
-                controllers[asset] = new KeyValuePair<string, Transform>(asset.name, null);
+                controllers[asset] = new Usage { Label = asset.name };
                 return controllers;
             }
             var target = from as GameObject;
             if (target == null) return controllers;
-            MenuScan scan = MenuToolScanner.Scan(target);
+            MenuToolScan scan = MenuToolScanner.Scan(target);
             if (scan == null) return controllers;
-            foreach (ControllerUsage usage in scan.Controllers)
+            foreach (MenuToolControllerUsage usage in scan.Controllers)
             {
                 var controller = usage.Controller as AnimatorController;
                 if (controller == null || controllers.ContainsKey(controller)) continue;
-                controllers[controller] = new KeyValuePair<string, Transform>(usage.Name, RootOf(usage.Source, controller));
+                controllers[controller] = new Usage { Label = usage.Name, Root = RootOf(usage.Source, controller), Source = usage.Source as Component };
             }
             return controllers;
         }
@@ -155,47 +190,6 @@ namespace Riry.RiryTools.Editor
             return avatar != null ? avatar.transform : null;
         }
 
-        // ---- Apply --------------------------------------------------------------------------------
-
-        // Play Audio paths take the repath object's path when one is set (not for a controller asset), Parameter Driver
-        // names the mapped parameter when one is typed; every other found string becomes replace, when it is not empty.
-        // One undo step. Returns what changed.
-        internal static List<Change> Apply(List<Hit> hits, string replace, GameObject repath, string map, bool asset)
-        {
-            var made = new List<Change>();
-            Undo.IncrementCurrentGroup();
-            int group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName("Find and Replace");
-            foreach (IGrouping<StateMachineBehaviour, Hit> behaviour in hits.Where(h => h.Behaviour != null).GroupBy(h => h.Behaviour))
-            {
-                var serialized = new SerializedObject(behaviour.Key);
-                foreach (Hit hit in behaviour)
-                {
-                    string after = NewValue(hit, replace, asset ? null : repath, map);
-                    if (after == null) continue;
-                    SerializedProperty property = serialized.FindProperty(hit.Property);
-                    if (property == null || property.propertyType != SerializedPropertyType.String || property.stringValue == after) continue;
-                    made.Add(new Change { Hit = hit, Before = property.stringValue, After = after });
-                    property.stringValue = after;
-                }
-                serialized.ApplyModifiedProperties();
-            }
-            Undo.CollapseUndoOperations(group);
-            foreach (AnimatorController controller in made.Select(c => c.Hit.Controller).Distinct()) EditorUtility.SetDirty(controller);
-            return made;
-        }
-
-        private static string NewValue(Hit hit, string replace, GameObject repath, string map)
-        {
-            if (hit.Kind == Kind.PlayAudio && repath != null)
-            {
-                if (hit.Root != null && (repath.transform == hit.Root || repath.transform.IsChildOf(hit.Root)))
-                    return AnimationUtility.CalculateTransformPath(repath.transform, hit.Root);
-            }
-            else if (hit.Kind == Kind.Driver && !string.IsNullOrEmpty(map)) return map;
-            return string.IsNullOrEmpty(replace) ? null : replace;
-        }
-
         // ---- Reveal -------------------------------------------------------------------------------
 
         // Opens the Animator window on the hit's controller, layer and state machine, selects its state (shown in the
@@ -218,7 +212,10 @@ namespace Riry.RiryTools.Editor
                     if (layer != null && layer.CanWrite) layer.SetValue(tool, hit.Layer);
                     if (crumb != null) foreach (AnimatorStateMachine machine in hit.Machines.Skip(1)) crumb.Invoke(tool, new object[] { machine });
                 }
-                catch (Exception) { }
+                catch (Exception exception)
+                {
+                    RiryLog.Exception(RiryLog.FindReplace, "Could not show " + hit.Owner.name + " in the Animator window", exception, hit.Controller);
+                }
             }
             Selection.activeObject = hit.Owner;
             if (tool == null) return;

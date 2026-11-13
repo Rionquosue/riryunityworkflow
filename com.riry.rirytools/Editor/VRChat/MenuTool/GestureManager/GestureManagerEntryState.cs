@@ -23,9 +23,6 @@ namespace Riry.RiryTools.Editor
     {
         private const BindingFlags Members = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         private static readonly PropertyInfo Radials = typeof(ModuleVrc3).GetProperty("Radials", Members);
-        private static readonly FieldInfo MenuPath = typeof(RadialMenu).GetField("_menuPath", Members);
-        private static readonly MethodInfo OpenMenu = typeof(RadialMenu).GetMethod("OpenMenu", Members, null,
-            new[] { typeof(VRCExpressionsMenu), typeof(Vrc3Param), typeof(float) }, null);
 
         private static MenuToolEntryState state;
         private static ModuleVrc3 module;
@@ -69,7 +66,7 @@ namespace Riry.RiryTools.Editor
             if (module == null)
             {
                 module = GmManager.ControlledAvatars.Values.OfType<ModuleVrc3>().FirstOrDefault(m => m.Avatar != null &&
-                    m.Avatar.scene.name == state.Scene && HierarchyPath.Of(m.Avatar.transform) == state.Avatar);
+                    MenuToolEntryState.IdOf(m.Avatar) == state.Avatar);
                 // Its writes start the frame after it is set up.
                 return;
             }
@@ -85,7 +82,7 @@ namespace Riry.RiryTools.Editor
                 if (param != null) param.Set(module, write.Value);
                 return;
             }
-            if (state.Menu.Length == 0 || Radials == null || MenuPath == null || OpenMenu == null)
+            if (state.Menu.Length == 0 || Radials == null || !GestureManagerMenuPath.Available)
             {
                 Stop();
                 return;
@@ -97,12 +94,7 @@ namespace Riry.RiryTools.Editor
             List<VRCExpressionsMenu> path = descriptor != null ? MenuChain(descriptor.expressionsMenu, state.Menu) : null;
             if (path != null)
             {
-                foreach (RadialMenu radial in radials)
-                {
-                    var pages = (IList)MenuPath.GetValue(radial);
-                    pages.Clear();
-                    foreach (VRCExpressionsMenu menu in path) OpenMenu.Invoke(radial, new object[] { menu, null, 0f });
-                }
+                foreach (RadialMenu radial in radials) GestureManagerMenuPath.Open(radial, path);
             }
             Stop();
         }

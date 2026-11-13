@@ -1,15 +1,18 @@
 ## File structure rules
 
-1. Code reused by several tools goes in `Editor/Components/`.
-2. Every file that draws UI goes in a `UI/` folder. A tool's logic stays in its own folder; If a file holds both UI and logic in a single script, they should be divided into two, and sorted appropriately by the following rules.
-3. Code that relies on a dependency goes in a folder for that dependency (its own assembly, e.g. `Editor/VRChat/`). That folder holds a `UI/` folder, one folder per tool (e.g. `MenuTool/`, `ConstraintTool/`), and a `Components/` folder only for shared code that needs that dependency's assembly.
+The full rules, tool names and script locations are in `filestructure.md`. In short:
+
+1. Code reused by several tools, or by several subtools of one tool, goes in its assembly's `Components/` folder (`Editor/Components/`, `Editor/VRChat/Components/`).
+2. Keep UI and feature logic in separate scripts and types. Follow the UI placement and naming rules in `filestructure.md`.
+3. Code that relies on a dependency goes in a folder for that dependency (its own assembly, e.g. `Editor/VRChat/`). That folder holds a `UI/` folder, one folder per tool (e.g. `MenuTool/`, `ConstraintTools/`), and a `Components/` folder only for shared code that needs that dependency's assembly. A tool that needs the dependency for any part of it lives entirely in that folder.
 4. Always keep the .meta file alongside to allow for smooth updating experiences when using the VPM manifest.
-5. Where possible, all scripts except for reused component scripts will be stored in a single folder. 
+5. Where possible, all of a tool's scripts except for reused component scripts will be stored in a single folder. Tools that are a single script with a single job share a category folder instead (`Debug/`, `Utilities/`, `AnimatorTools/`), as do the tools the owner places there (Menu Mockup, Attach To).
+6. One job per script. A tool that indexes the avatar hierarchy for searching and then applies changes based on that search has one script for the index and search, and another for applying the changes.
 
 ## Factoring and name rules
 
 1. All names must be consistent. If a tool is named "FlipTool" then all classes and scripts related should be along the lines of "FlipToolMenu.cs" or "FlipToolChecks.cs"
-2. All files must be human readable and refactorable. Keep names descriptive, comment where clarity is needed. An example is commenting "This segment calls /Editor/Components/Fuzzymatch.cs to embed a fuzzy search window."
+2. All files must be human readable and refactorable. Keep names descriptive, comment where clarity is needed. An example is commenting "This segment calls /Editor/Components/FuzzyMatch.cs to embed a fuzzy search window."
 2. All names must be simple and descriptive. Things should be named something like "PreFlight" if they run before, "PostFlight" if after. 
 
 ## UI Design rules

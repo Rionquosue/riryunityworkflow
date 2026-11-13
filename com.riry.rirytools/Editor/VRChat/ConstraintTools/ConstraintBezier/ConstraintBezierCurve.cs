@@ -179,7 +179,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: Bezier curve math (Constraint Tool's Bezier tab)
 // ============================================================================
 //
-// ConstraintBezierCurve           Static math, no Unity objects; used by Editor/VRChat/ConstraintBezierWindow.cs.
+// ConstraintBezierCurve           Static math, no Unity objects; used by Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.cs.
 //   ArcSteps (256)                Steps of the length table that turns a distance along the curve into t.
 //   FitRounds (4)                 Rounds of fit handles, then measure the nodes' t again.
 //   Regularization (1e-6)         Pulls P1/P2 slightly to the straight-line handles, so 2 or 3 nodes still solve.

@@ -22,8 +22,7 @@ namespace Riry.RiryTools.Editor
             public float Value;
         }
 
-        // The avatar root's scene name and hierarchy path ("Root/Child").
-        public string Scene = "";
+        // The avatar root's GlobalObjectId (its saved scene's GUID and its file ID), so a renamed or moved avatar is still found.
         public string Avatar = "";
         // The submenu shown, as a path of control names in the assembled menu ("" is the root).
         public string Menu = "";
@@ -45,6 +44,13 @@ namespace Riry.RiryTools.Editor
         internal void Save()
         {
             SessionState.SetString(Key, JsonUtility.ToJson(this));
+        }
+
+        /// <summary>The avatar's GlobalObjectId, or null for an object in a scene that has not been saved (it has no lasting id).</summary>
+        internal static string IdOf(GameObject avatar)
+        {
+            GlobalObjectId id = GlobalObjectId.GetGlobalObjectIdSlow(avatar);
+            return id.identifierType == 2 && !id.assetGUID.Empty() ? id.ToString() : null;
         }
 
         internal static void Clear()
