@@ -151,23 +151,27 @@ namespace Riry.RiryTools.Editor
 
         internal static void RepairSelected()
         {
-            GuidToolBrokenReferenceWindow.Open(SelectedFiles(), "Selected in the Project window.");
+            GuidToolBrokenReferenceWindow.Open(SelectedFiles(), "Selected in the Project window.", true);
         }
 
-        internal static GuidToolRepairPlan Scan(IEnumerable<string> files, GuidToolLog log)
+        /// <summary>
+        /// Scans the files and what they use. <paramref name="intoControllers"/> (the Project window's Repair Missing GUID
+        /// References) also opens animator controllers and what they use; otherwise the walk stops at a controller, which is
+        /// only checked for being present where it is referenced.
+        /// </summary>
+        internal static GuidToolRepairPlan Scan(IEnumerable<string> files, GuidToolLog log, bool intoControllers = false)
         {
             var plan = new GuidToolRepairPlan();
             plan.Files.AddRange(files);
             // What the files use is scanned too: a material's shader lives in the .mat, a nested prefab's references in its
-            // own .prefab, not in the scene. The walk stops at an animator controller: the controller is only checked for
-            // being present, where it is referenced, and nothing it uses (layers, blend trees, clips) is opened.
+            // own .prefab, not in the scene.
             var listed = new HashSet<string>(plan.Files, StringComparer.OrdinalIgnoreCase);
-            var pending = new Queue<string>(plan.Files.Where(file => !IsController(file)));
+            var pending = new Queue<string>(plan.Files.Where(file => intoControllers || !IsController(file)));
             while (pending.Count > 0)
             {
                 foreach (string dependency in AssetDatabase.GetDependencies(pending.Dequeue(), false))
                 {
-                    if (!dependency.StartsWith("Assets/", StringComparison.Ordinal) || IsController(dependency) || !listed.Add(dependency)) continue;
+                    if (!dependency.StartsWith("Assets/", StringComparison.Ordinal) || (!intoControllers && IsController(dependency)) || !listed.Add(dependency)) continue;
                     plan.Files.Add(dependency);
                     pending.Enqueue(dependency);
                 }
@@ -181,8 +185,8 @@ namespace Riry.RiryTools.Editor
                     string fullPath = Path.Combine(RiryToolsPaths.ProjectRoot, plan.Files[i]);
                     if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + plan.Files[i], (float)i / plan.Files.Count))
                         throw new OperationCanceledException();
-                    // A controller is never opened, even when selected: only whether it is present is checked, where it is referenced.
-                    if (IsController(plan.Files[i]))
+                    // Outside the Project window's repair a controller is never opened: only whether it is present is checked.
+                    if (!intoControllers && IsController(plan.Files[i]))
                     {
                         log.Write("Skipped animator controller: " + plan.Files[i]);
                         continue;
@@ -194,6 +198,10 @@ namespace Riry.RiryTools.Editor
                     }
                     byte[] bytes = File.ReadAllBytes(fullPath);
                     List<KeyValuePair<long, string>> references = FindGuidReferences(bytes);
+                    // Not listed: empty slots, prefab bookkeeping, and anything in a controller's unused sub-assets (Controller
+                    // Cleaner removes those).
+                    HashSet<long> unused = IsController(plan.Files[i]) ? UnusedIds(plan.Files[i]) : null;
+                    references = references.FindAll(reference => !Nonsense(bytes, reference, unused));
                     List<KeyValuePair<long, string>> broken = references.FindAll(reference => IsMissing(reference.Value));
                     foreach (KeyValuePair<long, string> reference in references)
                     {
@@ -684,6 +692,43 @@ namespace Riry.RiryTools.Editor
             return sorted;
         }
 
+        // A reference that changes nothing: an empty slot (file ID 0), prefab bookkeeping (the source prefab itself is kept,
+        // a missing one is real), or one inside a sub-asset of the controller that nothing uses.
+        private static bool Nonsense(byte[] bytes, KeyValuePair<long, string> reference, HashSet<long> unused)
+        {
+            if (FileIdBefore(bytes, (int)reference.Key, out long fileId) && fileId == 0) return true;
+            if (PrefabBookkeeping(bytes, (int)reference.Key, false)) return true;
+            return unused != null && unused.Count > 0 && DocumentId(bytes, (int)reference.Key, out long owner) && unused.Contains(owner);
+        }
+
+        // The file IDs of a controller's unused sub-assets (ControllerCleanerScan).
+        private static HashSet<long> UnusedIds(string path)
+        {
+            var ids = new HashSet<long>();
+            var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(path);
+            if (controller == null) return ids;
+            foreach (UnityEngine.Object item in ControllerCleanerScan.Scan(controller).Unused)
+            {
+                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(item, out string guid, out long id)) ids.Add(id);
+            }
+            return ids;
+        }
+
+        // The file ID of the YAML document ("--- !u!<class> &<id>") the offset is in.
+        private static bool DocumentId(byte[] bytes, int offset, out long id)
+        {
+            id = 0;
+            for (int i = offset; i >= 4; i--)
+            {
+                if (bytes[i] != (byte)'-' || bytes[i - 1] != (byte)'-' || bytes[i - 2] != (byte)'-' || (i > 2 && bytes[i - 3] != (byte)'\n')) continue;
+                int end = i;
+                while (end < bytes.Length && bytes[end] != (byte)'\n') end++;
+                Match match = Regex.Match(Encoding.ASCII.GetString(bytes, i, end - i), @"&(-?\d+)");
+                return match.Success && long.TryParse(match.Groups[1].Value, out id);
+            }
+            return false;
+        }
+
         private static bool IsController(string path)
         {
             Type type = AssetDatabase.GetMainAssetTypeAtPath(path);
@@ -732,7 +777,7 @@ namespace Riry.RiryTools.Editor
         /// Whether the reference is prefab bookkeeping (an override's target, a stripped object's source, an entry of a
         /// removed or added list) rather than a value an object uses.
         /// </summary>
-        private static bool PrefabBookkeeping(byte[] bytes, int guidStart)
+        private static bool PrefabBookkeeping(byte[] bytes, int guidStart, bool sourcePrefab = true)
         {
             int lineStart = guidStart;
             while (lineStart > 0 && bytes[lineStart - 1] != (byte)'\n') lineStart--;
@@ -740,7 +785,8 @@ namespace Riry.RiryTools.Editor
             bool listItem = line.StartsWith("- ", StringComparison.Ordinal);
             if (listItem) line = line.Substring(2).TrimStart();
             int colon = line.IndexOf(':');
-            if (colon > 0 && !line.StartsWith("{", StringComparison.Ordinal) && BookkeepingKeys.Contains(line.Substring(0, colon))) return true;
+            if (colon > 0 && !line.StartsWith("{", StringComparison.Ordinal) && BookkeepingKeys.Contains(line.Substring(0, colon)))
+                return sourcePrefab || line.Substring(0, colon) != "m_SourcePrefab";
             if (!listItem) return false;
             // A bare "- {fileID: ...}" item: the key is the nearest line above that is not an item.
             int end = lineStart - 1;
