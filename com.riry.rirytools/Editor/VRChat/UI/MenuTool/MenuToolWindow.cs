@@ -87,6 +87,10 @@ namespace Riry.RiryTools.Editor
         // Assign Menu Icon: the icon picker's control ID (0 when none is open) and the entry path it was opened for.
         [NonSerialized] private int iconPickerId;
         [NonSerialized] private string iconFor = "";
+        // Whether the picker has been seen focused, and its last choice: its close is also caught from Update, for when its
+        // ObjectSelectorClosed event goes to another view.
+        [NonSerialized] private bool iconPickerSeen;
+        [NonSerialized] private Texture2D iconPicked;
 
         public EditorWindow Surface
         {
@@ -406,6 +410,8 @@ namespace Riry.RiryTools.Editor
                 {
                     iconFor = path;
                     iconPickerId = IconPicker;
+                    iconPickerSeen = false;
+                    iconPicked = entry.Icon;
                     EditorGUIUtility.ShowObjectPicker<Texture2D>(entry.Icon, false, "", iconPickerId);
                 });
             }
@@ -419,10 +425,29 @@ namespace Riry.RiryTools.Editor
             Event current = Event.current;
             if (iconPickerId == 0 || current.type != EventType.ExecuteCommand || current.commandName != "ObjectSelectorClosed" ||
                 EditorGUIUtility.GetObjectPickerControlID() != iconPickerId) return;
+            PlanIcon(EditorGUIUtility.GetObjectPickerObject() as Texture2D);
+        }
+
+        // The picker's close seen from Update: it was focused and no longer is.
+        private void Update()
+        {
+            if (iconPickerId == 0) return;
+            bool open = focusedWindow != null && focusedWindow.GetType().Name == "ObjectSelector";
+            if (open)
+            {
+                iconPickerSeen = true;
+                if (EditorGUIUtility.GetObjectPickerControlID() == iconPickerId) iconPicked = EditorGUIUtility.GetObjectPickerObject() as Texture2D;
+                return;
+            }
+            if (iconPickerSeen) PlanIcon(iconPicked);
+        }
+
+        private void PlanIcon(Texture2D texture)
+        {
             iconPickerId = 0;
-            var texture = EditorGUIUtility.GetObjectPickerObject() as Texture2D;
+            iconPickerSeen = false;
             MenuToolEntry entry = planned != null ? planned.Find(iconFor) : null;
-            if (texture == null || entry == null || entry.Icon == texture) return;
+            if (texture == null || entry != null && entry.Icon == texture) return;
             string guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(texture));
             string path = iconFor;
             ChangePlan("Plan a menu icon", moves => moves.Add(new MenuToolPlannedMove { From = path, AssignIcon = true, Icon = guid }));
