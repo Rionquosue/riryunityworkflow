@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -158,15 +159,18 @@ namespace Riry.RiryTools.Editor
             var plan = new GuidToolRepairPlan();
             plan.Files.AddRange(files);
             // What the files use is scanned too: a material's shader lives in the .mat, a nested prefab's references in its
-            // own .prefab, not in the scene. Only those two kinds are opened: other assets a scene uses (animation clips,
-            // including ones saved as .asset, controllers, ScriptableObjects) are not checked, as their references do not
-            // reach the built avatar; a missing one is still found where it is referenced.
+            // own .prefab, not in the scene. The walk stops at an animator controller: the controller is only checked for
+            // being present, where it is referenced, and nothing it uses (layers, blend trees, clips) is opened.
             var listed = new HashSet<string>(plan.Files, StringComparer.OrdinalIgnoreCase);
-            foreach (string dependency in AssetDatabase.GetDependencies(plan.Files.ToArray(), true))
+            var pending = new Queue<string>(plan.Files.Where(file => !IsController(file)));
+            while (pending.Count > 0)
             {
-                if (dependency.StartsWith("Assets/", StringComparison.Ordinal) && DependencyFiles.Contains(Path.GetExtension(dependency)) &&
-                    listed.Add(dependency))
+                foreach (string dependency in AssetDatabase.GetDependencies(pending.Dequeue(), false))
+                {
+                    if (!dependency.StartsWith("Assets/", StringComparison.Ordinal) || IsController(dependency) || !listed.Add(dependency)) continue;
                     plan.Files.Add(dependency);
+                    pending.Enqueue(dependency);
+                }
             }
             var objectIds = new Dictionary<string, HashSet<long>>(StringComparer.Ordinal);
             var sample = new byte[4096];
@@ -177,11 +181,10 @@ namespace Riry.RiryTools.Editor
                     string fullPath = Path.Combine(RiryToolsPaths.ProjectRoot, plan.Files[i]);
                     if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + plan.Files[i], (float)i / plan.Files.Count))
                         throw new OperationCanceledException();
-                    // Animation assets are never opened, even when selected: only whether a controller is present is checked,
-                    // where a scene or prefab references it.
-                    if (IsAnimationAsset(plan.Files[i]))
+                    // A controller is never opened, even when selected: only whether it is present is checked, where it is referenced.
+                    if (IsController(plan.Files[i]))
                     {
-                        log.Write("Skipped animation asset: " + plan.Files[i]);
+                        log.Write("Skipped animator controller: " + plan.Files[i]);
                         continue;
                     }
                     if (!File.Exists(fullPath) || !GuidToolRegenerate.LooksLikeText(fullPath, sample))
@@ -681,15 +684,11 @@ namespace Riry.RiryTools.Editor
             return sorted;
         }
 
-        private static bool IsAnimationAsset(string path)
+        private static bool IsController(string path)
         {
             Type type = AssetDatabase.GetMainAssetTypeAtPath(path);
-            return type != null && (typeof(AnimationClip).IsAssignableFrom(type) || typeof(RuntimeAnimatorController).IsAssignableFrom(type) ||
-                typeof(AvatarMask).IsAssignableFrom(type) || type == typeof(UnityEditor.Animations.BlendTree));
+            return type != null && typeof(RuntimeAnimatorController).IsAssignableFrom(type);
         }
-
-        // The dependencies the scan opens: prefabs (a nested prefab's own references) and materials (their shaders).
-        private static readonly HashSet<string> DependencyFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".prefab", ".mat" };
 
         // The prefab asset itself as a nested prefab's source (m_SourcePrefab): not one of the objects LoadAllAssetsAtPath gives.
         private const long PrefabAssetFileId = 100100000;
