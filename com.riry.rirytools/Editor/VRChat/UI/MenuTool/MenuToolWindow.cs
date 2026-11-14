@@ -1057,7 +1057,7 @@ namespace Riry.RiryTools.Editor
         {
             var sources = checks.SelectMany(c => c.Affected).Where(a => a != null).Distinct().Select(a => a.name).ToList();
             string message = "Apply " + plan.Moves.Count + " planned moves to " + PlanRoot.name + "?\n\nSources changed: " + string.Join(", ", sources) +
-                "\n\nMenu assets other places also use are copied to Assets/RiryTools/MenuTool first. One Ctrl+Z undoes everything this does (copied files stay)." +
+                "\n\nMenu assets are edited in place: anything else that uses them changes too. One Ctrl+Z undoes everything this does (new menu files stay)." +
                 (plan.Moves.Any(m => m.Destructive) ? "\n\nDestructive moves edit their sources in place: " +
                     string.Join(", ", checks.Where(c => c.Move.Destructive).SelectMany(c => c.Affected).Where(a => a != null).Distinct().Select(a => a.name)) +
                     ". Every avatar and prefab that uses them changes." : "");
