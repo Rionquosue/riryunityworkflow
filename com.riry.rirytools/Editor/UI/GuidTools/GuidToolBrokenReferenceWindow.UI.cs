@@ -24,7 +24,15 @@ namespace Riry.RiryTools.Editor
             const int ShownFiles = 10;
             EditorGUILayout.LabelField("Files (" + files.Count + "): " + string.Join(", ", files.GetRange(0, Math.Min(ShownFiles, files.Count))) +
                 (files.Count > ShownFiles ? " and " + (files.Count - ShownFiles) + " more" : ""), EditorStyles.wordWrappedMiniLabel);
-            if (GUILayout.Button("Rescan")) { Rescan(); RiryToolGUI.ExitAfterModal(); }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Rescan")) { Rescan(); RiryToolGUI.ExitAfterModal(); }
+                if (GUILayout.Button(new GUIContent("Scrub unused overrides", "Removes prefab overrides left pointing at objects that no longer exist.")))
+                {
+                    ScrubUnusedOverrides();
+                    RiryToolGUI.ExitAfterModal();
+                }
+            }
             if (plan == null) return;
             HashSet<string> ignored = GuidToolIgnoredReferences.All();
             List<string> shownMissing = plan.Missing.Keys.Where(m => !ignored.Contains(m)).ToList();

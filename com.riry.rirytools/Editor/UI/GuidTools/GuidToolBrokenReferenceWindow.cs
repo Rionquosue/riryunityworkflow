@@ -187,6 +187,35 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // Scrub unused overrides (GuidToolUnusedOverrides) in the scanned files: asks first, logs what changed, then rescans.
+        private void ScrubUnusedOverrides()
+        {
+            List<string> scanned = plan != null ? plan.Files : files;
+            List<string> found = GuidToolUnusedOverrides.Find(scanned);
+            if (found.Count == 0)
+            {
+                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "No unused overrides were found.", "OK");
+                return;
+            }
+            PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+            bool prefabFiles = found.Any(path => path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) && (stage == null || stage.assetPath != path));
+            if (!EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Remove unused overrides in:\n\n" + string.Join("\n", found.Take(15)) +
+                    (found.Count > 15 ? "\nand " + (found.Count - 15) + " more" : "") +
+                    (prefabFiles ? "\n\nPrefab files are saved straight away; Ctrl+Z can't undo those." : ""), "Scrub", "Cancel"))
+                return;
+            try
+            {
+                int scrubbed = GuidToolUnusedOverrides.Scrub(found);
+                RiryLog.Info(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": removed unused overrides from " + scrubbed + " prefab instance(s) in " +
+                    string.Join(", ", found) + ".");
+            }
+            catch (Exception exception)
+            {
+                RiryLog.Exception(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": scrubbing unused overrides failed", exception);
+            }
+            Rescan();
+        }
+
         private void ApplyRedirects()
         {
             if (EditorSettings.serializationMode != SerializationMode.ForceText)
