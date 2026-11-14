@@ -82,7 +82,7 @@ namespace Riry.RiryTools.Editor
                 foreach (KeyValuePair<long, string> reference in
                          GuidToolReferenceRepair.FindGuidReferences(System.IO.File.ReadAllBytes(fullPath)))
                 {
-                    if (!GuidToolReferenceRepair.IsMissing(reference.Value)) continue;
+                    if (!GuidToolReferenceRepair.IsMissing(reference.Value) || GuidToolIgnoredReferences.Contains(reference.Value)) continue;
                     PromptOnOpen(path);
                     return;
                 }

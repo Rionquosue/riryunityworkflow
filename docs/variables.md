@@ -82,6 +82,7 @@ Per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.Remote` | The **Remote** AutoSync pushes to (a remote name). Unset means `origin`, else the first remote. Read through `AutoSyncGitRemotes.Selected`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
 | `RiryTools.AvatarMigrator.SdkNoticeOff` | `1` once **Do not show again** is chosen on the VRC SDK not detected popup. Unset by default. | `UI/AvatarMigrator/AvatarMigratorSdkNoticeWindow.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
 | `RiryTools.GuidTools.BrokenPromptOff` | Scene and prefab paths, one per line, where the broken reference prompt's **Do Not Show Again** was chosen. Unset by default. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
+| `RiryTools.GuidTools.Ignored` | Broken references chosen to **Ignore**, one per line: a missing GUID, or `<path> (file ID <n>)` for a missing object. Listed under Ignored; left out of the save check, its warning and the prompt on open. | `GuidTools/GuidToolIgnoredReferences.cs` |
 | `RiryTools.MenuTool.LastAvatar` | GlobalObjectId of the last avatar the Menu Tool scanned (saved scenes only); selected when the Menu Tool opens with no target. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 
 ### SessionState
@@ -362,6 +363,7 @@ One entry or submenu per tool.
 | Name | Use | Scripts |
 |---|---|---|
 | `Tools/RiryTools/Animator Tools/Clean Animation Keys` | (1994) The Clean Animation Keys window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Animator Tools/Controller Cleaner` | (1996) The Controller Cleaner window; also the Main Menu's Animator Tools tab, sub-tab Controller Cleaner. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Animator Tools/Find and Replace` | (1995) The Find and Replace popup (`BehaviourFindReplaceWindow`), no source; also the Main Menu's Animator Tools tab, sub-tab Find and Replace (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/AutoSync/Configuration` | (2001) The AutoSync Configuration window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/AutoSync/Sync` | (2000) Turns AutoSync on or off; check mark. | `UI/RiryToolsMenuBar.cs` |

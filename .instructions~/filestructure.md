@@ -31,6 +31,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Avatar Migration Assistant | `AvatarMigrator/` | `AvatarMigrator` |
 | Blendshape Sync | `BlendshapeSync/` | `BlendshapeSync` |
 | Clean Animation Keys | `AnimatorTools/` | `CleanAnimationKeys` |
+| Controller Cleaner | `AnimatorTools/` | `ControllerCleaner` |
 | Constraint Tool (Train, Bezier, Insertable prop) | `VRChat/ConstraintTools/` | `ConstraintTool`, `ConstraintTrain`, `ConstraintBezier`, `InsertableProp` |
 | Find and Replace | `VRChat/AnimatorTools/` | `BehaviourFindReplace` |
 | Find Null references | `Debug/` | `FindNullReferences` |
@@ -59,7 +60,10 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 com.riry.rirytools/
 └── Editor/
     ├── AnimatorTools/
-    │   └── CleanAnimationKeys.cs
+    │   ├── CleanAnimationKeys.cs
+    │   ├── ControllerCleanerClean.cs
+    │   ├── ControllerCleanerScan.cs
+    │   └── ControllerCleanerSources.cs
     ├── AutoSync/
     │   ├── AutoSync.cs
     │   ├── AutoSyncGitActions.cs
@@ -124,6 +128,7 @@ com.riry.rirytools/
     │   ├── GuidToolBrokenReferenceSaveGuard.cs
     │   ├── GuidToolBytes.cs
     │   ├── GuidToolLog.cs
+    │   ├── GuidToolIgnoredReferences.cs
     │   ├── GuidToolPrefabStageRepair.cs
     │   ├── GuidToolMetaHistoryParser.cs
     │   ├── GuidToolReferenceCache.cs
@@ -157,7 +162,8 @@ com.riry.rirytools/
     │   ├── AnimatorTools/
     │   │   ├── CleanAnimationKeysButton.cs
     │   │   ├── CleanAnimationKeysWhitelistWindow.cs
-    │   │   └── CleanAnimationKeysWindow.cs
+    │   │   ├── CleanAnimationKeysWindow.cs
+    │   │   └── ControllerCleanerWindow.cs
     │   ├── AutoSync/
     │   │   ├── AutoSyncGitConfigureWindow.cs
     │   │   ├── AutoSyncGitConfigureWindow.UI.cs

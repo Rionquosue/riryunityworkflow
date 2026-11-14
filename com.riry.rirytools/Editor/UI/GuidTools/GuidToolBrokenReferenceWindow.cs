@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -102,7 +103,7 @@ namespace Riry.RiryTools.Editor
         private void UpdateExitPrompt()
         {
             saveChangesMessage = ExitMessage;
-            hasUnsavedChanges = plan != null && plan.Missing.Count > 0;
+            hasUnsavedChanges = plan != null && plan.Missing.Keys.Any(missing => !GuidToolIgnoredReferences.Contains(missing));
         }
 
         // Save in Unity's close prompt keeps the window open, like Cancel; Discard closes it.
@@ -143,6 +144,7 @@ namespace Riry.RiryTools.Editor
             var redirects = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (string missing in plan.Missing.Keys)
             {
+                if (GuidToolIgnoredReferences.Contains(missing)) continue;
                 GuidToolRepairCandidate chosen = Chosen(missing);
                 string guid = chosen != null && !chosen.IsRestore ? chosen.TargetGuid : null;
                 Object other;
@@ -159,6 +161,7 @@ namespace Riry.RiryTools.Editor
             var restores = new List<GuidToolRepairCandidate>();
             foreach (string missing in plan.Missing.Keys)
             {
+                if (GuidToolIgnoredReferences.Contains(missing)) continue;
                 GuidToolRepairCandidate chosen = Chosen(missing);
                 if (chosen != null && chosen.IsRestore) restores.Add(chosen);
             }
