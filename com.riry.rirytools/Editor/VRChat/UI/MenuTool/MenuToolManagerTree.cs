@@ -27,6 +27,9 @@ namespace Riry.RiryTools.Editor
         internal Action<string, string, int> Move;
         internal Action<MenuToolEntry> Clicked;
         internal Action<MenuToolEntry> ContextMove;
+        // Rename Menu Entry (path, new name) and Delete Menu Entry (path), planned by the window.
+        internal Action<string, string> Rename;
+        internal Action<string> Delete;
         private MenuToolEntry root;
         private int handleDown = -1;
         private readonly Dictionary<MenuToolEntry, int> idOf = new Dictionary<MenuToolEntry, int>();
@@ -51,6 +54,17 @@ namespace Riry.RiryTools.Editor
                 var row = selection.Count > 0 ? FindItem(selection[0], rootItem) as Row : null;
                 return row != null ? row.Entry : null;
             }
+        }
+
+        /// <summary>Rename Menu Entry from the radial: selects the entry's row and opens its name field.</summary>
+        internal void BeginRename(MenuToolEntry entry)
+        {
+            int id;
+            if (entry == null || !idOf.TryGetValue(entry, out id)) return;
+            searchString = "";
+            Select(entry);
+            TreeViewItem item = FindItem(id, rootItem);
+            if (item != null) BeginRename(item);
         }
 
         internal void Select(MenuToolEntry entry)
@@ -93,6 +107,13 @@ namespace Riry.RiryTools.Editor
         {
             var row = (Row)args.item;
             Rect rect = args.rowRect;
+            // A triple-click opens the name field (Rename Menu Entry).
+            Event click = Event.current;
+            if (click.type == EventType.MouseDown && click.button == 0 && click.clickCount == 3 && rect.Contains(click.mousePosition) && CanRename(row))
+            {
+                click.Use();
+                BeginRename(row);
+            }
             float x = rect.x + GetContentIndent(row);
             var handle = new Rect(x, rect.y + 2f, Handle, rect.height - 4f);
             if (!hasSearch)
@@ -117,6 +138,37 @@ namespace Riry.RiryTools.Editor
             EditorGUI.LabelField(new Rect(x, rect.y, Mathf.Max(0f, free - folderWidth - 4f), rect.height),
                 new GUIContent(row.Entry.Name + (row.Entry.IsSubMenu ? "  ▸" : ""), tip), row.Entry.IsSubMenu ? EditorStyles.boldLabel : EditorStyles.label);
             if (folderWidth > 0f) EditorGUI.LabelField(new Rect(rect.xMax - folderWidth, rect.y, folderWidth, rect.height), new GUIContent(folder, folder), EditorStyles.miniLabel);
+        }
+
+        protected override bool CanRename(TreeViewItem item)
+        {
+            var row = item as Row;
+            return row != null && row.Entry != null && !row.Entry.Generated;
+        }
+
+        protected override Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
+        {
+            float x = rowRect.x + GetContentIndent(item) + Handle + 2f + 36f;
+            return new Rect(x, rowRect.y, Mathf.Max(40f, rowRect.xMax - x), rowRect.height);
+        }
+
+        protected override void RenameEnded(RenameEndedArgs args)
+        {
+            var row = FindItem(args.itemID, rootItem) as Row;
+            string name = (args.newName ?? "").Trim();
+            if (!args.acceptedRename || row == null || name.Length == 0 || name == row.Entry.Name || Rename == null) return;
+            Rename(row.Entry.Path, name);
+        }
+
+        // Delete on a selected row: Delete Menu Entry.
+        protected override void KeyEvent()
+        {
+            Event current = Event.current;
+            if (current.type != EventType.KeyDown || current.keyCode != KeyCode.Delete || Delete == null) return;
+            MenuToolEntry entry = Selected;
+            if (entry == null || entry.Generated) return;
+            current.Use();
+            Delete(entry.Path);
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)

@@ -121,7 +121,7 @@ namespace Riry.RiryTools.Editor
             if (root == null) return null;
             var chain = new List<VRCExpressionsMenu> { root };
             VRCExpressionsMenu at = root;
-            foreach (string name in path.Split('/'))
+            foreach (string name in MenuToolVrcfuryMenu.Split(path))
             {
                 VRCExpressionsMenu.Control control = at.controls.FirstOrDefault(c =>
                     c.type == VRCExpressionsMenu.Control.ControlType.SubMenu && c.name == name && c.subMenu != null);

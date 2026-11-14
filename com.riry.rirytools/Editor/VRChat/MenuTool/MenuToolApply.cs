@@ -26,10 +26,12 @@ namespace Riry.RiryTools.Editor
         private const string ReorderType = "VF.Model.Feature.ReorderMenuItem";
         private const string ToggleType = "VF.Model.Feature.Toggle";
         private const string SetIconType = "VF.Model.Feature.SetIcon";
+#if RIRYTOOLS_MENUTOOL_MA
         private const string MaInstallerType = "nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller";
         private const string MaItemType = "nadena.dev.modular_avatar.core.ModularAvatarMenuItem";
         // Modular Avatar's SubmenuSource.Children.
         private const int MaChildrenSource = 1;
+#endif
         private const string UndoName = "Apply menu layout";
 
         internal sealed class Report
@@ -78,7 +80,9 @@ namespace Riry.RiryTools.Editor
                     {
                         expected.Add(new Expected { Path = check.After, Type = VRCExpressionsMenu.Control.ControlType.SubMenu, Parameters = new string[0] });
                         if (check.Edit == MenuToolMoveEdit.NewMenuAsset) NewMenuAsset(scan, destination, move.NewMenu.Trim(), Index(scan, ref references), report);
+#if RIRYTOOLS_MENUTOOL_MA
                         else NewMaItem(scan, destination, move.NewMenu.Trim());
+#endif
                         report.Applied++;
                         continue;
                     }
@@ -89,7 +93,9 @@ namespace Riry.RiryTools.Editor
                         expected.Add(new Expected { Path = check.After, Type = control.Type, Icon = control.Icon,
                             Parameters = check.Edit == MenuToolMoveEdit.NewControlVrcfury ? null : control.Parameters().ToArray() });
                         if (check.Edit == MenuToolMoveEdit.NewControlAsset) NewControlAsset(scan, destination, control, Index(scan, ref references), report);
+#if RIRYTOOLS_MENUTOOL_MA
                         else if (check.Edit == MenuToolMoveEdit.NewControlMa) NewControlMa(scan, destination, control);
+#endif
                         else NewRule(scan.Avatar.gameObject, RiryToolsTypes.Named(VrcfuryType), ToggleType, rule =>
                         {
                             string into = MenuToolVrcfuryMenu.PathOf(destination);
@@ -109,6 +115,30 @@ namespace Riry.RiryTools.Editor
                         continue;
                     }
                     MenuToolEntry entry = scan.Root.Find(move.From);
+                    if (move.Remove || move.ToNull)
+                    {
+                        if (check.Edit == MenuToolMoveEdit.RemoveAsset) RemoveNative(scan, entry, Index(scan, ref references), report);
+                        else AddRule(scan, MenuToolVrcfuryMenu.PathOf(entry), "", -1, false);
+                        report.Applied++;
+                        continue;
+                    }
+                    if (move.IsRename)
+                    {
+                        expected.Add(new Expected { Path = check.After, Type = entry.Type, Icon = entry.Icon, Parameters = entry.Parameters().ToArray() });
+                        string old = MenuToolVrcfuryMenu.PathOf(entry), parent = MenuToolVrcfuryMenu.PathOf(entry.Parent);
+                        string renamed = (parent.Length == 0 ? "" : parent + "/") + MenuToolVrcfuryMenu.Escape(move.Rename.Trim());
+                        if (check.Edit == MenuToolMoveEdit.RenameAsset)
+                        {
+                            VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, Index(scan, ref references)), entry.Parent, report);
+                            Undo.RecordObject(holder, UndoName);
+                            holder.controls[entry.OwnerIndex].name = move.Rename.Trim();
+                            EditorUtility.SetDirty(holder);
+                            RepathVrcfury(scan, entry, old, renamed, report);
+                        }
+                        else AddRule(scan, old, renamed, -1, false);
+                        report.Applied++;
+                        continue;
+                    }
                     if (move.AssignIcon)
                     {
                         Texture2D icon = move.IconTexture;
@@ -122,16 +152,24 @@ namespace Riry.RiryTools.Editor
                     {
                         case MenuToolMoveEdit.NativeAssets:
                             MoveNative(scan, entry, destination, move.Index, Index(scan, ref references), report);
+                            RepathVrcfury(scan, entry, destination, report);
                             break;
                         case MenuToolMoveEdit.VrcfuryRule:
                             // Paths as VRCFury reads them: a slash inside a name written "\/".
                             string from = MenuToolVrcfuryMenu.PathOf(entry), into = MenuToolVrcfuryMenu.PathOf(destination);
                             AddRule(scan, from, (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name), move.Index, entry.Parent == destination);
                             break;
+#if RIRYTOOLS_MENUTOOL_MA
                         case MenuToolMoveEdit.MaReparent: Reparent(entry, destination, move.Index); break;
-                        case MenuToolMoveEdit.DestructiveAsset: MoveInPlace(entry, destination, move.Index); break;
+#endif
+                        case MenuToolMoveEdit.DestructiveAsset:
+                            MoveInPlace(entry, destination, move.Index);
+                            RepathVrcfury(scan, entry, destination, report);
+                            break;
                         case MenuToolMoveEdit.DestructivePath: Repath(entry, destination); break;
+#if RIRYTOOLS_MENUTOOL_MA
                         case MenuToolMoveEdit.MaRetarget: Retarget(scan, entry, destination); break;
+#endif
                     }
                     report.Applied++;
                 }
@@ -206,6 +244,73 @@ namespace Riry.RiryTools.Editor
             EditorUtility.SetDirty(to);
         }
 
+        /// <summary>
+        /// A submenu moved in its menu assets: every VRCFury menu path on the avatar inside its old path (Toggle and Puppet
+        /// names, Full Controller menu prefixes, Move Menu Item, Reorder Menu Item and Set Icon paths, the SPS menu path) is
+        /// rewritten to the new one, so what VRCFury adds there follows it. VRCFury items under it that no path of theirs
+        /// places there (a Full Controller menu asset merged higher up, Security Lock) are reported.
+        /// </summary>
+        private static void RepathVrcfury(MenuToolScan scan, MenuToolEntry entry, MenuToolEntry destination, Report report)
+        {
+            string into = MenuToolVrcfuryMenu.PathOf(destination);
+            RepathVrcfury(scan, entry, MenuToolVrcfuryMenu.PathOf(entry), (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name), report);
+        }
+
+        // The same for a submenu whose path goes from one VRCFury path to another (a move or a rename).
+        private static void RepathVrcfury(MenuToolScan scan, MenuToolEntry entry, string from, string to, Report report)
+        {
+            Type vrcfury = RiryToolsTypes.Named(VrcfuryType);
+            if (!entry.IsSubMenu || scan.Avatar == null || vrcfury == null) return;
+            if (MenuToolVrcfuryMenu.SamePath(from, to)) return;
+            var changed = new HashSet<Component>();
+            foreach (Component component in scan.Avatar.GetComponentsInChildren(vrcfury, true))
+            {
+                var serialized = new SerializedObject(component);
+                bool any = false;
+                foreach (SerializedProperty feature in MenuToolScanner.Features(serialized))
+                {
+                    switch (MenuToolScanner.FeatureName(feature))
+                    {
+                        case "Toggle":
+                        case "Puppet":
+                            any |= Rebase(feature.FindPropertyRelative("name"), from, to);
+                            break;
+                        case "FullController":
+                            SerializedProperty menus = feature.FindPropertyRelative("menus");
+                            for (int i = 0; menus != null && i < menus.arraySize; i++)
+                                any |= Rebase(menus.GetArrayElementAtIndex(i).FindPropertyRelative("prefix"), from, to);
+                            break;
+                        case "MoveMenuItem":
+                            any |= Rebase(feature.FindPropertyRelative("fromPath"), from, to);
+                            any |= Rebase(feature.FindPropertyRelative("toPath"), from, to);
+                            break;
+                        case "ReorderMenuItem":
+                        case "SetIcon":
+                            any |= Rebase(feature.FindPropertyRelative("path"), from, to);
+                            break;
+                        case "SpsOptions":
+                            any |= Rebase(feature.FindPropertyRelative("menuPath"), from, to);
+                            break;
+                    }
+                }
+                if (!any) continue;
+                serialized.ApplyModifiedProperties();
+                changed.Add(component);
+            }
+            foreach (Component left in entry.Descendants().Where(e => e.Origin == MenuToolOrigin.VRCFury && e.VrcfComponent != null && !changed.Contains(e.VrcfComponent))
+                .Select(e => e.VrcfComponent).Distinct())
+                report.Problems.Add(left.name + ": its VRCFury items in " + entry.Path + " are not placed by a path under it and were not repathed.");
+        }
+
+        private static bool Rebase(SerializedProperty property, string from, string to)
+        {
+            if (property == null || property.propertyType != SerializedPropertyType.String) return false;
+            string rebased = MenuToolVrcfuryMenu.Rebase(property.stringValue, from, to);
+            if (rebased == null || rebased == property.stringValue) return false;
+            property.stringValue = rebased;
+            return true;
+        }
+
         // Destructive Move of a VRCFury Toggle or Puppet: its feature's menu path becomes the destination's path and its name.
         private static void Repath(MenuToolEntry entry, MenuToolEntry destination)
         {
@@ -267,6 +372,15 @@ namespace Riry.RiryTools.Editor
             EditorUtility.SetDirty(holder);
         }
 
+        // Remove Menu Item from a menu asset: the control leaves the menu its slot shows (a copy when shared).
+        private static void RemoveNative(MenuToolScan scan, MenuToolEntry entry, ReferenceIndex index, Report report)
+        {
+            VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), entry.Parent, report);
+            Undo.RecordObject(holder, UndoName);
+            holder.controls.RemoveAt(entry.OwnerIndex);
+            EditorUtility.SetDirty(holder);
+        }
+
         // Assign Menu Icon through the chosen owner.
         private static void SetIcon(MenuToolScan scan, MenuToolEntry entry, Texture2D icon, MenuToolMoveEdit edit, ReferenceIndex index, Report report)
         {
@@ -278,11 +392,13 @@ namespace Riry.RiryTools.Editor
                     holder.controls[entry.OwnerIndex].icon = icon;
                     EditorUtility.SetDirty(holder);
                     break;
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.IconMa:
                     var item = new SerializedObject(entry.MaItem);
                     item.FindProperty("Control.icon").objectReferenceValue = icon;
                     item.ApplyModifiedProperties();
                     break;
+#endif
                 default:
                     NewRule(scan.Avatar.gameObject, RiryToolsTypes.Named(VrcfuryType), SetIconType, rule =>
                     {
@@ -529,6 +645,7 @@ namespace Riry.RiryTools.Editor
             serialized.ApplyModifiedProperties();
         }
 
+#if RIRYTOOLS_MENUTOOL_MA
         // ---- Modular Avatar ------------------------------------------------------------
 
         // Add menu as a Modular Avatar Menu Item: a new object named after the menu with a SubMenu item whose items are its own
@@ -602,6 +719,7 @@ namespace Riry.RiryTools.Editor
             target.objectReferenceValue = destination.Parent == null ? null : destination.SubMenuAsset;
             serialized.ApplyModifiedProperties();
         }
+#endif
     }
 }
 

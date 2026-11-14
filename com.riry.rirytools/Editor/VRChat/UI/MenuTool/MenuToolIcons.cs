@@ -18,7 +18,11 @@ namespace Riry.RiryTools.Editor
         internal static Texture Origin(MenuToolEntry entry)
         {
             if (entry.Origin == MenuToolOrigin.Native) return null;
+#if RIRYTOOLS_MENUTOOL_MA
             Component component = entry.Origin == MenuToolOrigin.VRCFury ? entry.VrcfComponent ?? entry.Source as Component : entry.MaItem ?? entry.MaInstaller ?? entry.Source as Component;
+#else
+            Component component = entry.Origin == MenuToolOrigin.VRCFury ? entry.VrcfComponent ?? entry.Source as Component : entry.Source as Component;
+#endif
             if (component == null) return null;
             string key = component.GetType().FullName;
             Texture icon;

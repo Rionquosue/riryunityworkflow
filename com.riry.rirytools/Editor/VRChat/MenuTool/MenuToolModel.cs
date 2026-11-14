@@ -11,7 +11,9 @@ namespace Riry.RiryTools.Editor
     {
         Native,
         VRCFury,
+#if RIRYTOOLS_MENUTOOL_MA
         ModularAvatar
+#endif
     }
 
     /// <summary>
@@ -49,11 +51,13 @@ namespace Riry.RiryTools.Editor
         internal int OwnerIndex = -1;
         // A native submenu's own menu asset (also for submenus whose items come from an asset through MA or VRCFury).
         internal VRCExpressionsMenu SubMenuAsset;
+#if RIRYTOOLS_MENUTOOL_MA
         // Modular Avatar: the menu item component, and the installer that installs it (on it or an ancestor).
         internal Component MaItem;
         internal Component MaInstaller;
         // Modular Avatar: the object whose children are this submenu's items (MenuSource Children).
         internal GameObject MaChildrenSource;
+#endif
         // VRCFury: the component, and the path the feature gives before any move rule.
         internal Component VrcfComponent;
         internal string VrcfPath;
@@ -70,7 +74,8 @@ namespace Riry.RiryTools.Editor
             {
                 if (Parent == null) return "";
                 string parent = Parent.Path;
-                return parent.Length == 0 ? Name : parent + "/" + Name;
+                // A slash inside a name is written "\/", as in VRCFury's paths.
+                return parent.Length == 0 ? MenuToolVrcfuryMenu.Escape(Name) : parent + "/" + MenuToolVrcfuryMenu.Escape(Name);
             }
         }
 
@@ -123,7 +128,7 @@ namespace Riry.RiryTools.Editor
         {
             if (string.IsNullOrEmpty(path)) return this;
             MenuToolEntry at = this;
-            foreach (string part in path.Split('/'))
+            foreach (string part in MenuToolVrcfuryMenu.Split(path))
             {
                 at = at.Child(part);
                 if (at == null) return null;
@@ -220,7 +225,9 @@ namespace Riry.RiryTools.Editor
         // Unsupported generators, missing references and other things worth knowing, each once.
         internal readonly List<string> Notes = new List<string>();
         internal bool VrcfuryInstalled;
+#if RIRYTOOLS_MENUTOOL_MA
         internal bool ModularAvatarInstalled;
+#endif
         // VRCFury's Override Menu Settings: the name and icon of its "Next" pages.
         internal string NextText = "Next";
         internal Texture2D NextIcon;

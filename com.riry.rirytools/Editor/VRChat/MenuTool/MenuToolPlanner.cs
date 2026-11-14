@@ -30,13 +30,31 @@ namespace Riry.RiryTools.Editor
                     {
                         Name = (move.IsAdd ? move.NewMenu : move.NewControl).Trim(),
                         Type = move.IsAdd ? VRCExpressionsMenu.Control.ControlType.SubMenu : (VRCExpressionsMenu.Control.ControlType)move.ControlType,
+#if RIRYTOOLS_MENUTOOL_MA
                         Origin = added.Edit == MenuToolMoveEdit.NewMaItem || added.Edit == MenuToolMoveEdit.NewControlMa ? MenuToolOrigin.ModularAvatar
                             : added.Edit == MenuToolMoveEdit.NewControlVrcfury ? MenuToolOrigin.VRCFury : MenuToolOrigin.Native,
+#else
+                        Origin = added.Edit == MenuToolMoveEdit.NewControlVrcfury ? MenuToolOrigin.VRCFury : MenuToolOrigin.Native,
+#endif
                         Added = added.Edit
                     };
                     if (move.IsAddControl) ControlOf(move, made);
                     added.Destination.Add(made);
                     added.Entry = made;
+                    continue;
+                }
+                if (move.IsRename)
+                {
+                    MenuToolMoveCheck renamed = CheckRename(scan, root, move);
+                    checks.Add(renamed);
+                    if (renamed.Errors.Count == 0) renamed.Entry.Name = move.Rename.Trim();
+                    continue;
+                }
+                if (move.Remove || move.ToNull)
+                {
+                    MenuToolMoveCheck removed = CheckRemove(scan, root, move);
+                    checks.Add(removed);
+                    if (removed.Errors.Count == 0) removed.Entry.Parent.Children.Remove(removed.Entry);
                     continue;
                 }
                 if (move.AssignIcon)
@@ -88,7 +106,7 @@ namespace Riry.RiryTools.Editor
             if (!sameMenu && check.Destination.Children.Any(child => child.Name == check.Entry.Name))
                 check.Warnings.Add(check.Destination.Path + " already has an item named " + check.Entry.Name +
                     (check.Entry.IsSubMenu && scan.VrcfuryInstalled ? "; VRCFury merges submenus of the same name." : "."));
-            check.After = (check.Destination.Path.Length == 0 ? "" : check.Destination.Path + "/") + check.Entry.Name;
+            check.After = (check.Destination.Path.Length == 0 ? "" : check.Destination.Path + "/") + MenuToolVrcfuryMenu.Escape(check.Entry.Name);
             if (move.Destructive) Destructive(scan, check);
             else Ownership(scan, check, sameMenu);
             return check;
@@ -144,16 +162,92 @@ namespace Riry.RiryTools.Editor
             }
             MenuToolEntry entry = check.Entry;
             bool asset = entry.Origin == MenuToolOrigin.Native && (entry.OwnerMenu != null || entry.Added == MenuToolMoveEdit.NewControlAsset || entry.Added == MenuToolMoveEdit.NewMenuAsset);
+#if RIRYTOOLS_MENUTOOL_MA
             bool ma = entry.Origin == MenuToolOrigin.ModularAvatar && (entry.MaItem != null && !EditorUtility.IsPersistent(entry.MaItem) || entry.Added == MenuToolMoveEdit.NewControlMa || entry.Added == MenuToolMoveEdit.NewMaItem);
+#endif
             if (asset) check.Candidates.Add(MenuToolMoveEdit.IconAsset);
+#if RIRYTOOLS_MENUTOOL_MA
             if (ma) check.Candidates.Add(MenuToolMoveEdit.IconMa);
+#endif
             if (scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.IconVrcfury);
+#if RIRYTOOLS_MENUTOOL_MA
             Decide(check, entry.Origin == MenuToolOrigin.Native && asset ? MenuToolMoveEdit.IconAsset : entry.Origin == MenuToolOrigin.ModularAvatar && ma ? MenuToolMoveEdit.IconMa
                 : entry.Origin == MenuToolOrigin.VRCFury && check.Candidates.Contains(MenuToolMoveEdit.IconVrcfury) ? MenuToolMoveEdit.IconVrcfury : MenuToolMoveEdit.Ambiguous,
                 "No supported edit sets the icon of " + entry.Path + ".");
+#else
+            Decide(check, entry.Origin == MenuToolOrigin.Native && asset ? MenuToolMoveEdit.IconAsset
+                : entry.Origin == MenuToolOrigin.VRCFury && check.Candidates.Contains(MenuToolMoveEdit.IconVrcfury) ? MenuToolMoveEdit.IconVrcfury : MenuToolMoveEdit.Ambiguous,
+                "No supported edit sets the icon of " + entry.Path + ".");
+#endif
             if (check.Edit == MenuToolMoveEdit.IconAsset && entry.OwnerMenu != null) check.Affected.Add(entry.OwnerMenu);
+#if RIRYTOOLS_MENUTOOL_MA
             if (check.Edit == MenuToolMoveEdit.IconMa && entry.MaItem != null) check.Affected.Add(entry.MaItem);
+#endif
             if (check.Edit == MenuToolMoveEdit.IconVrcfury) check.Affected.Add(scan.Avatar.gameObject);
+            return check;
+        }
+
+        // Delete Menu Entry: the entry must exist and be a control in a menu asset, which it is deleted from. Move to… > <NULL>:
+        // any entry, through a VRCFury Move Menu Item rule with a blank destination.
+        private static MenuToolMoveCheck CheckRemove(MenuToolScan scan, MenuToolEntry root, MenuToolPlannedMove move)
+        {
+            var check = new MenuToolMoveCheck { Move = move, Before = move.From, After = move.ToNull ? "<NULL>" : move.From + " (deleted)" };
+            check.Entry = root.Find(move.From ?? "");
+            if (check.Entry == null || check.Entry.Parent == null)
+            {
+                check.Errors.Add(move.From + " is no longer in the menu.");
+                return check;
+            }
+            MenuToolEntry entry = check.Entry;
+            if (entry.Generated)
+            {
+                check.Errors.Add(entry.Name + " is made by VRCFury's pagination and cannot be removed.");
+                return check;
+            }
+            if (move.ToNull)
+            {
+                if (scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.RemoveVrcfury);
+                Decide(check, MenuToolMoveEdit.RemoveVrcfury, "Move to <NULL> needs VRCFury and an avatar descriptor.");
+            }
+            else
+            {
+                if (entry.Origin == MenuToolOrigin.Native && entry.OwnerMenu != null) check.Candidates.Add(MenuToolMoveEdit.RemoveAsset);
+                Decide(check, MenuToolMoveEdit.RemoveAsset, entry.Path + " is not in a menu asset: use Move to… > <NULL> for VRCFury items.");
+            }
+            if (check.Edit == MenuToolMoveEdit.RemoveAsset) check.Affected.Add(entry.OwnerMenu);
+            if (check.Edit == MenuToolMoveEdit.RemoveVrcfury) check.Affected.Add(scan.Avatar.gameObject);
+            return check;
+        }
+
+        // Rename Menu Entry: the entry must exist, the name not be empty or taken in its submenu; a menu-asset control is renamed
+        // in its asset, otherwise (or by choice) a VRCFury Move Menu Item rule renames it.
+        private static MenuToolMoveCheck CheckRename(MenuToolScan scan, MenuToolEntry root, MenuToolPlannedMove move)
+        {
+            string name = move.Rename.Trim();
+            var check = new MenuToolMoveCheck { Move = move, Before = move.From };
+            check.Entry = root.Find(move.From ?? "");
+            if (check.Entry == null || check.Entry.Parent == null)
+            {
+                check.Errors.Add(move.From + " is no longer in the menu.");
+                return check;
+            }
+            MenuToolEntry entry = check.Entry;
+            check.After = (entry.Parent.Path.Length == 0 ? "" : entry.Parent.Path + "/") + MenuToolVrcfuryMenu.Escape(name);
+            if (entry.Generated)
+            {
+                check.Errors.Add(entry.Name + " is made by VRCFury's pagination and cannot be renamed.");
+                return check;
+            }
+            if (name.Length == 0) check.Errors.Add("A name cannot be empty.");
+            else if (entry.Parent.Children.Any(child => child != entry && child.Name == name)) check.Errors.Add((entry.Parent.Parent == null ? "The root menu" : entry.Parent.Path) + " already has an item named " + name + ".");
+            if (check.Errors.Count > 0) return check;
+            bool asset = entry.Origin == MenuToolOrigin.Native && entry.OwnerMenu != null;
+            if (asset) check.Candidates.Add(MenuToolMoveEdit.RenameAsset);
+            if (scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.RenameVrcfury);
+            Decide(check, asset ? MenuToolMoveEdit.RenameAsset : entry.Origin == MenuToolOrigin.VRCFury ? MenuToolMoveEdit.RenameVrcfury : MenuToolMoveEdit.Ambiguous,
+                "No supported edit renames " + entry.Path + ".");
+            if (check.Edit == MenuToolMoveEdit.RenameAsset) check.Affected.Add(entry.OwnerMenu);
+            if (check.Edit == MenuToolMoveEdit.RenameVrcfury) check.Affected.Add(scan.Avatar.gameObject);
             return check;
         }
 
@@ -188,17 +282,27 @@ namespace Riry.RiryTools.Editor
             CheckCapacity(scan, check, parentName, count);
             MenuToolEntry parent = check.Destination;
             if (CanAddNative(scan, parent)) check.Candidates.Add(MenuToolMoveEdit.NewMenuAsset);
+#if RIRYTOOLS_MENUTOOL_MA
             if (CanAddMa(scan, parent)) check.Candidates.Add(MenuToolMoveEdit.NewMaItem);
+#endif
             if (check.Candidates.Count == 0)
             {
                 check.Edit = MenuToolMoveEdit.Invalid;
+#if RIRYTOOLS_MENUTOOL_MA
                 check.Errors.Add("No supported edit adds a menu to " + parentName + " (it needs a menu asset, or Modular Avatar; VRCFury cannot make an empty submenu).");
+#else
+                check.Errors.Add("No supported edit adds a menu to " + parentName + " (it needs a menu asset; VRCFury cannot make an empty submenu).");
+#endif
                 return check;
             }
             // Who owns the parent: a native menu gets a menu asset, an MA children submenu an MA item; the user chooses otherwise.
             MenuToolMoveEdit preferred = check.Candidates.Count == 1 ? check.Candidates[0]
                 : parent.Origin == MenuToolOrigin.Native && check.Candidates.Contains(MenuToolMoveEdit.NewMenuAsset) ? MenuToolMoveEdit.NewMenuAsset
+#if RIRYTOOLS_MENUTOOL_MA
                 : MaChildren(parent) ? MenuToolMoveEdit.NewMaItem : MenuToolMoveEdit.Ambiguous;
+#else
+                : MenuToolMoveEdit.Ambiguous;
+#endif
             MenuToolMoveEdit chosen;
             if (!string.IsNullOrEmpty(move.Choice) && Enum.TryParse(move.Choice, out chosen) && check.Candidates.Contains(chosen)) check.Edit = chosen;
             else check.Edit = preferred;
@@ -220,11 +324,17 @@ namespace Riry.RiryTools.Editor
             CheckCapacity(scan, check, parentName, count);
             MenuToolEntry parent = check.Destination;
             if (CanAddNative(scan, parent)) check.Candidates.Add(MenuToolMoveEdit.NewControlAsset);
+#if RIRYTOOLS_MENUTOOL_MA
             if (CanAddMa(scan, parent)) check.Candidates.Add(MenuToolMoveEdit.NewControlMa);
+#endif
             if (scan.VrcfuryInstalled && scan.Avatar != null && type == VRCExpressionsMenu.Control.ControlType.Toggle)
                 check.Candidates.Add(MenuToolMoveEdit.NewControlVrcfury);
             Decide(check, parent.Origin == MenuToolOrigin.Native && check.Candidates.Contains(MenuToolMoveEdit.NewControlAsset) ? MenuToolMoveEdit.NewControlAsset
+#if RIRYTOOLS_MENUTOOL_MA
                 : MaChildren(parent) && check.Candidates.Contains(MenuToolMoveEdit.NewControlMa) ? MenuToolMoveEdit.NewControlMa : MenuToolMoveEdit.Ambiguous,
+#else
+                : MenuToolMoveEdit.Ambiguous,
+#endif
                 "No supported edit adds a control to " + parentName + ".");
             if (check.Errors.Count > 0) return check;
             // VRCFury makes its toggle's parameter (a global one when named); the others need a declared one.
@@ -237,7 +347,9 @@ namespace Riry.RiryTools.Editor
                 UnityEngine.Object parentMenu = parent.Parent == null ? scan.Avatar.expressionsMenu : parent.SubMenuAsset;
                 if (parentMenu != null) check.Affected.Add(parentMenu);
             }
+#if RIRYTOOLS_MENUTOOL_MA
             else if (check.Edit == MenuToolMoveEdit.NewControlMa) check.Affected.Add(parent.MaChildrenSource != null ? (UnityEngine.Object)parent.MaChildrenSource : scan.Avatar.gameObject);
+#endif
             else if (check.Edit == MenuToolMoveEdit.NewControlVrcfury) check.Affected.Add(scan.Avatar.gameObject);
             return check;
         }
@@ -266,6 +378,7 @@ namespace Riry.RiryTools.Editor
             return scan.Avatar != null && NativeAsset(scan, parent);
         }
 
+#if RIRYTOOLS_MENUTOOL_MA
         // Add menu / Add New Control: the parent takes a new Modular Avatar item (the avatar is in a scene, and the parent is an
         // MA children submenu, the root, a native submenu with an asset, or a menu asset the plan adds).
         private static bool CanAddMa(MenuToolScan scan, MenuToolEntry parent)
@@ -274,6 +387,7 @@ namespace Riry.RiryTools.Editor
                 (MaChildren(parent) || parent.Parent == null || parent.SubMenuAsset != null || parent.Added == MenuToolMoveEdit.NewMenuAsset);
         }
 
+#endif
         // A native submenu with its own menu asset (the root: the descriptor's menu), or one the plan adds as a menu asset.
         private static bool NativeAsset(MenuToolScan scan, MenuToolEntry menu)
         {
@@ -282,12 +396,14 @@ namespace Riry.RiryTools.Editor
             return menu.SubMenuAsset != null || menu.Added == MenuToolMoveEdit.NewMenuAsset;
         }
 
+#if RIRYTOOLS_MENUTOOL_MA
         // A Modular Avatar submenu whose items are an object's children, or one the plan adds as an MA item.
         private static bool MaChildren(MenuToolEntry menu)
         {
             return menu.MaChildrenSource != null || menu.Added == MenuToolMoveEdit.NewMaItem;
         }
 
+#endif
         // Chooses the edit from the origin of the entry and the destination (the spec's table).
         private static void Ownership(MenuToolScan scan, MenuToolMoveCheck check, bool sameMenu)
         {
@@ -310,6 +426,7 @@ namespace Riry.RiryTools.Editor
                         check.Candidates.Add(MenuToolMoveEdit.NativeAssets);
                     if (vrcfuryRule) check.Candidates.Add(MenuToolMoveEdit.VrcfuryRule);
                     break;
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolOrigin.ModularAvatar:
                     if ((entry.MaItem != null && CanReparent(entry.MaItem.gameObject) || entry.Added == MenuToolMoveEdit.NewMaItem || entry.Added == MenuToolMoveEdit.NewControlMa) && MaChildren(destination))
                         check.Candidates.Add(MenuToolMoveEdit.MaReparent);
@@ -319,10 +436,13 @@ namespace Riry.RiryTools.Editor
                         check.Candidates.Add(MenuToolMoveEdit.MaRetarget);
                     if (vrcfuryRule) check.Candidates.Add(MenuToolMoveEdit.VrcfuryRule);
                     break;
+#endif
             }
+#if RIRYTOOLS_MENUTOOL_MA
             if (sameMenu && entry.Origin == MenuToolOrigin.ModularAvatar && entry.Parent != null && MaChildren(entry.Parent) &&
                 (entry.MaItem != null && CanReparent(entry.MaItem.gameObject) || entry.Added == MenuToolMoveEdit.NewMaItem) && !check.Candidates.Contains(MenuToolMoveEdit.MaReparent))
                 check.Candidates.Insert(0, MenuToolMoveEdit.MaReparent);
+#endif
             if (check.Candidates.Count == 0)
             {
                 check.Edit = MenuToolMoveEdit.Invalid;
@@ -357,7 +477,9 @@ namespace Riry.RiryTools.Editor
             }
             Func<MenuToolEntry, bool> same;
             if (entry.Origin == MenuToolOrigin.VRCFury) same = e => e.VrcfComponent == entry.VrcfComponent && e.OwnerMenu != null;
+#if RIRYTOOLS_MENUTOOL_MA
             else if (entry.Origin == MenuToolOrigin.ModularAvatar) same = e => e.MaInstaller == entry.MaInstaller && (e.MaItem != null || e.OwnerMenu != null);
+#endif
             else return null;
             MenuToolEntry first = entry;
             while (first.Parent != null && first.Parent.Parent != null && same(first.Parent)) first = first.Parent;
@@ -372,7 +494,11 @@ namespace Riry.RiryTools.Editor
             MenuToolEntry root = MenuRoot(entry, out VRCExpressionsMenu rootAsset);
             if (root == null)
             {
+#if RIRYTOOLS_MENUTOOL_MA
                 check.Errors.Add("Destructive Move is for items Modular Avatar or VRCFury add.");
+#else
+                check.Errors.Add("Destructive Move is for items VRCFury adds.");
+#endif
                 return;
             }
             if (destination != root && !MenuToolScanner.IsUnder(destination, root))
@@ -382,7 +508,9 @@ namespace Riry.RiryTools.Editor
             }
             if (entry.Origin == MenuToolOrigin.VRCFury && entry.OwnerMenu == null) check.Edit = MenuToolMoveEdit.DestructivePath;
             else if (entry.OwnerMenu != null && (destination == root ? rootAsset : destination.SubMenuAsset) != null) check.Edit = MenuToolMoveEdit.DestructiveAsset;
+#if RIRYTOOLS_MENUTOOL_MA
             else if (entry.MaItem != null && CanReparent(entry.MaItem.gameObject) && MaChildren(destination)) check.Edit = MenuToolMoveEdit.MaReparent;
+#endif
             else
             {
                 check.Errors.Add("No edit of " + entry.Name + "'s source moves it there.");
@@ -400,9 +528,11 @@ namespace Riry.RiryTools.Editor
                 case MenuToolMoveEdit.DestructivePath:
                     check.Affected.Add(entry.VrcfComponent);
                     break;
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.MaReparent:
                     check.Affected.Add(entry.MaItem);
                     break;
+#endif
             }
         }
 
@@ -411,11 +541,13 @@ namespace Riry.RiryTools.Editor
             if (candidates.Count == 1) return candidates[0];
             if (entry.Origin == MenuToolOrigin.VRCFury) return MenuToolMoveEdit.VrcfuryRule;
             if (entry.Origin == MenuToolOrigin.Native && candidates.Contains(MenuToolMoveEdit.NativeAssets)) return MenuToolMoveEdit.NativeAssets;
+#if RIRYTOOLS_MENUTOOL_MA
             if (entry.Origin == MenuToolOrigin.ModularAvatar)
             {
                 if (candidates.Contains(MenuToolMoveEdit.MaReparent)) return MenuToolMoveEdit.MaReparent;
                 if (candidates.Contains(MenuToolMoveEdit.MaRetarget)) return MenuToolMoveEdit.MaRetarget;
             }
+#endif
             return MenuToolMoveEdit.Ambiguous;
         }
 
@@ -426,12 +558,14 @@ namespace Riry.RiryTools.Editor
             return !PrefabUtility.IsPartOfPrefabInstance(gameObject) || PrefabUtility.IsOutermostPrefabInstanceRoot(gameObject);
         }
 
+#if RIRYTOOLS_MENUTOOL_MA
         // Whether the entry is the whole installed block of its installer (the first thing it installs at that level).
         private static bool IsInstallRoot(MenuToolEntry entry)
         {
             return entry.Parent == null || entry.Parent.MaInstaller != entry.MaInstaller;
         }
 
+#endif
         private static void Affected(MenuToolScan scan, MenuToolMoveCheck check)
         {
             switch (check.Edit)
@@ -444,20 +578,24 @@ namespace Riry.RiryTools.Editor
                 case MenuToolMoveEdit.VrcfuryRule:
                     if (scan.Avatar != null) check.Affected.Add(scan.Avatar.gameObject);
                     break;
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.MaReparent:
                     check.Affected.Add(check.Entry.MaItem);
                     break;
                 case MenuToolMoveEdit.MaRetarget:
                     check.Affected.Add(check.Entry.MaInstaller);
                     break;
+#endif
                 case MenuToolMoveEdit.NewMenuAsset:
                     UnityEngine.Object parentMenu = check.Destination.Parent == null ? scan.Avatar.expressionsMenu : check.Destination.SubMenuAsset;
                     if (parentMenu != null) check.Affected.Add(parentMenu);
                     break;
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.NewMaItem:
                     if (check.Destination.MaChildrenSource != null) check.Affected.Add(check.Destination.MaChildrenSource);
                     else if (scan.Avatar != null) check.Affected.Add(scan.Avatar.gameObject);
                     break;
+#endif
             }
         }
 
@@ -467,16 +605,28 @@ namespace Riry.RiryTools.Editor
             {
                 case MenuToolMoveEdit.NativeAssets: return "Move between menu assets";
                 case MenuToolMoveEdit.VrcfuryRule: return MoveRule;
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.MaReparent: return "Move the MA Menu Item object";
                 case MenuToolMoveEdit.MaRetarget: return "Retarget the MA Menu Installer";
+#endif
                 case MenuToolMoveEdit.NewMenuAsset: return "New menu asset";
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.NewMaItem: return "New MA Menu Item";
+#endif
                 case MenuToolMoveEdit.NewControlAsset: return "New control in the menu asset";
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.NewControlMa: return "New MA Menu Item";
+#endif
                 case MenuToolMoveEdit.NewControlVrcfury: return "New VRCFury Toggle";
                 case MenuToolMoveEdit.IconAsset: return "Icon in the menu asset";
                 case MenuToolMoveEdit.IconVrcfury: return "Set Icon (VRCFury)";
+#if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.IconMa: return "Icon on the MA Menu Item";
+#endif
+                case MenuToolMoveEdit.RemoveAsset: return "Delete from the menu asset";
+                case MenuToolMoveEdit.RenameAsset: return "Rename in the menu asset";
+                case MenuToolMoveEdit.RenameVrcfury: return "Rename with Move Menu Item (VRCFury)";
+                case MenuToolMoveEdit.RemoveVrcfury: return "Move Menu Item to nothing (VRCFury)";
                 case MenuToolMoveEdit.DestructiveAsset: return "Destructive Move in the menu asset";
                 case MenuToolMoveEdit.DestructivePath: return "Destructive Move of the VRCFury menu path";
                 case MenuToolMoveEdit.Ambiguous: return "Choose a source";

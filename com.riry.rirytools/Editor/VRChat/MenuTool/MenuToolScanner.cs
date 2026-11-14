@@ -28,12 +28,14 @@ namespace Riry.RiryTools.Editor
         internal const int MaxControls = 8;
         internal const string BaseBlock = "Base avatar";
         private const string VrcfuryType = "VF.Model.VRCFury";
+#if RIRYTOOLS_MENUTOOL_MA
         private const string MaInstallerType = "nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller";
         private const string MaItemType = "nadena.dev.modular_avatar.core.ModularAvatarMenuItem";
         private const string MaGroupType = "nadena.dev.modular_avatar.core.ModularAvatarMenuGroup";
         private const string MaInstallTargetType = "nadena.dev.modular_avatar.core.ModularAvatarMenuInstallTarget";
         private const string MaParametersType = "nadena.dev.modular_avatar.core.ModularAvatarParameters";
         private const string MaMergeAnimatorType = "nadena.dev.modular_avatar.core.ModularAvatarMergeAnimator";
+#endif
         // VRCFury components that add an SPS menu this scan does not model.
         // VRCFury features that add menu items this scan does not model.
         private static readonly string[] VrcfuryUnmodelled = { "TPSIntegration", "TPSIntegration2", "OGBIntegration", "OGBIntegration2", "ZawooIntegration", "Modes" };
@@ -54,9 +56,11 @@ namespace Riry.RiryTools.Editor
         {
             internal MenuToolScan Scan;
             internal GameObject Root;
+#if RIRYTOOLS_MENUTOOL_MA
             internal readonly HashSet<Component> InstalledByTarget = new HashSet<Component>();
             internal readonly List<(string Name, Component Item, bool Synced, bool Saved, bool IsDefault, MenuToolEntry Entry)> MaAuto =
                 new List<(string, Component, bool, bool, bool, MenuToolEntry)>();
+#endif
             internal readonly List<MenuToolVrcfuryMenuRule> VrcfRules = new List<MenuToolVrcfuryMenuRule>();
             // VRCFury SPS: its options feature (the first), and the sockets and plugs, in hierarchy order.
             internal SerializedProperty SpsOptions;
@@ -73,13 +77,17 @@ namespace Riry.RiryTools.Editor
             scan.Avatar = DescriptorAbove(target.transform);
             scan.Standalone = scan.Avatar == null;
             scan.VrcfuryInstalled = RiryToolsTypes.Named(VrcfuryType) != null;
+#if RIRYTOOLS_MENUTOOL_MA
             scan.ModularAvatarInstalled = RiryToolsTypes.Named(MaInstallerType) != null;
+#endif
             var context = new Context { Scan = scan, Root = scan.Avatar != null ? scan.Avatar.gameObject : target };
             if (scan.Standalone) scan.Note("No avatar descriptor above " + target.name + ": its own contributions are shown; where they land and what they cost depend on the avatar it is added to.");
 
             AddNative(context);
             Component[] components = AllComponents(context.Root);
+#if RIRYTOOLS_MENUTOOL_MA
             AddModularAvatar(context, components);
+#endif
             AddVrcfury(context, components);
             MenuToolVrcfuryMenu.Apply(scan, context.VrcfRules, rule => Maker(rule.Component, BlockOf(rule.Component, context.Root)));
             NoteReferences(context, components);
@@ -261,11 +269,13 @@ namespace Riry.RiryTools.Editor
                     context.Scan.Controllers.Add(Usage("Avatar " + layer.type + " (" + controller.name + ")", controller, avatar, null));
                 }
             }
+#if RIRYTOOLS_MENUTOOL_MA
             foreach (Component merge in components.Where(c => Is(c, MaMergeAnimatorType)))
             {
                 var controller = Field(merge, "animator") as AnimatorController;
                 if (controller != null) context.Scan.Controllers.Add(Usage("MA Merge Animator: " + controller.name + " (" + merge.gameObject.name + ")", controller, merge, null));
             }
+#endif
         }
 
         private static MenuToolControllerUsage Usage(string name, AnimatorController controller, UnityEngine.Object source, Func<string, string> rename)

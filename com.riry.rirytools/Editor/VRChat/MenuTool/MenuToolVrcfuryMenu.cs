@@ -46,6 +46,18 @@ namespace Riry.RiryTools.Editor
             return parent.Length == 0 ? Escape(entry.Name) : parent + "/" + Escape(entry.Name);
         }
 
+        /// <summary>
+        /// The path with its leading from rewritten to to, when it starts with from (each name matching as SamePath); null
+        /// when it does not.
+        /// </summary>
+        internal static string Rebase(string path, string from, string to)
+        {
+            List<string> parts = Split(path), prefix = Split(from);
+            if (prefix.Count == 0 || parts.Count < prefix.Count) return null;
+            if (!SamePath(string.Join("/", parts.Take(prefix.Count).Select(Escape)), from)) return null;
+            return string.Join("/", Split(to).Concat(parts.Skip(prefix.Count)).Select(Escape));
+        }
+
         /// <summary>Whether two VRCFury paths name the same place: the same number of names, each matching the other's.</summary>
         internal static bool SamePath(string a, string b)
         {
