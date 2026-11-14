@@ -74,7 +74,8 @@ namespace Riry.RiryTools.Editor
             {
                 if (Parent == null) return "";
                 string parent = Parent.Path;
-                return parent.Length == 0 ? Name : parent + "/" + Name;
+                // A slash inside a name is written "\/", as in VRCFury's paths.
+                return parent.Length == 0 ? MenuToolVrcfuryMenu.Escape(Name) : parent + "/" + MenuToolVrcfuryMenu.Escape(Name);
             }
         }
 
@@ -127,7 +128,7 @@ namespace Riry.RiryTools.Editor
         {
             if (string.IsNullOrEmpty(path)) return this;
             MenuToolEntry at = this;
-            foreach (string part in path.Split('/'))
+            foreach (string part in MenuToolVrcfuryMenu.Split(path))
             {
                 at = at.Child(part);
                 if (at == null) return null;

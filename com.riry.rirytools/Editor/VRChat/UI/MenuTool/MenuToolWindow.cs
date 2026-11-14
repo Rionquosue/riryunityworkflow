@@ -320,7 +320,7 @@ namespace Riry.RiryTools.Editor
         private IEnumerable<KeyValuePair<string, string>> Submenus()
         {
             foreach (MenuToolEntry menu in new[] { planned }.Concat(planned.Descendants()).Where(e => e.IsSubMenu))
-                yield return new KeyValuePair<string, string>(menu.Path, menu.Parent == null ? "Root" : "Root › " + menu.Path.Replace("/", " › "));
+                yield return new KeyValuePair<string, string>(menu.Path, menu.Parent == null ? "Root" : "Root › " + string.Join(" › ", MenuToolVrcfuryMenu.Split(menu.Path)));
         }
 
         private void MoveToMenu(MenuToolEntry entry)

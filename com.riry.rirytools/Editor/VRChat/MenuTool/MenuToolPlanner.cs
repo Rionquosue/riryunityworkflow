@@ -99,7 +99,7 @@ namespace Riry.RiryTools.Editor
             if (!sameMenu && check.Destination.Children.Any(child => child.Name == check.Entry.Name))
                 check.Warnings.Add(check.Destination.Path + " already has an item named " + check.Entry.Name +
                     (check.Entry.IsSubMenu && scan.VrcfuryInstalled ? "; VRCFury merges submenus of the same name." : "."));
-            check.After = (check.Destination.Path.Length == 0 ? "" : check.Destination.Path + "/") + check.Entry.Name;
+            check.After = (check.Destination.Path.Length == 0 ? "" : check.Destination.Path + "/") + MenuToolVrcfuryMenu.Escape(check.Entry.Name);
             if (move.Destructive) Destructive(scan, check);
             else Ownership(scan, check, sameMenu);
             return check;
