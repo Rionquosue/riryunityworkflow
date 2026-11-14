@@ -81,7 +81,7 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-1. When editing the menu of a prefab provide the option to apply your changes as VRCFury overides or as direct menu path changes with a second "Destructive Move" submenu on the right click that is only active when right clicking a menu item added by ModularAvatar or VRCFury. Automatically determine what the "Root" of that menu would be, only present available options from that menu root (starting from the Full Controller menu path as "Root")
+1. Add a "Remove menu item" button that will use vrcfury or modular avatar and pipe that item to null, or delete depending on host owner.
 
 #### Fixed
 1. Menu entry state does not properly set itself after gesturemanager begins emulation on the avatar.
@@ -107,3 +107,8 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 ##### Features
         
 
+# Possible new tools:
+
+| Tool name | Tool purpose | Tool reasoning |
+| :---: | :---: | :---: |
+| VPM Manager | Manage VPM dependencies for packages. | To automatically fix possible broken GUID issues or feature issues before they become a problem that requires human intervention. An avatar might need GoGoLoco or Avatar Limb Scaling, since the VPM Manifest might not automatically contain these for the project we can have a tool that generates a very basic script that will inject them and call the VPM for package resolution, and present the JSON list as copyable objects so the user can add those packages to their VPM tool (such as VCC or ALCOM) | 

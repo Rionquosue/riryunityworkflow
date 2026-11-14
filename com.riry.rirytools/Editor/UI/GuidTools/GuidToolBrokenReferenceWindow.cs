@@ -30,12 +30,16 @@ namespace Riry.RiryTools.Editor
         private GuidToolRepairCache cache = new GuidToolRepairCache();
         private Vector2 scroll;
 
-        internal static void Open(List<string> files, string reason)
+        // Whether the scan opens animator controllers: only when started from the Project window (Repair Missing GUID References).
+        [SerializeField] private bool intoControllers;
+
+        internal static void Open(List<string> files, string reason, bool intoControllers = false)
         {
             GuidToolBrokenReferenceWindow window = GetWindow<GuidToolBrokenReferenceWindow>(true, GuidToolReferenceRepair.Title);
             window.minSize = new Vector2(520f, 360f);
             window.files = files;
             window.reason = reason;
+            window.intoControllers = intoControllers;
             window.Show();
             window.Rescan();
         }
@@ -71,7 +75,7 @@ namespace Riry.RiryTools.Editor
             GuidToolLog log = GuidToolLog.Open("Check for Broken References");
             try
             {
-                plan = GuidToolReferenceRepair.Scan(files, log);
+                plan = GuidToolReferenceRepair.Scan(files, log, intoControllers);
                 GuidToolReferenceRepair.Suggest(plan, null, cache, log);
                 choices.Clear();
                 others.Clear();
@@ -187,6 +191,59 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // Scrub unused overrides (GuidToolUnusedOverrides) in the scanned files: asks first, logs what changed, then rescans.
+        private void ScrubUnusedOverrides()
+        {
+            List<string> scanned = plan != null ? plan.Files : files;
+            List<string> found = GuidToolUnusedOverrides.Find(scanned);
+            if (found.Count == 0)
+            {
+                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "No unused overrides were found.", "OK");
+                return;
+            }
+            PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+            bool prefabFiles = found.Any(path => path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) && (stage == null || stage.assetPath != path));
+            if (!EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Remove unused overrides in:\n\n" + string.Join("\n", found.Take(15)) +
+                    (found.Count > 15 ? "\nand " + (found.Count - 15) + " more" : "") +
+                    (prefabFiles ? "\n\nPrefab files are saved straight away; Ctrl+Z can't undo those." : ""), "Scrub", "Cancel"))
+                return;
+            try
+            {
+                int scrubbed = GuidToolUnusedOverrides.Scrub(found);
+                RiryLog.Info(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": removed unused overrides from " + scrubbed + " prefab instance(s) in " +
+                    string.Join(", ", found) + ".");
+            }
+            catch (Exception exception)
+            {
+                RiryLog.Exception(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": scrubbing unused overrides failed", exception);
+            }
+            Rescan();
+        }
+
+        // After Apply: Controller Cleaner on the controllers that had broken references removes their unused sub-assets,
+        // and the broken references left in them. Asks first; Ctrl+Z can't undo it.
+        private static void OfferControllerCleaner(List<string> controllers)
+        {
+            var found = controllers.Select(AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>).Where(c => c != null)
+                .Select(ControllerCleanerScan.Scan).Where(r => r.Unused.Count > 0).ToList();
+            if (found.Count == 0) return;
+            if (!EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Run Controller Cleaner on " + found.Count + " affected controller(s)? It removes " +
+                    found.Sum(r => r.Unused.Count) + " unused sub-asset(s) and the broken references in them.\n\nCtrl+Z can't undo this.", "Clean", "Not now"))
+                return;
+            var lines = new List<string>();
+            try
+            {
+                foreach (ControllerCleanerScan.Result result in found)
+                    lines.Add(AssetDatabase.GetAssetPath(result.Controller) + ": " + string.Join(", ", ControllerCleanerClean.Clean(result)));
+            }
+            catch (Exception exception)
+            {
+                RiryLog.Exception(RiryLog.ControllerCleaner, "Cleaning failed after " + lines.Count + " controller(s)", exception);
+            }
+            RiryLog.Info(RiryLog.ControllerCleaner, "Removed unused sub-assets from " + lines.Count + " controller(s) after the GUID repair (Ctrl+Z can't undo this):\n" +
+                string.Join("\n", lines));
+        }
+
         private void ApplyRedirects()
         {
             if (EditorSettings.serializationMode != SerializationMode.ForceText)
@@ -215,6 +272,9 @@ namespace Riry.RiryTools.Editor
                     "\n\nThis bypasses Unity Undo.", "Apply", "Cancel"))
                 return;
 
+            // The controllers this repair touches, for the Controller Cleaner offer afterwards.
+            List<string> controllers = plan.References.Keys.Where(path =>
+                typeof(RuntimeAnimatorController).IsAssignableFrom(AssetDatabase.GetMainAssetTypeAtPath(path) ?? typeof(Object))).ToList();
             GuidToolLog log = GuidToolLog.Open("Apply Broken Reference Repairs");
             bool applied = false;
             var restoredFiles = new List<string>();
@@ -250,6 +310,7 @@ namespace Riry.RiryTools.Editor
                 Rescan();
                 return;
             }
+            OfferControllerCleaner(controllers);
             // The next pass: the same files plus the restored ones, with what was already found.
             foreach (string restored in restoredFiles)
             {

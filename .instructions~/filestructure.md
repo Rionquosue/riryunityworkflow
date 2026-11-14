@@ -51,7 +51,7 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 - **Main Menu:** `UI/RiryToolsMainMenu.cs`. Hosts each tool's window in a tab. VRChat tools are handed to it by `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Tools > RiryTools menu:** `UI/RiryToolsMenuBar.cs`; the VRChat entries are in `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Right click menus (Hierarchy, Project):** `UI/RiryToolsRightClickMenu.cs`.
-- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources and generated objects, shared by Train, Bezier and Insertable prop).
+- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, Controller Cleaner's scan and clean (also used by GUID Tools), Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources and generated objects, shared by Train, Bezier and Insertable prop).
 - **A tool:** its logic folder and its `UI/<folder>/` window, per the table above.
 
 ## Script locations
@@ -61,8 +61,6 @@ com.riry.rirytools/
 └── Editor/
     ├── AnimatorTools/
     │   ├── CleanAnimationKeys.cs
-    │   ├── ControllerCleanerClean.cs
-    │   ├── ControllerCleanerScan.cs
     │   └── ControllerCleanerSources.cs
     ├── AutoSync/
     │   ├── AutoSync.cs
@@ -104,6 +102,8 @@ com.riry.rirytools/
     │   ├── BlendshapeSyncWindow.Plan.cs
     │   └── BlendshapeSyncWindow.Sync.cs
     ├── Components/
+    │   ├── ControllerCleanerClean.cs
+    │   ├── ControllerCleanerScan.cs
     │   ├── FuzzyMatch.cs
     │   ├── GestureManagerNotFoundException.cs
     │   ├── GitNotInstalledException.cs
@@ -130,6 +130,7 @@ com.riry.rirytools/
     │   ├── GuidToolLog.cs
     │   ├── GuidToolIgnoredReferences.cs
     │   ├── GuidToolPrefabStageRepair.cs
+    │   ├── GuidToolUnusedOverrides.cs
     │   ├── GuidToolMetaHistoryParser.cs
     │   ├── GuidToolReferenceCache.cs
     │   ├── GuidToolReferenceRepair.cs
