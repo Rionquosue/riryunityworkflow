@@ -26,9 +26,9 @@ namespace Riry.RiryTools.Editor
         private const string RegenerateGuidAssets = "Assets/RiryTools/Regenerate GUID";
         private const string ImportPreset = "Assets/RiryTools/Set Folder Import Presets";
         private const string SaveImportPreset = "Assets/RiryTools/Save Import Preset";
-        private const string ExtractAnimations = "Assets/RiryTools/Extract Animation";
+        private const string ExtractAnimations = "Assets/RiryTools/Animator Tools/Extract Animations";
         private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
-        private const string CleanAnimationKeysAssets = "Assets/RiryTools/Clean Animation Keys";
+        private const string CleanAnimationKeysAssets = "Assets/RiryTools/Animator Tools/Clean Animation Keys";
 
         // ---- Hierarchy right-click -------------------------------------------
         private const string AttachToHierarchy = "GameObject/RiryTools/Attach To";
@@ -134,10 +134,10 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Regenerate GUID (2000)         -> GuidToolRegenerate.RegenerateSelectedGuids (Editor/GuidTools/GuidToolRegenerate.cs)
 //   Assets/RiryTools/Set Folder Import Presets (2001) -> ImportPresetActions.QuickFolderPreset -> ImportPresetQuickWindow (Editor/UI/ImportPresets/ImportPresetQuickWindow.cs)
 //   Assets/RiryTools/Save Import Preset (2002) -> ImportPresetActions.SaveToLibrary -> ImportPresetSaveWindow
-//   Assets/RiryTools/Extract Animation (2003) -> ImportPresetExtractAnimationWindow.Open with the selected model (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs);
+//   Assets/RiryTools/Animator Tools/Extract Animations (2003) -> ImportPresetExtractAnimationWindow.Open with the selected model (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs);
 //                                                      enabled only for a model with embedded animations
 //   Assets/RiryTools/Repair Missing GUID References (2004) -> GuidToolReferenceRepair.RepairSelected -> GuidToolBrokenReferenceWindow (Editor/UI/GuidTools/GuidToolBrokenReferenceWindow.UI.cs)
-//   Assets/RiryTools/Clean Animation Keys (2005)    -> CleanAnimationKeysWindow.Open with the selected AnimationClips
+//   Assets/RiryTools/Animator Tools/Clean Animation Keys (2005) -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //   Assets/RiryTools/Animator Tools/Find and Replace (2006) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
 //

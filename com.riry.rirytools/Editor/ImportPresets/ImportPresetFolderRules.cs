@@ -120,11 +120,13 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// The decorators of the folder: every tag, and every "_word" ending of its files'
-        /// names whose word is not a tag.
+        /// names whose word is not a tag, as far as the filters listen to them (UseTags, UseEndings);
+        /// with neither, files are told apart by extension only.
         /// </summary>
         internal static HashSet<string> Decorators(string folder)
         {
-            var decorators = new HashSet<string>(ImportPresetPreferences.Tags(), StringComparer.Ordinal);
+            var decorators = new HashSet<string>(ImportPresetPreferences.UseTags ? ImportPresetPreferences.Tags() : new List<string>(), StringComparer.Ordinal);
+            if (!ImportPresetPreferences.UseEndings) return decorators;
             foreach (string path in Files(folder))
             {
                 string ending = Ending(path);

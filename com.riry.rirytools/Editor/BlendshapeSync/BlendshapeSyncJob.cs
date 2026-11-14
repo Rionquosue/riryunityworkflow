@@ -16,6 +16,8 @@ namespace Riry.RiryTools.Editor
         internal sealed class SavedJob
         {
             public string Master = "";
+            // The job's name ("" for the default: "<master> > N children").
+            public string Name = "";
             public List<SavedChild> Children = new List<SavedChild>();
             public bool Auto;
             public bool CaseSensitive;
@@ -30,6 +32,8 @@ namespace Riry.RiryTools.Editor
 
         // Order in the job list.
         [SerializeField] private int jobNumber;
+        // The name the user gave the job; blank shows the default (DisplayName).
+        [SerializeField] private string jobName = "";
         // Saved children whose renderer was not found on load; written back on save, so they are never lost.
         [SerializeField] private List<SavedChild> missingChildren = new List<SavedChild>();
 
@@ -37,6 +41,17 @@ namespace Riry.RiryTools.Editor
         {
             get { return jobNumber; }
             set { jobNumber = value; }
+        }
+
+        /// <summary>The job's name, or by default "&lt;master&gt; &gt; N children" ("No master yet" without one).</summary>
+        internal string DisplayName
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(jobName)) return jobName.Trim();
+                int count = ChildCount;
+                return master != null ? master.name + " > " + count + (count == 1 ? " child" : " children") : "No master yet";
+            }
         }
 
         internal SkinnedMeshRenderer Master
@@ -83,7 +98,7 @@ namespace Riry.RiryTools.Editor
 
         internal SavedJob Save()
         {
-            var saved = new SavedJob { Master = Id(master), Auto = runAutomatically, CaseSensitive = caseSensitive };
+            var saved = new SavedJob { Master = Id(master), Name = jobName ?? "", Auto = runAutomatically, CaseSensitive = caseSensitive };
             foreach (ChildEntry child in children)
             {
                 if (child == null || child.Renderer == null) continue;
@@ -122,6 +137,7 @@ namespace Riry.RiryTools.Editor
             }
             EnsureChildRow();
             caseSensitive = saved.CaseSensitive;
+            jobName = saved.Name ?? "";
             runAutomatically = saved.Auto;
             nextTick = EditorApplication.timeSinceStartup + Interval;
             InvalidatePlan();

@@ -16,7 +16,6 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-1. Move "Clean Animation Keys" and "Extract Animations" into here.
     
 ### AutoSync
 
@@ -36,17 +35,14 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-1. Add in the ability to name jobs, default to current job naming scheme.
     
 ### Clean Animation Keys
 
 #### Bugs
 
-1. Overlaps with other drawn UI elements, justify hard left to avoid interference with common animator tools.
 
 #### Features
 
-1. Move to "Animator Tools" in the right click menu.
 
 ### Constraint Tool
 
@@ -81,7 +77,6 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-1. Add a field to allow the user to select which filters the import preset tool should listen to.
 
 ### Menu Tool
 
@@ -89,7 +84,6 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-1. Add a "Remove menu item" button that will use vrcfury or modular avatar and pipe that item to null, or delete depending on host owner.
 
 #### Fixed
 

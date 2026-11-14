@@ -68,6 +68,8 @@ Per user, shared by every project.
 | `RiryTools.AvatarMigrator.Settings` | Avatar Migration Assistant settings as JSON: per-entry options, sub-options, ignore children and migrated folder. Unset means `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty. | `AvatarMigrator/AvatarMigratorSettings.cs` |
 | `RiryTools.BetterFbx.BlenderPath` | Path to the Blender executable for Better FBX (string; `""` means detect). Read through `ImportPresetBetterFBX.BlenderPath`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
 | `RiryTools.BetterFbx.Options` | Better FBX export options (string; default `""`). Read through `ImportPresetBetterFBX.Options`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
+| `RiryTools.ImportPresets.UseTags` | Set Folder Import Presets' **Filters**: a tag in a file's name makes a file type of its own (bool; default true). Read through `ImportPresetPreferences.UseTags`. | `ImportPresets/ImportPresetPreferences.cs`, `ImportPresets/ImportPresetFolderRules.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
+| `RiryTools.ImportPresets.UseEndings` | Set Folder Import Presets' **Filters**: a `_word` name ending makes a file type of its own (bool; default true); with both off, file extensions only. Read through `ImportPresetPreferences.UseEndings`. | `ImportPresets/ImportPresetPreferences.cs`, `ImportPresets/ImportPresetFolderRules.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
 | `RiryTools.ScriptLoadGuard.Enabled` | Turns Script Load Guard on or off (bool; default `true`). Read through `ScriptLoadGuard.Enabled`. | `Debug/ScriptLoadGuard.cs`, `UI/RiryToolsMenuBar.cs` |
 | `RiryTools.StopAutoGame.Enabled` | Turns Stop Auto Game on or off (bool; default `true`). Read through `StopAutoGame.Enabled`. | `Utilities/StopAutoGame.cs`, `UI/RiryToolsMainMenu.cs`, `UI/RiryToolsMenuBar.cs` |
 
@@ -139,7 +141,7 @@ Not stored, but named like settings keys.
 | `Library/RiryTools/ImportPresets/` | `owned.txt` (path, size, write time and, for a clip, its model GUID), `Pending/<sha1>.txt`, `better_fbx_export.py`, `previous.fbx`. | `ImportPresets/ImportPresetOwnedFiles.cs`, `ImportPresets/ImportPresetAnimations.cs`, `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs` |
 | `Logs/RiryTools/GuidTools/` | `guid-tools.log` and `archive/guid-tools_<UTC time>.log`. Path is `GuidToolRegenerate.LogDirectoryPath`. | `GuidTools/GuidToolRegenerate.cs`, `GuidTools/GuidToolLog.cs`, `GuidTools/GuidToolReferenceRepair.cs`, `UI/GuidTools/GuidToolsWindow.cs` |
 | `ProjectSettings/RiryToolsGuidRemap.tsv` | GUID remap ledger; keep it in version control. Path is `GuidToolRemapLedger.RelativePath`. | `GuidTools/GuidToolReferenceRepair.cs`, `GuidTools/GuidToolRemapLedger.cs`, `UI/GuidTools/GuidToolRegenerate.Prompts.cs` |
-| `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds). | `BlendshapeSync/BlendshapeSyncJobs.cs`, `BlendshapeSync/BlendshapeSyncJob.cs`, `UI/BlendshapeSync/BlendshapeSyncJobWindow.cs` |
+| `UserSettings/RiryTools/BlendshapeSync/<scene GUID>.json` | Blendshape Sync jobs of a scene (renderers as GlobalObjectIds; `Name`, the job's name, blank for the default "<master> > N children"). | `BlendshapeSync/BlendshapeSyncJobs.cs`, `BlendshapeSync/BlendshapeSyncJob.cs`, `UI/BlendshapeSync/BlendshapeSyncJobWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/<avatar key>.json` | Menu Tool's pathing JSON: the planned moves of one avatar (`Avatar`, `Key`, `Moves`: `From`, `To`, `Index`, `Choice`, `NewMenu` for a menu planned with **Add menu**; `NewControl`, `ControlType`, `Parameter`, `Value`, `Icon` (texture GUID) for **Add New Control**; `AssignIcon` with `From` and `Icon` for **Assign Menu Icon**; `Remove` with `From` for **Delete Menu Entry**; `ToNull` with `From` for **Move to… > <NULL>**; `Rename` (the new name) with `From` for **Rename Menu Entry**; `Destructive` for **Destructive Move**, which edits the item's own source inside its menu root). Deleted when empty. | `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `UserSettings/RiryTools/MenuTool/avatars.json` | The GUID stamped on each avatar Menu Tool planned for (`Object`: its GlobalObjectId, `Key`); nothing is written on the avatar. | `VRChat/MenuTool/MenuToolAvatarKeys.cs` |
 
@@ -362,7 +364,7 @@ One entry or submenu per tool.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `Tools/RiryTools/Animator Tools/Clean Animation Keys` | (1994) The Clean Animation Keys window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Animator Tools/Clean Animation Keys` | (1994) The Clean Animation Keys window; also the Main Menu's Animator Tools tab, sub-tab Clean Animation Keys (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Animator Tools/Controller Cleaner` | (1996) The Controller Cleaner window; also the Main Menu's Animator Tools tab, sub-tab Controller Cleaner. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Animator Tools/Find and Replace` | (1995) The Find and Replace popup (`BehaviourFindReplaceWindow`), no source; also the Main Menu's Animator Tools tab, sub-tab Find and Replace (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/AutoSync/Configuration` | (2001) The AutoSync Configuration window. | `UI/RiryToolsMenuBar.cs` |
@@ -374,7 +376,7 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Find Null references` | (2056) Reads the Console's NullReferenceException entries (internal `UnityEditor.LogEntries`) once and lists empty or missing references in a popup, the whole open scenes when the log gives nothing. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `Debug/FindNullReferences.cs` |
 | `Tools/RiryTools/GUID Tools` | (2040) The window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/IconCap` | (2045) Written `Ic&onCap` so its menu key is O: the IconCap window (also from the Main Menu's Tools tab, in its own window). | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Import Presets/Extract Animation` | (2052) The Extract Animation window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Animator Tools/Extract Animations` | (1997) The Extract Animation window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Open Import Preset Library` | (2053) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Save Import Preset` | (2051) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Set Folder Import Presets` | (2050) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
@@ -390,8 +392,8 @@ One entry or submenu per tool.
 | Name | Use | Scripts |
 |---|---|---|
 | `Assets/RiryTools/Animator Tools/Find and Replace` | (2006) The Find and Replace popup with the selected animator controller; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Assets/RiryTools/Clean Animation Keys` | (2005) Clean Animation Keys on the selected clips. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Extract Animation` | (2003) The Extract Animation window with the selected model; enabled only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/Animator Tools/Clean Animation Keys` | (2005) Clean Animation Keys on the selected clips. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/Animator Tools/Extract Animations` | (2003) The Extract Animation window with the selected model; enabled only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Regenerate GUID` | (2000) Regenerates the selected assets' GUIDs. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Repair Missing GUID References` | (2004) Repairs missing GUID references in the selection. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Save Import Preset` | (2002) The Save Import Preset window for the selected asset. | `UI/RiryToolsRightClickMenu.cs` |

@@ -26,6 +26,19 @@ namespace Riry.RiryTools.Editor
             {
                 scroll = EditorGUILayout.BeginScrollView(scroll);
                 EditorGUI.BeginChangeCheck();
+                // Blank keeps the default name, shown in grey.
+                string typed = EditorGUILayout.TextField(new GUIContent("Job name", "Blank uses the default: the master and its child count."), jobName ?? "");
+                if (string.IsNullOrEmpty(typed) && Event.current.type == EventType.Repaint)
+                {
+                    Rect field = GUILayoutUtility.GetLastRect();
+                    field.xMin += EditorGUIUtility.labelWidth + 2f;
+                    EditorGUI.LabelField(field, DisplayName, EditorStyles.centeredGreyMiniLabel);
+                }
+                if (typed != (jobName ?? ""))
+                {
+                    Undo.RecordObject(this, SettingsUndo);
+                    jobName = typed;
+                }
                 SkinnedMeshRenderer selected = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(
                     "Master", master, typeof(SkinnedMeshRenderer), true);
                 if (selected != master && CanAssign(selected, -1))

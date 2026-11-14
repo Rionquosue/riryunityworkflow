@@ -53,6 +53,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Clean Animation Keys
         * Find and Replace
         * Controller Cleaner
+        * Extract Animations
     * Avatar Tools >
         * Avatar Migration Assistant
         * Blendshape Sync
@@ -64,7 +65,6 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * Import Presets >
         * Set Folder Presets
         * Save Import Preset
-        * Extract Animation
         * Import Preset Library
     * Debug Tools >
         * Refresh Scripts
