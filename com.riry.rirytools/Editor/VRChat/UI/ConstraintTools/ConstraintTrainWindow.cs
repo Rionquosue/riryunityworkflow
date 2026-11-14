@@ -22,7 +22,8 @@ namespace Riry.RiryTools.Editor
         private sealed class Plan
         {
             public readonly List<Transform> Real = new List<Transform>();
-            public readonly List<Transform> Rest = new List<Transform>();
+            // Source 0 of every bone: where the train starts from.
+            public Transform Start;
             public readonly List<List<Transform>> Chains = new List<List<Transform>>();
             public ConstraintTrainPlanner.Settings Settings;
             public Transform Root;
@@ -32,7 +33,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private Transform realStart;
         [SerializeField] private Transform realEnd;
         [SerializeField] private int chainCount = 2;
-        [SerializeField] private Transform restStart;
+        // The start position: one object every bone is constrained to before the train reaches it (no Rest chain: rest is the
+        // constraints switched off).
+        [SerializeField] private Transform startPosition;
         [SerializeField] private Transform[] chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
         [SerializeField] private bool addEndpoints = true;
         [SerializeField] private float trainEnd = 0.5f;
@@ -73,7 +76,7 @@ namespace Riry.RiryTools.Editor
             {
                 // Chains and the avatar root found for the previous start do not apply to a new one.
                 avatarRoot = null;
-                restStart = null;
+                startPosition = null;
                 chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
                 realEnd = null;
             }
@@ -198,12 +201,6 @@ namespace Riry.RiryTools.Editor
             try
             {
                 // Each slot is recorded after its chain is made (Generate starts a group) and before it is set.
-                if (restStart == null)
-                {
-                    Transform made = Generate(realBones, ConstraintTrainChains.RestPrefix, false);
-                    Undo.RecordObject(this, SettingsUndo);
-                    restStart = made;
-                }
                 for (int c = 0; c < chainCount; c++)
                 {
                     if (chainStarts[c] != null) continue;
@@ -247,7 +244,23 @@ namespace Riry.RiryTools.Editor
             error = ConstraintTrainPlanner.Validate(plan.Settings);
             if (error != null) return false;
 
-            if (!TryFollowTargets("Rest", restStart, plan, plan.Rest, out error)) return false;
+            if (startPosition == null)
+            {
+                error = "Assign the start position.";
+                return false;
+            }
+            // As for chain targets: not inside the constrained chain, and inside the avatar root.
+            if (startPosition.IsChildOf(plan.Real[0]))
+            {
+                error = "Start position: it must not be inside the real bone chain.";
+                return false;
+            }
+            if (!startPosition.IsChildOf(plan.Root))
+            {
+                error = "Start position: it must be inside the avatar root.";
+                return false;
+            }
+            plan.Start = startPosition;
             for (int c = 0; c < chainCount; c++)
             {
                 var chain = new List<Transform>();
@@ -256,7 +269,7 @@ namespace Riry.RiryTools.Editor
                 plan.Chains.Add(chain);
             }
 
-            var all = new List<List<Transform>>(plan.Chains) { plan.Rest };
+            var all = new List<List<Transform>>(plan.Chains) { new List<Transform> { plan.Start } };
             Transform shared = ConstraintTrainChains.FindSharedTarget(all);
             if (shared != null)
             {
@@ -297,7 +310,7 @@ namespace Riry.RiryTools.Editor
             int chain;
             int chainBone;
             ConstraintTrainPlanner.DescribeSource(bone, source, out chain, out chainBone);
-            return chain < 0 ? plan.Rest[chainBone] : plan.Chains[chain][chainBone];
+            return chain < 0 ? plan.Start : plan.Chains[chain][chainBone];
         }
 
         private void SetUpConstraints()

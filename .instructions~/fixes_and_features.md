@@ -56,7 +56,6 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-1. "start" empty needs a definition field. All bones should be constrained to the "start" except for the first bone that moves along the chain which should be at the first bone of the "rest" chain.
 
 #### Features
 
