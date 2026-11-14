@@ -4,13 +4,15 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// References a file holds that nothing reads, which the broken-reference scan does not list: a material's texture slots
-    /// its current shader does not have (left from an earlier shader), and in a prefab, any reference outside the objects
-    /// that actually hold a missing reference when loaded (stale override values, a script's leftover serialized data).
+    /// its current shader does not have (left from an earlier shader), and in a prefab or an open scene, any reference outside
+    /// the objects that actually hold a missing reference when loaded (stale override values, a script's leftover serialized
+    /// data). A scene that is not open, and a scene's settings documents (render, lightmap, navmesh), are always listed.
     /// One instance per scanned file; the file is only loaded when asked about.
     /// </summary>
     internal sealed class GuidToolInactiveReferences
@@ -26,6 +28,10 @@ namespace Riry.RiryTools.Editor
         private HashSet<long> live;
         private bool liveNested;
         private HashSet<long> documents;
+        // Scene: the file IDs of its own GameObjects and components, and the PrefabInstance documents whose objects hold a
+        // missing reference.
+        private HashSet<long> sceneObjects;
+        private HashSet<long> livePrefabInstances;
 
         internal GuidToolInactiveReferences(string path, byte[] bytes)
         {
@@ -37,6 +43,13 @@ namespace Riry.RiryTools.Editor
         internal bool Inactive(int offset)
         {
             if (path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase)) return UnusedTexture(offset);
+            if (path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+            {
+                LoadScene();
+                if (live == null || !Document(offset, out int sceneClass, out long sceneDocument)) return false;
+                if (sceneClass == 1001) return !livePrefabInstances.Contains(sceneDocument);
+                return sceneObjects.Contains(sceneDocument) && !live.Contains(sceneDocument);
+            }
             if (!path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)) return false;
             LoadPrefab();
             if (live == null || !Document(offset, out int classId, out long document)) return false;
@@ -112,6 +125,45 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // The open scene's GameObjects and components: each of its own (no prefab instance) by file ID, and each of a prefab
+        // instance by its PrefabInstance document (GlobalObjectId.targetPrefabId), noted when it holds a missing reference.
+        private void LoadScene()
+        {
+            if (loaded) return;
+            loaded = true;
+            Scene scene = SceneManager.GetSceneByPath(path);
+            if (!scene.IsValid() || !scene.isLoaded) return;
+            var objects = new List<UnityEngine.Object>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                {
+                    objects.Add(transform.gameObject);
+                    foreach (Component component in transform.GetComponents<Component>())
+                    {
+                        if (component != null) objects.Add(component);
+                    }
+                }
+            }
+            var ids = new GlobalObjectId[objects.Count];
+            GlobalObjectId.GetGlobalObjectIdsSlow(objects.ToArray(), ids);
+            live = new HashSet<long>();
+            sceneObjects = new HashSet<long>();
+            livePrefabInstances = new HashSet<long>();
+            for (int i = 0; i < objects.Count; i++)
+            {
+                bool missing = HoldsMissing(objects[i]);
+                if (ids[i].targetPrefabId != 0)
+                {
+                    if (missing) livePrefabInstances.Add((long)ids[i].targetPrefabId);
+                    continue;
+                }
+                long id = (long)ids[i].targetObjectId;
+                sceneObjects.Add(id);
+                if (missing) live.Add(id);
+            }
+        }
+
         private static bool HoldsMissing(UnityEngine.Object item)
         {
             using (var serialized = new SerializedObject(item))
@@ -147,4 +199,6 @@ namespace Riry.RiryTools.Editor
 // GuidToolInactiveReferences (this file)
 //   Inactive(offset)       A material texture slot its shader lacks (UnusedTexture), or in a
 //                            prefab a reference in a document whose object holds no missing reference when loaded; a PrefabInstance
-//                            document's references count only while an object of a nested instance holds one (LoadPrefab).
+//                            document's references count only while an object of a nested instance holds one (LoadPrefab). In an
+//                            open scene (LoadScene) the same by GlobalObjectId: its own objects by file ID, a PrefabInstance
+//                            document's references while one of that instance's objects holds one; settings documents always count.
