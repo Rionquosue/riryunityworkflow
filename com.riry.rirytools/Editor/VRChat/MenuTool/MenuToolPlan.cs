@@ -130,23 +130,31 @@ namespace Riry.RiryTools.Editor
         NativeAssets,
         // Add or update an avatar-level VRCFury Move Menu Item (or Reorder Menu Item) rule.
         VrcfuryRule,
+#if RIRYTOOLS_MENUTOOL_MA
         // Reparent the Modular Avatar menu item's object.
         MaReparent,
         // Retarget the Modular Avatar installer of the whole installed block.
         MaRetarget,
+#endif
         // Add menu: a new menu asset, linked by a SubMenu control in the parent's menu asset (copying a shared one first).
         NewMenuAsset,
+#if RIRYTOOLS_MENUTOOL_MA
         // Add menu: a new object with a Modular Avatar Menu Item (SubMenu, children from its own object), under the parent's
         // MA children object, or under the avatar with an MA Menu Installer targeting the parent menu.
         NewMaItem,
+#endif
         // Add New Control: a control in the parent's menu asset, an MA Menu Item object (as NewMaItem), or a VRCFury Toggle.
         NewControlAsset,
+#if RIRYTOOLS_MENUTOOL_MA
         NewControlMa,
+#endif
         NewControlVrcfury,
         // Assign Menu Icon: the control's icon in its menu asset, a VRCFury Set Icon rule, or the MA Menu Item's icon.
         IconAsset,
         IconVrcfury,
+#if RIRYTOOLS_MENUTOOL_MA
         IconMa,
+#endif
         // Remove Menu Item: the control deleted from its menu asset (copying a shared one first), or a VRCFury Move Menu Item
         // rule with a blank destination.
         RemoveAsset,

@@ -13,6 +13,7 @@ using VRC.SDKBase;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
 using ValueType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.ValueType;
 
+#if RIRYTOOLS_MENUTOOL_MA
 namespace Riry.RiryTools.Editor
 {
     /// <summary>Menu Tool scan: Modular Avatar menu installers, items and parameters, read by type name.</summary>
@@ -219,3 +220,4 @@ namespace Riry.RiryTools.Editor
 //                            (nameOrPrefix, remapTo, syncType, localOnly, saved, defaultValue, internalParameter), Merge Animator.
 //                            Remap applies MA Parameters renames from the object up. Undeclared item parameters are created as
 //                            MA would (AddMaAutoParameters).
+#endif
