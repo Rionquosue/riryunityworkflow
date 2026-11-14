@@ -158,13 +158,14 @@ namespace Riry.RiryTools.Editor
             var plan = new GuidToolRepairPlan();
             plan.Files.AddRange(files);
             // What the files use is scanned too: a material's shader lives in the .mat, a nested prefab's references in its
-            // own .prefab, not in the scene. Only files in Assets that Unity writes as text. Animator files are not opened:
-            // a missing controller is found where it is referenced, and nothing inside controllers or animations is checked.
+            // own .prefab, not in the scene. Only those two kinds are opened: other assets a scene uses (animation clips,
+            // including ones saved as .asset, controllers, ScriptableObjects) are not checked, as their references do not
+            // reach the built avatar; a missing one is still found where it is referenced.
             var listed = new HashSet<string>(plan.Files, StringComparer.OrdinalIgnoreCase);
             foreach (string dependency in AssetDatabase.GetDependencies(plan.Files.ToArray(), true))
             {
-                if (dependency.StartsWith("Assets/", StringComparison.Ordinal) && !AnimatorFiles.Contains(Path.GetExtension(dependency)) &&
-                    GuidToolRegenerate.UnitySerializedExtensions.Contains(Path.GetExtension(dependency)) && listed.Add(dependency))
+                if (dependency.StartsWith("Assets/", StringComparison.Ordinal) && DependencyFiles.Contains(Path.GetExtension(dependency)) &&
+                    listed.Add(dependency))
                     plan.Files.Add(dependency);
             }
             var objectIds = new Dictionary<string, HashSet<long>>(StringComparer.Ordinal);
@@ -673,10 +674,8 @@ namespace Riry.RiryTools.Editor
             return sorted;
         }
 
-        private static readonly HashSet<string> AnimatorFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".controller", ".overrideController", ".anim", ".mask"
-        };
+        // The dependencies the scan opens: prefabs (a nested prefab's own references) and materials (their shaders).
+        private static readonly HashSet<string> DependencyFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".prefab", ".mat" };
 
         // The prefab asset itself as a nested prefab's source (m_SourcePrefab): not one of the objects LoadAllAssetsAtPath gives.
         private const long PrefabAssetFileId = 100100000;
