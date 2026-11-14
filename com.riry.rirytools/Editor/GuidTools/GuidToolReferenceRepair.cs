@@ -687,7 +687,7 @@ namespace Riry.RiryTools.Editor
         private static string MissingObject(byte[] bytes, KeyValuePair<long, string> reference, Dictionary<string, HashSet<long>> objectIds)
         {
             long fileId;
-            if (reference.Value.StartsWith("0000000000000000", StringComparison.Ordinal)) return null;
+            if (reference.Value.StartsWith("0000000000000000", StringComparison.Ordinal) || PrefabBookkeeping(bytes, (int)reference.Key)) return null;
             if (!FileIdBefore(bytes, (int)reference.Key, out fileId) || fileId == 0 || fileId == PrefabAssetFileId) return null;
             HashSet<long> ids;
             string path = AssetDatabase.GUIDToAssetPath(reference.Value);
@@ -701,6 +701,46 @@ namespace Riry.RiryTools.Editor
                 objectIds[reference.Value] = ids;
             }
             return ids.Count == 0 || ids.Contains(fileId) ? null : path + " (file ID " + fileId + ")";
+        }
+
+        // Keys of a prefab instance's bookkeeping: which model or prefab object an override or a stripped object stands
+        // for. When the model is reimported without that object, Unity drops these quietly; nothing in the build uses them.
+        private static readonly HashSet<string> BookkeepingKeys = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "target", "m_CorrespondingSourceObject", "targetCorrespondingSourceObject", "m_SourcePrefab"
+        };
+
+        private static readonly HashSet<string> BookkeepingLists = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "m_RemovedComponents", "m_RemovedGameObjects", "m_AddedGameObjects", "m_AddedComponents"
+        };
+
+        /// <summary>
+        /// Whether the reference is prefab bookkeeping (an override's target, a stripped object's source, an entry of a
+        /// removed or added list) rather than a value an object uses.
+        /// </summary>
+        private static bool PrefabBookkeeping(byte[] bytes, int guidStart)
+        {
+            int lineStart = guidStart;
+            while (lineStart > 0 && bytes[lineStart - 1] != (byte)'\n') lineStart--;
+            string line = Encoding.ASCII.GetString(bytes, lineStart, guidStart - lineStart).TrimStart();
+            bool listItem = line.StartsWith("- ", StringComparison.Ordinal);
+            if (listItem) line = line.Substring(2).TrimStart();
+            int colon = line.IndexOf(':');
+            if (colon > 0 && !line.StartsWith("{", StringComparison.Ordinal) && BookkeepingKeys.Contains(line.Substring(0, colon))) return true;
+            if (!listItem) return false;
+            // A bare "- {fileID: ...}" item: the key is the nearest line above that is not an item.
+            int end = lineStart - 1;
+            while (end > 0)
+            {
+                int start = end;
+                while (start > 0 && bytes[start - 1] != (byte)'\n') start--;
+                string above = Encoding.ASCII.GetString(bytes, start, end - start).Trim();
+                if (!above.StartsWith("- ", StringComparison.Ordinal) && !above.StartsWith("{", StringComparison.Ordinal) && above.Length > 0)
+                    return above.EndsWith(":", StringComparison.Ordinal) && BookkeepingLists.Contains(above.TrimEnd(':'));
+                end = start - 1;
+            }
+            return false;
         }
 
         // The "fileID: n" written before "guid: " in the same {fileID: n, guid: ..., type: t} reference.
