@@ -5,12 +5,13 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Broken References' scrub: removes prefab instances' unused overrides (Unity's PrefabUtility.RemoveUnusedOverrides),
-    /// the entries left pointing at model or prefab objects that no longer exist. In a loaded scene and in Prefab Mode it
+    /// Broken References' scrub: removes prefab instances' unused overrides, the property modifications whose target object
+    /// no longer exists in the model or prefab, or whose property path no longer exists on it. In a loaded scene and in Prefab Mode it
     /// is one undo step; a prefab file is opened, scrubbed and saved, which Ctrl+Z can't undo.
     /// </summary>
     internal static class GuidToolUnusedOverrides
@@ -41,7 +42,7 @@ namespace Riry.RiryTools.Editor
                 {
                     GameObject[] instances = Instances(root).ToArray();
                     if (instances.Length == 0) return;
-                    PrefabUtility.RemoveUnusedOverrides(instances, InteractionMode.UserAction);
+                    foreach (GameObject instance in instances) RemoveUnused(instance);
                     scrubbed += instances.Length;
                 }, true);
             }
@@ -52,7 +53,40 @@ namespace Riry.RiryTools.Editor
         private static IEnumerable<GameObject> Instances(GameObject root)
         {
             return root.GetComponentsInChildren<Transform>(true).Select(t => t.gameObject)
-                .Where(go => PrefabUtility.IsAnyPrefabInstanceRoot(go) && PrefabUtility.HasPrefabInstanceUnusedOverrides(go));
+                .Where(go => PrefabUtility.IsAnyPrefabInstanceRoot(go) && Modifications(go).Any(Unused));
+        }
+
+        private static PropertyModification[] Modifications(GameObject instance)
+        {
+            return PrefabUtility.GetPropertyModifications(instance) ?? Array.Empty<PropertyModification>();
+        }
+
+        // Keeps only the used modifications; recorded on the PrefabInstance object so Ctrl+Z restores them.
+        private static void RemoveUnused(GameObject instance)
+        {
+            PropertyModification[] all = Modifications(instance);
+            PropertyModification[] kept = all.Where(m => !Unused(m)).ToArray();
+            if (kept.Length == all.Length) return;
+            Object handle = PrefabUtility.GetPrefabInstanceHandle(instance);
+            if (handle != null) Undo.RegisterCompleteObjectUndo(handle, GuidToolReferenceRepair.Title + ": scrub unused overrides");
+            PrefabUtility.SetPropertyModifications(instance, kept);
+        }
+
+        // Unused: the target is gone, or the property path is not on it. An array element past the source's size is used
+        // when its array exists (the instance's own size override adds it); managed references are left alone.
+        private static bool Unused(PropertyModification modification)
+        {
+            if (modification.target == null) return true;
+            string path = modification.propertyPath ?? "";
+            if (path.StartsWith("managedReferences", StringComparison.Ordinal)) return false;
+            using (var serialized = new SerializedObject(modification.target))
+            {
+                if (serialized.FindProperty(path) != null) return false;
+                int array = path.IndexOf(".Array.", StringComparison.Ordinal);
+                if (array < 0) return true;
+                SerializedProperty list = serialized.FindProperty(path.Substring(0, array));
+                return list == null || !list.isArray;
+            }
         }
 
         // Runs the action on the file's roots: a loaded scene's, the prefab open in Prefab Mode, or a prefab file's contents
