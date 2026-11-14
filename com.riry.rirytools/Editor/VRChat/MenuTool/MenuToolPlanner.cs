@@ -89,7 +89,8 @@ namespace Riry.RiryTools.Editor
                 check.Warnings.Add(check.Destination.Path + " already has an item named " + check.Entry.Name +
                     (check.Entry.IsSubMenu && scan.VrcfuryInstalled ? "; VRCFury merges submenus of the same name." : "."));
             check.After = (check.Destination.Path.Length == 0 ? "" : check.Destination.Path + "/") + check.Entry.Name;
-            Ownership(scan, check, sameMenu);
+            if (move.Destructive) Destructive(scan, check);
+            else Ownership(scan, check, sameMenu);
             return check;
         }
 
@@ -338,6 +339,73 @@ namespace Riry.RiryTools.Editor
             Affected(scan, check);
         }
 
+        /// <summary>
+        /// Where a Modular Avatar or VRCFury item can go with Destructive Move: its menu root, the menu its source's top level
+        /// lands in (a Full Controller's menu path, an MA installer's target), and the menu asset that top level is, if any.
+        /// A VRCFury Toggle or Puppet has the whole menu as its root. Null for other items.
+        /// </summary>
+        internal static MenuToolEntry MenuRoot(MenuToolEntry entry, out VRCExpressionsMenu rootAsset)
+        {
+            rootAsset = null;
+            if (entry.Parent == null || entry.Generated) return null;
+            if (entry.Origin == MenuToolOrigin.VRCFury && entry.OwnerMenu == null)
+            {
+                if (entry.VrcfComponent == null || string.IsNullOrEmpty(entry.VrcfPath)) return null;
+                MenuToolEntry top = entry;
+                while (top.Parent != null) top = top.Parent;
+                return top;
+            }
+            Func<MenuToolEntry, bool> same;
+            if (entry.Origin == MenuToolOrigin.VRCFury) same = e => e.VrcfComponent == entry.VrcfComponent && e.OwnerMenu != null;
+            else if (entry.Origin == MenuToolOrigin.ModularAvatar) same = e => e.MaInstaller == entry.MaInstaller && (e.MaItem != null || e.OwnerMenu != null);
+            else return null;
+            MenuToolEntry first = entry;
+            while (first.Parent != null && first.Parent.Parent != null && same(first.Parent)) first = first.Parent;
+            rootAsset = first.OwnerMenu;
+            return first.Parent;
+        }
+
+        // Destructive Move's check: the destination must be inside the item's menu root; the edit follows the item's source.
+        private static void Destructive(MenuToolScan scan, MenuToolMoveCheck check)
+        {
+            MenuToolEntry entry = check.Entry, destination = check.Destination;
+            MenuToolEntry root = MenuRoot(entry, out VRCExpressionsMenu rootAsset);
+            if (root == null)
+            {
+                check.Errors.Add("Destructive Move is for items Modular Avatar or VRCFury add.");
+                return;
+            }
+            if (destination != root && !MenuToolScanner.IsUnder(destination, root))
+            {
+                check.Errors.Add(check.Move.To + " is outside " + entry.Name + "'s menu root" + (root.Path.Length > 0 ? " (" + root.Path + ")" : "") + ".");
+                return;
+            }
+            if (entry.Origin == MenuToolOrigin.VRCFury && entry.OwnerMenu == null) check.Edit = MenuToolMoveEdit.DestructivePath;
+            else if (entry.OwnerMenu != null && (destination == root ? rootAsset : destination.SubMenuAsset) != null) check.Edit = MenuToolMoveEdit.DestructiveAsset;
+            else if (entry.MaItem != null && CanReparent(entry.MaItem.gameObject) && MaChildren(destination)) check.Edit = MenuToolMoveEdit.MaReparent;
+            else
+            {
+                check.Errors.Add("No edit of " + entry.Name + "'s source moves it there.");
+                return;
+            }
+            check.Candidates.Add(check.Edit);
+            switch (check.Edit)
+            {
+                case MenuToolMoveEdit.DestructiveAsset:
+                    check.Affected.Add(entry.OwnerMenu);
+                    VRCExpressionsMenu into = destination == root ? rootAsset : destination.SubMenuAsset;
+                    if (into != entry.OwnerMenu) check.Affected.Add(into);
+                    check.Warnings.Add("Edits " + AssetDatabase.GetAssetPath(entry.OwnerMenu) + " in place: everything that uses it changes.");
+                    break;
+                case MenuToolMoveEdit.DestructivePath:
+                    check.Affected.Add(entry.VrcfComponent);
+                    break;
+                case MenuToolMoveEdit.MaReparent:
+                    check.Affected.Add(entry.MaItem);
+                    break;
+            }
+        }
+
         private static MenuToolMoveEdit Preferred(MenuToolEntry entry, List<MenuToolMoveEdit> candidates)
         {
             if (candidates.Count == 1) return candidates[0];
@@ -409,6 +477,8 @@ namespace Riry.RiryTools.Editor
                 case MenuToolMoveEdit.IconAsset: return "Icon in the menu asset";
                 case MenuToolMoveEdit.IconVrcfury: return "Set Icon (VRCFury)";
                 case MenuToolMoveEdit.IconMa: return "Icon on the MA Menu Item";
+                case MenuToolMoveEdit.DestructiveAsset: return "Destructive Move in the menu asset";
+                case MenuToolMoveEdit.DestructivePath: return "Destructive Move of the VRCFury menu path";
                 case MenuToolMoveEdit.Ambiguous: return "Choose a source";
                 default: return "Cannot move";
             }

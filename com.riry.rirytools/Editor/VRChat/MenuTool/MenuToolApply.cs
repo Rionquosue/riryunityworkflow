@@ -129,6 +129,8 @@ namespace Riry.RiryTools.Editor
                             AddRule(scan, from, (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name), move.Index, entry.Parent == destination);
                             break;
                         case MenuToolMoveEdit.MaReparent: Reparent(entry, destination, move.Index); break;
+                        case MenuToolMoveEdit.DestructiveAsset: MoveInPlace(entry, destination, move.Index); break;
+                        case MenuToolMoveEdit.DestructivePath: Repath(entry, destination); break;
                         case MenuToolMoveEdit.MaRetarget: Retarget(scan, entry, destination); break;
                     }
                     report.Applied++;
@@ -184,6 +186,41 @@ namespace Riry.RiryTools.Editor
             else to.controls.Insert(at, control);
             EditorUtility.SetDirty(from);
             EditorUtility.SetDirty(to);
+        }
+
+        // Destructive Move in a menu asset: the control moves between its own source's menu assets as they are, no copy.
+        private static void MoveInPlace(MenuToolEntry entry, MenuToolEntry destination, int at)
+        {
+            VRCExpressionsMenu from = entry.OwnerMenu;
+            MenuToolEntry root = MenuToolPlanner.MenuRoot(entry, out VRCExpressionsMenu rootAsset);
+            VRCExpressionsMenu to = destination == root ? rootAsset : destination.SubMenuAsset;
+            VRCExpressionsMenu.Control control = from.controls[entry.OwnerIndex];
+            Undo.RecordObject(from, UndoName);
+            if (to != from) Undo.RecordObject(to, UndoName);
+            from.controls.RemoveAt(entry.OwnerIndex);
+            if (at > to.controls.Count) at = -1;
+            if (to == from && at > entry.OwnerIndex) at--;
+            if (at < 0) to.controls.Add(control);
+            else to.controls.Insert(at, control);
+            EditorUtility.SetDirty(from);
+            EditorUtility.SetDirty(to);
+        }
+
+        // Destructive Move of a VRCFury Toggle or Puppet: its feature's menu path becomes the destination's path and its name.
+        private static void Repath(MenuToolEntry entry, MenuToolEntry destination)
+        {
+            var serialized = new SerializedObject(entry.VrcfComponent);
+            foreach (SerializedProperty feature in MenuToolScanner.Features(serialized))
+            {
+                string kind = MenuToolScanner.FeatureName(feature);
+                SerializedProperty name = feature.FindPropertyRelative("name");
+                if ((kind != "Toggle" && kind != "Puppet") || name == null || name.stringValue != entry.VrcfPath) continue;
+                string into = MenuToolVrcfuryMenu.PathOf(destination);
+                name.stringValue = (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name);
+                serialized.ApplyModifiedProperties();
+                return;
+            }
+            throw new InvalidOperationException("The VRCFury feature for " + entry.Path + " was not found on " + entry.VrcfComponent.name + ".");
         }
 
         // Add menu as a menu asset: a new empty menu in Assets/RiryTools/MenuTool/<avatar>/, linked by a SubMenu control at the end
