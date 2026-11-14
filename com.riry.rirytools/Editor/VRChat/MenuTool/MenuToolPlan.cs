@@ -31,8 +31,12 @@ namespace Riry.RiryTools.Editor
         public string Icon = "";
         // Assign Menu Icon: the entry at From gets the texture Icon.
         public bool AssignIcon;
-        // Remove Menu Item: the entry at From is removed.
+        // Delete Menu Entry: the entry at From is deleted from its menu asset.
         public bool Remove;
+        // Move to… > <NULL>: a VRCFury Move Menu Item takes the entry at From to a blank path.
+        public bool ToNull;
+        // Rename Menu Entry: the entry at From gets this name ("" for no rename).
+        public string Rename = "";
         // Destructive Move: edits the item's own source (its VRCFury feature's path, or the menu asset or MA item it comes
         // from) instead of adding an override, inside its menu root.
         public bool Destructive;
@@ -45,6 +49,11 @@ namespace Riry.RiryTools.Editor
         internal bool IsAddControl
         {
             get { return !string.IsNullOrEmpty(NewControl); }
+        }
+
+        internal bool IsRename
+        {
+            get { return !string.IsNullOrEmpty(Rename); }
         }
 
         internal Texture2D IconTexture
@@ -155,10 +164,14 @@ namespace Riry.RiryTools.Editor
 #if RIRYTOOLS_MENUTOOL_MA
         IconMa,
 #endif
-        // Remove Menu Item: the control deleted from its menu asset (copying a shared one first), or a VRCFury Move Menu Item
-        // rule with a blank destination.
+        // Delete Menu Entry: the control deleted from its menu asset (copying a shared one first). Move to… > <NULL>: a VRCFury
+        // Move Menu Item rule with a blank destination.
         RemoveAsset,
         RemoveVrcfury,
+        // Rename Menu Entry: the control's name in its menu asset (copying a shared one first), or a VRCFury Move Menu Item
+        // rule to the same submenu under the new name.
+        RenameAsset,
+        RenameVrcfury,
         // Destructive Move: the control moved between its own source's menu assets, in place (no copy), or a VRCFury Toggle or
         // Puppet's menu path rewritten. (An MA Menu Item object is moved with MaReparent.)
         DestructiveAsset,

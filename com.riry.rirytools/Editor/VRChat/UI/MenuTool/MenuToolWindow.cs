@@ -57,6 +57,8 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private bool stale = true;
         // A plan change waiting for the next Layout pass (changes mid-event would unbalance the layout).
         [NonSerialized] private bool replan;
+        // Rescan: the next Refresh also drops the preview menus and the radial.
+        [NonSerialized] private bool rebuild;
         [NonSerialized] private readonly List<KeyValuePair<string, float>> pendingWrites = new List<KeyValuePair<string, float>>();
         // When and for what the exact comparison ran (kept across rescans, which its own test builds trigger).
         [NonSerialized] private GameObject exactFor;
@@ -226,7 +228,7 @@ namespace Riry.RiryTools.Editor
             if (budgetTree == null) budgetTree = new MenuToolBudgetTree(budgetState);
             if (managerTree == null)
             {
-                managerTree = new MenuToolManagerTree(managerState) { Move = AddMove, Clicked = Clicked, ContextMove = MoveToMenu };
+                managerTree = new MenuToolManagerTree(managerState) { Move = AddMove, Clicked = Clicked, ContextMove = MoveToMenu, Rename = PlanRename, Delete = PlanDelete };
                 search = new SearchField();
             }
             try
@@ -295,6 +297,16 @@ namespace Riry.RiryTools.Editor
             ChangePlan("Plan a move", moves => moves.Add(new MenuToolPlannedMove { From = from, To = to ?? "", Index = index }));
         }
 
+        private void PlanRename(string from, string name)
+        {
+            ChangePlan("Plan a rename", moves => moves.Add(new MenuToolPlannedMove { From = from, Rename = name }));
+        }
+
+        private void PlanDelete(string from)
+        {
+            ChangePlan("Plan deleting a menu entry", moves => moves.Add(new MenuToolPlannedMove { From = from, Remove = true }));
+        }
+
         /// <summary>
         /// Every plan change: the plan file is read again first (another Menu Tool view may have changed it), the window is
         /// recorded for Undo, the change made and the file written; the layout is rebuilt on the next Layout pass.
@@ -313,7 +325,7 @@ namespace Riry.RiryTools.Editor
         private static bool Same(MenuToolPlannedMove a, MenuToolPlannedMove b)
         {
             return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu && a.NewControl == b.NewControl &&
-                a.AssignIcon == b.AssignIcon && a.Remove == b.Remove && a.Icon == b.Icon && a.Destructive == b.Destructive;
+                a.AssignIcon == b.AssignIcon && a.Remove == b.Remove && a.ToNull == b.ToNull && a.Rename == b.Rename && a.Icon == b.Icon && a.Destructive == b.Destructive;
         }
 
         // Every submenu of the planned layout, the root first: its path and how menus show it ("Root › A › B").
@@ -340,6 +352,11 @@ namespace Riry.RiryTools.Editor
             }
             AddMoveSegment(menu, entry, planned, "Move to…/", to => AddMove(entry.Path, to, -1));
             if (menu.GetItemCount() == before) menu.AddDisabledItem(new GUIContent("Move to…/No other submenu"));
+            // Always last: VRCFury's Move Menu Item to a blank path.
+            string nullPath = entry.Path;
+            menu.AddSeparator("Move to…/");
+            menu.AddItem(new GUIContent("Move to…/<NULL>"), false, () =>
+                ChangePlan("Plan a move to <NULL>", moves => moves.Add(new MenuToolPlannedMove { From = nullPath, ToNull = true })));
 
             // Destructive Move…: only for items Modular Avatar or VRCFury add, inside their menu root (shown as Root).
             MenuToolEntry root = MenuToolPlanner.MenuRoot(entry, out _);
@@ -419,10 +436,18 @@ namespace Riry.RiryTools.Editor
             if (entry != null && !entry.Generated)
             {
                 string path = entry.Path;
-                menu.AddItem(new GUIContent("Remove Menu Item"), false, () =>
-                    ChangePlan("Plan removing a menu item", moves => moves.Add(new MenuToolPlannedMove { From = path, Remove = true })));
+                MenuToolEntry renaming = entry;
+                menu.AddItem(new GUIContent("Rename Menu Entry"), false, () =>
+                {
+                    if (managerTree != null) managerTree.BeginRename(renaming);
+                });
+                menu.AddItem(new GUIContent("Delete Menu Entry"), false, () => PlanDelete(path));
             }
-            else menu.AddDisabledItem(new GUIContent("Remove Menu Item"));
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Rename Menu Entry"));
+                menu.AddDisabledItem(new GUIContent("Delete Menu Entry"));
+            }
             menu.ShowAsContext();
         }
 
@@ -505,7 +530,12 @@ namespace Riry.RiryTools.Editor
             }
             if (Event.current.type == EventType.Layout)
             {
-                if (stale) Refresh();
+                if (stale)
+                {
+                    if (rebuild) DisposePreview();
+                    rebuild = false;
+                    Refresh();
+                }
                 else if (replan && scan != null)
                 {
                     replan = false;
@@ -576,7 +606,12 @@ namespace Riry.RiryTools.Editor
                     MarkStale();
                 }
                 if (GUILayout.Button("Use selection", GUILayout.Width(100f))) UseSelection();
-                if (GUILayout.Button(new GUIContent("Rescan", "Read the avatar again."), GUILayout.Width(70f))) MarkStale();
+                if (GUILayout.Button(new GUIContent("Rescan", "Read the avatar again and rebuild the preview and radial."), GUILayout.Width(70f)))
+                {
+                    // A full rebuild on the next Layout: the preview menus and the radial are made again, not kept when they look the same.
+                    rebuild = true;
+                    MarkStale();
+                }
             }
         }
 

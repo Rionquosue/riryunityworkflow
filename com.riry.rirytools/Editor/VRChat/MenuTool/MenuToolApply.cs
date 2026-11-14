@@ -115,10 +115,27 @@ namespace Riry.RiryTools.Editor
                         continue;
                     }
                     MenuToolEntry entry = scan.Root.Find(move.From);
-                    if (move.Remove)
+                    if (move.Remove || move.ToNull)
                     {
                         if (check.Edit == MenuToolMoveEdit.RemoveAsset) RemoveNative(scan, entry, Index(scan, ref references), report);
                         else AddRule(scan, MenuToolVrcfuryMenu.PathOf(entry), "", -1, false);
+                        report.Applied++;
+                        continue;
+                    }
+                    if (move.IsRename)
+                    {
+                        expected.Add(new Expected { Path = check.After, Type = entry.Type, Icon = entry.Icon, Parameters = entry.Parameters().ToArray() });
+                        string old = MenuToolVrcfuryMenu.PathOf(entry), parent = MenuToolVrcfuryMenu.PathOf(entry.Parent);
+                        string renamed = (parent.Length == 0 ? "" : parent + "/") + MenuToolVrcfuryMenu.Escape(move.Rename.Trim());
+                        if (check.Edit == MenuToolMoveEdit.RenameAsset)
+                        {
+                            VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, Index(scan, ref references)), entry.Parent, report);
+                            Undo.RecordObject(holder, UndoName);
+                            holder.controls[entry.OwnerIndex].name = move.Rename.Trim();
+                            EditorUtility.SetDirty(holder);
+                            RepathVrcfury(scan, entry, old, renamed, report);
+                        }
+                        else AddRule(scan, old, renamed, -1, false);
                         report.Applied++;
                         continue;
                     }
@@ -235,10 +252,15 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         private static void RepathVrcfury(MenuToolScan scan, MenuToolEntry entry, MenuToolEntry destination, Report report)
         {
+            string into = MenuToolVrcfuryMenu.PathOf(destination);
+            RepathVrcfury(scan, entry, MenuToolVrcfuryMenu.PathOf(entry), (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name), report);
+        }
+
+        // The same for a submenu whose path goes from one VRCFury path to another (a move or a rename).
+        private static void RepathVrcfury(MenuToolScan scan, MenuToolEntry entry, string from, string to, Report report)
+        {
             Type vrcfury = RiryToolsTypes.Named(VrcfuryType);
             if (!entry.IsSubMenu || scan.Avatar == null || vrcfury == null) return;
-            string from = MenuToolVrcfuryMenu.PathOf(entry), into = MenuToolVrcfuryMenu.PathOf(destination);
-            string to = (into.Length == 0 ? "" : into + "/") + MenuToolVrcfuryMenu.Escape(entry.Name);
             if (MenuToolVrcfuryMenu.SamePath(from, to)) return;
             var changed = new HashSet<Component>();
             foreach (Component component in scan.Avatar.GetComponentsInChildren(vrcfury, true))

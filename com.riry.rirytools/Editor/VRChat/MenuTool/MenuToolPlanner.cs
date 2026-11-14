@@ -43,7 +43,14 @@ namespace Riry.RiryTools.Editor
                     added.Entry = made;
                     continue;
                 }
-                if (move.Remove)
+                if (move.IsRename)
+                {
+                    MenuToolMoveCheck renamed = CheckRename(scan, root, move);
+                    checks.Add(renamed);
+                    if (renamed.Errors.Count == 0) renamed.Entry.Name = move.Rename.Trim();
+                    continue;
+                }
+                if (move.Remove || move.ToNull)
                 {
                     MenuToolMoveCheck removed = CheckRemove(scan, root, move);
                     checks.Add(removed);
@@ -180,11 +187,11 @@ namespace Riry.RiryTools.Editor
             return check;
         }
 
-        // Remove Menu Item: the entry must exist; a menu-asset control is deleted from its asset, a VRCFury item gets a Move
-        // Menu Item rule with a blank destination.
+        // Delete Menu Entry: the entry must exist and be a control in a menu asset, which it is deleted from. Move to… > <NULL>:
+        // any entry, through a VRCFury Move Menu Item rule with a blank destination.
         private static MenuToolMoveCheck CheckRemove(MenuToolScan scan, MenuToolEntry root, MenuToolPlannedMove move)
         {
-            var check = new MenuToolMoveCheck { Move = move, Before = move.From, After = move.From + " (removed)" };
+            var check = new MenuToolMoveCheck { Move = move, Before = move.From, After = move.ToNull ? "<NULL>" : move.From + " (deleted)" };
             check.Entry = root.Find(move.From ?? "");
             if (check.Entry == null || check.Entry.Parent == null)
             {
@@ -197,11 +204,50 @@ namespace Riry.RiryTools.Editor
                 check.Errors.Add(entry.Name + " is made by VRCFury's pagination and cannot be removed.");
                 return check;
             }
-            if (entry.Origin == MenuToolOrigin.Native && entry.OwnerMenu != null) check.Candidates.Add(MenuToolMoveEdit.RemoveAsset);
-            if (entry.Origin == MenuToolOrigin.VRCFury && scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.RemoveVrcfury);
-            Decide(check, MenuToolMoveEdit.Invalid, "No supported edit removes " + entry.Path + ".");
+            if (move.ToNull)
+            {
+                if (scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.RemoveVrcfury);
+                Decide(check, MenuToolMoveEdit.RemoveVrcfury, "Move to <NULL> needs VRCFury and an avatar descriptor.");
+            }
+            else
+            {
+                if (entry.Origin == MenuToolOrigin.Native && entry.OwnerMenu != null) check.Candidates.Add(MenuToolMoveEdit.RemoveAsset);
+                Decide(check, MenuToolMoveEdit.RemoveAsset, entry.Path + " is not in a menu asset: use Move to… > <NULL> for VRCFury items.");
+            }
             if (check.Edit == MenuToolMoveEdit.RemoveAsset) check.Affected.Add(entry.OwnerMenu);
             if (check.Edit == MenuToolMoveEdit.RemoveVrcfury) check.Affected.Add(scan.Avatar.gameObject);
+            return check;
+        }
+
+        // Rename Menu Entry: the entry must exist, the name not be empty or taken in its submenu; a menu-asset control is renamed
+        // in its asset, otherwise (or by choice) a VRCFury Move Menu Item rule renames it.
+        private static MenuToolMoveCheck CheckRename(MenuToolScan scan, MenuToolEntry root, MenuToolPlannedMove move)
+        {
+            string name = move.Rename.Trim();
+            var check = new MenuToolMoveCheck { Move = move, Before = move.From };
+            check.Entry = root.Find(move.From ?? "");
+            if (check.Entry == null || check.Entry.Parent == null)
+            {
+                check.Errors.Add(move.From + " is no longer in the menu.");
+                return check;
+            }
+            MenuToolEntry entry = check.Entry;
+            check.After = (entry.Parent.Path.Length == 0 ? "" : entry.Parent.Path + "/") + MenuToolVrcfuryMenu.Escape(name);
+            if (entry.Generated)
+            {
+                check.Errors.Add(entry.Name + " is made by VRCFury's pagination and cannot be renamed.");
+                return check;
+            }
+            if (name.Length == 0) check.Errors.Add("A name cannot be empty.");
+            else if (entry.Parent.Children.Any(child => child != entry && child.Name == name)) check.Errors.Add((entry.Parent.Parent == null ? "The root menu" : entry.Parent.Path) + " already has an item named " + name + ".");
+            if (check.Errors.Count > 0) return check;
+            bool asset = entry.Origin == MenuToolOrigin.Native && entry.OwnerMenu != null;
+            if (asset) check.Candidates.Add(MenuToolMoveEdit.RenameAsset);
+            if (scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.RenameVrcfury);
+            Decide(check, asset ? MenuToolMoveEdit.RenameAsset : entry.Origin == MenuToolOrigin.VRCFury ? MenuToolMoveEdit.RenameVrcfury : MenuToolMoveEdit.Ambiguous,
+                "No supported edit renames " + entry.Path + ".");
+            if (check.Edit == MenuToolMoveEdit.RenameAsset) check.Affected.Add(entry.OwnerMenu);
+            if (check.Edit == MenuToolMoveEdit.RenameVrcfury) check.Affected.Add(scan.Avatar.gameObject);
             return check;
         }
 
@@ -577,7 +623,9 @@ namespace Riry.RiryTools.Editor
 #if RIRYTOOLS_MENUTOOL_MA
                 case MenuToolMoveEdit.IconMa: return "Icon on the MA Menu Item";
 #endif
-                case MenuToolMoveEdit.RemoveAsset: return "Remove from the menu asset";
+                case MenuToolMoveEdit.RemoveAsset: return "Delete from the menu asset";
+                case MenuToolMoveEdit.RenameAsset: return "Rename in the menu asset";
+                case MenuToolMoveEdit.RenameVrcfury: return "Rename with Move Menu Item (VRCFury)";
                 case MenuToolMoveEdit.RemoveVrcfury: return "Move Menu Item to nothing (VRCFury)";
                 case MenuToolMoveEdit.DestructiveAsset: return "Destructive Move in the menu asset";
                 case MenuToolMoveEdit.DestructivePath: return "Destructive Move of the VRCFury menu path";
