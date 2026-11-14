@@ -865,7 +865,8 @@ namespace Riry.RiryTools.Editor
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUI.DisabledScope(scan.Avatar == null || radial == null || MenuToolEntryState.IdOf(scan.Avatar.gameObject) == null))
+                using (new EditorGUI.DisabledScope(scan.Avatar == null || radial == null ||
+                    (!HasVrcfury(scan.Avatar.gameObject) && MenuToolEntryState.IdOf(scan.Avatar.gameObject) == null)))
                 {
                     if (GUILayout.Button(new GUIContent("Set as entry state",
                         "In Play Mode this session, once Gesture Manager has set up this avatar, makes these writes in order and opens this submenu. " +
@@ -889,10 +890,15 @@ namespace Riry.RiryTools.Editor
             Transform root = scan.Avatar.transform;
             var state = new MenuToolEntryState
             {
-                Avatar = MenuToolEntryState.IdOf(root.gameObject), Menu = shownPath ?? "",
+                Avatar = MenuToolEntryState.IdOf(root.gameObject) ?? "", Vrcfury = HasVrcfury(root.gameObject), Path = HierarchyPath.Of(root), Menu = shownPath ?? "",
                 Writes = new List<MenuToolEntryState.Write>(writes)
             };
             state.Save();
+        }
+
+        private static bool HasVrcfury(GameObject avatar)
+        {
+            return avatar.GetComponentsInChildren<Component>(true).Any(c => c != null && c.GetType().FullName == "VF.Model.VRCFury");
         }
 
         private void ResetMenuState()

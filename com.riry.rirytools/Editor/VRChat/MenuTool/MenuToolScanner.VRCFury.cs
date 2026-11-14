@@ -25,12 +25,127 @@ namespace Riry.RiryTools.Editor
             if (!context.Scan.VrcfuryInstalled) return;
             foreach (Component component in components)
             {
-                if (VrcfurySpsTypes.Contains(component.GetType().FullName))
-                    context.Scan.Note("VRCFury SPS on " + component.gameObject.name + " adds an SPS menu; it is not shown.");
+                string type = component.GetType().FullName;
+                if (type == VrcfurySocketType) context.Sockets.Add(component);
+                else if (type == VrcfuryPlugType) context.Plugs.Add(component);
                 if (!Is(component, VrcfuryType)) continue;
                 var serialized = new SerializedObject(component);
                 foreach (SerializedProperty feature in Features(serialized)) AddVrcfuryFeature(context, component, feature);
             }
+            // VRCFury adds the SPS menu after the features (BakeHapticSocketsService, BakeHapticPlugsService).
+            AddVrcfurySps(context);
+        }
+
+        // ---- VRCFury SPS ----------------------------------------------------------
+
+        private const string VrcfurySocketType = "VF.Component.VRCFuryHapticSocket";
+        private const string VrcfuryPlugType = "VF.Component.VRCFuryHapticPlug";
+
+        // What VRCFury takes out of an object's name for a socket's menu name (HapticUtils.NormalizeName), in its order.
+        private static readonly string[] SpsNameNoise =
+        {
+            "ezdps_([a-z][a-z]?_?)?", "dps", "sps", "gameobject", "object", "armature", "tps", "haptic", "socket", "plug", "ring",
+            "hole", "mesh", @"\(\d+\)", "orifice", "oriface", "penetrator", "penetrater"
+        };
+
+        /// <summary>
+        /// The SPS menu VRCFury builds: SPS Options' menu path ("SPS" when empty) with a toggle per socket that has Add Menu
+        /// Item, and its options (Auto Mode, Stealth Mode, Legacy Compatibility, and the plugs' Disable Depth Pass, Disable
+        /// Realtime Shadows, DPS Tip Light), in an Options submenu when there are socket toggles.
+        /// </summary>
+        private static void AddVrcfurySps(Context context)
+        {
+            if (context.Sockets.Count == 0 && context.Plugs.Count == 0) return;
+            Component owner = context.SpsOptionsComponent ?? (context.Sockets.Count > 0 ? context.Sockets[0] : context.Plugs[0]);
+            string block = BlockOf(owner, context.Root);
+            Block(context.Scan, block);
+            string menuPath = context.SpsOptions != null ? Str(context.SpsOptions, "menuPath") : "";
+            if (string.IsNullOrWhiteSpace(menuPath)) menuPath = "SPS";
+            bool saved = context.SpsOptions != null && Bool(context.SpsOptions, "saveSockets");
+            var sockets = context.Sockets.Select(s => new SerializedObject(s)).ToList();
+            List<SerializedObject> listed = sockets.Where(s => SoBool(s, "addMenuItem")).ToList();
+            string optionsPath = listed.Count > 0 ? menuPath + "/<b>Options" : menuPath;
+
+            if (listed.Any(s => SoBool(s, "enableAuto")))
+                AddSpsToggle(context, owner, block, optionsPath + "/<b>Auto Mode<\\/b>\n<size=20>Activates hole nearest to a VRCFury plug", "autoMode", false, saved, false);
+            if (listed.Count > 0)
+                AddSpsToggle(context, owner, block, optionsPath + "/<b>Stealth Mode<\\/b>\n<size=20>Only local haptics,\nInvisible to others", "stealth", true, saved, false);
+            if (listed.Any(s => SoBool(s, "useLights")))
+                AddSpsToggle(context, owner, block, optionsPath + "/<b>Legacy Compatibility<\\/b>\n<size=20>DPS \\/ TPS \\/ SPS1\nOne socket at a time", "legacy", true, saved,
+                    context.SpsOptions == null || Bool(context.SpsOptions, "legacyModeEnabledOnAvatarLoad"));
+
+            var usedNames = new HashSet<string>();
+            var usedOsc = new HashSet<string>();
+            for (int i = 0; i < sockets.Count; i++)
+            {
+                string preferred = sockets[i].FindProperty("name")?.stringValue;
+                if (string.IsNullOrWhiteSpace(preferred)) preferred = SpsFallbackName(context.Sockets[i].transform);
+                string menuName = MakeUnique(usedNames, preferred);
+                string osc = sockets[i].FindProperty("oscId")?.stringValue;
+                string oscId = MakeUnique(usedOsc, string.IsNullOrWhiteSpace(osc) ? menuName : osc);
+                if (!SoBool(sockets[i], "addMenuItem")) continue;
+                MenuToolEntry entry = AddSpsToggle(context, context.Sockets[i], BlockOf(context.Sockets[i], context.Root), menuPath + "/" + menuName, oscId, true, saved, false);
+                entry.Icon = sockets[i].FindProperty("menuIcon.objRef")?.objectReferenceValue as Texture2D;
+            }
+
+            var plugs = context.Plugs.Select(p => new SerializedObject(p)).ToList();
+            if (plugs.Any(p => SoBool(p, "enableSps")))
+            {
+                AddSpsToggle(context, owner, block, optionsPath + "/<b>Disable Depth Pass<\\/b>\n<size=20>(May fix 'ghost' plugs in some worlds)", "disableDepth", true, true, false);
+                AddSpsToggle(context, owner, block, optionsPath + "/<b>Disable Realtime Shadows<\\/b>\n<size=20>(May fix 'ghost' plugs in some worlds)", "disableRealtimeShadows", true, true, false);
+            }
+            if (plugs.Any(p => SoBool(p, "addDpsTipLight")))
+                AddSpsToggle(context, owner, block, optionsPath + "/<b>DPS Tip Light<\\/b>\n<size=20>Allows plugs to trigger old DPS animations", "tipLight", true, false, false);
+
+            if (context.SpsOptions != null)
+            {
+                MenuToolEntry folder = MenuToolVrcfuryMenu.Folder(context.Scan.Root, MenuToolVrcfuryMenu.Split(menuPath), false, null);
+                var icon = Ref(context.SpsOptions, "menuIcon") as Texture2D;
+                if (folder != null && icon != null) folder.Icon = icon;
+            }
+        }
+
+        // One SPS toggle at a VRCFury menu path, with VRCFury's unique parameter (estimated) declared.
+        private static MenuToolEntry AddSpsToggle(Context context, Component component, string block, string path, string parameterName, bool synced, bool saved, bool on)
+        {
+            MenuToolEntry parent = ParentOf(context, component, block, path, out string leaf);
+            string parameter = Unique(parameterName);
+            var entry = new MenuToolEntry
+            {
+                Name = leaf, Type = ControlType.Toggle, Parameter = parameter, Origin = MenuToolOrigin.VRCFury, Source = component, Block = block,
+                VrcfComponent = component, VrcfPath = path, Estimated = true
+            };
+            parent.Add(entry);
+            if (synced) Declare(context.Scan, parameter, ValueType.Bool, true, saved, on ? 1f : 0f, block, component, true);
+            return entry;
+        }
+
+        // The first name up the hierarchy that is not empty once VRCFury's noise words are taken out (GetFallbackId).
+        private static string SpsFallbackName(Transform transform)
+        {
+            for (Transform t = transform; t != null; t = t.parent)
+            {
+                string name = t.name;
+                foreach (string noise in SpsNameNoise) name = Regex.Replace(name, noise, "", RegexOptions.IgnoreCase);
+                name = name.Trim();
+                if (!string.IsNullOrWhiteSpace(name)) return name;
+            }
+            return "Unknown";
+        }
+
+        // VRCFury's MakeUnique: the name, else name_2, name_3, ...
+        private static string MakeUnique(HashSet<string> used, string name)
+        {
+            string unique = name;
+            for (int i = 2; used.Contains(unique); i++) unique = name + "_" + i;
+            used.Add(unique);
+            return unique;
+        }
+
+        private static bool SoBool(SerializedObject serialized, string name)
+        {
+            SerializedProperty property = serialized.FindProperty(name);
+            return property != null && property.propertyType == SerializedPropertyType.Boolean && property.boolValue;
         }
 
         /// <summary>A VRCFury component's features: its content, and the older config.features list.</summary>
@@ -83,6 +198,25 @@ namespace Riry.RiryTools.Editor
                     context.VrcfRules.Add(new MenuToolVrcfuryMenuRule { Kind = name, Component = component, Path = Str(feature, "path"), Position = position != null ? position.intValue : 0 });
                     break;
                 }
+                case "SpsOptions":
+                    if (context.SpsOptions == null)
+                    {
+                        context.SpsOptions = feature.Copy();
+                        context.SpsOptionsComponent = component;
+                    }
+                    break;
+                case "SecurityLock":
+                    Block(context.Scan, block);
+                    AddVrcfurySecurityLock(context, component, block);
+                    break;
+                case "OverrideMenuSettings":
+                {
+                    string next = Str(feature, "nextText");
+                    if (!string.IsNullOrEmpty(next)) context.Scan.NextText = next;
+                    var nextIcon = Ref(feature, "nextIcon") as Texture2D;
+                    if (nextIcon != null) context.Scan.NextIcon = nextIcon;
+                    break;
+                }
                 case "SetIcon":
                     context.VrcfRules.Add(new MenuToolVrcfuryMenuRule { Kind = name, Component = component, Path = Str(feature, "path"), Icon = Ref(feature, "icon") as Texture2D });
                     break;
@@ -91,6 +225,22 @@ namespace Riry.RiryTools.Editor
                         context.Scan.Note("VRCFury " + name + " on " + component.gameObject.name + " may add menu items; they are not shown.");
                     break;
             }
+        }
+
+        // Security Lock: a Security submenu with buttons 1 to 7 and Unlocked (8), all on VRCFury's unique SecurityInput Int (not synced).
+        private static void AddVrcfurySecurityLock(Context context, Component component, string block)
+        {
+            string parameter = Unique("SecurityInput");
+            for (int i = 1; i <= 8; i++)
+            {
+                MenuToolEntry parent = ParentOf(context, component, block, "Security/" + (i == 8 ? "Unlocked" : i.ToString()), out string leaf);
+                parent.Add(new MenuToolEntry
+                {
+                    Name = leaf, Type = ControlType.Button, Parameter = parameter, Value = i, Origin = MenuToolOrigin.VRCFury, Source = component,
+                    Block = block, VrcfComponent = component, VrcfPath = "Security/" + leaf, Estimated = true
+                });
+            }
+            Declare(context.Scan, Unique("SecurityLockSync"), ValueType.Bool, true, false, 0f, block, component, true);
         }
 
         private static void AddVrcfuryToggle(Context context, Component component, SerializedProperty feature, string block)

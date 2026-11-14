@@ -192,12 +192,10 @@ namespace Riry.RiryTools.Editor
                     "Set Edit > Project Settings > Editor > Asset Serialization to Force Text first.", "OK");
                 return;
             }
-            if (PrefabStageUtility.GetCurrentPrefabStage() != null)
-            {
-                EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title,
-                    "Close Prefab Mode without saving first, then apply the redirects.", "OK");
+            // The prefab open in Prefab Mode is repaired in memory (GuidToolPrefabStageRepair), not rewritten on disk.
+            PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (stage != null && !EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Repair GUID in prefab mode?", "Yes", "No"))
                 return;
-            }
             List<GuidToolRepairCandidate> restores = Restores();
             // A break without Fix (accepted, or not decided) stays broken after Apply.
             if (restores.Exists(restore => restore.Unfixed) &&
@@ -219,9 +217,19 @@ namespace Riry.RiryTools.Editor
             var restoredFiles = new List<string>();
             try
             {
+                int inStage = 0;
+                var unresolved = new List<string>();
+                if (stage != null && plan.References.ContainsKey(stage.assetPath))
+                {
+                    inStage = GuidToolPrefabStageRepair.Apply(stage, Redirects(), unresolved);
+                    plan.References.Remove(stage.assetPath);
+                    plan.Files.Remove(stage.assetPath);
+                }
                 int changed = GuidToolReferenceRepair.Apply(plan, Redirects(), restores, restoredFiles, log);
                 RiryLog.Info(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": repaired references in " + changed + " file(s)" +
-                    (restoredFiles.Count > 0 ? ", restoring " + string.Join(", ", restoredFiles) : "") + ".");
+                    (restoredFiles.Count > 0 ? ", restoring " + string.Join(", ", restoredFiles) : "") +
+                    (stage != null ? "; set " + inStage + " reference(s) in " + stage.assetPath + " in Prefab Mode (not saved yet)" : "") +
+                    (unresolved.Count > 0 ? "; no matching object for " + string.Join(", ", unresolved) : "") + ".");
                 applied = true;
             }
             catch (Exception exception)

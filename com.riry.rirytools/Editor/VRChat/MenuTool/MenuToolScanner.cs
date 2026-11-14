@@ -35,9 +35,8 @@ namespace Riry.RiryTools.Editor
         private const string MaParametersType = "nadena.dev.modular_avatar.core.ModularAvatarParameters";
         private const string MaMergeAnimatorType = "nadena.dev.modular_avatar.core.ModularAvatarMergeAnimator";
         // VRCFury components that add an SPS menu this scan does not model.
-        private static readonly string[] VrcfurySpsTypes = { "VF.Component.VRCFuryHapticSocket", "VF.Component.VRCFuryHapticPlug" };
         // VRCFury features that add menu items this scan does not model.
-        private static readonly string[] VrcfuryUnmodelled = { "SpsOptions", "TPSIntegration", "TPSIntegration2", "OGBIntegration", "OGBIntegration2", "ZawooIntegration", "SecurityLock", "Modes" };
+        private static readonly string[] VrcfuryUnmodelled = { "TPSIntegration", "TPSIntegration2", "OGBIntegration", "OGBIntegration2", "ZawooIntegration", "Modes" };
 
         // VRChat's own parameters: not custom expression parameters, never counted.
         internal static readonly HashSet<string> BuiltIn = new HashSet<string>
@@ -59,6 +58,11 @@ namespace Riry.RiryTools.Editor
             internal readonly List<(string Name, Component Item, bool Synced, bool Saved, bool IsDefault, MenuToolEntry Entry)> MaAuto =
                 new List<(string, Component, bool, bool, bool, MenuToolEntry)>();
             internal readonly List<MenuToolVrcfuryMenuRule> VrcfRules = new List<MenuToolVrcfuryMenuRule>();
+            // VRCFury SPS: its options feature (the first), and the sockets and plugs, in hierarchy order.
+            internal SerializedProperty SpsOptions;
+            internal Component SpsOptionsComponent;
+            internal readonly List<Component> Sockets = new List<Component>();
+            internal readonly List<Component> Plugs = new List<Component>();
         }
 
         /// <summary>Scans the avatar the target belongs to, or the target alone when no avatar descriptor is above it.</summary>

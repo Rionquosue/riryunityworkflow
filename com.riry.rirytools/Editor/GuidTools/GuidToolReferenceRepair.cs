@@ -19,6 +19,12 @@ namespace Riry.RiryTools.Editor
         /// <summary>Missing GUID to the files that use it. Exact case: patches rewrite the bytes as found.</summary>
         public readonly SortedDictionary<string, SortedSet<string>> Missing =
             new SortedDictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+        /// <summary>
+        /// Objects that are gone from an asset that still exists (a renamed mesh, a removed sub-material): "path (file ID n)"
+        /// to the files that use it. Their GUID is fine, so they are listed, not redirected.
+        /// </summary>
+        public readonly SortedDictionary<string, SortedSet<string>> MissingObjects =
+            new SortedDictionary<string, SortedSet<string>>(StringComparer.Ordinal);
         /// <summary>Missing GUID to every replacement found, in the order the sources were searched.</summary>
         public readonly Dictionary<string, List<GuidToolRepairCandidate>> Candidates =
             new Dictionary<string, List<GuidToolRepairCandidate>>(StringComparer.Ordinal);
@@ -151,6 +157,16 @@ namespace Riry.RiryTools.Editor
         {
             var plan = new GuidToolRepairPlan();
             plan.Files.AddRange(files);
+            // What the files use is scanned too: a material's shader lives in the .mat, a nested prefab's references in its
+            // own .prefab, not in the scene. Only files in Assets that Unity writes as text.
+            var listed = new HashSet<string>(plan.Files, StringComparer.OrdinalIgnoreCase);
+            foreach (string dependency in AssetDatabase.GetDependencies(plan.Files.ToArray(), true))
+            {
+                if (dependency.StartsWith("Assets/", StringComparison.Ordinal) &&
+                    GuidToolRegenerate.UnitySerializedExtensions.Contains(Path.GetExtension(dependency)) && listed.Add(dependency))
+                    plan.Files.Add(dependency);
+            }
+            var objectIds = new Dictionary<string, HashSet<long>>(StringComparer.Ordinal);
             var sample = new byte[4096];
             try
             {
@@ -164,8 +180,19 @@ namespace Riry.RiryTools.Editor
                         log.Write("Skipped missing or binary file: " + plan.Files[i]);
                         continue;
                     }
-                    List<KeyValuePair<long, string>> broken = FindGuidReferences(File.ReadAllBytes(fullPath))
-                        .FindAll(reference => IsMissing(reference.Value));
+                    byte[] bytes = File.ReadAllBytes(fullPath);
+                    List<KeyValuePair<long, string>> references = FindGuidReferences(bytes);
+                    List<KeyValuePair<long, string>> broken = references.FindAll(reference => IsMissing(reference.Value));
+                    foreach (KeyValuePair<long, string> reference in references)
+                    {
+                        if (IsMissing(reference.Value)) continue;
+                        string gone = MissingObject(bytes, reference, objectIds);
+                        if (gone == null) continue;
+                        SortedSet<string> users;
+                        if (!plan.MissingObjects.TryGetValue(gone, out users))
+                            plan.MissingObjects[gone] = users = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+                        users.Add(plan.Files[i]);
+                    }
                     if (broken.Count == 0) continue;
                     plan.References[plan.Files[i]] = broken;
                     foreach (KeyValuePair<long, string> reference in broken)
@@ -643,6 +670,44 @@ namespace Riry.RiryTools.Editor
             var sorted = new List<string>(files);
             sorted.Sort(StringComparer.OrdinalIgnoreCase);
             return sorted;
+        }
+
+        // The prefab asset itself as a nested prefab's source (m_SourcePrefab): not one of the objects LoadAllAssetsAtPath gives.
+        private const long PrefabAssetFileId = 100100000;
+
+        /// <summary>
+        /// "path (file ID n)" when the reference's file ID is not one of its asset's objects any more; null when it is, when
+        /// it has none (0), or when the asset's objects can't be loaded.
+        /// </summary>
+        private static string MissingObject(byte[] bytes, KeyValuePair<long, string> reference, Dictionary<string, HashSet<long>> objectIds)
+        {
+            long fileId;
+            if (reference.Value.StartsWith("0000000000000000", StringComparison.Ordinal)) return null;
+            if (!FileIdBefore(bytes, (int)reference.Key, out fileId) || fileId == 0 || fileId == PrefabAssetFileId) return null;
+            HashSet<long> ids;
+            string path = AssetDatabase.GUIDToAssetPath(reference.Value);
+            if (!objectIds.TryGetValue(reference.Value, out ids))
+            {
+                ids = new HashSet<long>();
+                foreach (UnityEngine.Object item in AssetDatabase.LoadAllAssetsAtPath(path))
+                {
+                    if (item != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(item, out string guid, out long id)) ids.Add(id);
+                }
+                objectIds[reference.Value] = ids;
+            }
+            return ids.Count == 0 || ids.Contains(fileId) ? null : path + " (file ID " + fileId + ")";
+        }
+
+        // The "fileID: n" written before "guid: " in the same {fileID: n, guid: ..., type: t} reference.
+        private static bool FileIdBefore(byte[] bytes, int guidStart, out long fileId)
+        {
+            fileId = 0;
+            int open = guidStart;
+            while (open > 0 && bytes[open] != (byte)'{' && bytes[open] != (byte)'\n') open--;
+            if (open < 0 || bytes[open] != (byte)'{') return false;
+            string inside = Encoding.ASCII.GetString(bytes, open, guidStart - open);
+            Match match = Regex.Match(inside, @"fileID:\s*(-?\d+)");
+            return match.Success && long.TryParse(match.Groups[1].Value, out fileId);
         }
 
         /// <summary>A GUID with no asset behind it. Built-in resources (16 leading zeros) never count.</summary>

@@ -24,6 +24,9 @@ namespace Riry.RiryTools.Editor
 
         // The avatar root's GlobalObjectId (its saved scene's GUID and its file ID), so a renamed or moved avatar is still found.
         public string Avatar = "";
+        // A VRCFury avatar is replaced in Play Mode, so it is found by its hierarchy path ("Root/Child") instead.
+        public bool Vrcfury;
+        public string Path = "";
         // The submenu shown, as a path of control names in the assembled menu ("" is the root).
         public string Menu = "";
         public List<Write> Writes = new List<Write>();
