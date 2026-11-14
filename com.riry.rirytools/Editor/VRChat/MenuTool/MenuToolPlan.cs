@@ -31,6 +31,8 @@ namespace Riry.RiryTools.Editor
         public string Icon = "";
         // Assign Menu Icon: the entry at From gets the texture Icon.
         public bool AssignIcon;
+        // Remove Menu Item: the entry at From is removed.
+        public bool Remove;
         // Destructive Move: edits the item's own source (its VRCFury feature's path, or the menu asset or MA item it comes
         // from) instead of adding an override, inside its menu root.
         public bool Destructive;
@@ -145,6 +147,10 @@ namespace Riry.RiryTools.Editor
         IconAsset,
         IconVrcfury,
         IconMa,
+        // Remove Menu Item: the control deleted from its menu asset (copying a shared one first), or a VRCFury Move Menu Item
+        // rule with a blank destination.
+        RemoveAsset,
+        RemoveVrcfury,
         // Destructive Move: the control moved between its own source's menu assets, in place (no copy), or a VRCFury Toggle or
         // Puppet's menu path rewritten. (An MA Menu Item object is moved with MaReparent.)
         DestructiveAsset,

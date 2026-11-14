@@ -39,6 +39,13 @@ namespace Riry.RiryTools.Editor
                     added.Entry = made;
                     continue;
                 }
+                if (move.Remove)
+                {
+                    MenuToolMoveCheck removed = CheckRemove(scan, root, move);
+                    checks.Add(removed);
+                    if (removed.Errors.Count == 0) removed.Entry.Parent.Children.Remove(removed.Entry);
+                    continue;
+                }
                 if (move.AssignIcon)
                 {
                     MenuToolMoveCheck icon = CheckIcon(scan, root, move);
@@ -154,6 +161,31 @@ namespace Riry.RiryTools.Editor
             if (check.Edit == MenuToolMoveEdit.IconAsset && entry.OwnerMenu != null) check.Affected.Add(entry.OwnerMenu);
             if (check.Edit == MenuToolMoveEdit.IconMa && entry.MaItem != null) check.Affected.Add(entry.MaItem);
             if (check.Edit == MenuToolMoveEdit.IconVrcfury) check.Affected.Add(scan.Avatar.gameObject);
+            return check;
+        }
+
+        // Remove Menu Item: the entry must exist; a menu-asset control is deleted from its asset, a VRCFury item gets a Move
+        // Menu Item rule with a blank destination.
+        private static MenuToolMoveCheck CheckRemove(MenuToolScan scan, MenuToolEntry root, MenuToolPlannedMove move)
+        {
+            var check = new MenuToolMoveCheck { Move = move, Before = move.From, After = move.From + " (removed)" };
+            check.Entry = root.Find(move.From ?? "");
+            if (check.Entry == null || check.Entry.Parent == null)
+            {
+                check.Errors.Add(move.From + " is no longer in the menu.");
+                return check;
+            }
+            MenuToolEntry entry = check.Entry;
+            if (entry.Generated)
+            {
+                check.Errors.Add(entry.Name + " is made by VRCFury's pagination and cannot be removed.");
+                return check;
+            }
+            if (entry.Origin == MenuToolOrigin.Native && entry.OwnerMenu != null) check.Candidates.Add(MenuToolMoveEdit.RemoveAsset);
+            if (entry.Origin == MenuToolOrigin.VRCFury && scan.VrcfuryInstalled && scan.Avatar != null) check.Candidates.Add(MenuToolMoveEdit.RemoveVrcfury);
+            Decide(check, MenuToolMoveEdit.Invalid, "No supported edit removes " + entry.Path + ".");
+            if (check.Edit == MenuToolMoveEdit.RemoveAsset) check.Affected.Add(entry.OwnerMenu);
+            if (check.Edit == MenuToolMoveEdit.RemoveVrcfury) check.Affected.Add(scan.Avatar.gameObject);
             return check;
         }
 
@@ -477,6 +509,8 @@ namespace Riry.RiryTools.Editor
                 case MenuToolMoveEdit.IconAsset: return "Icon in the menu asset";
                 case MenuToolMoveEdit.IconVrcfury: return "Set Icon (VRCFury)";
                 case MenuToolMoveEdit.IconMa: return "Icon on the MA Menu Item";
+                case MenuToolMoveEdit.RemoveAsset: return "Remove from the menu asset";
+                case MenuToolMoveEdit.RemoveVrcfury: return "Move Menu Item to nothing (VRCFury)";
                 case MenuToolMoveEdit.DestructiveAsset: return "Destructive Move in the menu asset";
                 case MenuToolMoveEdit.DestructivePath: return "Destructive Move of the VRCFury menu path";
                 case MenuToolMoveEdit.Ambiguous: return "Choose a source";

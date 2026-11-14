@@ -109,6 +109,13 @@ namespace Riry.RiryTools.Editor
                         continue;
                     }
                     MenuToolEntry entry = scan.Root.Find(move.From);
+                    if (move.Remove)
+                    {
+                        if (check.Edit == MenuToolMoveEdit.RemoveAsset) RemoveNative(scan, entry, Index(scan, ref references), report);
+                        else AddRule(scan, MenuToolVrcfuryMenu.PathOf(entry), "", -1, false);
+                        report.Applied++;
+                        continue;
+                    }
                     if (move.AssignIcon)
                     {
                         Texture2D icon = move.IconTexture;
@@ -264,6 +271,15 @@ namespace Riry.RiryTools.Editor
                 subParameters = control.SubParameters.Select(n => new VRCExpressionsMenu.Control.Parameter { name = n }).ToArray(),
                 labels = new VRCExpressionsMenu.Control.Label[0]
             });
+            EditorUtility.SetDirty(holder);
+        }
+
+        // Remove Menu Item from a menu asset: the control leaves the menu its slot shows (a copy when shared).
+        private static void RemoveNative(MenuToolScan scan, MenuToolEntry entry, ReferenceIndex index, Report report)
+        {
+            VRCExpressionsMenu holder = Owned(scan, new MenuUses(scan, index), entry.Parent, report);
+            Undo.RecordObject(holder, UndoName);
+            holder.controls.RemoveAt(entry.OwnerIndex);
             EditorUtility.SetDirty(holder);
         }
 

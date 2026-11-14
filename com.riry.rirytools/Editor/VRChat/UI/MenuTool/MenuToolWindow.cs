@@ -313,7 +313,7 @@ namespace Riry.RiryTools.Editor
         private static bool Same(MenuToolPlannedMove a, MenuToolPlannedMove b)
         {
             return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu && a.NewControl == b.NewControl &&
-                a.AssignIcon == b.AssignIcon && a.Icon == b.Icon && a.Destructive == b.Destructive;
+                a.AssignIcon == b.AssignIcon && a.Remove == b.Remove && a.Icon == b.Icon && a.Destructive == b.Destructive;
         }
 
         // Every submenu of the planned layout, the root first: its path and how menus show it ("Root › A › B").
@@ -416,6 +416,13 @@ namespace Riry.RiryTools.Editor
                 });
             }
             else menu.AddDisabledItem(new GUIContent("Assign Menu Icon"));
+            if (entry != null && !entry.Generated)
+            {
+                string path = entry.Path;
+                menu.AddItem(new GUIContent("Remove Menu Item"), false, () =>
+                    ChangePlan("Plan removing a menu item", moves => moves.Add(new MenuToolPlannedMove { From = path, Remove = true })));
+            }
+            else menu.AddDisabledItem(new GUIContent("Remove Menu Item"));
             menu.ShowAsContext();
         }
 
