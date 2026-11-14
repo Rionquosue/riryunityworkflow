@@ -6,88 +6,95 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 ### Main menu
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
 
 ### Animator Tools
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### AutoSync
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### Avatar Migration Assistant
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### Blendshape Sync
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### Clean Animation Keys
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### Constraint Tool
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### GUID Tools
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+1. Does not find a broken shader reference on a "Mesh Renderer" object at element 0 position.
+2. Does not find a broken mesh reference on a "Mesh renderer" object (child of VRCFury prefab).
+3. When repairing a GUID inside a prefab it blocks while saying "Close prefab mode without saving first, then apply the redirects.", this should say "Repair GUID in prefab mode?" with a yes/no, instead of blocking all functions.
+
+#### Features
     
 ### IconCap
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
     
 ### Import Presets
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+#### Features
 
 ### Menu Tool
 
-    #### Bugs
+#### Bugs
 
-    #### Features
+1. Menu entry state does not properly set itself after gesturemanager begins emulation on the avatar.
+2. Menu manager does not include all VRCFury added objects (using latest beta release)
+
+#### Features
     
 ### Debug Tools
 
-    #### Refresh Scripts
+#### Refresh Scripts
     
-        ##### Bugs
+##### Bugs
         
-        ##### Features
+##### Features
         
-    #### Find Null references
+#### Find Null references
     
-        ##### Bugs
+##### Bugs
         
-        ##### Features
+##### Features
             
-    #### Menu Mockup
+#### Menu Mockup
     
-        ##### Bugs
+##### Bugs
         
-        ##### Features
+##### Features
         
 
