@@ -177,6 +177,13 @@ namespace Riry.RiryTools.Editor
                     string fullPath = Path.Combine(RiryToolsPaths.ProjectRoot, plan.Files[i]);
                     if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + plan.Files[i], (float)i / plan.Files.Count))
                         throw new OperationCanceledException();
+                    // Animation assets are never opened, even when selected: only whether a controller is present is checked,
+                    // where a scene or prefab references it.
+                    if (IsAnimationAsset(plan.Files[i]))
+                    {
+                        log.Write("Skipped animation asset: " + plan.Files[i]);
+                        continue;
+                    }
                     if (!File.Exists(fullPath) || !GuidToolRegenerate.LooksLikeText(fullPath, sample))
                     {
                         log.Write("Skipped missing or binary file: " + plan.Files[i]);
@@ -672,6 +679,13 @@ namespace Riry.RiryTools.Editor
             var sorted = new List<string>(files);
             sorted.Sort(StringComparer.OrdinalIgnoreCase);
             return sorted;
+        }
+
+        private static bool IsAnimationAsset(string path)
+        {
+            Type type = AssetDatabase.GetMainAssetTypeAtPath(path);
+            return type != null && (typeof(AnimationClip).IsAssignableFrom(type) || typeof(RuntimeAnimatorController).IsAssignableFrom(type) ||
+                typeof(AvatarMask).IsAssignableFrom(type) || type == typeof(UnityEditor.Animations.BlendTree));
         }
 
         // The dependencies the scan opens: prefabs (a nested prefab's own references) and materials (their shaders).
