@@ -15,6 +15,8 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 #### Bugs
 
 #### Features
+
+1. Move "Clean Animation Keys" and "Extract Animations" into here.
     
 ### AutoSync
 
@@ -33,13 +35,19 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 #### Bugs
 
 #### Features
+
+1. Add in the ability to name jobs, default to current job naming scheme.
     
 ### Clean Animation Keys
 
 #### Bugs
 
+1. Overlaps with other drawn UI elements, justify hard left to avoid interference with common animator tools.
+
 #### Features
-    
+
+1. Move to "Animator Tools" in the right click menu.
+
 ### Constraint Tool
 
 #### Bugs
@@ -50,17 +58,15 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Bugs
 
+#### Features
 
+1. "start" empty needs a definition field. All bones should be constrained to the "start" except for the first bone that moves along the chain which should be at the first bone of the "rest" chain.
 
 #### Features
 
-1. Give the user an "Ignore" button on the right that will move these to a silent "ignored" category, ignored GUID errors should exclude from the save check. An ignored error should not trigger the "WARNING" popup.
 
 #### Fixed
 
-1. Does not find a broken shader reference on a "Mesh Renderer" object at element 0 position.
-2. Does not find a broken mesh reference on a "Mesh renderer" object (child of VRCFury prefab).
-3. When repairing a GUID inside a prefab it blocks while saying "Close prefab mode without saving first, then apply the redirects.", this should say "Repair GUID in prefab mode?" with a yes/no, instead of blocking all functions.
 
 ### IconCap
 
@@ -75,6 +81,8 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
+1. Add a field to allow the user to select which filters the import preset tool should listen to.
+
 ### Menu Tool
 
 #### Bugs
@@ -84,8 +92,8 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 1. Add a "Remove menu item" button that will use vrcfury or modular avatar and pipe that item to null, or delete depending on host owner.
 
 #### Fixed
-1. Menu entry state does not properly set itself after gesturemanager begins emulation on the avatar.
-2. Menu manager does not include all VRCFury added objects (using latest beta release)
+
+
 ### Debug Tools
 
 #### Refresh Scripts
