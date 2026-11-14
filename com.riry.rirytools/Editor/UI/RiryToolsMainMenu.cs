@@ -27,7 +27,7 @@ namespace Riry.RiryTools.Editor
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
-        private static readonly string[] AnimatorTabs = { "Find and Replace" };
+        private static readonly string[] AnimatorTabs = { "Find and Replace", "Controller Cleaner" };
         private static readonly string[] ImportTabs =
         {
             "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
@@ -63,6 +63,7 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private int tab;
         [SerializeField] private int importTab;
+        [SerializeField] private int animatorTab;
         // The current tab's scroll position; back to the top when the tab changes.
         [SerializeField] private Vector2 tabScroll;
         [SerializeField] private List<Hosted> hosted = new List<Hosted>();
@@ -128,14 +129,15 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case "Animator Tools":
-                    if (CreateFindReplace == null)
+                    EditorGUILayout.Space(SubTabGap);
+                    animatorTab = TabStrip(this, animatorTab, AnimatorTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                    EditorGUILayout.Space(4f);
+                    // Find and Replace needs the VRChat SDK; Controller Cleaner does not.
+                    if (animatorTab == 0 && CreateFindReplace == null)
                     {
                         EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Find and Replace").Message, MessageType.Info);
                         break;
                     }
-                    EditorGUILayout.Space(SubTabGap);
-                    TabStrip(this, 0, AnimatorTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
-                    EditorGUILayout.Space(4f);
                     Draw(Active());
                     break;
                 case "Blendshape Sync":
@@ -201,7 +203,9 @@ namespace Riry.RiryTools.Editor
             switch (Current)
             {
                 case "AutoSync": return Host("Configuration", () => CreateInstance<AutoSyncGitConfigureWindow>(), window => ((AutoSyncGitConfigureWindow)window).Reload());
-                case "Animator Tools": return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
+                case "Animator Tools":
+                    if (animatorTab == 1) return Host(ControllerCleanerWindow.Title, () => CreateInstance<ControllerCleanerWindow>(), null);
+                    return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
                 case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Tool": return CreateConstraintTool == null ? null : Host("Constraint Tool", CreateConstraintTool, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);

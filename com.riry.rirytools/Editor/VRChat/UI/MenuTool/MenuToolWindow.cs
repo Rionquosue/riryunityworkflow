@@ -281,6 +281,11 @@ namespace Riry.RiryTools.Editor
             if (lastClicked != null) lastClicked = planned.Find(lastClicked.Path);
         }
 
+        private void AddDestructiveMove(string from, string to)
+        {
+            ChangePlan("Plan a destructive move", moves => moves.Add(new MenuToolPlannedMove { From = from, To = to ?? "", Index = -1, Destructive = true }));
+        }
+
         private void AddMove(string from, string to, int index)
         {
             ChangePlan("Plan a move", moves => moves.Add(new MenuToolPlannedMove { From = from, To = to ?? "", Index = index }));
@@ -304,7 +309,7 @@ namespace Riry.RiryTools.Editor
         private static bool Same(MenuToolPlannedMove a, MenuToolPlannedMove b)
         {
             return a.From == b.From && a.To == b.To && a.Index == b.Index && a.NewMenu == b.NewMenu && a.NewControl == b.NewControl &&
-                a.AssignIcon == b.AssignIcon && a.Icon == b.Icon;
+                a.AssignIcon == b.AssignIcon && a.Icon == b.Icon && a.Destructive == b.Destructive;
         }
 
         // Every submenu of the planned layout, the root first: its path and how menus show it ("Root › A › B").
@@ -329,8 +334,25 @@ namespace Riry.RiryTools.Editor
                 menu.AddItem(new GUIContent("Move to…/Top level"), false, () => AddMove(entry.Path, "", -1));
                 if (MoveDestinations(planned, entry).Any()) menu.AddSeparator("Move to…/");
             }
-            AddMoveSegment(menu, entry, planned, "Move to…/");
+            AddMoveSegment(menu, entry, planned, "Move to…/", to => AddMove(entry.Path, to, -1));
             if (menu.GetItemCount() == before) menu.AddDisabledItem(new GUIContent("Move to…/No other submenu"));
+
+            // Destructive Move…: only for items Modular Avatar or VRCFury add, inside their menu root (shown as Root).
+            MenuToolEntry root = MenuToolPlanner.MenuRoot(entry, out _);
+            if (root == null)
+            {
+                menu.AddDisabledItem(new GUIContent("Destructive Move…"));
+                return;
+            }
+            before = menu.GetItemCount();
+            if (root != entry.Parent)
+            {
+                string rootPath = root.Path;
+                menu.AddItem(new GUIContent("Destructive Move…/Root"), false, () => AddDestructiveMove(entry.Path, rootPath));
+                if (MoveDestinations(root, entry).Any()) menu.AddSeparator("Destructive Move…/");
+            }
+            AddMoveSegment(menu, entry, root, "Destructive Move…/", to => AddDestructiveMove(entry.Path, to));
+            if (menu.GetItemCount() == before) menu.AddDisabledItem(new GUIContent("Destructive Move…/No other submenu"));
         }
 
         // The submenus under a parent that the entry can move into: not itself or anything under it.
@@ -341,7 +363,7 @@ namespace Riry.RiryTools.Editor
 
         // One level of Move to…: a submenu with submenus of its own expands, its own name first, then a separator and its
         // submenus; one without is a single item.
-        private void AddMoveSegment(GenericMenu menu, MenuToolEntry entry, MenuToolEntry parent, string prefix)
+        private void AddMoveSegment(GenericMenu menu, MenuToolEntry entry, MenuToolEntry parent, string prefix, Action<string> pick)
         {
             foreach (MenuToolEntry destination in MoveDestinations(parent, entry))
             {
@@ -350,16 +372,16 @@ namespace Riry.RiryTools.Editor
                 bool target = destination != entry.Parent;
                 if (!MoveDestinations(destination, entry).Any())
                 {
-                    if (target) menu.AddItem(new GUIContent(prefix + name), false, () => AddMove(entry.Path, to, -1));
+                    if (target) menu.AddItem(new GUIContent(prefix + name), false, () => pick(to));
                     continue;
                 }
                 string segment = prefix + name + "/";
                 if (target)
                 {
-                    menu.AddItem(new GUIContent(segment + name), false, () => AddMove(entry.Path, to, -1));
+                    menu.AddItem(new GUIContent(segment + name), false, () => pick(to));
                     menu.AddSeparator(segment);
                 }
-                AddMoveSegment(menu, entry, destination, segment);
+                AddMoveSegment(menu, entry, destination, segment, pick);
             }
         }
 
@@ -968,7 +990,10 @@ namespace Riry.RiryTools.Editor
         {
             var sources = checks.SelectMany(c => c.Affected).Where(a => a != null).Distinct().Select(a => a.name).ToList();
             string message = "Apply " + plan.Moves.Count + " planned moves to " + PlanRoot.name + "?\n\nSources changed: " + string.Join(", ", sources) +
-                "\n\nMenu assets other places also use are copied to Assets/RiryTools/MenuTool first. One Ctrl+Z undoes everything this does (copied files stay).";
+                "\n\nMenu assets other places also use are copied to Assets/RiryTools/MenuTool first. One Ctrl+Z undoes everything this does (copied files stay)." +
+                (plan.Moves.Any(m => m.Destructive) ? "\n\nDestructive moves edit their sources in place: " +
+                    string.Join(", ", checks.Where(c => c.Move.Destructive).SelectMany(c => c.Affected).Where(a => a != null).Distinct().Select(a => a.name)) +
+                    ". Every avatar and prefab that uses them changes." : "");
             if (!EditorUtility.DisplayDialog(Title, message, "Apply", "Cancel"))
             {
                 RiryToolGUI.ExitAfterModal();

@@ -51,6 +51,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * Animator Tools >
         * Clean Animation Keys
         * Find and Replace
+        * Controller Cleaner
     * Avatar Tools >
         * Avatar Migration Assistant
         * Blendshape Sync
@@ -100,16 +101,26 @@ Where [] contains the currently active tab.
 
 | Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [Find and Replace] | Clean Animation Keys |  |  |  |  |
+| [Find and Replace] | Clean Animation Keys | Controller Cleaner |  |  |  |
 | Find and Replace UI here |  |  |  |  |  |
 
 ---
 
 | Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Find and Replace | [Clean Animation Keys] |  |  |  |  |
+| Find and Replace | [Clean Animation Keys] | Controller Cleaner |  |  |  |
 | [Select Clean Target(s) field] |  |  |  |  |  |
 | Clean animation keys UI here |  |  |  |  |  |
+
+---
+
+| Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Find and Replace | Clean Animation Keys | [Controller Cleaner] |  |  |  |
+| Controller field + Scan |  |  |  |  |  |
+| Scan scene controllers | Scan all controllers in project |  |  |  |  |
+| Clean all |  |  |  |  |  |
+| Results: controller, unused count, Clean |  |  |  |  |  |
 
 ---
 

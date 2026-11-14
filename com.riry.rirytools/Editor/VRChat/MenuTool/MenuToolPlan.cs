@@ -31,6 +31,9 @@ namespace Riry.RiryTools.Editor
         public string Icon = "";
         // Assign Menu Icon: the entry at From gets the texture Icon.
         public bool AssignIcon;
+        // Destructive Move: edits the item's own source (its VRCFury feature's path, or the menu asset or MA item it comes
+        // from) instead of adding an override, inside its menu root.
+        public bool Destructive;
 
         internal bool IsAdd
         {
@@ -142,6 +145,10 @@ namespace Riry.RiryTools.Editor
         IconAsset,
         IconVrcfury,
         IconMa,
+        // Destructive Move: the control moved between its own source's menu assets, in place (no copy), or a VRCFury Toggle or
+        // Puppet's menu path rewritten. (An MA Menu Item object is moved with MaReparent.)
+        DestructiveAsset,
+        DestructivePath,
         // Ownership unclear or unsupported: the user picks one of the candidates.
         Ambiguous,
         Invalid

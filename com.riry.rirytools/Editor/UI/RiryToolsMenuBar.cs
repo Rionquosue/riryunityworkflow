@@ -27,6 +27,7 @@ namespace Riry.RiryTools.Editor
         private const string AvatarMigratorMenu = "Tools/RiryTools/Avatar Migratio&n Assistant";
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Animator Tools/Clean Animation Keys";
+        private const string ControllerCleanerMenu = "Tools/RiryTools/Animator Tools/Controller Cleaner";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
         // "&o" makes O its menu key (Import Presets has I).
         private const string IconCapMenu = "Tools/RiryTools/Ic&onCap";
@@ -87,6 +88,10 @@ namespace Riry.RiryTools.Editor
         // In the Animator Tools submenu, before Find and Replace (1995).
         [MenuItem(CleanAnimationKeysMenu, false, 1994)]
         private static void CleanAnimationKeysItem() { CleanAnimationKeysWindow.Open(new UnityEngine.AnimationClip[0]); }
+
+        // After Find and Replace (1995).
+        [MenuItem(ControllerCleanerMenu, false, 1996)]
+        private static void ControllerCleanerItem() { ControllerCleanerWindow.Open(); }
 
         // Constraint Tool is 2030 (RiryToolsVRChatMenus.cs).
 

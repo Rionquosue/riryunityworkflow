@@ -158,11 +158,12 @@ namespace Riry.RiryTools.Editor
             var plan = new GuidToolRepairPlan();
             plan.Files.AddRange(files);
             // What the files use is scanned too: a material's shader lives in the .mat, a nested prefab's references in its
-            // own .prefab, not in the scene. Only files in Assets that Unity writes as text.
+            // own .prefab, not in the scene. Only files in Assets that Unity writes as text. Animator files are not opened:
+            // a missing controller is found where it is referenced, and nothing inside controllers or animations is checked.
             var listed = new HashSet<string>(plan.Files, StringComparer.OrdinalIgnoreCase);
             foreach (string dependency in AssetDatabase.GetDependencies(plan.Files.ToArray(), true))
             {
-                if (dependency.StartsWith("Assets/", StringComparison.Ordinal) &&
+                if (dependency.StartsWith("Assets/", StringComparison.Ordinal) && !AnimatorFiles.Contains(Path.GetExtension(dependency)) &&
                     GuidToolRegenerate.UnitySerializedExtensions.Contains(Path.GetExtension(dependency)) && listed.Add(dependency))
                     plan.Files.Add(dependency);
             }
@@ -671,6 +672,11 @@ namespace Riry.RiryTools.Editor
             sorted.Sort(StringComparer.OrdinalIgnoreCase);
             return sorted;
         }
+
+        private static readonly HashSet<string> AnimatorFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".controller", ".overrideController", ".anim", ".mask"
+        };
 
         // The prefab asset itself as a nested prefab's source (m_SourcePrefab): not one of the objects LoadAllAssetsAtPath gives.
         private const long PrefabAssetFileId = 100100000;

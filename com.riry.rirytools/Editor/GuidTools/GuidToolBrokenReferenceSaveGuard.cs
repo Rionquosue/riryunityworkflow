@@ -25,7 +25,9 @@ namespace Riry.RiryTools.Editor
             var allowed = new List<string>();
             foreach (string path in paths)
             {
-                List<BrokenReference> broken = FindBroken(path);
+                // Ignored references (GuidToolIgnoredReferences) neither block the save nor warn.
+                HashSet<string> ignored = GuidToolIgnoredReferences.All();
+                List<BrokenReference> broken = FindBroken(path).FindAll(reference => reference.Guid == null || !ignored.Contains(reference.Guid));
                 if (broken.Count > 0 && !GuidToolBrokenSaveWindow.Confirm(path, Describe(broken)))
                 {
                     RiryLog.Warn(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": saving " + path + " was aborted; it has " + broken.Count +
