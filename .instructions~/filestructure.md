@@ -124,6 +124,7 @@ com.riry.rirytools/
     │   ├── GuidToolBrokenReferenceSaveGuard.cs
     │   ├── GuidToolBytes.cs
     │   ├── GuidToolLog.cs
+    │   ├── GuidToolPrefabStageRepair.cs
     │   ├── GuidToolMetaHistoryParser.cs
     │   ├── GuidToolReferenceCache.cs
     │   ├── GuidToolReferenceRepair.cs

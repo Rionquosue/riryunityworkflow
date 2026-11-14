@@ -221,6 +221,9 @@ namespace Riry.RiryTools.Editor
         internal readonly List<string> Notes = new List<string>();
         internal bool VrcfuryInstalled;
         internal bool ModularAvatarInstalled;
+        // VRCFury's Override Menu Settings: the name and icon of its "Next" pages.
+        internal string NextText = "Next";
+        internal Texture2D NextIcon;
 
         internal void Note(string text)
         {

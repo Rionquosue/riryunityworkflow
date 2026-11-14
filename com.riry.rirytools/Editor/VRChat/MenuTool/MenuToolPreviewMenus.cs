@@ -38,7 +38,7 @@ namespace Riry.RiryTools.Editor
 
         internal static MenuToolPreviewMenus Build(MenuToolEntry root, MenuToolScan scan)
         {
-            var menus = new MenuToolPreviewMenus();
+            var menus = new MenuToolPreviewMenus { nextText = scan.NextText, nextIcon = scan.NextIcon };
             menus.Root = menus.Menu(root, scan.VrcfuryInstalled);
             menus.Parameters = menus.Make<VRCExpressionParameters>("Menu Tool preview parameters");
             menus.Parameters.parameters = scan.Params.Values.Select(p => new VRCExpressionParameters.Parameter
@@ -92,6 +92,10 @@ namespace Riry.RiryTools.Editor
             return made;
         }
 
+        // VRCFury's "Next" page name and icon (Override Menu Settings).
+        private string nextText = "Next";
+        private Texture2D nextIcon;
+
         private VRCExpressionsMenu Menu(MenuToolEntry entry, bool paginate)
         {
             VRCExpressionsMenu menu = Make<VRCExpressionsMenu>(string.IsNullOrEmpty(entry.Name) ? "Root" : entry.Name);
@@ -107,7 +111,7 @@ namespace Riry.RiryTools.Editor
                     VRCExpressionsMenu next = Make<VRCExpressionsMenu>(menu.name + " (Page " + pageNumber++ + ")");
                     next.controls = new List<VRCExpressionsMenu.Control>();
                     EntryOf[next] = entry;
-                    page.controls.Add(new VRCExpressionsMenu.Control { name = "Next", type = ControlType.SubMenu, subMenu = next, parameter = new VRCExpressionsMenu.Control.Parameter { name = "" } });
+                    page.controls.Add(new VRCExpressionsMenu.Control { name = nextText, icon = nextIcon, type = ControlType.SubMenu, subMenu = next, parameter = new VRCExpressionsMenu.Control.Parameter { name = "" } });
                     page = next;
                 }
                 VRCExpressionsMenu.Control control = Control(entry.Children[i], paginate);

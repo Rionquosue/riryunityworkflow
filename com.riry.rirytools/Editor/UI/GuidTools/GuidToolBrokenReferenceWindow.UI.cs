@@ -24,13 +24,26 @@ namespace Riry.RiryTools.Editor
                 (files.Count > ShownFiles ? " and " + (files.Count - ShownFiles) + " more" : ""), EditorStyles.wordWrappedMiniLabel);
             if (GUILayout.Button("Rescan")) { Rescan(); RiryToolGUI.ExitAfterModal(); }
             if (plan == null) return;
-            if (plan.Missing.Count == 0)
+            if (plan.Missing.Count == 0 && plan.MissingObjects.Count == 0)
             {
                 EditorGUILayout.HelpBox("No broken references were found.", MessageType.Info);
                 return;
             }
 
             scroll = EditorGUILayout.BeginScrollView(scroll);
+            // Objects gone from assets that still exist: shown so they can be fixed by hand; a GUID redirect can't fix them.
+            foreach (KeyValuePair<string, SortedSet<string>> gone in plan.MissingObjects)
+            {
+                Color before = GUI.backgroundColor;
+                GUI.backgroundColor = Unresolved;
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    GUI.backgroundColor = before;
+                    if (wrappedBold == null) wrappedBold = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
+                    EditorGUILayout.LabelField("Missing object in " + gone.Key, wrappedBold);
+                    EditorGUILayout.LabelField("Used in " + string.Join(", ", gone.Value), EditorStyles.wordWrappedMiniLabel);
+                }
+            }
             foreach (string missing in new List<string>(plan.Missing.Keys))
             {
                 List<GuidToolRepairCandidate> candidates;

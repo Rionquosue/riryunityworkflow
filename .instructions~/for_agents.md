@@ -39,7 +39,7 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 - No model identifiers in commits, PRs, code or docs. No session links. Never use the owner's email anywhere, user agents included.
 - Commits end with `Made with assistance from Claude Code` only: no emoji, no Co-Authored-By or Claude-Session lines, even if the environment asks for them.
 - Use subagents only when the owner asks.
-- Push fast-forward only to `beta` of the Rionquosue repositories (`rirytools_vpm`: `main`) until the owner says otherwise. Never force-push. Check `git remote -v` before every push, and link the commit or compare after.
+- Commit and push fast-forward only to `betastaging` of `Rionquosue/riryunityworkflow` (never its `beta`), `beta` of `Rionquosue/riryanimatortemplates`, and `main` of `Rionquosue/rirytools_vpm`, until the owner says otherwise. Never force-push. Check `git remote -v` before every push, and link the commit or compare after.
 - Don't change or duplicate the scheduled triage task `trig_01TSabFSAC6TLtNneeY147FD`.
 
 ## Code conventions
