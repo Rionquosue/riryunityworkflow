@@ -377,7 +377,7 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Find Null references` | (2056) Reads the Console's NullReferenceException entries (internal `UnityEditor.LogEntries`) once and lists empty or missing references in a popup, the whole open scenes when the log gives nothing. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `Debug/FindNullReferences.cs` |
 | `Tools/RiryTools/GUID Tools` | (2040) The window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/IconCap` | (2045) Written `Ic&onCap` so its menu key is O: the IconCap window (also from the Main Menu's Tools tab, in its own window). | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Animator Tools/Extract Animations` | (1997) The Extract Animation window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Animator Tools/Extract Animations` | (1997) The Extract Animation window. Also the Main Menu's Animator Tools tab, sub-tab Extract Animations (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Open Import Preset Library` | (2053) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Save Import Preset` | (2051) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Set Folder Import Presets` | (2050) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
