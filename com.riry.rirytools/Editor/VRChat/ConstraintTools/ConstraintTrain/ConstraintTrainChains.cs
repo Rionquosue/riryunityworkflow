@@ -18,7 +18,8 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>
-        /// Follows a target chain down from its start, one bone per real bone.
+        /// Follows a target chain down from its start, one bone per real bone, then its end bone (where the last real bone
+        /// stops): the child ending "_End" (any case), or the only child.
         /// With several children, the child named like the start (same prefix
         /// plus the real bone's name) wins, then a unique name ending match.
         /// </summary>
@@ -48,7 +49,28 @@ namespace Riry.RiryTools.Editor
                 }
                 chain.Add(next);
             }
+            Transform end = EndBone(chain[chain.Count - 1]);
+            if (end == null)
+            {
+                error = "'" + chain[chain.Count - 1].name + "' needs an end bone below it (named ..." + ConstraintToolChains.EndpointSuffix +
+                    ", or its only child), where the last bone stops. Generate the chain with Add endpoints on.";
+                return false;
+            }
+            chain.Add(end);
             return true;
+        }
+
+        private static Transform EndBone(Transform last)
+        {
+            Transform named = null;
+            for (int i = 0; i < last.childCount; i++)
+            {
+                Transform child = last.GetChild(i);
+                if (!child.name.EndsWith(ConstraintToolChains.EndpointSuffix, System.StringComparison.OrdinalIgnoreCase)) continue;
+                if (named != null) return null;
+                named = child;
+            }
+            return named ?? (last.childCount == 1 ? last.GetChild(0) : null);
         }
 
         private static Transform PickChild(Transform parent, string prefix, string realName)
