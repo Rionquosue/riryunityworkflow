@@ -27,15 +27,16 @@ If an item requires fixed height or width to be usable, it should not be docked 
 
 **Project folder**
 
-    * Animator Tools
-    * Clean Animation Keys
+    * Animator Tools >
+        * Clean Animation Keys
+        * Extract Animations
+        * Find And Replace
     * GUID Tools >
         * Regenerate GUID(s)
     * Import Presets
         * Set Folder Preset
         * Save Import Preset (only when clicking file, else grayed)
-        * Extract Animation (only when clicking mesh like FBX or library file containing multiple animations, else grayed)
-
+        
 ### Toolbar menu
 
     Formatted as breadcrumbs where > expands into a submenu.
@@ -52,6 +53,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Clean Animation Keys
         * Find and Replace
         * Controller Cleaner
+        * Extract Animations
     * Avatar Tools >
         * Avatar Migration Assistant
         * Blendshape Sync
@@ -63,7 +65,6 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * Import Presets >
         * Set Folder Presets
         * Save Import Preset
-        * Extract Animation
         * Import Preset Library
     * Debug Tools >
         * Refresh Scripts

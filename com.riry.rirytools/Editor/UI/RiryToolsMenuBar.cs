@@ -33,7 +33,7 @@ namespace Riry.RiryTools.Editor
         private const string IconCapMenu = "Tools/RiryTools/Ic&onCap";
         private const string ImportPresetTools = "Tools/RiryTools/Import Presets/Set Folder Import Presets";
         private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Preset";
-        private const string ExtractAnimationsTools = "Tools/RiryTools/Import Presets/Extract Animation";
+        private const string ExtractAnimationsTools = "Tools/RiryTools/Animator Tools/Extract Animations";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
         private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
         private const string FindNullReferencesMenu = "Tools/RiryTools/Find Null references";
@@ -110,7 +110,8 @@ namespace Riry.RiryTools.Editor
         [MenuItem(SaveImportPresetTools, true)]
         private static bool SaveImportPresetToolsValid() { return ImportPresetActions.ValidateSaveToLibrary(); }
 
-        [MenuItem(ExtractAnimationsTools, false, 2052)]
+        // In the Animator Tools submenu, after Controller Cleaner (1996).
+        [MenuItem(ExtractAnimationsTools, false, 1997)]
         private static void ExtractAnimationsToolsItem() { ImportPresetExtractAnimationWindow.Open(); }
 
         [MenuItem(OpenPresetLibrary, false, 2053)]
@@ -217,7 +218,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/IconCap (2045), menu key O     -> IconCapWindow.Open (Editor/UI/IconCap/IconCapWindow.cs)
 //   Tools/RiryTools/Import Presets/Set Folder Import Presets (2050) -> ImportPresetActions.ChooseFolderPreset -> ImportPresetFolderWindow (Editor/UI/ImportPresets/)
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
-//   Tools/RiryTools/Import Presets/Extract Animation (2052) -> ImportPresetExtractAnimationWindow.Open (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs)
+//   Tools/RiryTools/Animator Tools/Extract Animations (1997) -> ImportPresetExtractAnimationWindow.Open (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/Debug/FindNullReferencesWindow.cs)
 //   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)

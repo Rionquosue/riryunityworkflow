@@ -107,6 +107,19 @@ namespace Riry.RiryTools.Editor
         private void DrawTags()
         {
             EditorGUILayout.Space(6);
+            // What tells file types apart besides the extension.
+            EditorGUILayout.LabelField(new GUIContent("Filters", "What makes a file type of its own besides its extension. Saved for this user in every project."),
+                EditorStyles.boldLabel);
+            using (new EditorGUI.IndentLevelScope())
+            {
+                bool useTags = EditorGUILayout.ToggleLeft(new GUIContent("Tags in the file name", "A file whose name contains a tag below is its own file type."),
+                    ImportPresetPreferences.UseTags);
+                if (useTags != ImportPresetPreferences.UseTags) ImportPresetPreferences.UseTags = useTags;
+                bool useEndings = EditorGUILayout.ToggleLeft(new GUIContent("_word name endings", "Body_normal.png is a \"_normal\" file type."),
+                    ImportPresetPreferences.UseEndings);
+                if (useEndings != ImportPresetPreferences.UseEndings) ImportPresetPreferences.UseEndings = useEndings;
+                if (!useTags && !useEndings) EditorGUILayout.LabelField("File extensions only.", EditorStyles.miniLabel);
+            }
             tagsExpanded = EditorGUILayout.Foldout(tagsExpanded, new GUIContent("Tags",
                 "A file whose name contains a tag (any case) is listed under that tag's file type, such as normal files. " +
                 "Saved for every project in " + ImportPresetPreferences.FilePath + "."), true);

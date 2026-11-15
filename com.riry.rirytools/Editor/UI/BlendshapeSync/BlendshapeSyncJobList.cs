@@ -24,10 +24,7 @@ namespace Riry.RiryTools.Editor
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    int count = job.ChildCount;
-                    string name = job.Master != null
-                        ? job.Master.name + " > " + count + (count == 1 ? " child" : " children")
-                        : "No master yet";
+                    string name = job.DisplayName;
                     EditorGUILayout.LabelField(new GUIContent(name, job.Problem), GUILayout.MinWidth(120f));
                     if (!wide)
                     {

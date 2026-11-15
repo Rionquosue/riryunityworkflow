@@ -82,8 +82,9 @@ namespace Riry.RiryTools.Editor
                     "repeats the offset between the last two real bones."), addEndpoints));
 
             bool canGenerate = realBones.Count > 0 && GenerationError(realBones) == null;
-            restStart = RiryToolGUI.Set(this, SettingsUndo, restStart, DrawChainRow("Rest", restStart, realBones, ConstraintTrainChains.RestPrefix, false,
-                canGenerate));
+            startPosition = RiryToolGUI.Set(this, SettingsUndo, startPosition, (Transform)EditorGUILayout.ObjectField(
+                new GUIContent("Start position", "Every bone is constrained here until the train reaches it. Rest is the constraints switched off."),
+                startPosition, typeof(Transform), true));
             for (int c = 0; c < chainCount; c++)
             {
                 chainStarts[c] = RiryToolGUI.Set(this, SettingsUndo, chainStarts[c], DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,

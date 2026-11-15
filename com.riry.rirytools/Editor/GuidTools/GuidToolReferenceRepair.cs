@@ -202,14 +202,17 @@ namespace Riry.RiryTools.Editor
                     // Cleaner removes those).
                     HashSet<long> unused = IsController(plan.Files[i]) ? UnusedIds(plan.Files[i]) : null;
                     references = references.FindAll(reference => !Nonsense(bytes, reference, unused));
-                    List<KeyValuePair<long, string>> broken = references.FindAll(reference => IsMissing(reference.Value));
+                    // Nor what nothing reads: a material's texture slots its shader lacks, a prefab's references outside the
+                    // objects that hold a missing reference when loaded.
+                    var inactive = new GuidToolInactiveReferences(plan.Files[i], bytes);
+                    List<KeyValuePair<long, string>> broken = references.FindAll(reference => IsMissing(reference.Value) && !inactive.Inactive((int)reference.Key));
                     // A file's references to its own missing parts are not listed: nothing outside the file is involved.
                     string self = AssetDatabase.AssetPathToGUID(plan.Files[i]);
                     foreach (KeyValuePair<long, string> reference in references)
                     {
                         if (IsMissing(reference.Value) || reference.Value == self) continue;
                         string gone = MissingObject(bytes, reference, objectIds);
-                        if (gone == null) continue;
+                        if (gone == null || inactive.Inactive((int)reference.Key)) continue;
                         SortedSet<string> users;
                         if (!plan.MissingObjects.TryGetValue(gone, out users))
                             plan.MissingObjects[gone] = users = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);

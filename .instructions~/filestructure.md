@@ -129,6 +129,7 @@ com.riry.rirytools/
     │   ├── GuidToolBytes.cs
     │   ├── GuidToolLog.cs
     │   ├── GuidToolIgnoredReferences.cs
+    │   ├── GuidToolInactiveReferences.cs
     │   ├── GuidToolPrefabStageRepair.cs
     │   ├── GuidToolUnusedOverrides.cs
     │   ├── GuidToolMetaHistoryParser.cs

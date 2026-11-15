@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -40,6 +41,24 @@ namespace Riry.RiryTools.Editor
         internal static string FilePath
         {
             get { return Path.Combine(ImportPresetLibrary.RootPath, FileName); }
+        }
+
+        // Which name filters file types listen to (EditorPrefs, for this user in every project); the extension always counts.
+        private const string UseTagsPref = "RiryTools.ImportPresets.UseTags";
+        private const string UseEndingsPref = "RiryTools.ImportPresets.UseEndings";
+
+        /// <summary>Whether a tag in a file's name makes a file type of its own.</summary>
+        internal static bool UseTags
+        {
+            get { return EditorPrefs.GetBool(UseTagsPref, true); }
+            set { EditorPrefs.SetBool(UseTagsPref, value); }
+        }
+
+        /// <summary>Whether a "_word" ending of a file's name makes a file type of its own.</summary>
+        internal static bool UseEndings
+        {
+            get { return EditorPrefs.GetBool(UseEndingsPref, true); }
+            set { EditorPrefs.SetBool(UseEndingsPref, value); }
         }
 
         /// <summary>The tags, lower case; the file is created with DefaultTags when it is missing.</summary>

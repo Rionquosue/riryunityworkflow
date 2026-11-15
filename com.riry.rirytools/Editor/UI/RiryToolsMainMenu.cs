@@ -23,11 +23,11 @@ namespace Riry.RiryTools.Editor
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools" 
+            "AutoSync", "Blendshape Sync", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools" 
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
-        private static readonly string[] AnimatorTabs = { "Find and Replace", "Controller Cleaner" };
+        private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner" };
         private static readonly string[] ImportTabs =
         {
             "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
@@ -204,9 +204,9 @@ namespace Riry.RiryTools.Editor
             {
                 case "AutoSync": return Host("Configuration", () => CreateInstance<AutoSyncGitConfigureWindow>(), window => ((AutoSyncGitConfigureWindow)window).Reload());
                 case "Animator Tools":
-                    if (animatorTab == 1) return Host(ControllerCleanerWindow.Title, () => CreateInstance<ControllerCleanerWindow>(), null);
+                    if (animatorTab == 1) return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
+                    if (animatorTab == 2) return Host(ControllerCleanerWindow.Title, () => CreateInstance<ControllerCleanerWindow>(), null);
                     return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
-                case "Clean Animation Keys": return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                 case "Constraint Tool": return CreateConstraintTool == null ? null : Host("Constraint Tool", CreateConstraintTool, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
                 case "Menu Tool": return CreateMenuTool == null ? null : Host("Menu Tool", CreateMenuTool, null);
@@ -365,6 +365,7 @@ namespace Riry.RiryTools.Editor
             string name = Current;
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
+                : name == "Animator Tools" ? AnimatorTabs[Mathf.Clamp(animatorTab, 0, AnimatorTabs.Length - 1)]
                 : name == "Blendshape Sync" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
@@ -387,7 +388,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
-//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Tool, GUID Tools, Import Presets,
+//   Tabs                     AutoSync, Blendshape Sync, Constraint Tool, GUID Tools, Import Presets,
 //                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
 //                            name; tabs are handled by name.
 //   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the

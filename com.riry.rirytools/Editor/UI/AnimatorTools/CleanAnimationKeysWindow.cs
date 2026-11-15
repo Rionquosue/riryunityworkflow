@@ -50,6 +50,8 @@ namespace Riry.RiryTools.Editor
                 window = CreateInstance<CleanAnimationKeysWindow>();
                 window.titleContent = new GUIContent(CleanAnimationKeys.DisplayName);
                 window.minSize = new Vector2(480.0f, 520.0f);
+                window.ShowUtility();
+                HardLeft(window);
             }
             foreach (AnimationClip clip in clips) window.Add(clip);
             window.ShowUtility();
@@ -67,7 +69,16 @@ namespace Riry.RiryTools.Editor
             window.minSize = new Vector2(480.0f, 520.0f);
             window.extract = owner;
             window.ShowUtility();
+            HardLeft(window);
             return window;
+        }
+
+        // Opened against the left edge of Unity's main window, clear of the Animation window and the Inspector.
+        private static void HardLeft(CleanAnimationKeysWindow window)
+        {
+            Rect main = EditorGUIUtility.GetMainWindowPosition();
+            Vector2 size = window.minSize;
+            window.position = new Rect(main.x, main.y + Mathf.Max(0f, (main.height - size.y) / 2f), size.x, size.y);
         }
 
         internal void Add(IEnumerable<AnimationClip> clips)

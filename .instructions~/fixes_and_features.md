@@ -15,6 +15,7 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 #### Bugs
 
 #### Features
+
     
 ### AutoSync
 
@@ -33,13 +34,16 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 #### Bugs
 
 #### Features
+
     
 ### Clean Animation Keys
 
 #### Bugs
 
+
 #### Features
-    
+
+
 ### Constraint Tool
 
 #### Bugs
@@ -50,17 +54,14 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Bugs
 
+#### Features
 
 
 #### Features
 
-1. Give the user an "Ignore" button on the right that will move these to a silent "ignored" category, ignored GUID errors should exclude from the save check. An ignored error should not trigger the "WARNING" popup.
 
 #### Fixed
 
-1. Does not find a broken shader reference on a "Mesh Renderer" object at element 0 position.
-2. Does not find a broken mesh reference on a "Mesh renderer" object (child of VRCFury prefab).
-3. When repairing a GUID inside a prefab it blocks while saying "Close prefab mode without saving first, then apply the redirects.", this should say "Repair GUID in prefab mode?" with a yes/no, instead of blocking all functions.
 
 ### IconCap
 
@@ -75,17 +76,17 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
+
 ### Menu Tool
 
 #### Bugs
 
 #### Features
 
-1. Add a "Remove menu item" button that will use vrcfury or modular avatar and pipe that item to null, or delete depending on host owner.
 
 #### Fixed
-1. Menu entry state does not properly set itself after gesturemanager begins emulation on the avatar.
-2. Menu manager does not include all VRCFury added objects (using latest beta release)
+
+
 ### Debug Tools
 
 #### Refresh Scripts

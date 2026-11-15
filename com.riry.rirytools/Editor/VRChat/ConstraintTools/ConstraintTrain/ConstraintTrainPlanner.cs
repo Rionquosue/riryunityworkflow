@@ -7,7 +7,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Weight math for a staggered "train" of parent constraints over a 0..1 value.
-    /// Bone b (1-based, chain root first) of n moves from its rest target along
+    /// Bone b (1-based, chain root first) of n moves from the start position along
     /// physics chain 1, one chain bone per step, and arrives at chain-1 bone b at
     /// TrainEnd. The tip leads; each bone toward the root starts one step later.
     /// After that, every bone blends from chain 1 to 2, ending at ChainEnds[0],
@@ -32,7 +32,7 @@ namespace Riry.RiryTools.Editor
         }
 
         // Source layout on bone i (0-based):
-        //   0            rest target
+        //   0            the start position (the same object for every bone)
         //   1 .. i+1     chain 1, bones 0 .. i (the train path)
         //   i+1+c        chain c+1, bone i, for c = 1 .. ChainCount-1
         internal static int SourceCount(int bone, int chainCount)
@@ -45,7 +45,7 @@ namespace Riry.RiryTools.Editor
             return chain == 0 ? bone + 1 : bone + 1 + chain;
         }
 
-        /// <summary>chain is -1 for the rest target.</summary>
+        /// <summary>chain is -1 for the start position.</summary>
         internal static void DescribeSource(int bone, int source, out int chain, out int chainBone)
         {
             if (source == 0)
@@ -110,7 +110,7 @@ namespace Riry.RiryTools.Editor
             if (t < settings.TrainEnd)
             {
                 float step = settings.TrainEnd / n;
-                // Train node 0 is rest, node k is chain-1 bone k-1; node index == source index.
+                // Train node 0 is the start position, node k is chain-1 bone k-1; node index == source index.
                 float position = Mathf.Clamp(t / step - (n - b), 0f, b);
                 int node = Mathf.Min((int)Math.Floor(position), b);
                 if (node >= b)
