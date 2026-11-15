@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using VRC.Dynamics;
@@ -21,7 +22,13 @@ namespace Riry.RiryTools.Editor
 
         private sealed class Plan
         {
+            // The real chain, start to end; its last bone is where the train stops, not constrained (Moving is the rest).
             public readonly List<Transform> Real = new List<Transform>();
+
+            public List<Transform> Moving
+            {
+                get { return Real.GetRange(0, Math.Max(0, Real.Count - 1)); }
+            }
             // Source 0 of every bone: where the train starts from.
             public Transform Start;
             public readonly List<List<Transform>> Chains = new List<List<Transform>>();
@@ -240,7 +247,7 @@ namespace Riry.RiryTools.Editor
             }
 
             plan.Root = avatarRoot;
-            plan.Settings = CurrentSettings(plan.Real.Count);
+            plan.Settings = CurrentSettings(plan.Real.Count - 1);
             error = ConstraintTrainPlanner.Validate(plan.Settings);
             if (error != null) return false;
 
@@ -327,7 +334,7 @@ namespace Riry.RiryTools.Editor
             // sources is replaced instead of extended.
             int replace = 0;
             var others = new List<string>();
-            foreach (Transform bone in plan.Real)
+            foreach (Transform bone in plan.Moving)
             {
                 if (bone.GetComponents<VRCParentConstraint>().Length > 1)
                 {
@@ -357,7 +364,11 @@ namespace Riry.RiryTools.Editor
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(UndoName);
-            for (int bone = 0; bone < plan.Real.Count; bone++)
+            // The bones' pose before setup: their rest, kept on screen (the constraints start switched off at zero).
+            List<Transform> moving = plan.Moving;
+            var restPositions = moving.Select(b => b.localPosition).ToArray();
+            var restRotations = moving.Select(b => b.localRotation).ToArray();
+            for (int bone = 0; bone < moving.Count; bone++)
             {
                 GameObject owner = plan.Real[bone].gameObject;
                 VRCParentConstraint constraint = owner.GetComponent<VRCParentConstraint>();
@@ -369,17 +380,29 @@ namespace Riry.RiryTools.Editor
                 if (constraint == null) constraint = Undo.AddComponent<VRCParentConstraint>(owner);
                 else Undo.RecordObject(constraint, UndoName);
 
+                // Every source at zero influence; the clip sets the weights (and switches the constraint on) when it plays.
                 var weights = new float[ConstraintTrainPlanner.SourceCount(bone, plan.Settings.ChainCount)];
-                ConstraintTrainPlanner.EvaluateWeights(plan.Settings, bone, 0f, weights);
                 var targets = new Transform[weights.Length];
                 for (int s = 0; s < weights.Length; s++) targets[s] = Target(plan, bone, s);
                 ConstraintToolSources.AddSources(constraint, targets, weights);
                 ConstraintToolSources.ApplyDefaults(constraint);
+                constraint.IsActive = false;
+                constraint.PositionAtRest = restPositions[bone];
+                constraint.RotationAtRest = restRotations[bone].eulerAngles;
                 PrefabUtility.RecordPrefabInstancePropertyModifications(constraint);
                 EditorUtility.SetDirty(constraint);
             }
+            // Back to rest: setting up may have moved them.
+            for (int bone = 0; bone < moving.Count; bone++)
+            {
+                Transform transform = moving[bone];
+                Undo.RecordObject(transform, UndoName);
+                transform.localPosition = restPositions[bone];
+                transform.localRotation = restRotations[bone];
+                PrefabUtility.RecordPrefabInstancePropertyModifications(transform);
+            }
             Undo.CollapseUndoOperations(group);
-            status = "Set up VRC Parent Constraints on " + plan.Real.Count + " bones.";
+            status = "Set up VRC Parent Constraints on " + moving.Count + " bones (switched off, all sources at 0, bones at rest).";
             if (others.Count > 0)
                 status += " Other constraints on " + string.Join(", ", others) +
                     " also move these bones and may fight the train.";
@@ -440,9 +463,12 @@ namespace Riry.RiryTools.Editor
         {
             var bindings = new List<EditorCurveBinding>();
             var curves = new List<AnimationCurve>();
-            for (int bone = 0; bone < plan.Real.Count; bone++)
+            for (int bone = 0; bone < plan.Settings.BoneCount; bone++)
             {
                 string path = AnimationUtility.CalculateTransformPath(plan.Real[bone], avatarRoot);
+                // The constraints are set up switched off: the clip switches them on.
+                bindings.Add(EditorCurveBinding.FloatCurve(path, typeof(VRCParentConstraint), "IsActive"));
+                curves.Add(AnimationCurve.Constant(0f, 1f, 1f));
                 AnimationCurve[] boneCurves = ConstraintTrainPlanner.BuildCurves(plan.Settings, bone);
                 for (int s = 0; s < boneCurves.Length; s++)
                 {

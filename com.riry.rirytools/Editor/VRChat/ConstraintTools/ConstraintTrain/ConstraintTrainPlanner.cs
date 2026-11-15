@@ -8,10 +8,12 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Weight math for a staggered "train" of parent constraints over a 0..1 value.
     /// Bone b (1-based, chain root first) of n moves from the start position along
-    /// physics chain 1, one chain bone per step, and arrives at chain-1 bone b at
-    /// TrainEnd. The tip leads; each bone toward the root starts one step later.
-    /// After that, every bone blends from chain 1 to 2, ending at ChainEnds[0],
-    /// then from 2 to 3, ending at ChainEnds[1], and so on.
+    /// physics chain 1, one chain bone per step, and arrives at the chain-1 bone one
+    /// past its own (chain bone b, 0-based; the last bone arrives at the chain bone of
+    /// the real chain's end bone, which is not constrained) at TrainEnd. The tip leads; each bone toward the root starts one step
+    /// later. After that, every bone blends from chain 1 to 2 at that same chain bone,
+    /// ending at ChainEnds[0], then from 2 to 3, ending at ChainEnds[1], and so on.
+    /// BoneCount is the real chain without its end bone; a physics chain follows the whole real chain.
     /// </summary>
     internal static class ConstraintTrainPlanner
     {
@@ -33,16 +35,16 @@ namespace Riry.RiryTools.Editor
 
         // Source layout on bone i (0-based):
         //   0            the start position (the same object for every bone)
-        //   1 .. i+1     chain 1, bones 0 .. i (the train path)
-        //   i+1+c        chain c+1, bone i, for c = 1 .. ChainCount-1
+        //   1 .. i+2     chain 1, bones 0 .. i+1 (the train path; i+1 is where bone i stops)
+        //   i+2+c        chain c+1, bone i+1, for c = 1 .. ChainCount-1
         internal static int SourceCount(int bone, int chainCount)
         {
-            return bone + chainCount + 1;
+            return bone + chainCount + 2;
         }
 
         internal static int ChainSource(int bone, int chain)
         {
-            return chain == 0 ? bone + 1 : bone + 1 + chain;
+            return chain == 0 ? bone + 2 : bone + 2 + chain;
         }
 
         /// <summary>chain is -1 for the start position.</summary>
@@ -53,15 +55,15 @@ namespace Riry.RiryTools.Editor
                 chain = -1;
                 chainBone = bone;
             }
-            else if (source <= bone + 1)
+            else if (source <= bone + 2)
             {
                 chain = 0;
                 chainBone = source - 1;
             }
             else
             {
-                chain = source - bone - 1;
-                chainBone = bone;
+                chain = source - bone - 2;
+                chainBone = bone + 1;
             }
         }
 
@@ -81,7 +83,7 @@ namespace Riry.RiryTools.Editor
 
         internal static string Validate(Settings settings)
         {
-            if (settings.BoneCount < 1) return "The real bone chain needs at least one bone.";
+            if (settings.BoneCount < 1) return "The real bone chain needs at least one bone before its end bone (where the train stops).";
             if (settings.ChainCount < 1 || settings.ChainCount > MaxChains)
                 return "Use between 1 and " + MaxChains + " physics chains.";
             if (!(settings.TrainEnd > 0f) || settings.TrainEnd > 1f)
@@ -105,13 +107,15 @@ namespace Riry.RiryTools.Editor
             Array.Clear(weights, 0, count);
             t = Mathf.Clamp01(t);
             int n = settings.BoneCount;
-            int b = bone + 1;
+            // Steps this bone takes: from the start position to chain-1 bone `bone + 1`.
+            int b = bone + 2;
 
             if (t < settings.TrainEnd)
             {
-                float step = settings.TrainEnd / n;
+                // The tip takes n + 1 steps; each bone toward the root starts one step later.
+                float step = settings.TrainEnd / (n + 1);
                 // Train node 0 is the start position, node k is chain-1 bone k-1; node index == source index.
-                float position = Mathf.Clamp(t / step - (n - b), 0f, b);
+                float position = Mathf.Clamp(t / step - (n + 1 - b), 0f, b);
                 int node = Mathf.Min((int)Math.Floor(position), b);
                 if (node >= b)
                 {
@@ -151,8 +155,8 @@ namespace Riry.RiryTools.Editor
         internal static List<float> BreakTimes(Settings settings)
         {
             var times = new List<float>();
-            for (int q = 0; q <= settings.BoneCount; q++)
-                times.Add(settings.TrainEnd * q / settings.BoneCount);
+            for (int q = 0; q <= settings.BoneCount + 1; q++)
+                times.Add(settings.TrainEnd * q / (settings.BoneCount + 1));
             int chains = settings.ChainCount;
             for (int c = 0; c < chains - 1; c++)
                 times.Add(settings.ChainEnds[c]);
