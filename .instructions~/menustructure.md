@@ -89,6 +89,7 @@ Where [] contains the currently active tab.
 | Check for Broken References |  |  |  |  |  |
 | Delete GUID Reference Cache |  |  |  |  |  |
 | IconCap |  |  |  |  |  |
+| Material Cleaner |  |  |  |  |  |
 
 ---
 
@@ -102,14 +103,14 @@ Where [] contains the currently active tab.
 
 | Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [Find and Replace] | Clean Animation Keys | Controller Cleaner |  |  |  |
+| [Find and Replace] | Clean Animation Keys | Controller Cleaner | Extract Animations |  |  |
 | Find and Replace UI here |  |  |  |  |  |
 
 ---
 
 | Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Find and Replace | [Clean Animation Keys] | Controller Cleaner |  |  |  |
+| Find and Replace | [Clean Animation Keys] | Controller Cleaner | Extract Animations |  |  |
 | [Select Clean Target(s) field] |  |  |  |  |  |
 | Clean animation keys UI here |  |  |  |  |  |
 
@@ -117,11 +118,18 @@ Where [] contains the currently active tab.
 
 | Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Find and Replace | Clean Animation Keys | [Controller Cleaner] |  |  |  |
+| Find and Replace | Clean Animation Keys | [Controller Cleaner] | Extract Animations |  |  |
 | Controller field + Scan |  |  |  |  |  |
 | Scan scene controllers | Scan all controllers in project |  |  |  |  |
 | Clean all |  |  |  |  |  |
 | Results: controller, unused count, Clean |  |  |  |  |  |
+
+---
+
+| Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Find and Replace | Clean Animation Keys | Controller Cleaner | [Extract Animations] |  |  |
+| Extract Animations UI here |  |  |  |  |  |
 
 ---
 
@@ -167,21 +175,14 @@ Where [] contains the currently active tab.
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [Set Folder Import Presets] | Extract Animation | Import Preset Library |  |  |  |
+| [Set Folder Import Presets] | Import Preset Library |  |  |  |  |
 | Set Folder Import Presets UI here |  |  |  |  |  |
 
 ---
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Set Folder Import Presets | [Extract Animation] | Import Preset Library |  |  |  |
-| Extract Animation UI here |  |  |  |  |  |
-
----
-
-| Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| Set Folder Import Presets | Extract Animation | [Import Preset Library] |  |  |  |
+| Set Folder Import Presets | [Import Preset Library] |  |  |  |  |
 | Display Import Preset Library here |  |  |  |  |  |
 | Click to open in explorer | File input box here | Save import preset (creates from selected in input box) |  |  |  |
 

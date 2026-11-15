@@ -16,59 +16,65 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-    
+### Attach To
+
+#### Bugs
+
+#### Features
+
 ### AutoSync
 
 #### Bugs
 
 #### Features
-    
+
 ### Avatar Migration Assistant
 
 #### Bugs
 
 #### Features
-    
+
 ### Blendshape Sync
 
 #### Bugs
 
 #### Features
 
-    
 ### Clean Animation Keys
 
 #### Bugs
 
-
 #### Features
-
 
 ### Constraint Tool
 
 #### Bugs
 
 #### Features
-    
+
+### Controller Cleaner
+
+#### Bugs
+
+#### Features
+
+### Find and Replace
+
+#### Bugs
+
+#### Features
+
 ### GUID Tools
 
 #### Bugs
 
 #### Features
 
-
-#### Features
-
-
-#### Fixed
-
-
 ### IconCap
 
 #### Bugs
 
 #### Features
-    
 
 ### Import Presets
 
@@ -76,6 +82,11 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
+### Material Cleaner
+
+#### Bugs
+
+#### Features
 
 ### Menu Tool
 
@@ -83,30 +94,37 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
+### Stop Auto Game
 
-#### Fixed
+#### Bugs
 
+#### Features
 
 ### Debug Tools
 
 #### Refresh Scripts
-    
+
 ##### Bugs
-        
+
 ##### Features
-        
+
 #### Find Null references
-    
+
 ##### Bugs
-        
+
 ##### Features
-            
+
 #### Menu Mockup
-    
+
 ##### Bugs
-        
+
 ##### Features
-        
+
+#### Script Load Guard
+
+##### Bugs
+
+##### Features
 
 # Possible new tools:
 

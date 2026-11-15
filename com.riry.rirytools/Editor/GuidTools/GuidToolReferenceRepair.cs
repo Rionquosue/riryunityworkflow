@@ -176,12 +176,12 @@ namespace Riry.RiryTools.Editor
             // What the files use is scanned too: a material's shader lives in the .mat, a nested prefab's references in its
             // own .prefab, not in the scene.
             var listed = new HashSet<string>(plan.Files, StringComparer.OrdinalIgnoreCase);
-            var pending = new Queue<string>(plan.Files.Where(file => intoControllers || !IsController(file)));
+            var pending = new Queue<string>(plan.Files.Where(file => intoControllers || !Boundary(file)));
             while (pending.Count > 0)
             {
                 foreach (string dependency in AssetDatabase.GetDependencies(pending.Dequeue(), false))
                 {
-                    if (!dependency.StartsWith("Assets/", StringComparison.Ordinal) || (!intoControllers && IsController(dependency)) || !listed.Add(dependency)) continue;
+                    if (!dependency.StartsWith("Assets/", StringComparison.Ordinal) || (!intoControllers && Boundary(dependency)) || !listed.Add(dependency)) continue;
                     plan.Files.Add(dependency);
                     pending.Enqueue(dependency);
                 }
@@ -195,10 +195,10 @@ namespace Riry.RiryTools.Editor
                     string fullPath = Path.Combine(RiryToolsPaths.ProjectRoot, plan.Files[i]);
                     if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + plan.Files[i], (float)i / plan.Files.Count))
                         throw new OperationCanceledException();
-                    // Outside the Project window's repair a controller is never opened: only whether it is present is checked.
-                    if (!intoControllers && IsController(plan.Files[i]))
+                    // Outside the Project window's repair a controller or shader is never opened: only whether it is present is checked.
+                    if (!intoControllers && Boundary(plan.Files[i]))
                     {
-                        log.Write("Skipped animator controller: " + plan.Files[i]);
+                        log.Write("Skipped animator controller or shader: " + plan.Files[i]);
                         continue;
                     }
                     if (!File.Exists(fullPath) || !GuidToolRegenerate.LooksLikeText(fullPath, sample))
@@ -744,6 +744,12 @@ namespace Riry.RiryTools.Editor
                 return match.Success && long.TryParse(match.Groups[1].Value, out id);
             }
             return false;
+        }
+
+        // Where the walk stops: an animator controller or a shader (checked only for being present).
+        private static bool Boundary(string path)
+        {
+            return IsController(path) || AssetDatabase.GetMainAssetTypeAtPath(path) == typeof(Shader);
         }
 
         private static bool IsController(string path)

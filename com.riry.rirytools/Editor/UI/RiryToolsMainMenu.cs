@@ -27,10 +27,10 @@ namespace Riry.RiryTools.Editor
         };
         // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
-        private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner" };
+        private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner", "Extract Animations" };
         private static readonly string[] ImportTabs =
         {
-            "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
+            "Set Folder Import Presets", "Save Import Preset", "Open Import Preset Library"
         };
 
         /// <summary>A tool window drawn in a tab; never shown on its own.</summary>
@@ -165,7 +165,7 @@ namespace Riry.RiryTools.Editor
                     EditorGUILayout.Space(SubTabGap);
                     importTab = TabStrip(this, importTab, ImportTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
-                    if (importTab == 3)
+                    if (importTab == 2)
                     {
                         if (GUILayout.Button("Open Import Preset Library", GUILayout.Height(28f))) ImportPresetActions.OpenLibrary();
                     }
@@ -179,6 +179,7 @@ namespace Riry.RiryTools.Editor
                         if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
                         else EditorApplication.delayCall += AvatarMigratorWindow.OpenPopup;
                     }
+                    if (GUILayout.Button(MaterialCleaner.Title, GUILayout.Height(28f))) EditorApplication.delayCall += MaterialCleanerWindow.Open;
                     if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
                     // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
                     if (GUILayout.Button(RefreshScripts.DisplayName, GUILayout.Height(28f))) RefreshScripts.Run();
@@ -206,6 +207,9 @@ namespace Riry.RiryTools.Editor
                 case "Animator Tools":
                     if (animatorTab == 1) return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
                     if (animatorTab == 2) return Host(ControllerCleanerWindow.Title, () => CreateInstance<ControllerCleanerWindow>(), null);
+                    if (animatorTab == 3)
+                        return Host("Extract Animations", () => CreateInstance<ImportPresetExtractAnimationWindow>(),
+                            window => ((ImportPresetExtractAnimationWindow)window).ShowSelection());
                     return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
                 case "Constraint Tool": return CreateConstraintTool == null ? null : Host("Constraint Tool", CreateConstraintTool, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
@@ -219,9 +223,6 @@ namespace Riry.RiryTools.Editor
                         case 1:
                             return Host("Save Import Preset", () => CreateInstance<ImportPresetSaveWindow>(),
                                 window => ((ImportPresetSaveWindow)window).UseImporter(ImportPresetActions.SelectedImporter()));
-                        case 2:
-                            return Host("Extract Animation", () => CreateInstance<ImportPresetExtractAnimationWindow>(),
-                                window => ((ImportPresetExtractAnimationWindow)window).ShowSelection());
                     }
                     return null;
                 default: return null;
@@ -364,7 +365,7 @@ namespace Riry.RiryTools.Editor
         {
             string name = Current;
             string key = name == "AutoSync" ? "Configuration"
-                : name == "Import Presets" ? (importTab < 3 ? ImportTabs[importTab] : null)
+                : name == "Import Presets" ? (importTab < 2 ? ImportTabs[importTab] : null)
                 : name == "Animator Tools" ? AnimatorTabs[Mathf.Clamp(animatorTab, 0, AnimatorTabs.Length - 1)]
                 : name == "Blendshape Sync" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
