@@ -9,11 +9,11 @@ namespace Riry.RiryTools.Editor
     /// Weight math for a staggered "train" of parent constraints over a 0..1 value.
     /// Bone b (1-based, chain root first) of n moves from the start position along
     /// physics chain 1, one chain bone per step, and arrives at the chain-1 bone one
-    /// past its own (chain bone b, 0-based; the last bone arrives at the chain's end
-    /// bone) at TrainEnd. The tip leads; each bone toward the root starts one step
+    /// past its own (chain bone b, 0-based; the last bone arrives at the chain bone of
+    /// the real chain's end bone, which is not constrained) at TrainEnd. The tip leads; each bone toward the root starts one step
     /// later. After that, every bone blends from chain 1 to 2 at that same chain bone,
     /// ending at ChainEnds[0], then from 2 to 3, ending at ChainEnds[1], and so on.
-    /// A physics chain therefore holds one bone more than the real chain (its end).
+    /// BoneCount is the real chain without its end bone; a physics chain follows the whole real chain.
     /// </summary>
     internal static class ConstraintTrainPlanner
     {
@@ -83,7 +83,7 @@ namespace Riry.RiryTools.Editor
 
         internal static string Validate(Settings settings)
         {
-            if (settings.BoneCount < 1) return "The real bone chain needs at least one bone.";
+            if (settings.BoneCount < 1) return "The real bone chain needs at least one bone before its end bone (where the train stops).";
             if (settings.ChainCount < 1 || settings.ChainCount > MaxChains)
                 return "Use between 1 and " + MaxChains + " physics chains.";
             if (!(settings.TrainEnd > 0f) || settings.TrainEnd > 1f)
