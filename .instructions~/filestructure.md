@@ -38,6 +38,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | GUID Tools | `GuidTools/` | `GuidTool` |
 | IconCap | `IconCap/` | `IconCap` |
 | Import Presets | `ImportPresets/` | `ImportPreset` |
+| Material Cleaner | `Utilities/` | `MaterialCleaner` |
 | Menu Mockup | `Debug/` | `MenuMockup` |
 | Menu Tool | `VRChat/MenuTool/` | `MenuTool` |
 | Refresh Scripts | `Utilities/` | `RefreshScripts` |
@@ -214,7 +215,8 @@ com.riry.rirytools/
     │   │   ├── ImportPresetSaveWindow.cs
     │   │   └── ImportPresetSaveWindow.UI.cs
     │   ├── Utilities/
-    │   │   └── AttachToWindow.cs
+    │   │   ├── AttachToWindow.cs
+    │   │   └── MaterialCleanerWindow.cs
     │   ├── RiryToolsMainMenu.cs
     │   ├── RiryToolsMenuBar.cs
     │   └── RiryToolsRightClickMenu.cs
@@ -222,6 +224,8 @@ com.riry.rirytools/
     │   ├── AttachTo.cs
     │   ├── AttachToAvatarTracker.cs
     │   ├── AttachToBones.cs
+    │   ├── MaterialCleaner.cs
+    │   ├── MaterialCleanerSources.cs
     │   ├── RefreshScripts.cs
     │   └── StopAutoGame.cs
     ├── VRChat/

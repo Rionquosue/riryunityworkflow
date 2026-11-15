@@ -89,6 +89,7 @@ Where [] contains the currently active tab.
 | Check for Broken References |  |  |  |  |  |
 | Delete GUID Reference Cache |  |  |  |  |  |
 | IconCap |  |  |  |  |  |
+| Material Cleaner |  |  |  |  |  |
 
 ---
 
