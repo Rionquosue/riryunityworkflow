@@ -53,6 +53,7 @@ namespace Riry.RiryTools.Editor
                     if (wrappedBold == null) wrappedBold = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
                     if (Header("Missing object in " + gone, gone)) GUIUtility.ExitGUI();
                     EditorGUILayout.LabelField("Used in " + string.Join(", ", plan.MissingObjects[gone]), EditorStyles.wordWrappedMiniLabel);
+                    DrawLocations(gone);
                 }
             }
             foreach (string missing in shownMissing)
@@ -71,6 +72,7 @@ namespace Riry.RiryTools.Editor
                     if (wrappedBold == null) wrappedBold = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
                     if (Header("Missing " + missing + (lastPath != null ? " (was " + lastPath + ")" : ""), missing)) GUIUtility.ExitGUI();
                     EditorGUILayout.LabelField("Used in " + string.Join(", ", plan.Missing[missing]), EditorStyles.wordWrappedMiniLabel);
+                    DrawLocations(missing);
                     if (candidates.Count == 0)
                         EditorGUILayout.LabelField("No match found. Pick the asset this reference should use.", EditorStyles.miniLabel);
                     for (int c = 0; c < candidates.Count; c++) DrawCandidate(missing, c, candidates[c]);
@@ -120,6 +122,31 @@ namespace Riry.RiryTools.Editor
             GuidToolIgnoredReferences.Add(reference);
             UpdateExitPrompt();
             return true;
+        }
+
+        // Each place the reference sits: the object that holds it (click to select it) and the field.
+        private void DrawLocations(string key)
+        {
+            List<GuidToolReferenceLocation> locations;
+            if (!plan.Locations.TryGetValue(key, out locations)) return;
+            foreach (GuidToolReferenceLocation location in locations)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    UnityEngine.Object holder = location.Object;
+                    GUIContent content = holder != null ? new GUIContent(EditorGUIUtility.ObjectContent(holder, holder.GetType())) : new GUIContent("Not loaded");
+                    content.text = location.Label;
+                    content.tooltip = holder != null ? "Select it." : "Open the scene to select it.";
+                    using (new EditorGUI.DisabledScope(holder == null))
+                    {
+                        if (GUILayout.Button(content, EditorStyles.objectField, GUILayout.Height(18f), GUILayout.MinWidth(80f)))
+                        {
+                            Selection.activeObject = holder;
+                            EditorGUIUtility.PingObject(holder);
+                        }
+                    }
+                }
+            }
         }
 
         private void DrawCandidate(string missing, int index, GuidToolRepairCandidate candidate)

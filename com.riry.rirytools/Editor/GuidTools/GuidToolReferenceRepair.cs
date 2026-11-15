@@ -26,6 +26,16 @@ namespace Riry.RiryTools.Editor
         /// </summary>
         public readonly SortedDictionary<string, SortedSet<string>> MissingObjects =
             new SortedDictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+        /// <summary>A missing GUID or missing object (as in Missing / MissingObjects) to where each of its references sits.</summary>
+        public readonly Dictionary<string, List<GuidToolReferenceLocation>> Locations =
+            new Dictionary<string, List<GuidToolReferenceLocation>>(StringComparer.Ordinal);
+        internal void Locate(string key, string file, byte[] bytes, int offset)
+        {
+            List<GuidToolReferenceLocation> list;
+            if (!Locations.TryGetValue(key, out list)) Locations[key] = list = new List<GuidToolReferenceLocation>();
+            list.Add(GuidToolReferenceLocation.Of(file, bytes, offset));
+        }
+
         /// <summary>Missing GUID to every replacement found, in the order the sources were searched.</summary>
         public readonly Dictionary<string, List<GuidToolRepairCandidate>> Candidates =
             new Dictionary<string, List<GuidToolRepairCandidate>>(StringComparer.Ordinal);
@@ -213,6 +223,7 @@ namespace Riry.RiryTools.Editor
                         if (IsMissing(reference.Value) || reference.Value == self) continue;
                         string gone = MissingObject(bytes, reference, objectIds);
                         if (gone == null || inactive.Inactive((int)reference.Key)) continue;
+                        plan.Locate(gone, plan.Files[i], bytes, (int)reference.Key);
                         SortedSet<string> users;
                         if (!plan.MissingObjects.TryGetValue(gone, out users))
                             plan.MissingObjects[gone] = users = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -222,6 +233,7 @@ namespace Riry.RiryTools.Editor
                     plan.References[plan.Files[i]] = broken;
                     foreach (KeyValuePair<long, string> reference in broken)
                     {
+                        plan.Locate(reference.Value, plan.Files[i], bytes, (int)reference.Key);
                         SortedSet<string> users;
                         if (!plan.Missing.TryGetValue(reference.Value, out users))
                             plan.Missing[reference.Value] = users = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
