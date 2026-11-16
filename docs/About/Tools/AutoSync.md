@@ -1,15 +1,23 @@
 # AutoSync
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > AutoSync > Sync / Configuration | |
+| Menu bar | Git > Sync / Configuration | |
+| Main Menu | AutoSync | Sync, Configuration |
+
+## 2. Brief description
 
 Commits every scene or prefab save to the checked-out Git branch and pushes it to the chosen remote.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Keeping a running Git history of scene and prefab saves, so a broken scene or prefab can be recovered from an earlier save.
 - Backing the project up to a Git server as you work.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Off until turned on, per user and per project (**Tools > RiryTools > AutoSync > Sync**).
 - Without a repository, one is created in the project folder with the Unity `.gitignore` and `.gitattributes`, and Git LFS is enabled.
@@ -18,7 +26,7 @@ Commits every scene or prefab save to the checked-out Git branch and pushes it t
 - **Configuration** sets the branch, remote, `.gitignore` and `.gitattributes`, shows whether the server has Git LFS, and lists tracked files over 100 MiB so they can be ignored; a save that would push such a file over HTTP(S) holds the push and offers **Fix Now**.
 - Without Git installed, it links to the download.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -36,6 +44,6 @@ flowchart TD
     H -- No --> J[Push to the remote]
 ```
 
-## 5. References
+## 6. References
 
 - Git and Git LFS (command line), Unity's standard `.gitignore` and `.gitattributes`.

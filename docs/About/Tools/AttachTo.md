@@ -1,14 +1,20 @@
 # Attach To
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Right Click (hierarchy) | RiryTools > Attach To | |
+
+## 2. Brief description
 
 Moves the selected objects to one of an avatar's bones and can reparent them to it.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Placing accessories, props or clothing objects on an avatar bone (for example a hat on the Head bone) without moving them by hand.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Opened from the Hierarchy's right-click **RiryTools > Attach To** with objects selected.
 - The popup shows the target avatar, a button for each listed bone the avatar has, and **Add bone** to list more bones (saved per user).
@@ -17,7 +23,7 @@ Moves the selected objects to one of an avatar's bones and can reparent them to 
 - An object inside a prefab instance is only unpacked after the **Unpack prefabs?** warning. An object that is the bone or one of its parents is left out.
 - The whole action is one undo step.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -34,6 +40,6 @@ flowchart TD
     I --> H
 ```
 
-## 5. References
+## 6. References
 
 - Unity's `HumanBodyBones` for finding the avatar's bones.

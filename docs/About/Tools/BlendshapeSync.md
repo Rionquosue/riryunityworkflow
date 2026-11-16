@@ -1,14 +1,21 @@
 # Blendshape Sync
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > Blendshape Sync | |
+| Main Menu | Blendshape Sync | Add Job, job list |
+
+## 2. Brief description
 
 Copies the blendshape weights of a master mesh to child meshes that have blendshapes of the same name.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Keeping the blendshape weights of clothing, hair or accessories in step with a body mesh while you work.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Each job is a master SkinnedMeshRenderer and its children, with a name (by default the master and its child count).
 - **Sync Now** copies every matching weight once; **Run automatically** syncs every half second.
@@ -19,7 +26,7 @@ Copies the blendshape weights of a master mesh to child meshes that have blendsh
 - Jobs keep running after their window closes, are listed in the Main Menu's Blendshape Sync tab, and are saved per scene for this user.
 - Only renderer weights change; meshes and animation clips are never changed.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -32,6 +39,6 @@ flowchart TD
     E -- No --> G[Copy the master's weights to the child, one undo step]
 ```
 
-## 5. References
+## 6. References
 
 - Unity's SkinnedMeshRenderer blendshape API.

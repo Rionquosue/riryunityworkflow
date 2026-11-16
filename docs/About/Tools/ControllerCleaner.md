@@ -1,22 +1,30 @@
 # Controller Cleaner
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > Animator Tools > Controller Cleaner | |
+| Main Menu | Animator Tools | Controller Cleaner |
+| GUID Tools | Offered after Apply in the broken-reference window | |
+
+## 2. Brief description
 
 Finds and removes animator controller sub-assets that nothing in the controller's layers reaches any more.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Shrinking controllers that have built up leftover states, transitions, blend trees and behaviours while being edited.
 - Clearing broken references that only live in those leftovers (GUID Tools offers it after a repair).
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Scans one controller, the controllers the open scenes use (any component that references one, with an override controller's base), or every controller in the project's Assets.
 - Unused means no layer reaches it: state machines, states, transitions, behaviours and blend trees. A synced layer's own motions and behaviours count as used.
 - Each row shows the unused count with a **Clean** button; **Clean all** cleans every listed controller.
 - Ctrl+Z can't undo a clean, so it asks first and the log lists everything removed.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -28,6 +36,6 @@ flowchart TD
     F -- Yes --> G[Confirm, remove unused sub-assets, log them]
 ```
 
-## 5. References
+## 6. References
 
 - Unity's `AnimatorController` sub-asset structure.

@@ -1,16 +1,25 @@
 # Constraint Tool
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > Constraint Tool | |
+| Main Menu | Constraint Tool | Train, Bezier, Insertable prop |
+| Right Click (hierarchy) | RiryTools > Constraint Tool > Train | |
+| Right Click (hierarchy) | RiryTools > Constraint Tool > Bezier | |
+
+## 2. Brief description
 
 One window with a tab per subtool, all built on VRChat constraints: Train, Bezier and Insertable prop.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - **Train:** animating a bone chain (a tail, ears, hair) so it slides onto physics-driven copies of itself, one bone after another, driven by a single float.
 - **Bezier:** bending a bone chain along a curve by moving two handles.
 - **Insertable prop:** a prop that can be drawn from, dropped from and put back into a socket (a dagger and sheath, for example).
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 **Train**
 - Opened from the Hierarchy's right-click **RiryTools > Constraint Tool > Train** on the first bone (Ctrl/Cmd-click the end bone too), or the Main Menu's Constraint Tool tab.
@@ -27,7 +36,7 @@ One window with a tab per subtool, all built on VRChat constraints: Train, Bezie
 **Insertable prop**
 - Generates a draw, drop and reinsert system for a prop and its socket: grabbed by a PhysBone, slides back in when released near the socket, otherwise drops. Needs VRChat SDK 3.10.6 or newer.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -41,6 +50,6 @@ flowchart TD
     H --> I[Motion Time clip saved]
 ```
 
-## 5. References
+## 6. References
 
 - VRChat Avatars SDK constraints (`VRCParentConstraint` and the other VRC constraint types), VRChat PhysBones.

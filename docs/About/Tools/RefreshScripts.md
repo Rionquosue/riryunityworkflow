@@ -1,18 +1,25 @@
 # Refresh Scripts
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > Refresh Scripts | |
+| Main Menu | Tools | Refresh Scripts |
+
+## 2. Brief description
 
 Reloads all scripts and reopens the open RiryTools windows.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Seeing script and UI changes without restarting Unity.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Imports changed files, closes the open RiryTools windows, reloads all scripts, then reopens those windows at their old positions with fresh state.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -22,6 +29,6 @@ flowchart TD
     D --> E[Reopen those windows at their old positions]
 ```
 
-## 5. References
+## 6. References
 
 - Unity's script compilation and domain reload.
