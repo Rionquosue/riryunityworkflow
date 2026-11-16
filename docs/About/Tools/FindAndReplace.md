@@ -1,14 +1,23 @@
 # Find and Replace
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > Animator Tools > Find and Replace | |
+| Main Menu | Animator Tools | Find and Replace |
+| Right Click (hierarchy) | RiryTools > Animator Tools > Find and Replace | |
+| Right Click (project) | RiryTools > Animator Tools > Find and Replace | |
+
+## 2. Brief description
 
 Finds strings in animator state behaviours and replaces whole strings.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Renaming parameters, paths or other strings used by state behaviours across all of an avatar's controllers in one go.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Searches (case-insensitive) an avatar's controllers (playable layers, VRCFury Full Controllers, Modular Avatar Merge Animators) or one animator controller.
 - Replaces whole strings as one undo step.
@@ -17,7 +26,7 @@ Finds strings in animator state behaviours and replaces whole strings.
 - Each result opens its state in the Animator window.
 - Needs the VRChat SDK.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -29,6 +38,6 @@ flowchart TD
     E -- Child prefab --> G[Duplicate affected controllers for the child, replace there, swap scene to variant]
 ```
 
-## 5. References
+## 6. References
 
 - VRChat state behaviours (Play Audio, Parameter Driver); VRCFury and Modular Avatar components read by type name.

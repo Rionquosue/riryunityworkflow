@@ -1,16 +1,23 @@
 # Menu Tool
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > Menu Tool | |
+| Main Menu | Menu Tool | Parameter budget, Menu manager |
+
+## 2. Brief description
 
 Shows an avatar's assembled expression menu and parameters, traced to their sources, and plans changes to the menu.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Seeing the menu the avatar will have once VRCFury has built it, and where each control comes from.
 - Checking the synced parameter budget, with and without VRCFury's compression.
 - Moving, renaming, deleting and adding menu items, and assigning icons, from one place.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - Traces expression menu controls and parameters to their sources: the avatar descriptor and VRCFury (Modular Avatar is not read for now). VRCFury's menu rules (Move, Reorder, Set Icon, SPS, Security Lock, Override Menu Settings) are applied as VRCFury applies them.
 - **Parameter budget** compares synced parameter cost with and without VRCFury's Parameter Compressor, estimated or exact (two isolated test builds).
@@ -20,7 +27,7 @@ Shows an avatar's assembled expression menu and parameters, traced to their sour
 - The radial's parameter writes and submenu can be replayed when Gesture Manager starts Play Mode.
 - **Rescan** rebuilds the scan, preview and radial.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -34,7 +41,7 @@ flowchart TD
     H --> I[Rescan and verify, one undo step]
 ```
 
-## 5. References
+## 6. References
 
 - The owner's Menu Tool specification (`Menu-Tool.md`).
 - VRCFury (reference only): the Parameter Compressor (`Editor-Avatars/Service/Compressor/ParameterCompressorService.cs`), followed for the compressed budget; its menu path and Full Controller rewrite rules; Move / Reorder Menu Item and Set Icon behaviour.

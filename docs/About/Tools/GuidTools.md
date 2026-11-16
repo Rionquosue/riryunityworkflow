@@ -1,15 +1,25 @@
 # GUID Tools
 
-## 1. Brief description
+## 1. Where to find it
+
+| Access | Location | Item |
+| --- | --- | --- |
+| Menu bar | RiryTools > GUID Tools | |
+| Main Menu | GUID Tools | Regenerate GUID, Repair Missing GUID References, Check for Broken References, Delete GUID Reference Cache |
+| Right Click (project) | RiryTools > Regenerate GUID | |
+| Right Click (project) | RiryTools > Repair Missing GUID References | |
+| Prompt | When an opened scene or prefab points at missing assets | |
+
+## 2. Brief description
 
 Regenerates asset GUIDs without breaking references, and repairs references to assets that no longer exist.
 
-## 2. What the tool can be used for
+## 3. What the tool can be used for
 
 - Giving copied assets their own GUIDs (for example after copying a package folder) so they stop being treated as the original.
 - Fixing references broken by deleted, replaced or re-imported assets.
 
-## 3. How the tool behaves
+## 4. How the tool behaves
 
 - **Regenerate GUID** gives selected assets (and folders' contents) new GUIDs and rewrites every reference to them; folder GUIDs never change. Replaced GUIDs go into a permanent ledger in ProjectSettings, read with its Git history.
 - **Check for Broken References** scans the open scenes and the files they use. The scan stops at animator controllers and shaders, which are only checked for being present; the Project window's **Repair Missing GUID References** also opens them.
@@ -19,7 +29,7 @@ Regenerates asset GUIDs without breaking references, and repairs references to a
 - After Apply, Controller Cleaner is offered on controllers the repair touched.
 - When an opened scene or prefab points at missing assets, it offers Check for Broken References; saving such a file is guarded.
 
-## 4. Flow chart
+## 5. Flow chart
 
 ```mermaid
 flowchart TD
@@ -35,6 +45,6 @@ flowchart TD
     J -- Yes --> K[Offer Controller Cleaner]
 ```
 
-## 5. References
+## 6. References
 
 - Unity's text serialization (YAML) and `.meta` files, Git history for restores, Unity's `PrefabUtility` property modifications.
