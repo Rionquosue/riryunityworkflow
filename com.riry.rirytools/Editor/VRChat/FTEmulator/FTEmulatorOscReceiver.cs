@@ -125,7 +125,19 @@ namespace Riry.RiryTools.Editor
 
         private void Loop(object state)
         {
-            var socket = (UdpClient)state;
+            try
+            {
+                ReceiveLoop((UdpClient)state);
+            }
+            catch (Exception exception)
+            {
+                // A thread must not end without a trace.
+                if (!stopping) diagnostics?.Record(FTEmulatorDiagnostics.ReceiverFault, exception.GetType().Name + ": " + exception.Message);
+            }
+        }
+
+        private void ReceiveLoop(UdpClient socket)
+        {
             var remote = new IPEndPoint(IPAddress.Any, 0);
             while (!stopping)
             {

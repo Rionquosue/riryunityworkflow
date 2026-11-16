@@ -1,0 +1,45 @@
+{
+  "name": "Riry.RiryTools.Editor.FTEmulatorTests",
+  "rootNamespace": "Riry.RiryTools.Editor",
+  "references": [
+    "Riry.RiryTools.Editor",
+    "Riry.RiryTools.Editor.VRChat",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "VRCSDK3A.dll",
+    "VRCSDKBase.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS",
+    "RIRYTOOLS_VRC_CONSTRAINTS",
+    "RIRYTOOLS_TEST_FRAMEWORK"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.7.0",
+      "define": "RIRYTOOLS_VRC_CONSTRAINTS"
+    },
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.10.6",
+      "define": "RIRYTOOLS_VRC_BIT_WIDTH"
+    },
+    {
+      "name": "com.unity.test-framework",
+      "expression": "1.1.0",
+      "define": "RIRYTOOLS_TEST_FRAMEWORK"
+    }
+  ],
+  "noEngineReferences": false
+}

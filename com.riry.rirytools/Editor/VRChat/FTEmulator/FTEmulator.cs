@@ -39,6 +39,8 @@ namespace Riry.RiryTools.Editor
         private static FTEmulatorNativeSetWeights setWeights;
         private static FTEmulatorSessionSnapshot lastSnapshot;
         private static string lastDiagnostics;
+        // The player loop is only touched while the two steps are in it.
+        private static bool stepsInstalled;
 
         static FTEmulator()
         {
@@ -241,10 +243,13 @@ namespace Riry.RiryTools.Editor
             Insert(ref loop, typeof(PreUpdate), typeof(TickStep), Tick);
             Insert(ref loop, typeof(PostLateUpdate), typeof(LateTickStep), LateTick);
             PlayerLoop.SetPlayerLoop(loop);
+            stepsInstalled = true;
         }
 
         private static void RemoveSteps()
         {
+            if (!stepsInstalled) return;
+            stepsInstalled = false;
             PlayerLoopSystem loop = PlayerLoop.GetCurrentPlayerLoop();
             bool changed = Insert(ref loop, typeof(PreUpdate), typeof(TickStep), null);
             changed |= Insert(ref loop, typeof(PostLateUpdate), typeof(LateTickStep), null);

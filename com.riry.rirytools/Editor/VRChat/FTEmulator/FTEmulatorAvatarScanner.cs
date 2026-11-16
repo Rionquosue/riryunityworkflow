@@ -22,7 +22,8 @@ namespace Riry.RiryTools.Editor
         /// <summary>False with an SDK older than 3.10.6.</summary>
         internal bool NativeSupported;
         internal FTEmulatorNativeConfig Native;
-        internal SkinnedMeshRenderer[] NativeMeshes = new SkinnedMeshRenderer[0];
+        /// <summary>The Face Tracking Meshes that exist; null in a snapshot that was not made by a scan.</summary>
+        internal SkinnedMeshRenderer[] NativeMeshes;
         /// <summary>The full type names of the avatar's components that a template's signature names.</summary>
         internal readonly HashSet<string> Components = new HashSet<string>(StringComparer.Ordinal);
         /// <summary>Installed packages that a template's signature names, with their versions.</summary>
