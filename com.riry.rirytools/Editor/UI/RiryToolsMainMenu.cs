@@ -20,12 +20,17 @@ namespace Riry.RiryTools.Editor
         internal static Func<EditorWindow> CreateConstraintTool;
         internal static Func<EditorWindow> CreateMenuTool;
         internal static Func<EditorWindow> CreateFindReplace;
+        // The FTEmulator window, hosted in the Tools tab's FTEmulator sub-tab.
+        internal static Func<EditorWindow> CreateFTEmulator;
 
         private static readonly string[] Tabs =
         {
             "AutoSync", "Blendshape Sync", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools" 
         };
-        // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
+        // The Tools tab's sub-tabs: General (the buttons and toggles below) and FTEmulator (its window, hosted).
+        private static readonly string[] ToolsTabs = { "General", "FTEmulator" };
+        private const int FTEmulatorToolsTab = 1;
+        // Tools that need more room than a tab: the Tools tab's General sub-tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
         private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner", "Extract Animations" };
         private static readonly string[] ImportTabs =
@@ -64,6 +69,7 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private int tab;
         [SerializeField] private int importTab;
         [SerializeField] private int animatorTab;
+        [SerializeField] private int toolsTab;
         // The current tab's scroll position; back to the top when the tab changes.
         [SerializeField] private Vector2 tabScroll;
         [SerializeField] private List<Hosted> hosted = new List<Hosted>();
@@ -172,7 +178,17 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case "Tools":
-                    // Each opens in its own window, not in this one, which may be docked small.
+                    EditorGUILayout.Space(SubTabGap);
+                    toolsTab = TabStrip(this, toolsTab, ToolsTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                    EditorGUILayout.Space(4f);
+                    if (toolsTab == FTEmulatorToolsTab)
+                    {
+                        // FTEmulator needs the VRChat SDK.
+                        if (CreateFTEmulator == null) EditorGUILayout.HelpBox(new VrcSdkNotFoundException("FTEmulator").Message, MessageType.Info);
+                        else Draw(Active());
+                        break;
+                    }
+                    // General. Each opens in its own window, not in this one, which may be docked small.
                     foreach (string tool in PopupTools)
                     {
                         if (!GUILayout.Button(tool, GUILayout.Height(28f))) continue;
@@ -214,6 +230,7 @@ namespace Riry.RiryTools.Editor
                 case "Constraint Tool": return CreateConstraintTool == null ? null : Host("Constraint Tool", CreateConstraintTool, null);
                 case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
                 case "Menu Tool": return CreateMenuTool == null ? null : Host("Menu Tool", CreateMenuTool, null);
+                case "Tools": return toolsTab == FTEmulatorToolsTab && CreateFTEmulator != null ? Host("FTEmulator", CreateFTEmulator, null) : null;
                 case "Import Presets":
                     switch (importTab)
                     {
@@ -367,7 +384,8 @@ namespace Riry.RiryTools.Editor
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 2 ? ImportTabs[importTab] : null)
                 : name == "Animator Tools" ? AnimatorTabs[Mathf.Clamp(animatorTab, 0, AnimatorTabs.Length - 1)]
-                : name == "Blendshape Sync" || name == "Tools" ? null : name;
+                : name == "Tools" ? (toolsTab == FTEmulatorToolsTab ? "FTEmulator" : null)
+                : name == "Blendshape Sync" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -390,18 +408,23 @@ namespace Riry.RiryTools.Editor
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
 //   Tabs                     AutoSync, Blendshape Sync, Constraint Tool, GUID Tools, Import Presets,
-//                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
-//                            name; tabs are handled by name.
+//                            Menu Tool, Tools, Animator Tools (not Menu Mockup or Documentation). Current is the selected
+//                            tab's name; tabs are handled by name.
 //   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the
 //                            hosted MenuToolWindow (MenuToolWindow.CreateHosted). It shows the Parameter budget, drawn
 //                            outside the tab scroll view (the budget scrolls itself); its Menu manager tab opens the Menu
 //                            Tool window.
 //   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw, and NotDrawn() in a GUI
 //                            pass that drew another tab (drawn: the one drawn), so Menu Tool's radial leaves at once.
-//   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
-//                            the tool in its own floating window (OpenPopup), not inside this one; then Refresh Scripts
-//                            (RefreshScripts.Run), the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked) and
-//                            the Script Load Guard toggle (ScriptLoadGuard.Enabled, the same way).
+//   Tools tab / ToolsTabs    Sub-tabs General and FTEmulator (toolsTab, [SerializeField]).
+//   General / PopupTools     A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
+//                            the tool in its own floating window (OpenPopup), not inside this one; then Material Cleaner, Find
+//                            Null references, Refresh Scripts (RefreshScripts.Run), the Stop Auto Game toggle
+//                            (StopAutoGame.Enabled, set only when clicked) and the Script Load Guard toggle
+//                            (ScriptLoadGuard.Enabled, the same way).
+//   FTEmulator sub-tab       CreateFTEmulator (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK,
+//                            and the sub-tab says so) makes the hosted FTEmulatorWindow (FTEmulatorWindow.CreateHosted,
+//                            Editor/VRChat/UI/FTEmulator/FTEmulatorWindow.cs), hosted under the key "FTEmulator".
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
 //   Constraint Tool tab      CreateConstraintTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK,
@@ -415,7 +438,8 @@ namespace Riry.RiryTools.Editor
 //                            change), and the Documentation link at the bottom right.
 //   Tab constants            TabMinWidth, TabMinHeight, DarkTab, DarkActiveTab, LightTab, LightActiveTab, TabSeparator,
 //                            TabBorder, HoverTint: internal, so Menu Mockup's Tabs block draws the same strip.
-//   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
+//   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's, Import Presets', Animator Tools' and
+//                            Tools' sub-tabs, and FTEmulator Debug's tabs: flat cells of equal width (at least TabMinWidth,
 //                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
 //                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip. Every tab has a TabBorder (2 px) outline

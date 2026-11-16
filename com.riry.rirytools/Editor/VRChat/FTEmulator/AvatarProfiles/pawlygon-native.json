@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "id": "pawlygon-native",
+  "kind": "template",
+  "name": "Pawlygon 2.x",
+  "backend": "native",
+  "version": "2.0.7",
+  "evidence": [
+    "S9 PawlygonStudio/VRC-Facetracking README (blob da7fad165d16461d0e6a2b21f712d08620a6eb2e), package 2.0.7"
+  ],
+  "notes": [
+    "Applied to the built copy of the avatar: in Play Mode the descriptor carries the result, the components are gone.",
+    "Pupil Emulation, Face Tracking Emulation and Guards are animator layers of the avatar: they run as avatar behaviour."
+  ],
+  "signatures": {
+    "componentTypes": [
+      "Pawlygon.FaceTracking.PawlygonFaceTracking",
+      "Pawlygon.FaceTracking.PawlygonFTParameters"
+    ],
+    "packages": [
+      {
+        "name": "net.pawlygon.vrc-facetracking",
+        "minVersion": "2.0.0"
+      }
+    ]
+  }
+}
