@@ -231,7 +231,19 @@ namespace Riry.RiryTools.Editor
 
         private void HttpLoop(object state)
         {
-            var http = (HttpListener)state;
+            try
+            {
+                Serve((HttpListener)state);
+            }
+            catch (Exception exception)
+            {
+                // A thread must not end without a trace.
+                if (!stopping) diagnostics?.Record(FTEmulatorDiagnostics.QueryFault, "HTTP service stopped: " + exception.GetType().Name + ": " + exception.Message);
+            }
+        }
+
+        private void Serve(HttpListener http)
+        {
             while (!stopping)
             {
                 HttpListenerContext request;
@@ -368,7 +380,19 @@ namespace Riry.RiryTools.Editor
 
         private void MdnsLoop(object state)
         {
-            var receiver = (UdpClient)state;
+            try
+            {
+                Discovery((UdpClient)state);
+            }
+            catch (Exception exception)
+            {
+                // A thread must not end without a trace.
+                if (!stopping) diagnostics?.Record(FTEmulatorDiagnostics.DiscoveryFault, "discovery stopped: " + exception.GetType().Name + ": " + exception.Message);
+            }
+        }
+
+        private void Discovery(UdpClient receiver)
+        {
             var remote = new IPEndPoint(IPAddress.Any, 0);
             double nextAnnounce = 0, nextQuery = 0;
             int announced = 0;
@@ -566,12 +590,13 @@ namespace Riry.RiryTools.Editor
             }
             Close(mdns);
             mdns = null;
+            // The threads end first: the discovery thread sends on the sockets closed below.
+            Join(ref httpThread);
+            Join(ref mdnsThread);
             foreach (UdpClient sender in senders) Close(sender);
             senders.Clear();
             Close(oscSender);
             oscSender = null;
-            Join(ref httpThread);
-            Join(ref mdnsThread);
             lock (gate) peers.Clear();
             HttpPort = 0;
         }

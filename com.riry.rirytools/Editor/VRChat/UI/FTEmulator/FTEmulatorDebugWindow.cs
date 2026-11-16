@@ -48,7 +48,7 @@ namespace Riry.RiryTools.Editor
         internal static void Open(int tab)
         {
             FTEmulatorDebugWindow window = GetWindow<FTEmulatorDebugWindow>(false, Title);
-            window.minSize = new Vector2(820f, 420f);
+            window.minSize = new Vector2(960f, 420f);
             if (tab >= 0) window.tab = tab;
             window.Show();
         }
@@ -366,7 +366,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // FTEmulatorDebugWindow (this file)
-//   Open(tab)                The popup (minimum 820 x 420) on a tab; below 0 keeps the tab it had.
+//   Open(tab)                The popup (minimum 960 x 420) on a tab; below 0 keeps the tab it had.
 //   DiagnosticsText()        The running session's diagnostics (FTEmulatorDiagnostics.ExportText with state, avatar, backend,
 //                            hardware, counts, evidence, partial preview reasons, ignored settings and assumptions), or the
 //                            last session's.

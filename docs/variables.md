@@ -44,6 +44,7 @@ Example:
   - Clean Animation Keys
   - Constraint Tool
     - Subtools: `ConstraintTrain*`, `ConstraintBezier*`, `InsertableProp*`
+  - FTEmulator
   - GUID Tools
   - IconCap
   - Import Presets
@@ -83,6 +84,14 @@ Per user and per project, in `UserSettings/`.
 | `RiryTools.AutoSync.LargeFileNoticeOff` | Remote URLs, one per line, where the large file notice's **Do Not Show Again** was chosen. Unset by default. | `AutoSync/AutoSync.cs` |
 | `RiryTools.AutoSync.Remote` | The **Remote** AutoSync pushes to (a remote name). Unset means `origin`, else the first remote. Read through `AutoSyncGitRemotes.Selected`. | `AutoSync/AutoSync.cs`, `AutoSync/AutoSyncGitRemotes.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
 | `RiryTools.AvatarMigrator.SdkNoticeOff` | `1` once **Do not show again** is chosen on the VRC SDK not detected popup. Unset by default. | `UI/AvatarMigrator/AvatarMigratorSdkNoticeWindow.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
+| `RiryTools.FTEmulator.Backend` | FTEmulator's **Avatar backend**: `auto` (default), `native` or an avatar profile's id. Read through `FTEmulatorSettings.Backend`. | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
+| `RiryTools.FTEmulator.Behavior` | FTEmulator's **Behavior**: `Strict` (default) or `ModuleBehavior` (Documented module behavior). Read through `FTEmulatorSettings.Behavior`. | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
+| `RiryTools.FTEmulator.CustomMappings` | FTEmulator's own mappings (**Override mapping**) as a JSON object: avatar parameter name to a formula of tracking keys. Unset by default. | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorDebugWindow.cs` |
+| `RiryTools.FTEmulator.Discovery` | FTEmulator's **Discovery** toggle, the OSCQuery service (`1` / `0`; default `1`). | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
+| `RiryTools.FTEmulator.Hardware` | FTEmulator's **Hardware limits**: a hardware profile's id (default `unrestricted`). | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
+| `RiryTools.FTEmulator.Input` | FTEmulator's **Input**: `VrcftOsc` (default) or `Manual`. | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
+| `RiryTools.FTEmulator.ManualOutput` | FTEmulator's **Write manual values to the avatar** (`1` / `0`; default `1`). | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
+| `RiryTools.FTEmulator.Port` | FTEmulator's **Receive port** on 127.0.0.1 (int; default `9000`, `FTEmulatorSettings.DefaultPort`): the port VRCFaceTracking sends to. | `VRChat/FTEmulator/FTEmulatorSettings.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
 | `RiryTools.GuidTools.BrokenPromptOff` | Scene and prefab paths, one per line, where the broken reference prompt's **Do Not Show Again** was chosen. Unset by default. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
 | `RiryTools.GuidTools.Ignored` | Broken references chosen to **Ignore**, one per line: a missing GUID, or `<path> (file ID <n>)` for a missing object. Listed under Ignored; left out of the save check, its warning and the prompt on open. | `GuidTools/GuidToolIgnoredReferences.cs` |
 | `RiryTools.MenuTool.LastAvatar` | GlobalObjectId of the last avatar the Menu Tool scanned (saved scenes only); selected when the Menu Tool opens with no target. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
@@ -110,6 +119,8 @@ Not stored, but named like settings keys.
 
 | Name | Use | Scripts |
 |---|---|---|
+| `control:<name>` / `parameter:<name>` | FTEmulator's debug row keys (`FTEmulatorParameterStore.ControlPrefix` / `ParameterPrefix`): a hardware control, or an avatar parameter that arrives already mapped. | `VRChat/FTEmulator/FTEmulatorParameterStore.cs`, `VRChat/FTEmulator/FTEmulatorSession.cs` |
+| `local:RiryFTEmulator:<fingerprint>` | The avatar id FTEmulator's OSCQuery service gives in `/avatar/change`: an FNV-1a fingerprint of the avatar's name, Expression Parameters and native settings. | `VRChat/FTEmulator/FTEmulatorAvatarScanner.cs` |
 | `RiryTools.MenuMockup.Type` | Drag and drop data key: a component type dragged into the Menu Mockup Edit window. | `UI/Debug/MenuMockupEditWindow.cs` |
 | `RiryTools.MenuTool.AddMenuName` | GUI control name of the name field in Menu Tool's Add menu dialog, so it gets keyboard focus. | `VRChat/UI/MenuTool/MenuToolAddMenuDialog.cs` |
 | `RiryTools.MenuTool.Entry` | Drag and drop data key: the menu entry path dragged in the Menu manager tree. | `VRChat/UI/MenuTool/MenuToolManagerTree.cs` |
@@ -191,17 +202,24 @@ Moving or renaming a file must move its `.meta` with it.
 | Name | Use | Scripts |
 |---|---|---|
 | `0756bf5a933b437db4405f7a01a55498` | GUID of `AvatarMigrator/types.yml.meta`: Avatar Migration Assistant's type list template, found by GUID (`AvatarMigratorCopyTypes.TemplateGuid`). | `AvatarMigrator/AvatarMigratorCopyTypes.cs` |
+| `311b68250f50442e9fd0792f0665a214` | GUID of the folder `VRChat/FTEmulator/MappingSchemas` (its `.meta`): FTEmulator's tracking key schema, found by GUID (`FTEmulatorCatalog.SchemaFolderGuid`). | `VRChat/FTEmulator/FTEmulatorCatalog.cs` |
+| `762a0ef7a65b45ab944c36b36148869d` | GUID of the folder `VRChat/FTEmulator/HardwareProfiles`: FTEmulator's hardware profiles (`FTEmulatorCatalog.HardwareFolderGuid`). | `VRChat/FTEmulator/FTEmulatorCatalog.cs` |
 | Assembly `Riry.RiryTools.Editor` | Editor only, auto-referenced. All tools except the VRChat window. | `Riry.RiryTools.Editor.asmdef` |
-| Assembly `Riry.RiryTools.Editor.GestureManager` | `GestureManagerRadial`, built against Gesture Manager 3.9.9. Editor only; references Gesture Manager's assemblies, `VRCSDK3A.dll` and `VRCSDKBase.dll`; needs `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_GESTURE_MANAGER`. | `VRChat/MenuTool/GestureManager/Riry.RiryTools.Editor.GestureManager.asmdef` |
-| Assembly `Riry.RiryTools.Editor.VRChat` | Constraint Tool window (Train, Bezier and Insertable prop tabs), Menu Tool, and their menus. Editor only; needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll`. | `VRChat/Riry.RiryTools.Editor.VRChat.asmdef` |
-| `InternalsVisibleTo("Riry.RiryTools.Editor.GestureManager")` | Lets the Gesture Manager bridge implement `IMenuToolRadial`. | `VRChat/AssemblyInfo.cs` |
+| Assembly `Riry.RiryTools.Editor.FTEmulatorTests` | FTEmulator's NUnit tests. Editor only, not auto-referenced; references the Unity Test Framework assemblies and `nunit.framework.dll`; needs `UNITY_INCLUDE_TESTS`, `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_TEST_FRAMEWORK`, so it is left out of projects without the Test Framework. | `VRChat/FTEmulator/Tests/Riry.RiryTools.Editor.FTEmulatorTests.asmdef` |
+| Assembly `Riry.RiryTools.Editor.GestureManager` | `GestureManagerRadial` and FTEmulator's output `FTEmulatorGestureManager` (its folder joins the assembly through `VRChat/FTEmulator/GestureManager/Riry.RiryTools.Editor.GestureManager.asmref`), built against Gesture Manager 3.9.9. Editor only; references Gesture Manager's assemblies, `VRCSDK3A.dll` and `VRCSDKBase.dll`; needs `RIRYTOOLS_VRC_CONSTRAINTS` and `RIRYTOOLS_GESTURE_MANAGER`. | `VRChat/MenuTool/GestureManager/Riry.RiryTools.Editor.GestureManager.asmdef`, `VRChat/FTEmulator/GestureManager/Riry.RiryTools.Editor.GestureManager.asmref` |
+| Assembly `Riry.RiryTools.Editor.VRChat` | Constraint Tool window (Train, Bezier and Insertable prop tabs), Menu Tool, FTEmulator, and their menus. Editor only; needs `VRC.Dynamics.dll`, `VRC.SDK3.Dynamics.Constraint.dll`, `VRC.SDK3.Dynamics.Contact.dll`, `VRC.SDK3.Dynamics.PhysBone.dll`, `VRCSDK3A.dll` and `VRCSDKBase.dll`. | `VRChat/Riry.RiryTools.Editor.VRChat.asmdef` |
+| `e173195361fc4488ba7d04cd43776d4a` | GUID of the folder `VRChat/FTEmulator/AvatarProfiles`: FTEmulator's avatar profiles (`FTEmulatorCatalog.AvatarFolderGuid`). | `VRChat/FTEmulator/FTEmulatorCatalog.cs` |
+| `InternalsVisibleTo("Riry.RiryTools.Editor.FTEmulatorTests")` | Lets FTEmulator's tests reach its internal types. | `VRChat/AssemblyInfo.cs` |
+| `InternalsVisibleTo("Riry.RiryTools.Editor.GestureManager")` | Lets the Gesture Manager bridge implement `IMenuToolRadial` and `IFTEmulatorOutput`. | `VRChat/AssemblyInfo.cs` |
 | `InternalsVisibleTo("Riry.RiryTools.Editor.VRChat")` | Lets the VRChat assembly use internal types and menu paths. | `AssemblyInfo.cs` |
-| `RIRYTOOLS_GESTURE_MANAGER` | Defined when `vrchat.blackstartx.gesture-manager` is 3.9.0 or newer. Compiles `Riry.RiryTools.Editor.GestureManager` (Menu Tool's radial preview); without it the Menu manager says to install Gesture Manager. | `VRChat/MenuTool/GestureManager/Riry.RiryTools.Editor.GestureManager.asmdef`, `VRChat/MenuTool/GestureManager/GestureManagerRadial.cs` |
-| `RIRYTOOLS_VRC_BIT_WIDTH` | Defined when `com.vrchat.avatars` is 3.10.6 or newer. Menu Tool reads each parameter's synced width and flipped flag (`GetBitWidthByType`, `flippedRepresentation`; `MenuToolScanner.WidthOf` / `FlippedOf`); older SDKs count 8 bits. | `VRChat/Riry.RiryTools.Editor.VRChat.asmdef`, `VRChat/MenuTool/MenuToolScanner.cs` |
+| `RIRYTOOLS_GESTURE_MANAGER` | Defined when `vrchat.blackstartx.gesture-manager` is 3.9.0 or newer. Compiles `Riry.RiryTools.Editor.GestureManager` (Menu Tool's radial preview and FTEmulator's output); without it the Menu manager says to install Gesture Manager, and FTEmulator shows the Gesture Manager not found message. | `VRChat/MenuTool/GestureManager/Riry.RiryTools.Editor.GestureManager.asmdef`, `VRChat/MenuTool/GestureManager/GestureManagerRadial.cs`, `VRChat/FTEmulator/GestureManager/FTEmulatorGestureManager.cs` |
+| `RIRYTOOLS_TEST_FRAMEWORK` | Defined when `com.unity.test-framework` is 1.1.0 or newer. Compiles `Riry.RiryTools.Editor.FTEmulatorTests`. | `VRChat/FTEmulator/Tests/Riry.RiryTools.Editor.FTEmulatorTests.asmdef` |
+| `RIRYTOOLS_VRC_BIT_WIDTH` | Defined when `com.vrchat.avatars` is 3.10.6 or newer. Menu Tool reads each parameter's synced width and flipped flag (`GetBitWidthByType`, `flippedRepresentation`; `MenuToolScanner.WidthOf` / `FlippedOf`); older SDKs count 8 bits. FTEmulator reads the descriptor's native face tracking settings and follows `VRC_AnimatorFaceTrackingBlendshapesSet.OnApplySettings` only with it (native face tracking arrived in 3.10.6). | `VRChat/Riry.RiryTools.Editor.VRChat.asmdef`, `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/FTEmulator/FTEmulatorNativeDescriptor.cs`, `VRChat/FTEmulator/FTEmulatorNativeSetWeights.cs`, `VRChat/FTEmulator/Tests/Riry.RiryTools.Editor.FTEmulatorTests.asmdef` |
 | `RIRYTOOLS_MENUTOOL_MA` | Never defined: comments out Menu Tool's Modular Avatar code (scanning MA menu installers, items, parameters and Merge Animators, and the MA edits) until MA support returns. | `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolScanner.ModularAvatar.cs`, `VRChat/MenuTool/MenuToolModel.cs`, `VRChat/MenuTool/MenuToolPlan.cs`, `VRChat/MenuTool/MenuToolPlanner.cs`, `VRChat/MenuTool/MenuToolApply.cs`, `VRChat/UI/MenuTool/MenuToolIcons.cs` |
 | `RIRYTOOLS_VRC_CONSTRAINTS` | Defined when `com.vrchat.avatars` is 3.7.0 or newer. Compiles `Riry.RiryTools.Editor.VRChat`; without it the menus show the **VRCSDK not found** popup. | `Riry.RiryTools.Editor.asmdef`, `VRChat/Riry.RiryTools.Editor.VRChat.asmdef`, `VRChat/MenuTool/GestureManager/Riry.RiryTools.Editor.GestureManager.asmdef`, `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsRightClickMenu.cs` |
 | Shader `Hidden/RiryTools/IconCap/Draw` | IconCap alpha pass and Flat lighting; keyword `ICONCAP_CLIP`. | `IconCap/Shaders/IconCapDraw.shader`, `IconCap/IconCapRenderer.cs` |
 | Shader `Hidden/RiryTools/IconCap/Effects` | IconCap effect stack, composite and HDRI unwrap passes. | `IconCap/Shaders/IconCapEffects.shader`, `IconCap/IconCapEffects.cs` |
+| Type and package names read by FTEmulator | From `AvatarProfiles/*.json` signatures: components `Pawlygon.FaceTracking.PawlygonFaceTracking` and `Pawlygon.FaceTracking.PawlygonFTParameters`; packages `net.pawlygon.vrc-facetracking` and `adjerry91.vrcft.templates`. For the diagnostics export also `com.riry.rirytools`, `com.vrchat.avatars`, `com.vrchat.base`, `vrchat.blackstartx.gesture-manager`, `com.vrcfury.vrcfury`, `nadena.dev.modular-avatar`. | `VRChat/FTEmulator/FTEmulatorAvatarScanner.cs`, `VRChat/FTEmulator/FTEmulator.cs` |
 | Type names read by Menu Tool | `VF.Model.VRCFury` (features `Toggle`, `Puppet`, `FullController`, `MoveMenuItem`, `ReorderMenuItem`, `SetIcon`), `nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller`, `...MenuItem`, `...MenuGroup`, `...MenuInstallTarget`, `...Parameters`, `...MergeAnimator`, `VRC.SDKBase.Editor.BuildPipeline.VRCBuildPipelineCallbacks`. Looked up by name, so neither VRCFury nor Modular Avatar is needed to compile. | `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolBudget.cs`, `VRChat/MenuTool/MenuToolApply.cs` |
 
 ## Tunable constants
@@ -259,7 +277,7 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `RiryLog.Format` | `[RiryTools/<tool>] <message>` on every Console line. Tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, Find and Replace, Find Null references, GUID Tools, IconCap, Import Presets, Material Cleaner, Menu Mockup, Menu Tool, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it. | `Components/RiryLog.cs` |
+| `RiryLog.Format` | `[RiryTools/<tool>] <message>` on every Console line. Tools: Attach To, AutoSync, Avatar Migration, Blendshape Sync, Clean Animation Keys, Constraint Tool, Find and Replace, Find Null references, FTEmulator, GUID Tools, IconCap, Import Presets, Material Cleaner, Menu Mockup, Menu Tool, Script Load Guard, Stop Auto Game. A line about an object or asset passes it, so clicking the line pings it. | `Components/RiryLog.cs` |
 | `RiryToolsMainMenu.TabBorder` / `SubTabGap` / `TopMargin` | `2` / `8` / `2` px: tab outline thickness; space between the main tabs and the sub-tabs; space above the main tabs. | `UI/RiryToolsMainMenu.cs`, `UI/Debug/MenuMockupPreview.cs`, `VRChat/UI/ConstraintTools/ConstraintToolWindow.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `RiryToolsMenuBar.DocumentationLink` | `https://github.com/Rionquosue/riryunityworkflow`: opened by **Documentation**. Change it when the wiki is up. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | Settings Undo names | `Constraint Train settings`, `Bezier settings`, `Insertable prop settings`, `Blendshape Sync settings`, `Clean Animation Keys settings`, `Extract Animation settings`, `IconCap settings`: Undo steps of window settings edits, through `RiryToolGUI.Set`. | `UI/Components/RiryToolGUI.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `UI/BlendshapeSync/BlendshapeSyncJobList.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs`, `UI/ImportPresets/ImportPresetExtractAnimationWindow.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs`, `VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs`, `VRChat/UI/ConstraintTools/InsertablePropWindow.UI.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
@@ -351,10 +369,30 @@ Moving or renaming a file must move its `.meta` with it.
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760`: Menu Tool's own window; the Menu manager asks for this width in the Main Menu too. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | Writes box height (`MenuToolWindow.DrawBits`) | `120` px: the Writes foldout's scroll box, with every parameter write since the window opened or Reset menu state, one row each. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 
+### FTEmulator
+
+| Name | Use | Scripts |
+|---|---|---|
+| `FTEmulatorBlendshapeWriter.SameWeight` | `0.01`: a weight further than this from the one written has another owner and is not restored. | `VRChat/FTEmulator/FTEmulatorBlendshapeWriter.cs` |
+| `FTEmulatorCatalog.SchemaVersion` / `UnrestrictedId` | `1`: the `schema` every data file must have. `unrestricted`: the hardware profile with one control per tracking key. | `VRChat/FTEmulator/FTEmulatorCatalog.cs` |
+| `FTEmulatorDebugWindow.RowHeight` / `ChangedSeconds` | `20` px table rows; a row counts as changed for `2` s (**Changed only**). Minimum window size `960` x `420`. | `VRChat/UI/FTEmulator/FTEmulatorDebugWindow.cs` |
+| `FTEmulatorDiagnostics.MaxCodes` | `128`: problem categories kept; each is counted, and logged once. | `VRChat/FTEmulator/FTEmulatorDiagnostics.cs` |
+| `FTEmulatorDnsPacket.MaxRecords` / `MaxJumps` | `64` records of a kind and `16` name compression jumps read from one multicast DNS packet. | `VRChat/FTEmulator/FTEmulatorDnsPacket.cs` |
+| `FTEmulatorExpression` limits | `MaxLength` 1024 characters, `MaxTokens` 256, `MaxInstructions` 256, `MaxNesting` 32, `MaxStack` 32, `MaxLiteralLength` 20, `MaxLiteral` 10000: the limits the SDK states for Parameter Behavior custom expressions. | `VRChat/FTEmulator/FTEmulatorExpression.cs` |
+| `FTEmulatorJson.MaxDepth` / `MaxLength` | `64` levels / `4194304` characters of JSON read. | `VRChat/FTEmulator/FTEmulatorJson.cs` |
+| `FTEmulatorNativeConfig` limits | `MaxMeshes` 16, `MaxSets` 128, `MaxBehaviors` 128, `MaxInputsPerBehavior` 32, `MaxTotalInstructions` 2048: native face tracking's limits. Input order: the 102 tracking keys, `Voice`, then `Viseme_sil` ... `Viseme_ou`. | `VRChat/FTEmulator/FTEmulatorNativeEvaluator.cs` |
+| `FTEmulatorOscCodec` addresses | `/avatar/parameters/`, `/tracking/face/v1` (one blob of 102 bytes, byte / 255), `/avatar/change`, `/avatar/avatarfullfacetracking`. | `VRChat/FTEmulator/FTEmulatorOscCodec.cs` |
+| `FTEmulatorOscCodec` limits | `MaxBundleDepth` 4, `MaxMessagesPerPacket` 1024, `MaxArguments` 64, `MaxPacketLength` 65507. | `VRChat/FTEmulator/FTEmulatorOscCodec.cs` |
+| `FTEmulatorOscQuery.JsonService` / `NamePrefix` | `_oscjson._tcp.local` and `VRChat-Client-RiryFTEmulator-` (plus six characters): the service VRCFaceTracking looks for. Multicast DNS on `224.0.0.251:5353`; HTTP on `127.0.0.1`, a free port. | `VRChat/FTEmulator/FTEmulatorOscQuery.cs` |
+| `FTEmulatorOscQuery` timing | Announce every `15` s (three times a second apart at first), ask for tracking apps every `3` s, `30` s once one answered, HOST_INFO at most every `5` s per app, at most `8` apps. | `VRChat/FTEmulator/FTEmulatorOscQuery.cs` |
+| `FTEmulatorOscReceiver.MaxAddresses` | `2048`: parameter addresses kept pending between reads; the newest value per address wins. | `VRChat/FTEmulator/FTEmulatorOscReceiver.cs` |
+| `FTEmulatorParameterStore.GraceSeconds` / `FadeSeconds` | `0.25` s a Live value stays after input stops, then `0.2` s to fade to neutral; after that it is not driven. | `VRChat/FTEmulator/FTEmulatorParameterStore.cs` |
+| `FTEmulatorSession.UserFaceTracking` / `UserEyeTracking` | The native status parameters, set by the session. `VerifyEvery` 30 frames and `VerifyTolerance` 0.02: written parameters read back. | `VRChat/FTEmulator/FTEmulatorSession.cs` |
+
 ## Menu paths
 
-The number in brackets is the menu priority. Constraint Tool's, Menu Tool's and
-Find and Replace's entries are defined in `VRChat/UI/RiryToolsVRChatMenus.cs`
+The number in brackets is the menu priority. Constraint Tool's, Menu Tool's,
+Find and Replace's and FTEmulator's entries are defined in `VRChat/UI/RiryToolsVRChatMenus.cs`
 when the VRChat SDK is present, and in `UI/RiryToolsMenuBar.cs` (showing the
 **VRCSDK not found** popup) when it is not. Keep the priorities of both files in
 step.
@@ -375,13 +413,14 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Constraint Tool` | (2030) Written `Constraint\u00A0&Tool` (a no-break space) so its menu key is T: the Constraint Tool window on the tab used last. Path is `RiryToolsMenuBar.ConstraintTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/Documentation` | (2070) Opens `RiryToolsMenuBar.DocumentationLink`. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Find Null references` | (2056) Reads the Console's NullReferenceException entries (internal `UnityEditor.LogEntries`) once and lists empty or missing references in a popup, the whole open scenes when the log gives nothing. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `Debug/FindNullReferences.cs` |
+| `Tools/RiryTools/FTEmulator` | (2067) The FTEmulator window (`FTEmulatorWindow.Open`); also the Main Menu's Tools tab, sub-tab FTEmulator (`ToolsTabs`). No right-click entry. Path is `RiryToolsMenuBar.FTEmulatorTools`. Without the VRChat SDK: the **VRCSDK not found** popup. | `VRChat/UI/RiryToolsVRChatMenus.cs`, `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/GUID Tools` | (2040) The window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/IconCap` | (2045) Written `Ic&onCap` so its menu key is O: the IconCap window (also from the Main Menu's Tools tab, in its own window). | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Animator Tools/Extract Animations` | (1997) The Extract Animation window. Also the Main Menu's Animator Tools tab, sub-tab Extract Animations (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Open Import Preset Library` | (2053) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Save Import Preset` | (2051) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Set Folder Import Presets` | (2050) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window: a tab per tool and a Tools tab opening IconCap and Avatar Migration Assistant in their own windows, with Refresh Scripts and the Stop Auto Game toggle (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab). | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
+| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window: a tab per tool and a Tools tab with the sub-tabs General (opening IconCap and Avatar Migration Assistant in their own windows, with Refresh Scripts and the Stop Auto Game toggle) and FTEmulator (Documentation link at its bottom right; a Menu Tool tab, no Menu Mockup tab). | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `Tools/RiryTools/Menu Mockup` | (2065) Opens the Edit and Components windows. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Menu Tool` | (2066) Written `M&enu Tool` so its menu key is E: the Menu Tool window (the Main Menu's Menu Tool tab shows its Parameter budget; its Menu manager opens this window). Without the VRChat SDK, the **VRCSDK not found** popup. Path is `RiryToolsMenuBar.MenuTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/Refresh Scripts` | (2058) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. Also a button on the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs`, `Utilities/RefreshScripts.cs` |

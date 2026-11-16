@@ -113,6 +113,7 @@ namespace Riry.RiryTools.Editor
         private readonly HashSet<string> notOnAvatar = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> notTaken = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<string> release = new List<string>();
+        private readonly List<FTEmulatorParameterValue> passthrough = new List<FTEmulatorParameterValue>();
         private readonly Dictionary<string, KeyValuePair<float, float>> setTargets = new Dictionary<string, KeyValuePair<float, float>>(StringComparer.Ordinal);
 
         private FTEmulatorAvatarSnapshot avatar;
@@ -333,9 +334,11 @@ namespace Riry.RiryTools.Editor
                     query.Start(receiver.Port, Advert(), context);
                 }
             }
-            catch (InvalidOperationException exception)
+            catch (Exception exception)
             {
                 // A taken port, or a service that could not start: the session goes on, with the manual controls.
+                // Whatever went wrong, nothing half-open is left behind.
+                if (!(exception is FTEmulatorPortInUseException)) Diagnostics.Record(FTEmulatorDiagnostics.ReceiverFault, exception.GetType().Name + ": " + exception.Message);
                 sourceProblem = exception.Message;
                 StopSource();
                 listening = false;
@@ -563,6 +566,24 @@ namespace Riry.RiryTools.Editor
                 else faceAvailable |= hardware.FaceTracking;
             }
 
+            // Values that arrive already mapped count as tracking of the region their channels belong to, so the avatar's
+            // tracking-active parameters follow them too.
+            passthrough.Clear();
+            foreach (FTEmulatorParameterStore.Entry entry in store.Entries)
+            {
+                if (!entry.Key.StartsWith(FTEmulatorParameterStore.ParameterPrefix, StringComparison.Ordinal)) continue;
+                if (!store.TryEffective(entry.Key, now, out float value)) continue;
+                string name = entry.Key.Substring(FTEmulatorParameterStore.ParameterPrefix.Length);
+                passthrough.Add(new FTEmulatorParameterValue(name, entry.Type, value));
+                if (passthroughMapper == null) continue;
+                foreach (int key in passthroughMapper.GetDependencies(name))
+                {
+                    if (!filter.Allowed[key]) continue;
+                    if (catalog.EyeKey[key]) eyeAvailable |= hardware.EyeTracking;
+                    else faceAvailable |= hardware.FaceTracking;
+                }
+            }
+
             // 4. The avatar's values.
             writes.Clear();
             bool drive = Options.Input != FTEmulatorInput.Manual || Options.ManualOutput;
@@ -582,12 +603,7 @@ namespace Riry.RiryTools.Editor
                     writes.Add(new FTEmulatorParameterValue(UserEyeTracking, FTEmulatorValueType.Bool, eyeAvailable ? 1f : 0f));
                 }
                 mapper.Map(values, valueDriven, eyeAvailable, faceAvailable, writes);
-                foreach (FTEmulatorParameterStore.Entry entry in store.Entries)
-                {
-                    if (!entry.Key.StartsWith(FTEmulatorParameterStore.ParameterPrefix, StringComparison.Ordinal)) continue;
-                    if (store.TryEffective(entry.Key, now, out float value))
-                        writes.Add(new FTEmulatorParameterValue(entry.Key.Substring(FTEmulatorParameterStore.ParameterPrefix.Length), entry.Type, value));
-                }
+                writes.AddRange(passthrough);
             }
             else meshActive = false;
             if (!meshActive) ReleaseMeshWeights();
@@ -937,5 +953,6 @@ namespace Riry.RiryTools.Editor
 //   Stop(reason)             Closes the source and service, puts back parameters and blendshape weights, releases the output.
 //   Snapshot()               The windows' copy of the state.
 //   State / Running / Listening / Frozen / Avatar / Resolution / Evaluator / Mapper / Generation / Diagnostics / Info
-//   Status parameters        UserFaceTracking and UserEyeTracking (native) are the session's own: true while that region
-//                            is tracked. They are never taken from the input.
+//   Status parameters        UserFaceTracking and UserEyeTracking (native) and the parameter set's status parameters
+//                            (legacy) are the session's own: true while that region is tracked, by controls or by values
+//                            that arrive already mapped. They are never taken from the input.
