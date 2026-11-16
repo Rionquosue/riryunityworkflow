@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "pawlygon-legacy",
+  "kind": "template",
+  "name": "Pawlygon 1.x",
+  "backend": "legacy",
+  "version": "1.x",
+  "parameterSet": "vrcft-unified-v2",
+  "evidence": [
+    "S9 PawlygonStudio/VRC-Facetracking, Deprecated/Animators (1.x controllers), parameter prefixes read 2026-11-16"
+  ],
+  "notes": [
+    "Raw inputs are FT/v2/...; OSCm/... parameters are the template's own smoothing and binary decoding."
+  ],
+  "signatures": {
+    "parameterPrefixes": [
+      "OSCm/Binary/FT/v2/",
+      "OSCm/Local/Smooth/FT/v2/",
+      "OSCm/Remote/Smooth/FT/v2/"
+    ],
+    "packages": [
+      {
+        "name": "net.pawlygon.vrc-facetracking",
+        "maxVersion": "1.999.999"
+      }
+    ]
+  }
+}

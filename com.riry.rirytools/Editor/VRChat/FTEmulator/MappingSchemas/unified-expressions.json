@@ -1,0 +1,421 @@
+{
+  "schema": 1,
+  "id": "vrchat-face-v1",
+  "name": "VRChat native face tracking keys",
+  "address": "/tracking/face/v1",
+  "blobLength": 102,
+  "evidence": [
+    "https://creators.vrchat.com/avatars/face-tracking/osc/ (tracking key order, read 2026-11-16)",
+    "com.vrchat.avatars 3.10.6, VRCAvatarDescriptor.FaceTrackingKey (same order)"
+  ],
+  "keys": [
+    {
+      "name": "EyeLookOutRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookInRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookUpRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookDownRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookOutLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookInLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookUpLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeLookDownLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeClosedRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeClosedLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeDilationRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeDilationLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeConstrictRight",
+      "region": "eye"
+    },
+    {
+      "name": "EyeConstrictLeft",
+      "region": "eye"
+    },
+    {
+      "name": "EyeSquintRight",
+      "region": "face"
+    },
+    {
+      "name": "EyeSquintLeft",
+      "region": "face"
+    },
+    {
+      "name": "EyeWideRight",
+      "region": "face"
+    },
+    {
+      "name": "EyeWideLeft",
+      "region": "face"
+    },
+    {
+      "name": "BrowPinchRight",
+      "region": "face"
+    },
+    {
+      "name": "BrowPinchLeft",
+      "region": "face"
+    },
+    {
+      "name": "BrowLowererRight",
+      "region": "face"
+    },
+    {
+      "name": "BrowLowererLeft",
+      "region": "face"
+    },
+    {
+      "name": "BrowInnerUpRight",
+      "region": "face"
+    },
+    {
+      "name": "BrowInnerUpLeft",
+      "region": "face"
+    },
+    {
+      "name": "BrowOuterUpRight",
+      "region": "face"
+    },
+    {
+      "name": "BrowOuterUpLeft",
+      "region": "face"
+    },
+    {
+      "name": "NasalDilationRight",
+      "region": "face"
+    },
+    {
+      "name": "NasalDilationLeft",
+      "region": "face"
+    },
+    {
+      "name": "NasalConstrictRight",
+      "region": "face"
+    },
+    {
+      "name": "NasalConstrictLeft",
+      "region": "face"
+    },
+    {
+      "name": "CheekSquintRight",
+      "region": "face"
+    },
+    {
+      "name": "CheekSquintLeft",
+      "region": "face"
+    },
+    {
+      "name": "CheekPuffRight",
+      "region": "face"
+    },
+    {
+      "name": "CheekPuffLeft",
+      "region": "face"
+    },
+    {
+      "name": "CheekSuckRight",
+      "region": "face"
+    },
+    {
+      "name": "CheekSuckLeft",
+      "region": "face"
+    },
+    {
+      "name": "JawOpen",
+      "region": "face"
+    },
+    {
+      "name": "JawRight",
+      "region": "face"
+    },
+    {
+      "name": "JawLeft",
+      "region": "face"
+    },
+    {
+      "name": "JawForward",
+      "region": "face"
+    },
+    {
+      "name": "JawBackward",
+      "region": "face"
+    },
+    {
+      "name": "JawClench",
+      "region": "face"
+    },
+    {
+      "name": "JawMandibleRaise",
+      "region": "face"
+    },
+    {
+      "name": "MouthClosed",
+      "region": "face"
+    },
+    {
+      "name": "LipSuckUpperRight",
+      "region": "face"
+    },
+    {
+      "name": "LipSuckUpperLeft",
+      "region": "face"
+    },
+    {
+      "name": "LipSuckLowerRight",
+      "region": "face"
+    },
+    {
+      "name": "LipSuckLowerLeft",
+      "region": "face"
+    },
+    {
+      "name": "LipSuckCornerRight",
+      "region": "face"
+    },
+    {
+      "name": "LipSuckCornerLeft",
+      "region": "face"
+    },
+    {
+      "name": "LipFunnelUpperRight",
+      "region": "face"
+    },
+    {
+      "name": "LipFunnelUpperLeft",
+      "region": "face"
+    },
+    {
+      "name": "LipFunnelLowerRight",
+      "region": "face"
+    },
+    {
+      "name": "LipFunnelLowerLeft",
+      "region": "face"
+    },
+    {
+      "name": "LipPuckerUpperRight",
+      "region": "face"
+    },
+    {
+      "name": "LipPuckerUpperLeft",
+      "region": "face"
+    },
+    {
+      "name": "LipPuckerLowerRight",
+      "region": "face"
+    },
+    {
+      "name": "LipPuckerLowerLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthUpperUpRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthUpperUpLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthUpperDeepenRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthUpperDeepenLeft",
+      "region": "face"
+    },
+    {
+      "name": "NoseSneerRight",
+      "region": "face"
+    },
+    {
+      "name": "NoseSneerLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthLowerDownRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthLowerDownLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthUpperRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthUpperLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthLowerRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthLowerLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthCornerPullRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthCornerPullLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthCornerSlantRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthCornerSlantLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthFrownRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthFrownLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthStretchRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthStretchLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthDimpleRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthDimpleLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthRaiserUpper",
+      "region": "face"
+    },
+    {
+      "name": "MouthRaiserLower",
+      "region": "face"
+    },
+    {
+      "name": "MouthPressRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthPressLeft",
+      "region": "face"
+    },
+    {
+      "name": "MouthTightenerRight",
+      "region": "face"
+    },
+    {
+      "name": "MouthTightenerLeft",
+      "region": "face"
+    },
+    {
+      "name": "TongueOut",
+      "region": "face"
+    },
+    {
+      "name": "TongueUp",
+      "region": "face"
+    },
+    {
+      "name": "TongueDown",
+      "region": "face"
+    },
+    {
+      "name": "TongueRight",
+      "region": "face"
+    },
+    {
+      "name": "TongueLeft",
+      "region": "face"
+    },
+    {
+      "name": "TongueRoll",
+      "region": "face"
+    },
+    {
+      "name": "TongueBendDown",
+      "region": "face"
+    },
+    {
+      "name": "TongueCurlUp",
+      "region": "face"
+    },
+    {
+      "name": "TongueSquish",
+      "region": "face"
+    },
+    {
+      "name": "TongueFlat",
+      "region": "face"
+    },
+    {
+      "name": "TongueTwistRight",
+      "region": "face"
+    },
+    {
+      "name": "TongueTwistLeft",
+      "region": "face"
+    },
+    {
+      "name": "SoftPalateClose",
+      "region": "face"
+    },
+    {
+      "name": "ThroatSwallow",
+      "region": "face"
+    },
+    {
+      "name": "NeckFlexRight",
+      "region": "face"
+    },
+    {
+      "name": "NeckFlexLeft",
+      "region": "face"
+    }
+  ]
+}

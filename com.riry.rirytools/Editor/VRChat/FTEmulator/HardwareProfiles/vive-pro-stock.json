@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "vive-pro-stock",
+  "name": "Vive Pro stock",
+  "detail": "No eye/face hardware",
+  "version": "1",
+  "order": 40,
+  "eyeTracking": false,
+  "faceTracking": false,
+  "evidence": [
+    "H4 VRCFT Vive Pro Eye guide and SRanipal hardware matrix"
+  ],
+  "notes": [
+    "A Vive Pro without the Eye model or the Facial Tracker has no face tracking sensors."
+  ],
+  "controls": [],
+  "outputs": []
+}
