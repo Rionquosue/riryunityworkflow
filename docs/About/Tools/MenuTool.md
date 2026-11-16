@@ -7,7 +7,7 @@ Shows an avatar's assembled expression menu and parameters, traced to their sour
 ## 2. What the tool can be used for
 
 - Seeing the menu the avatar will have once VRCFury has built it, and where each control comes from.
-- Checking the synced parameter budget.
+- Checking the synced parameter budget, with and without VRCFury's compression.
 - Moving, renaming, deleting and adding menu items, and assigning icons, from one place.
 
 ## 3. How the tool behaves
@@ -36,6 +36,7 @@ flowchart TD
 
 ## 5. References
 
-- VRCFury: menu building, Parameter Compressor, Move / Reorder Menu Item behaviour (reference only).
-- Gesture Manager 3.9: the radial preview.
+- The owner's Menu Tool specification (`Menu-Tool.md`).
+- VRCFury (reference only): the Parameter Compressor (`Editor-Avatars/Service/Compressor/ParameterCompressorService.cs`), followed for the compressed budget; its menu path and Full Controller rewrite rules; Move / Reorder Menu Item and Set Icon behaviour.
+- Gesture Manager 3.9.9: its radial menu, called by reflection, for the preview.
 - Modular Avatar: menu installers and items, read by type name (currently off).
