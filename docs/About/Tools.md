@@ -81,3 +81,7 @@ Extract Animations (Animator Tools): copies a model's animation clips into an An
 ## Menu Mockup
 
 Menu Mockup: lays out an example editor window from blocks (every component is a block, blocks nest and lay out like flexbox) using a Components palette. Mockups are saved as .yml files in Documents/RiryTools/Mockups; nothing is compiled.
+
+## Animator Presets
+
+Animator Presets: a separate package (`com.riry.animatortemplates`) of animator templates. YGDR templates (layers and blend trees) appear in YGDR Animator Editor's layer **+** menu and **Import Template** list; MACS templates (blend trees) appear in a **Riry** submenu of the Animator window's blend tree right-click and are inserted with a window that names each parameter, remakes the AAP clips and adds missing parameters, as one undo step. Needs the VRChat SDK (Harmony) and the tool each extends.
