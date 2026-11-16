@@ -38,6 +38,8 @@ Shader "Hidden/RiryTools/IconCap/Effects"
     float _Levels;
     float _Amount;
     float _HasLayer;
+    float4 _LayerOffset;
+    float _LayerScale;
     float _Opaque;
 
     struct v2f
@@ -70,6 +72,16 @@ Shader "Hidden/RiryTools/IconCap/Effects"
         return float4(c.rgb, c.a * inside);
     }
 
+    // The layer moved by _LayerOffset pixels (x right, y down) and scaled by _LayerScale around
+    // the centre; transparent outside the texture.
+    float4 Layer (float2 uv)
+    {
+        float2 at = (uv - 0.5 - float2(_LayerOffset.x, -_LayerOffset.y) * _MainTex_TexelSize.xy) / max(_LayerScale, 1e-3) + 0.5;
+        float inside = step(0, at.x) * step(at.x, 1) * step(0, at.y) * step(at.y, 1);
+        float4 c = tex2Dlod(_LayerTex, float4(saturate(at), 0, 0)) * _Tint;
+        return float4(c.rgb, c.a * inside);
+    }
+
     float Luma (float3 c)
     {
         return dot(c, float3(0.2126, 0.7152, 0.0722));
@@ -98,7 +110,7 @@ Shader "Hidden/RiryTools/IconCap/Effects"
         ZTest Always
         Blend Off
 
-        // 0 Overlay: the layer over the image.
+        // 0 Overlay: the layer (moved and scaled) over the image.
         Pass
         {
             CGPROGRAM
@@ -106,12 +118,12 @@ Shader "Hidden/RiryTools/IconCap/Effects"
             #pragma fragment frag
             float4 frag (v2f i) : SV_Target
             {
-                return Over(tex2D(_LayerTex, i.uv) * _Tint, tex2D(_MainTex, i.uv));
+                return Over(Layer(i.uv), tex2D(_MainTex, i.uv));
             }
             ENDCG
         }
 
-        // 1 Draw under: the layer behind the image.
+        // 1 Draw under: the layer (moved and scaled) behind the image.
         Pass
         {
             CGPROGRAM
@@ -119,7 +131,7 @@ Shader "Hidden/RiryTools/IconCap/Effects"
             #pragma fragment frag
             float4 frag (v2f i) : SV_Target
             {
-                return Over(tex2D(_MainTex, i.uv), tex2D(_LayerTex, i.uv) * _Tint);
+                return Over(tex2D(_MainTex, i.uv), Layer(i.uv));
             }
             ENDCG
         }
@@ -443,3 +455,4 @@ Shader "Hidden/RiryTools/IconCap/Effects"
 // Pass 18       Composite: colour with the alpha pass as alpha (_MaskTex), or opaque (_Opaque).
 // Pass 19       Lat/long unwrap of _Cube for the HDRI ambient light.
 // Over / Image  Straight-alpha "over"; the image, transparent outside 0-1.
+// Layer         Overlay and Draw under's texture, moved by _LayerOffset pixels and scaled by _LayerScale.

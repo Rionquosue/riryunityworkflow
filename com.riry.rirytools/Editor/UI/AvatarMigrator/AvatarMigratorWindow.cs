@@ -1,0 +1,477 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using UnityEditor;
+using UnityEngine;
+
+namespace Riry.RiryTools.Editor
+{
+    /// <summary>
+    /// Avatar Migration Assistant: copies components and settings from an old avatar
+    /// (source) to a new one (target), and retargets the new one's animations; the source
+    /// and the original files are never changed. This is the main window; its parts are in
+    /// Editor/AvatarMigrator/, named by what they do. Copy: the object map
+    /// (AvatarMigratorMatchObjects.cs), Manual matching when anything is unmatched or on every run with
+    /// Manual matching on (AvatarMigratorMatchWindow.cs), the up-front check (AvatarMigratorPreFlightWindow.cs), the
+    /// run (AvatarMigratorCopyRun.cs and its parts) and its report (AvatarMigratorRunReport.cs). Retarget animations:
+    /// AvatarMigratorRetargetAnim.cs, AvatarMigratorRetargetAnim.VRCFuryMover.cs and AvatarMigratorMigratedFolder.cs. Without the VRChat
+    /// SDK it still runs with the VRChat parts left out; opening it then shows the VRC SDK
+    /// notice (AvatarMigratorSdkNoticeWindow.cs). Opened from Tools > RiryTools > Avatar Migration Assistant
+    /// and the Main Menu's Tools tab (in its own window).
+    /// </summary>
+    internal sealed class AvatarMigratorWindow : EditorWindow
+    {
+        internal const string Title = "Avatar Migration Assistant";
+        // The VRChat Avatars SDK is in the project when this type is.
+        private const string SdkProbeType = "VRC.SDK3.Avatars.Components.VRCAvatarDescriptor";
+        private static readonly string[] ListNames = { "Common", "All" };
+        private static readonly string[] AddReplace = { "Add", "Replace" };
+
+        private static bool? sdkPresent;
+
+        [SerializeField] private GameObject source;
+        [SerializeField] private GameObject target;
+        [SerializeField] private string lastRun = "";
+        [SerializeField] private List<GameObject> ignore = new List<GameObject>();
+        // Feature 9: the target's child prefabs included in Retarget animations.
+        [SerializeField] private List<GameObject> includedPrefabs = new List<GameObject>();
+        // The map of the last run, used again by Retarget animations for the same avatars.
+        [SerializeField] private AvatarMigratorMatchObjects lastMap;
+        [SerializeField] private bool foldMatching = true;
+        [SerializeField] private bool foldCopy = true;
+        [SerializeField] private bool foldIgnore;
+        [SerializeField] private bool foldAnimations;
+        [SerializeField] private List<string> openTypes = new List<string>();
+        [SerializeField] private Vector2 scroll;
+
+        [NonSerialized] private AvatarMigratorSettings settings;
+        [NonSerialized] private List<Transform> targetPrefabs;
+
+        internal static void Open()
+        {
+            AvatarMigratorWindow window = GetWindow<AvatarMigratorWindow>(Title);
+            window.minSize = new Vector2(420f, 360f);
+            window.Show();
+            EditorApplication.delayCall += AvatarMigratorSdkNoticeWindow.ShowIfNeeded;
+        }
+
+        /// <summary>The Main Menu's Tools tab: the tool in its own floating window.</summary>
+        internal static void OpenPopup()
+        {
+            AvatarMigratorWindow window = GetWindow<AvatarMigratorWindow>(true, Title);
+            window.minSize = new Vector2(420f, 360f);
+            window.Show();
+            EditorApplication.delayCall += AvatarMigratorSdkNoticeWindow.ShowIfNeeded;
+        }
+
+        private AvatarMigratorSettings Settings
+        {
+            get { return settings ?? (settings = AvatarMigratorSettings.Load()); }
+        }
+
+        /// <summary>Whether the VRChat Avatars SDK is in the project, found by type name in the loaded assemblies.</summary>
+        internal static bool SdkPresent
+        {
+            get
+            {
+                if (sdkPresent.HasValue) return sdkPresent.Value;
+                sdkPresent = RiryToolsTypes.Named(SdkProbeType) != null;
+                return sdkPresent.Value;
+            }
+        }
+
+        private void OnHierarchyChange()
+        {
+            targetPrefabs = null;
+            Repaint();
+        }
+
+        private void OnFocus()
+        {
+            targetPrefabs = null;
+        }
+
+        // ---- Drawing ----------------------------------------------------------------
+
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed -= DropLastMap;
+            Undo.undoRedoPerformed += DropLastMap;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= DropLastMap;
+        }
+
+        // After Undo or Redo the last run's map can point at objects the run made, so Retarget builds a new one.
+        private void DropLastMap()
+        {
+            lastMap = null;
+        }
+
+        private void OnGUI()
+        {
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            GameObject before = target;
+            source = SceneObject("Source (old avatar)", source);
+            target = SceneObject("Target (new avatar)", target);
+            if (target != before) targetPrefabs = null;
+
+            EditorGUI.BeginChangeCheck();
+            DrawMatching();
+            DrawCopy();
+            DrawIgnore();
+            DrawAnimations();
+            if (EditorGUI.EndChangeCheck()) Settings.Save();
+            EditorGUILayout.EndScrollView();
+
+            string problem = Problem();
+            if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Info);
+            using (new EditorGUI.DisabledScope(problem != null))
+            {
+                if (GUILayout.Button("Copy", GUILayout.Height(28f))) EditorApplication.delayCall += Run;
+            }
+            if (lastRun.Length > 0) EditorGUILayout.HelpBox(lastRun, MessageType.None);
+        }
+
+        private void DrawMatching()
+        {
+            foldMatching = EditorGUILayout.Foldout(foldMatching, "Matching", true);
+            if (!foldMatching) return;
+            EditorGUI.indentLevel++;
+            Settings.StructureTolerance = Mathf.Max(0f, EditorGUILayout.FloatField(new GUIContent("Structure tolerance",
+                "How far apart, in avatar-root space, an object and a candidate under the matched parent may be to match by structure."),
+                Settings.StructureTolerance));
+            Settings.ManualMatching = EditorGUILayout.Toggle(new GUIContent("Manual matching",
+                "Open Manual matching on every run, listing every object. Off: it opens only when something is unmatched."),
+                Settings.ManualMatching);
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawCopy()
+        {
+            foldCopy = EditorGUILayout.Foldout(foldCopy, "Copy", true);
+            if (!foldCopy) return;
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField(new GUIContent("Types: " + AvatarMigratorCopyTypes.FilePath, "Edit this file to change the list; it is read again when it changes."),
+                EditorStyles.wordWrappedMiniLabel);
+            // Indented like the controls around it (GUILayout.Toolbar ignores the indent level).
+            Rect toolbar = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
+            Settings.ShowAll = GUI.Toolbar(toolbar, Settings.ShowAll ? 1 : 0, ListNames) == 1;
+            // Grouped by category (the file's kinds of type); each category folds.
+            var categories = new List<string>();
+            foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
+            {
+                if ((type.Common || Settings.ShowAll) && !categories.Contains(type.Category)) categories.Add(type.Category);
+            }
+            foreach (string category in categories)
+            {
+                string key = "category:" + category;
+                bool open = EditorGUILayout.Foldout(openTypes.Contains(key), category, true);
+                if (open != openTypes.Contains(key))
+                {
+                    if (open) openTypes.Add(key);
+                    else openTypes.Remove(key);
+                }
+                if (!open) continue;
+                EditorGUI.indentLevel++;
+                foreach (AvatarMigratorCopyType type in AvatarMigratorCopyTypes.All)
+                {
+                    if (type.Category == category && (type.Common || Settings.ShowAll)) DrawType(type);
+                }
+                EditorGUI.indentLevel--;
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawType(AvatarMigratorCopyType type)
+        {
+            AvatarMigratorTypeSettings typeSettings = Settings.Type(type);
+            bool sdkMissing = type.NeedsSdk && !SdkPresent;
+            bool available = type.Available && !sdkMissing;
+            string label = type.Label + (sdkMissing ? " (VRC SDK not detected)" : !type.Available ? " (not in project)" : "");
+            bool open = openTypes.Contains(type.Id);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(!available))
+                {
+                    typeSettings.Enabled = EditorGUILayout.ToggleLeft(label, typeSettings.Enabled);
+                }
+                if (available && typeSettings.Enabled)
+                {
+                    bool now = GUILayout.Toggle(open, open ? "Options ▲" : "Options ▼", EditorStyles.miniButton, GUILayout.Width(80f));
+                    if (now != open)
+                    {
+                        if (now) openTypes.Add(type.Id);
+                        else openTypes.Remove(type.Id);
+                        open = now;
+                    }
+                }
+            }
+            if (!available || !typeSettings.Enabled || !open) return;
+            EditorGUI.indentLevel++;
+            bool creates = type.Rule != AvatarMigratorCopyTypes.SkinnedMeshRenderersRule && type.Rule != AvatarMigratorCopyTypes.DescriptorRule;
+            bool replaces = creates && type.Rule != AvatarMigratorCopyTypes.TransformsRule;
+            if (creates)
+                typeSettings.CreateMissing = EditorGUILayout.Toggle(new GUIContent("Create missing objects",
+                    "Make target objects for source objects that are still unmatched, under the nearest matched parent."), typeSettings.CreateMissing);
+            if (replaces)
+                typeSettings.Replace = EditorGUILayout.Popup(new GUIContent("Existing on target",
+                    "Add: alongside the target's own, skipping any that is identical. Replace: remove the target's first, on the objects " +
+                    "the source copies into (not on ignored objects, objects only the target has, or child prefabs)."),
+                    typeSettings.Replace ? 1 : 0, ToContents(AddReplace)) == 1;
+            switch (type.Rule)
+            {
+                case AvatarMigratorCopyTypes.TransformsRule:
+                    Settings.TransformPosition = EditorGUILayout.Toggle("Position", Settings.TransformPosition);
+                    Settings.TransformRotation = EditorGUILayout.Toggle("Rotation", Settings.TransformRotation);
+                    Settings.TransformScale = EditorGUILayout.Toggle("Scale", Settings.TransformScale);
+                    Settings.TransformTagLayer = EditorGUILayout.Toggle("Tag and layer", Settings.TransformTagLayer);
+                    Settings.TransformActive = EditorGUILayout.Toggle("Active state", Settings.TransformActive);
+                    break;
+                case AvatarMigratorCopyTypes.SkinnedMeshRenderersRule:
+                    Settings.SkinnedSettings = EditorGUILayout.Toggle("Settings", Settings.SkinnedSettings);
+                    Settings.SkinnedBlendshapes = EditorGUILayout.Toggle(new GUIContent("Blendshapes", "Values matched by name."), Settings.SkinnedBlendshapes);
+                    Settings.SkinnedMaterials = EditorGUILayout.Toggle("Materials", Settings.SkinnedMaterials);
+                    Settings.SkinnedBounds = EditorGUILayout.Toggle("Bounds", Settings.SkinnedBounds);
+                    break;
+                case AvatarMigratorCopyTypes.AnimatorsRule:
+                    Settings.RootAnimator = EditorGUILayout.Toggle(new GUIContent("Root animator", "Also the Animator on the avatar root."), Settings.RootAnimator);
+                    break;
+                case AvatarMigratorCopyTypes.DescriptorRule:
+                    Settings.DescriptorViewpoint = EditorGUILayout.Toggle("Viewpoint", Settings.DescriptorViewpoint);
+                    Settings.DescriptorLipSync = EditorGUILayout.Toggle("Lip sync and visemes", Settings.DescriptorLipSync);
+                    Settings.DescriptorEyeLook = EditorGUILayout.Toggle("Eye look", Settings.DescriptorEyeLook);
+                    Settings.DescriptorPlayableLayers = EditorGUILayout.Toggle("Playable layers", Settings.DescriptorPlayableLayers);
+                    Settings.DescriptorExpressions = EditorGUILayout.Toggle("Expressions", Settings.DescriptorExpressions);
+                    Settings.DescriptorColliders = EditorGUILayout.Toggle("Colliders", Settings.DescriptorColliders);
+                    Settings.DescriptorBlueprintId = EditorGUILayout.ToggleLeft("Copy original blueprint ID?", Settings.DescriptorBlueprintId);
+                    Settings.DescriptorAvatarScale = EditorGUILayout.Toggle(new GUIContent("Avatar scale",
+                        "Copy the root scale and move the viewpoint to match."), Settings.DescriptorAvatarScale);
+                    break;
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawIgnore()
+        {
+            foldIgnore = EditorGUILayout.Foldout(foldIgnore, "Ignore list", true);
+            if (!foldIgnore) return;
+            EditorGUI.indentLevel++;
+            for (int i = 0; i <= ignore.Count; i++)
+            {
+                GameObject current = i < ignore.Count ? ignore[i] : null;
+                var chosen = SceneObject(i == 0 ? "Ignore" : " ", current);
+                if (chosen == current) continue;
+                if (chosen != null && (chosen == source || chosen == target))
+                {
+                    ShowNotification(new GUIContent("The avatar root can't be ignored."));
+                    continue;
+                }
+                if (i == ignore.Count)
+                {
+                    if (chosen != null) ignore.Add(chosen);
+                }
+                else ignore[i] = chosen;
+                AvatarMigratorIgnoreList.DropEmpty(ignore);
+                break;
+            }
+            Settings.IgnoreChildren = EditorGUILayout.Toggle(new GUIContent("Include children", "Everything below an ignored object is ignored too."),
+                Settings.IgnoreChildren);
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawAnimations()
+        {
+            foldAnimations = EditorGUILayout.Foldout(foldAnimations, "Animations", true);
+            if (!foldAnimations) return;
+            EditorGUI.indentLevel++;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField(new GUIContent("Migrated folder", "Every file the tool creates goes here, at its original path."),
+                    new GUIContent(Settings.MigratedFolder.Length > 0 ? Settings.MigratedFolder : "(asked for when needed)", Settings.MigratedFolder));
+                if (GUILayout.Button("Browse", GUILayout.Width(70f)))
+                {
+                    string chosen = AvatarMigratorMigratedFolder.Choose(Settings.MigratedFolder);
+                    if (chosen != null)
+                    {
+                        Settings.MigratedFolder = chosen;
+                        GUI.changed = true;
+                    }
+                    RiryToolGUI.ExitAfterModal();
+                }
+            }
+            if (target != null)
+            {
+                if (targetPrefabs == null) targetPrefabs = new AvatarMigratorPrefabScope(target.transform).OutermostChildPrefabs();
+                if (targetPrefabs.Count > 0) EditorGUILayout.LabelField("Child prefabs on the target", EditorStyles.boldLabel);
+                foreach (Transform prefab in targetPrefabs)
+                {
+                    bool included = includedPrefabs.Contains(prefab.gameObject);
+                    bool now = EditorGUILayout.ToggleLeft(new GUIContent("Include child prefab: " + prefab.name,
+                        AnimationUtility.CalculateTransformPath(prefab, target.transform)), included);
+                    if (now == included) continue;
+                    if (now) includedPrefabs.Add(prefab.gameObject);
+                    else includedPrefabs.Remove(prefab.gameObject);
+                }
+            }
+            using (new EditorGUI.DisabledScope(Problem() != null))
+            {
+                if (GUILayout.Button(new GUIContent("Retarget animations", "Duplicate the target's controllers and clips into the migrated folder " +
+                        "with their paths rewritten for the target, and point the target at the duplicates.")))
+                    EditorApplication.delayCall += Retarget;
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        private static GUIContent[] ToContents(string[] names)
+        {
+            var contents = new GUIContent[names.Length];
+            for (int i = 0; i < names.Length; i++) contents[i] = new GUIContent(names[i]);
+            return contents;
+        }
+
+        private static GameObject SceneObject(string label, GameObject current)
+        {
+            var chosen = (GameObject)EditorGUILayout.ObjectField(label, current, typeof(GameObject), true);
+            return chosen != null && EditorUtility.IsPersistent(chosen) ? current : chosen;
+        }
+
+        // Why a run cannot start, or null. Copying an avatar onto itself is blocked.
+        private string Problem()
+        {
+            if (source == null || target == null) return "Set the source and the target avatar.";
+            if (source == target || target.transform.IsChildOf(source.transform) || source.transform.IsChildOf(target.transform))
+                return "The source and target must be two separate avatars.";
+            return null;
+        }
+
+        // ---- Running ----------------------------------------------------------------
+
+        // Features 1 and 2: the map, confirmed in Manual matching when needed; null when cancelled.
+        private AvatarMigratorMatchObjects BuildMap()
+        {
+            AvatarMigratorMatchObjects map = AvatarMigratorMatchObjects.Build(source.transform, target.transform, Settings.StructureTolerance);
+            if (Settings.ManualMatching || map.Unmatched().Count > 0)
+            {
+                Dictionary<string, Transform> unused;
+                if (!AvatarMigratorMatchWindow.Review(map, Settings.ManualMatching, null, out unused)) return null;
+            }
+            return map;
+        }
+
+        private void Run()
+        {
+            if (Problem() != null) return;
+            AvatarMigratorMatchObjects map = BuildMap();
+            if (map == null)
+            {
+                Finish("Cancelled. Nothing was changed.");
+                return;
+            }
+            AvatarMigratorIgnoreList.DropEmpty(ignore);
+            HashSet<Transform> ignored = AvatarMigratorIgnoreList.Resolve(map, ignore, Settings.IgnoreChildren);
+            AvatarMigratorPreFlightAnswers answers;
+            if (!AvatarMigratorPreFlightWindow.Run(map, Settings, ignored, out answers))
+            {
+                Finish("Aborted. Nothing was changed.");
+                return;
+            }
+            AvatarMigratorRunReport report = AvatarMigratorCopyRun.Execute(map, Settings, answers, ignored);
+            lastMap = map;
+            // Prefabs placed again from unpacked ones are the old avatar's own parts: their animations are retargeted too.
+            foreach (GameObject placed in report.RepackedRoots)
+            {
+                if (placed != null && !includedPrefabs.Contains(placed)) includedPrefabs.Add(placed);
+            }
+            targetPrefabs = null;
+            Finish(report.Summary);
+            AvatarMigratorRunReportWindow.Open(report);
+        }
+
+        // Feature 8: needs the map, so features 1 and 2 run first when there is none for these avatars.
+        private void Retarget()
+        {
+            if (Problem() != null) return;
+            AvatarMigratorMatchObjects map = lastMap != null && lastMap.SourceRoot == source.transform && lastMap.TargetRoot == target.transform
+                ? lastMap
+                : BuildMap();
+            if (map == null)
+            {
+                Finish("Cancelled. Nothing was changed.");
+                return;
+            }
+            if (!AvatarMigratorMigratedFolder.Ensure(Settings))
+            {
+                Finish("Retarget animations needs a folder for the migrated files. Nothing was changed.");
+                return;
+            }
+            var included = new HashSet<Transform>();
+            foreach (GameObject prefab in includedPrefabs)
+            {
+                if (prefab != null && prefab.transform.IsChildOf(target.transform)) included.Add(prefab.transform);
+            }
+            var report = new AvatarMigratorRunReport();
+            if (!AvatarMigratorRetargetAnim.Run(map, Settings, included, report))
+            {
+                Finish("Cancelled. Nothing was changed.");
+                return;
+            }
+            lastMap = map;
+            Finish("Animations retargeted: " + report.FilesCreated.Count + " file" + (report.FilesCreated.Count == 1 ? "" : "s") + " created.");
+            AvatarMigratorRunReportWindow.Open(report);
+        }
+
+        private void Finish(string result)
+        {
+            lastRun = result;
+            Repaint();
+        }
+    }
+}
+
+// ============================================================================
+// GLOSSARY: Avatar Migration Assistant window
+// The menu entry, Tools > RiryTools > Avatar Migration Assistant (menu key N), is in RiryToolsMenuBar.cs;
+// the Main Menu's Tools tab opens it in its own window (OpenPopup). Its parts are in Editor/AvatarMigrator/:
+//   AvatarMigratorMatchObjects.cs (1, the object map), AvatarMigratorMatchWindow.cs (2), types.yml (3 and 14, the type list, read in this file),
+//   AvatarMigratorSettings.cs (EditorPrefs),
+//   AvatarMigratorPreFlightWindow.cs (everything up front), AvatarMigratorCopyRun.cs (the run, 4 and 15), AvatarMigratorCopyRun.TypeRules.cs, AvatarMigratorCopyRun.Prefabs.cs (11),
+//   AvatarMigratorCopyRun.UpgradeConstraints.cs, AvatarMigratorCopyRun.RepointReferences.cs (5 and 12), AvatarMigratorCopyRun.CorrectRotation.cs (7), AvatarMigratorCopyRun.CorrectScale.cs (6), AvatarMigratorIgnoreList.cs (13),
+//   AvatarMigratorCopyRun.RepackPrefabs.cs (unpacked prefabs placed again as child prefabs),
+//   AvatarMigratorRunReport.cs, AvatarMigratorRetargetAnim.cs (8), AvatarMigratorRetargetAnim.VRCFuryMover.cs (9), AvatarMigratorMigratedFolder.cs (10),
+//   AvatarMigratorSdkNoticeWindow.cs (the VRC SDK not detected popup).
+// ============================================================================
+//
+// AvatarMigratorWindow (this file)
+//   SdkPresent               The VRChat SDK, found by type name. Without it, Open shows AvatarMigratorSdkNoticeWindow and the
+//                            VRChat types are shown as not available; the rest still runs.
+//   Source / Target          Scene avatars (old and new); copying an avatar onto itself, or onto one inside it, is blocked.
+//   Matching                 Structure tolerance, Manual matching.
+//   Copy                     The type list's file; Common / All; the entries grouped by category (each folds); per entry:
+//                            Enabled, Options (Create missing objects, Existing on target: Add or Replace, and the
+//                            sub-options of Transforms, SkinnedMeshRenderers, Animators and the Avatar Descriptor).
+//   Ignore list              Objects on either avatar (not the roots), Include children.
+//   Animations               Migrated folder (Browse), Include child prefab per target child prefab, Retarget animations.
+//   Copy / Run()             Map (BuildMap: features 1 and 2), ignore list, up-front check, the run, the report popup.
+//   Retarget()               The last run's map for the same avatars, else BuildMap; the migrated folder; AvatarMigratorRetargetAnim.
+//   Open() / OpenPopup()     The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window); both show the
+//                            VRC SDK notice when the SDK is missing.
+//   [SerializeField]         source, target, lastRun, ignore, includedPrefabs, lastMap, the fold states, openTypes, scroll.
+//   DropLastMap()            Undo.undoRedoPerformed: forgets lastMap, so Retarget rebuilds the map after Undo or Redo.
+//
+// ---- Type list (this file) ----
+// AvatarMigrator/types.yml  The template: every type from Pumkin's Avatar Tools, sorted by kind into categories;
+//                       each entry has id, label, common, enabled, sdk, rule and types.
+// Documents/RiryTools/migrator/types.yml  The copy the tool reads (made from the template when missing); users edit it.
+// AvatarMigratorCopyType        One entry: Id, Label, Category, Common, DefaultEnabled, NeedsSdk, Rule, TypeNames; Types (found in
+//                       this project, Namespace.* expanded), Available.
+// AvatarMigratorCopyTypes
+//   All / WithRule(rule)  The entries in run order (RunOrder: feature 3's order, then the rest in file order), read again
+//                       when the file changes; the first entry with a built-in rule.
+//   Rules               prefabs, transforms, meshrenderers, skinnedmeshrenderers, animators, cameras, descriptor,
+//                       unityconstraint: the entries the run treats specially.
+//   Resolve / Find / FindByName  Types by name across the loaded assemblies (cached).
+// AvatarMigratorYaml              The YAML subset the list uses: maps, lists, "- key: value" maps, # comments.

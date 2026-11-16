@@ -120,11 +120,13 @@ namespace Riry.RiryTools.Editor
 
         /// <summary>
         /// The decorators of the folder: every tag, and every "_word" ending of its files'
-        /// names whose word is not a tag.
+        /// names whose word is not a tag, as far as the filters listen to them (UseTags, UseEndings);
+        /// with neither, files are told apart by extension only.
         /// </summary>
         internal static HashSet<string> Decorators(string folder)
         {
-            var decorators = new HashSet<string>(ImportPresetPreferences.Tags(), StringComparer.Ordinal);
+            var decorators = new HashSet<string>(ImportPresetPreferences.UseTags ? ImportPresetPreferences.Tags() : new List<string>(), StringComparer.Ordinal);
+            if (!ImportPresetPreferences.UseEndings) return decorators;
             foreach (string path in Files(folder))
             {
                 string ending = Ending(path);
@@ -184,7 +186,7 @@ namespace Riry.RiryTools.Editor
         /// <summary>True when the folder itself holds a .blend file.</summary>
         internal static bool HasBlend(string folder)
         {
-            return Directory.Exists(folder) && Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension).Length > 0;
+            return Directory.Exists(folder) && Directory.GetFiles(folder, "*." + ImportPresetBetterFBX.SourceExtension).Length > 0;
         }
 
         /// <summary>The file types in the folders, each with the library presets that fit any of its files.</summary>
@@ -298,17 +300,80 @@ namespace Riry.RiryTools.Editor
         {
             if (HandEdited(folder)) return false;
             ImportPresetMarker.Rules before = Read(folder);
+            ImportPresetMarker.Rules after = After(folder, picks, betterFbx);
+            bool changed;
+            WriteMarker(folder, after.IsEmpty ? null : ImportPresetMarker.Generate(after), out changed);
+
+            foreach (KeyValuePair<AssetImporter, ImportPresetMarker.Target> change in Changes(folder, before, after))
+            {
+                AssetImporter listed = change.Key;
+                ImportPresetMarker.Target now = change.Value;
+                string path = listed.assetPath;
+                // A model set to Automatically extract animations is extracted as Generic first.
+                var model = listed as ModelImporter;
+                if (model != null && ImportPresetAnimations.ShouldExtract(path))
+                {
+                    ImportPresetAnimations.ExtractPreservingSettings(model, ImportPresetAnimationExtraction.Load(path),
+                        ImportPresetOwnedFiles.IsUnchanged, false);
+                }
+                AssetImporter importer = AssetImporter.GetAtPath(path);
+                string applied;
+                if (importer == null || !ImportPresetLibrary.TryApply(importer, now.Configuration, now.Preset, out applied)) continue;
+                importer.SaveAndReimport();
+                processed++;
+            }
+            if (betterFbx == true && !before.BetterFbx.Contains(ImportPresetBetterFBX.SourceExtension))
+            {
+                foreach (string file in Directory.GetFiles(folder, "*." + ImportPresetBetterFBX.SourceExtension))
+                {
+                    ImportPresetPostprocessor.ExportOne(folder.TrimEnd('/') + "/" + Path.GetFileName(file), false);
+                    processed++;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// How many files Apply would reimport with a new preset or export with Better FBX, changing nothing; 0 for a
+        /// hand-edited ImportPreset.md. The windows show it before Apply, which Undo can't revert.
+        /// </summary>
+        internal static int WouldChange(string folder, IEnumerable<Pick> picks, bool? betterFbx)
+        {
+            if (HandEdited(folder)) return 0;
+            ImportPresetMarker.Rules before = Read(folder);
+            int count = Changes(folder, before, After(folder, picks, betterFbx)).Count;
+            if (betterFbx == true && !before.BetterFbx.Contains(ImportPresetBetterFBX.SourceExtension))
+                count += Directory.GetFiles(folder, "*." + ImportPresetBetterFBX.SourceExtension).Length;
+            return count;
+        }
+
+        /// <summary>Asks before an Apply that reimports files, which Undo can't revert. True to go on (also when nothing changes).</summary>
+        internal static bool ConfirmApply(int files, string where)
+        {
+            return files == 0 || EditorUtility.DisplayDialog("Set Folder Import Presets", "Apply changes the import settings of " + files +
+                " file(s) in " + where + " and reimports them (models set to extract animations are extracted again, and .blend " +
+                "files are exported when Better FBX is turned on).\n\nCtrl+Z can't revert import settings or exported files. " +
+                "Commit or back up first if you may want them back.", "Apply", "Cancel");
+        }
+
+        // The folder's rules with the picks and Better FBX choice applied.
+        private static ImportPresetMarker.Rules After(string folder, IEnumerable<Pick> picks, bool? betterFbx)
+        {
             ImportPresetMarker.Rules after = Read(folder);
             foreach (Pick pick in picks) after.Set(pick.Label, pick.Configuration, pick.Configuration != null ? pick.Preset : null);
             if (betterFbx.HasValue)
             {
-                after.BetterFbx.Remove(BetterFbxExporter.SourceExtension);
-                if (betterFbx.Value) after.BetterFbx.Add(BetterFbxExporter.SourceExtension);
+                after.BetterFbx.Remove(ImportPresetBetterFBX.SourceExtension);
+                if (betterFbx.Value) after.BetterFbx.Add(ImportPresetBetterFBX.SourceExtension);
             }
-            bool changed;
-            WriteMarker(folder, after.IsEmpty ? null : ImportPresetMarker.Generate(after), out changed);
+            return after;
+        }
 
-            // Each file once, by the preset it gets now (its decorator's, else its plain type's).
+        // Each file once, with the preset it gets now (its decorator's, else its plain type's), when that changed.
+        private static List<KeyValuePair<AssetImporter, ImportPresetMarker.Target>> Changes(string folder,
+            ImportPresetMarker.Rules before, ImportPresetMarker.Rules after)
+        {
+            var changes = new List<KeyValuePair<AssetImporter, ImportPresetMarker.Target>>();
             HashSet<string> decorators = Decorators(folder);
             var done = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, List<AssetImporter>> type in InFolder(folder))
@@ -321,30 +386,10 @@ namespace Riry.RiryTools.Editor
                     if (now.Configuration == null || Same(Effective(before, listed, decorators), now)) continue;
                     // A Better FBX source is not configured itself; its exported FBX is.
                     if (after.BetterFbx.Contains(ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path)))) continue;
-                    // A model set to Automatically extract animations is extracted as Generic first.
-                    var model = listed as ModelImporter;
-                    if (model != null && ImportPresetAnimations.ShouldExtract(path))
-                    {
-                        List<string> skipped;
-                        ImportPresetAnimations.ExtractPreservingSettings(model, AnimationExtractSettings.Load(path),
-                            ImportPresetOwnedFiles.IsUnchanged, out skipped);
-                    }
-                    AssetImporter importer = AssetImporter.GetAtPath(path);
-                    string applied;
-                    if (importer == null || !ImportPresetLibrary.TryApply(importer, now.Configuration, now.Preset, out applied)) continue;
-                    importer.SaveAndReimport();
-                    processed++;
+                    changes.Add(new KeyValuePair<AssetImporter, ImportPresetMarker.Target>(listed, now));
                 }
             }
-            if (betterFbx == true && !before.BetterFbx.Contains(BetterFbxExporter.SourceExtension))
-            {
-                foreach (string file in Directory.GetFiles(folder, "*." + BetterFbxExporter.SourceExtension))
-                {
-                    ImportPresetPostprocessor.ExportOne(folder.TrimEnd('/') + "/" + Path.GetFileName(file), false);
-                    processed++;
-                }
-            }
-            return true;
+            return changes;
         }
 
         /// <summary>
@@ -383,10 +428,29 @@ namespace Riry.RiryTools.Editor
             {
                 return File.Exists(path) ? File.ReadAllText(path) : null;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                // An unreadable marker is left alone like a hand-edited one; this says why.
+                ImportPresetLibrary.ReportOnce("read:" + path + "|" + exception.Message, "Could not read " + path +
+                    ", so it is treated as hand-edited and left unchanged: " + exception.Message);
                 return null;
             }
         }
     }
 }
+
+// ============================================================================
+// GLOSSARY: Import Presets folder rules
+// ============================================================================
+//
+// ImportPresetFolderRules (this file): shared with the right-click popup
+//   Label(importer)          "Image files", "Model files", "Audio files", "Video files", "Font files", else "<Type> files".
+//   Ending / Decorators / DecoratorIn / DecoratorLabel  Tags ("normal files") and "_word" name endings (not
+//                            number-only; "_normal files") as file types; a name containing several uses the one ending last.
+//   InFolder(folder)         Importers of the files directly in the folder, by file type (decorated files under both types).
+//   Effective(rules, importer, decorators)  A file's preset: its decorator's type's, else its plain type's.
+//   Types(folders)           The file types with the library presets that fit each (Preset.CanBeAppliedTo).
+//   Entries / Chosen / FirstIn  Popup entries ("None", "Configuration/Preset"), the pick for an entry, a configuration's preset.
+//   Apply(folder, picks, betterFbx, ref processed)  Writes ImportPreset.md; applies only changed presets to the folder's
+//                            files (none and unchanged types are not reimported); exports .blend files when Better FBX is turned on.
+//   WriteMarker / ReadOrNull / Read / HandEdited  ImportPreset.md helpers; a hand-edited one is never changed.

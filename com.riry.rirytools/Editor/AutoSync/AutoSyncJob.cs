@@ -36,6 +36,17 @@ namespace Riry.RiryTools.Editor
             internal List<string> Files;
         }
 
+        /// <summary>What a pass did, for the Console line the main thread writes (AutoSync.Report).</summary>
+        internal sealed class Outcome
+        {
+            internal readonly List<string> Committed = new List<string>();
+            /// <summary>"remote/branch" when pushed, else null.</summary>
+            internal string PushedTo;
+            /// <summary>Committed on a detached HEAD, so not pushed.</summary>
+            internal bool Detached;
+            internal Held Held;
+        }
+
         internal string ProjectRoot;
         internal List<Save> Saves;
         internal bool Push;
@@ -44,13 +55,17 @@ namespace Riry.RiryTools.Editor
 
         private readonly Dictionary<string, string> environment = new Dictionary<string, string>();
 
-        /// <summary>Commits every save, then pushes when enabled. Returns a held push, or null. Throws on failure.</summary>
-        internal Held Execute()
+        /// <summary>Commits every save, then pushes when enabled. Returns what it did. Throws on failure.</summary>
+        internal Outcome Execute()
         {
             Open();
-            bool committed = false;
-            foreach (Save save in Saves) committed |= Commit(save);
-            return Push && committed && Remote != null ? PushBranch() : null;
+            var outcome = new Outcome();
+            foreach (Save save in Saves)
+            {
+                if (Commit(save)) outcome.Committed.Add(save.Title);
+            }
+            if (Push && outcome.Committed.Count > 0 && Remote != null) PushBranch(outcome);
+            return outcome;
         }
 
         private void Open()
@@ -84,7 +99,7 @@ namespace Riry.RiryTools.Editor
             var list = new List<string> { "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--" };
             list.AddRange(paths);
             var files = new List<string>();
-            foreach (string file in Check(Run(list.ToArray()), "Listing the saved files").Split('\0'))
+            foreach (string file in Run(list.ToArray()).RequireSuccess("Listing the saved files").Split('\0'))
             {
                 if (file.Length > 0 && !files.Contains(file) && File.Exists(Path.Combine(ProjectRoot, file))) files.Add(file);
             }
@@ -92,7 +107,7 @@ namespace Riry.RiryTools.Editor
 
             var add = new List<string> { "add", "--" };
             add.AddRange(files);
-            Check(Run(add.ToArray()), "Staging the saved files");
+            Run(add.ToArray()).RequireSuccess("Staging the saved files");
             var diff = new List<string> { "diff", "--cached", "--quiet", "--" };
             diff.AddRange(files);
             if (Run(diff.ToArray()).Succeeded) return false;
@@ -100,7 +115,7 @@ namespace Riry.RiryTools.Editor
             // With paths, git commit takes only those paths, whatever else is staged.
             var commit = new List<string> { "commit", "--quiet", "-m", save.Title, "--" };
             commit.AddRange(files);
-            Check(Run(commit.ToArray()), "Committing " + save.Title);
+            Run(commit.ToArray()).RequireSuccess("Committing " + save.Title);
             return true;
         }
 
@@ -110,22 +125,30 @@ namespace Riry.RiryTools.Editor
         /// are not pushed, since a Cloudflare proxy rejects them. On a detached HEAD
         /// nothing is pushed. Git asks its credential manager for any sign-in.
         /// </summary>
-        private Held PushBranch()
+        private void PushBranch(Outcome outcome)
         {
             string branch = Run("symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
-            if (branch.Length == 0) return null;
-            string url = GitRemotes.Url(ProjectRoot, Remote);
-            if (GitRemotes.IsHttps(url))
+            if (branch.Length == 0)
             {
-                List<string> large = GitLargeFiles.Unpushed(ProjectRoot, Remote);
-                if (large.Count > 0) return new Held { Remote = Remote, Url = url, Files = large };
+                outcome.Detached = true;
+                return;
+            }
+            string url = AutoSyncGitRemotes.Url(ProjectRoot, Remote);
+            if (AutoSyncGitRemotes.IsHttps(url))
+            {
+                List<string> large = AutoSyncGitLargeFiles.Unpushed(ProjectRoot, Remote);
+                if (large.Count > 0)
+                {
+                    outcome.Held = new Held { Remote = Remote, Url = url, Files = large };
+                    return;
+                }
             }
             var push = new List<string> { "push", "--quiet" };
             if (!Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded) push.Add("--set-upstream");
             push.Add(Remote);
             push.Add(branch);
-            Check(GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()), "Pushing " + branch + " to " + Remote);
-            return null;
+            GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()).RequireSuccess("Pushing " + branch + " to " + Remote);
+            outcome.PushedTo = Remote + "/" + branch;
         }
 
         private GitRunner.Result Run(params string[] arguments)
@@ -135,12 +158,6 @@ namespace Riry.RiryTools.Editor
             var all = new List<string> { "-c", "core.fsync=committed" };
             all.AddRange(arguments);
             return GitRunner.Run(ProjectRoot, environment, TimeoutMs, all.ToArray());
-        }
-
-        private static string Check(GitRunner.Result result, string action)
-        {
-            if (!result.Succeeded) throw new InvalidOperationException(result.Describe(action));
-            return result.Output;
         }
     }
 }

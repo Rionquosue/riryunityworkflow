@@ -1,7 +1,5 @@
 # Tutorial: VPM Publishing
 
-See the [design notes](../design/vpm-publishing.md) for how it works.
-
 ## Setup
 
 In `Rionquosue/riryunityworkflow`, add the secret `VPM_DISPATCH_TOKEN`: a

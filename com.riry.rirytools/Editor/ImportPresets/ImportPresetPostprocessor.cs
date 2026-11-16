@@ -16,6 +16,8 @@ namespace Riry.RiryTools.Editor
         private static readonly List<string> extractQueue = new List<string>();
         private static readonly List<string> exportQueue = new List<string>();
         private static bool scheduled;
+        // Presets applied on first import in this batch of imports, logged as one line when the batch ends.
+        private static readonly List<string> appliedThisBatch = new List<string>();
 
         private void OnPreprocessAsset()
         {
@@ -41,12 +43,19 @@ namespace Riry.RiryTools.Editor
             }
             if (target.Configuration == null) return;
             string applied;
-            ImportPresetLibrary.TryApply(assetImporter, target.Configuration, target.Preset, out applied);
+            if (ImportPresetLibrary.TryApply(assetImporter, target.Configuration, target.Preset, out applied))
+                appliedThisBatch.Add(path + " (" + target.Configuration + "/" + applied + ")");
         }
 
         private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved,
             string[] movedFrom)
         {
+            if (appliedThisBatch.Count > 0)
+            {
+                RiryLog.Info(RiryLog.ImportPresets, "Applied folder import presets to " + appliedThisBatch.Count + " new file(s):\n" +
+                    string.Join("\n", appliedThisBatch));
+                appliedThisBatch.Clear();
+            }
             foreach (string path in imported)
             {
                 if (ImportPresetAnimations.IsPending(path))
@@ -71,7 +80,7 @@ namespace Riry.RiryTools.Editor
             // Only Blender files can be opened by Blender; any other listed type
             // (an .fbx would even overwrite itself) is ignored.
             string extension = ImportPresetLibrary.NormalizeExtension(Path.GetExtension(path));
-            if (extension != BetterFbxExporter.SourceExtension) return null;
+            if (extension != ImportPresetBetterFBX.SourceExtension) return null;
             ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(path);
             return rules != null && rules.BetterFbx.Contains(extension) ? rules : null;
         }
@@ -119,7 +128,8 @@ namespace Riry.RiryTools.Editor
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError("Import Presets: animation extraction failed for " + model + ":\n" + exception);
+                    RiryLog.Exception(RiryLog.ImportPresets, "Animation extraction failed for " + model, exception,
+                        AssetDatabase.LoadMainAssetAtPath(model));
                 }
             }
         }
@@ -130,30 +140,34 @@ namespace Riry.RiryTools.Editor
             if (!File.Exists(source)) return;
             try
             {
-                bool existed = File.Exists(BetterFbxExporter.FbxPathFor(source));
+                bool existed = File.Exists(ImportPresetBetterFBX.FbxPathFor(source));
                 string message;
-                string fbx = BetterFbxExporter.Export(source, force, out message);
+                string fbx = ImportPresetBetterFBX.Export(source, force, out message);
                 if (fbx == null)
                 {
+                    // A lasting state (Blender missing, a kept FBX, bad options) is reported once per session, not per file
+                    // and save; the first file it stopped is named.
                     if (message != null && !message.EndsWith("is up to date.", StringComparison.Ordinal))
-                        Debug.LogWarning("Import Presets: " + message);
+                        ImportPresetLibrary.ReportOnce("better-fbx:" + message, message + " (" + source + ")");
                     return;
                 }
-                Debug.Log("Import Presets: " + message);
-
                 // A new FBX is handled by its first import. An updated one keeps
-                // its settings, so its clips are refreshed here when configured.
+                // its settings, so its clips are refreshed here when configured; one line for both.
                 var importer = AssetImporter.GetAtPath(fbx) as ModelImporter;
-                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx)) return;
-                List<string> skipped;
-                int written = ImportPresetAnimations.ExtractPreservingSettings(importer,
-                    AnimationExtractSettings.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, out skipped);
-                Debug.Log("Import Presets: refreshed " + written + " clip(s) from " + fbx +
-                    (skipped.Count > 0 ? "; kept " + skipped.Count + " edited clip(s)." : "."));
+                if (!existed || importer == null || !ImportPresetAnimations.ShouldExtract(fbx))
+                {
+                    RiryLog.Info(RiryLog.ImportPresets, message, AssetDatabase.LoadMainAssetAtPath(fbx));
+                    return;
+                }
+                ImportPresetAnimations.Extraction result = ImportPresetAnimations.ExtractPreservingSettings(importer,
+                    ImportPresetAnimationExtraction.Load(fbx), ImportPresetOwnedFiles.IsUnchanged, false);
+                result.Log(fbx, message.TrimEnd('.') + "; refreshed " + result.Written + " clip(s) in " + result.Folder +
+                    (result.Skipped.Count > 0 ? ", kept " + result.Skipped.Count + " clip(s) that were edited or extracted from another model" : ""));
             }
             catch (Exception exception)
             {
-                Debug.LogError("Import Presets: Better FBX export failed for " + source + ":\n" + exception);
+                RiryLog.Exception(RiryLog.ImportPresets, "Better FBX export failed for " + source, exception,
+                    AssetDatabase.LoadMainAssetAtPath(source));
             }
         }
     }

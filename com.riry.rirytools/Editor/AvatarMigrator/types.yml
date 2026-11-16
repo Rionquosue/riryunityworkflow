@@ -1,0 +1,899 @@
+# Avatar Migration Assistant component types.
+#
+# Copied to Documents/RiryTools/migrator/types.yml when that file is missing; the copy is the
+# list the tool reads, so edit that one. Every type from Pumkin's Avatar Tools is here, sorted
+# by what kind of type it is.
+#
+# Each category holds entries; each entry is one checkbox in the Copy list:
+#   id:       a unique name the settings remember it by
+#   label:    the name shown
+#   common:   true to show it in the Common list (every entry shows in All)
+#   enabled:  true to start ticked
+#   sdk:      true when it needs the VRChat SDK
+#   rule:     a built-in rule the tool applies to this entry; leave it as it is
+#   types:    full type names, or Namespace.* for every component in a namespace
+#
+# A run copies the built-in entries in a fixed order (colliders before the bones that use
+# them); other entries are copied after them, in the order of this file.
+
+categories:
+  Prefabs:
+    - id: prefab
+      label: Prefabs
+      common: true
+      enabled: true
+      rule: prefabs
+
+  Transforms:
+    - id: transform
+      label: Transforms
+      common: false
+      enabled: false
+      rule: transforms
+      types:
+        - UnityEngine.Transform
+
+  Rendering:
+    - id: meshrenderer
+      label: MeshRenderers
+      common: true
+      enabled: true
+      rule: meshrenderers
+      types:
+        - UnityEngine.MeshRenderer
+    - id: skinnedmeshrenderer
+      label: SkinnedMeshRenderers
+      common: true
+      enabled: true
+      rule: skinnedmeshrenderers
+      types:
+        - UnityEngine.SkinnedMeshRenderer
+    - id: particlesystem
+      label: ParticleSystems
+      common: true
+      enabled: true
+      types:
+        - UnityEngine.ParticleSystem
+    - id: trailrenderer
+      label: TrailRenderers
+      common: true
+      enabled: true
+      types:
+        - UnityEngine.TrailRenderer
+    - id: light
+      label: Lights
+      common: true
+      enabled: true
+      types:
+        - UnityEngine.Light
+    - id: camera
+      label: Cameras
+      common: false
+      enabled: false
+      rule: cameras
+      types:
+        - UnityEngine.Camera
+
+  Audio:
+    - id: audiosource
+      label: AudioSources
+      common: true
+      enabled: true
+      types:
+        - UnityEngine.AudioSource
+        - VRC.SDK3.Avatars.Components.VRCSpatialAudioSource
+        - ONSPAudioSource
+
+  Physics:
+    - id: collider
+      label: Colliders
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.Collider
+    - id: rigidbody
+      label: Rigidbodies
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.Rigidbody
+    - id: characterjoint
+      label: Character joints
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.CharacterJoint
+    - id: configurablejoint
+      label: Configurable joints
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.ConfigurableJoint
+    - id: fixedjoint
+      label: Fixed joints
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.FixedJoint
+    - id: hingejoint
+      label: Hinge joints
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.HingeJoint
+    - id: springjoint
+      label: Spring joints
+      common: false
+      enabled: false
+      types:
+        - UnityEngine.SpringJoint
+
+  Animation:
+    - id: animator
+      label: Animators
+      common: false
+      enabled: false
+      rule: animators
+      types:
+        - UnityEngine.Animator
+
+  Unity constraints:
+    - id: aimconstraint
+      label: Aim constraints
+      common: true
+      enabled: true
+      rule: unityconstraint
+      types:
+        - UnityEngine.Animations.AimConstraint
+    - id: lookatconstraint
+      label: LookAt constraints
+      common: true
+      enabled: true
+      rule: unityconstraint
+      types:
+        - UnityEngine.Animations.LookAtConstraint
+    - id: parentconstraint
+      label: Parent constraints
+      common: true
+      enabled: true
+      rule: unityconstraint
+      types:
+        - UnityEngine.Animations.ParentConstraint
+    - id: positionconstraint
+      label: Position constraints
+      common: true
+      enabled: true
+      rule: unityconstraint
+      types:
+        - UnityEngine.Animations.PositionConstraint
+    - id: rotationconstraint
+      label: Rotation constraints
+      common: true
+      enabled: true
+      rule: unityconstraint
+      types:
+        - UnityEngine.Animations.RotationConstraint
+    - id: scaleconstraint
+      label: Scale constraints
+      common: true
+      enabled: true
+      rule: unityconstraint
+      types:
+        - UnityEngine.Animations.ScaleConstraint
+
+  VRChat dynamics:
+    - id: physbonecollider
+      label: PhysBone colliders
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider
+    - id: physbone
+      label: PhysBones
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone
+    - id: contactreceiver
+      label: Contact Receivers
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Contact.Components.VRCContactReceiver
+    - id: contactsender
+      label: Contact Senders
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Contact.Components.VRCContactSender
+
+  VRChat constraints:
+    - id: vrcaimconstraint
+      label: VRC Aim constraints
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Constraint.Components.VRCAimConstraint
+    - id: vrclookatconstraint
+      label: VRC LookAt constraints
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Constraint.Components.VRCLookAtConstraint
+    - id: vrcparentconstraint
+      label: VRC Parent constraints
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Constraint.Components.VRCParentConstraint
+    - id: vrcpositionconstraint
+      label: VRC Position constraints
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Constraint.Components.VRCPositionConstraint
+    - id: vrcrotationconstraint
+      label: VRC Rotation constraints
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Constraint.Components.VRCRotationConstraint
+    - id: vrcscaleconstraint
+      label: VRC Scale constraints
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Dynamics.Constraint.Components.VRCScaleConstraint
+
+  VRChat avatar:
+    - id: vrcstation
+      label: VRCStation
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Avatars.Components.VRCStation
+    - id: vrcheadchop
+      label: VRCHeadChop
+      common: true
+      enabled: true
+      sdk: true
+      types:
+        - VRC.SDK3.Avatars.Components.VRCHeadChop
+    - id: vrcikfollower
+      label: VRC IK Followers
+      common: false
+      enabled: false
+      sdk: true
+      types:
+        - VRC.SDKBase.VRC_IKFollower
+    - id: vrcavatardescriptor
+      label: Avatar Descriptor
+      common: true
+      enabled: true
+      sdk: true
+      rule: descriptor
+      types:
+        - VRC.SDK3.Avatars.Components.VRCAvatarDescriptor
+
+  DynamicBone:
+    - id: dynamicbonecollider
+      label: DynamicBone colliders
+      common: true
+      enabled: true
+      types:
+        - DynamicBoneCollider
+        - DynamicBonePlaneCollider
+    - id: dynamicbone
+      label: DynamicBones
+      common: true
+      enabled: true
+      types:
+        - DynamicBone
+
+  FinalIK:
+    - id: finalik
+      label: FinalIK
+      common: false
+      enabled: false
+      types:
+        - RootMotion.FinalIK.CCDIK
+        - RootMotion.FinalIK.LimbIK
+        - RootMotion.FinalIK.FABRIK
+        - RootMotion.FinalIK.AimIK
+        - RootMotion.FinalIK.FullBodyBipedIK
+        - RootMotion.FinalIK.VRIK
+        - RootMotion.FinalIK.Grounder
+        - RootMotion.FinalIK.IKExecutionOrder
+
+  VRM:
+    - id: VRM.VRMSpringBone
+      label: VRMSpringBone
+      common: true
+      enabled: false
+      types:
+        - VRM.VRMSpringBone
+    - id: VRM.VRMSpringBoneColliderGroup
+      label: VRMSpringBoneColliderGroup
+      common: true
+      enabled: false
+      types:
+        - VRM.VRMSpringBoneColliderGroup
+
+  VRC Fury:
+    - id: VF.Model.VRCFury
+      label: VRCFury
+      common: true
+      enabled: false
+      types:
+        - VF.Model.VRCFury
+    - id: VF.Component.VRCFuryGlobalCollider
+      label: VRCFuryGlobalCollider
+      common: true
+      enabled: false
+      types:
+        - VF.Component.VRCFuryGlobalCollider
+    - id: VF.Component.VRCFuryHapticSocket
+      label: VRCFuryHapticSocket
+      common: true
+      enabled: false
+      types:
+        - VF.Component.VRCFuryHapticSocket
+    - id: VF.Component.VRCFuryHapticPlug
+      label: VRCFuryHapticPlug
+      common: true
+      enabled: false
+      types:
+        - VF.Component.VRCFuryHapticPlug
+
+  Modular Avatar:
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMenuGroup
+      label: ModularAvatarMenuGroup
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMenuGroup
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller
+      label: ModularAvatarMenuInstaller
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMenuInstaller
+    - id: nadena.dev.modular_avatar.core.ModularAvatarBlendshapeSync
+      label: ModularAvatarBlendshapeSync
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarBlendshapeSync
+    - id: nadena.dev.modular_avatar.core.ModularAvatarBoneProxy
+      label: ModularAvatarBoneProxy
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarBoneProxy
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMenuInstallTarget
+      label: ModularAvatarMenuInstallTarget
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMenuInstallTarget
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMenuItem
+      label: ModularAvatarMenuItem
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMenuItem
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMergeAnimator
+      label: ModularAvatarMergeAnimator
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMergeAnimator
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMergeArmature
+      label: ModularAvatarMergeArmature
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMergeArmature
+    - id: nadena.dev.modular_avatar.core.ModularAvatarMeshSettings
+      label: ModularAvatarMeshSettings
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarMeshSettings
+    - id: nadena.dev.modular_avatar.core.ModularAvatarParameters
+      label: ModularAvatarParameters
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarParameters
+    - id: nadena.dev.modular_avatar.core.ModularAvatarPBBlocker
+      label: ModularAvatarPBBlocker
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarPBBlocker
+    - id: nadena.dev.modular_avatar.core.ModularAvatarReplaceObject
+      label: ModularAvatarReplaceObject
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarReplaceObject
+    - id: nadena.dev.modular_avatar.core.ModularAvatarVisibleHeadAccessory
+      label: ModularAvatarVisibleHeadAccessory
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarVisibleHeadAccessory
+    - id: nadena.dev.modular_avatar.core.ModularAvatarWorldFixedObject
+      label: ModularAvatarWorldFixedObject
+      common: true
+      enabled: false
+      types:
+        - nadena.dev.modular_avatar.core.ModularAvatarWorldFixedObject
+
+  Magica Cloth 2:
+    - id: MagicaCloth2.MagicaCapsuleCollider
+      label: MagicaCapsuleCollider
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth2.MagicaCapsuleCollider
+    - id: MagicaCloth2.MagicaPlaneCollider
+      label: MagicaPlaneCollider
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth2.MagicaPlaneCollider
+    - id: MagicaCloth2.MagicaSphereCollider
+      label: MagicaSphereCollider
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth2.MagicaSphereCollider
+    - id: MagicaCloth2.MagicaCloth
+      label: MagicaCloth
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth2.MagicaCloth
+    - id: MagicaCloth2.MagicaWindZone
+      label: MagicaWindZone
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth2.MagicaWindZone
+    - id: MagicaCloth2.MagicaSettings
+      label: MagicaSettings
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth2.MagicaSettings
+
+  Magica Cloth:
+    - id: MagicaCloth.MagicaAvatar
+      label: MagicaAvatar
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaAvatar
+    - id: MagicaCloth.MagicaBoneCloth
+      label: MagicaBoneCloth
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaBoneCloth
+    - id: MagicaCloth.MagicaBoneSpring
+      label: MagicaBoneSpring
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaBoneSpring
+    - id: MagicaCloth.MagicaMeshCloth
+      label: MagicaMeshCloth
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaMeshCloth
+    - id: MagicaCloth.MagicaMeshSpring
+      label: MagicaMeshSpring
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaMeshSpring
+    - id: MagicaCloth.MagicaRenderDeformer
+      label: MagicaRenderDeformer
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaRenderDeformer
+    - id: MagicaCloth.MagicaVirtualDeformer
+      label: MagicaVirtualDeformer
+      common: true
+      enabled: false
+      types:
+        - MagicaCloth.MagicaVirtualDeformer
+
+  ChilloutVR CCK:
+    - id: CVRMirror
+      label: CVRMirror
+      common: true
+      enabled: false
+      types:
+        - CVRMirror
+    - id: CVRWarpPoint
+      label: CVRWarpPoint
+      common: true
+      enabled: false
+      types:
+        - CVRWarpPoint
+    - id: ABI.CCK.Components.ControlPoint
+      label: ControlPoint
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.ControlPoint
+    - id: ABI.CCK.Components.CVRAction
+      label: CVRAction
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAction
+    - id: ABI.CCK.Components.CVRAdvancedAvatarSettingsPointer
+      label: CVRAdvancedAvatarSettingsPointer
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAdvancedAvatarSettingsPointer
+    - id: ABI.CCK.Components.CVRAdvancedAvatarSettingsTrigger
+      label: CVRAdvancedAvatarSettingsTrigger
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAdvancedAvatarSettingsTrigger
+    - id: ABI.CCK.Components.CVRAdvancedAvatarSettingsTriggerHelper
+      label: CVRAdvancedAvatarSettingsTriggerHelper
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAdvancedAvatarSettingsTriggerHelper
+    - id: ABI.CCK.Components.CVRAnimatorDriver
+      label: CVRAnimatorDriver
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAnimatorDriver
+    - id: ABI.CCK.Components.CVRAssetInfo
+      label: CVRAssetInfo
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAssetInfo
+    - id: ABI.CCK.Components.CVRAttachment
+      label: CVRAttachment
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAttachment
+    - id: ABI.CCK.Components.CVRAudioDriver
+      label: CVRAudioDriver
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAudioDriver
+    - id: ABI.CCK.Components.CVRAudioMaterialParser
+      label: CVRAudioMaterialParser
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAudioMaterialParser
+    - id: ABI.CCK.Components.CVRAvatar
+      label: CVRAvatar
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAvatar
+    - id: ABI.CCK.Components.CVRAvatarPickupMarker
+      label: CVRAvatarPickupMarker
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRAvatarPickupMarker
+    - id: ABI.CCK.Components.CVRBuilderSpawnable
+      label: CVRBuilderSpawnable
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRBuilderSpawnable
+    - id: ABI.CCK.Components.CVRCameraHelper
+      label: CVRCameraHelper
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRCameraHelper
+    - id: ABI.CCK.Components.CVRCustomRenderTextureUpdater
+      label: CVRCustomRenderTextureUpdater
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRCustomRenderTextureUpdater
+    - id: ABI.CCK.Components.CVRDescription
+      label: CVRDescription
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRDescription
+    - id: ABI.CCK.Components.CVRDistanceConstrain
+      label: CVRDistanceConstrain
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRDistanceConstrain
+    - id: ABI.CCK.Components.CVRDistanceLod
+      label: CVRDistanceLod
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRDistanceLod
+    - id: ABI.CCK.Components.CVRFaceTracking
+      label: CVRFaceTracking
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRFaceTracking
+    - id: ABI.CCK.Components.CVRGIMaterialUpdater
+      label: CVRGIMaterialUpdater
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRGIMaterialUpdater
+    - id: ABI.CCK.Components.CVRGlobalMaterialPropertyUpdater
+      label: CVRGlobalMaterialPropertyUpdater
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRGlobalMaterialPropertyUpdater
+    - id: ABI.CCK.Components.CVRGlobalShaderUpdater
+      label: CVRGlobalShaderUpdater
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRGlobalShaderUpdater
+    - id: ABI.CCK.Components.CVRHapticAreaChest
+      label: CVRHapticAreaChest
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRHapticAreaChest
+    - id: ABI.CCK.Components.CVRHapticZone
+      label: CVRHapticZone
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRHapticZone
+    - id: ABI.CCK.Components.CVRInteractable
+      label: CVRInteractable
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRInteractable
+    - id: ABI.CCK.Components.CVRMaterialDriver
+      label: CVRMaterialDriver
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRMaterialDriver
+    - id: ABI.CCK.Components.CVRMaterialUpdater
+      label: CVRMaterialUpdater
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRMaterialUpdater
+    - id: ABI.CCK.Components.CVRMovementParent
+      label: CVRMovementParent
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRMovementParent
+    - id: ABI.CCK.Components.CVRNavController
+      label: CVRNavController
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRNavController
+    - id: ABI.CCK.Components.CVRObjectLibrary
+      label: CVRObjectLibrary
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRObjectLibrary
+    - id: ABI.CCK.Components.CVRObjectSync
+      label: CVRObjectSync
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRObjectSync
+    - id: ABI.CCK.Components.CVRParameterStream
+      label: CVRParameterStream
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRParameterStream
+    - id: ABI.CCK.Components.CVRParticleSound
+      label: CVRParticleSound
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRParticleSound
+    - id: ABI.CCK.Components.CVRPickupObject
+      label: CVRPickupObject
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRPickupObject
+    - id: ABI.CCK.Components.CVRPointer
+      label: CVRPointer
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRPointer
+    - id: ABI.CCK.Components.CVRPortalMarker
+      label: CVRPortalMarker
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRPortalMarker
+    - id: ABI.CCK.Components.CVRSnappingPoint
+      label: CVRSnappingPoint
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRSnappingPoint
+    - id: ABI.CCK.Components.CVRSpawnable
+      label: CVRSpawnable
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRSpawnable
+    - id: ABI.CCK.Components.CVRSpawnableTrigger
+      label: CVRSpawnableTrigger
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRSpawnableTrigger
+    - id: ABI.CCK.Components.CVRTexturePropertyParser
+      label: CVRTexturePropertyParser
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRTexturePropertyParser
+    - id: ABI.CCK.Components.CVRTimelineSync
+      label: CVRTimelineSync
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRTimelineSync
+    - id: ABI.CCK.Components.CVRToggleStatePointer
+      label: CVRToggleStatePointer
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRToggleStatePointer
+    - id: ABI.CCK.Components.CVRToggleStateTrigger
+      label: CVRToggleStateTrigger
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRToggleStateTrigger
+    - id: ABI.CCK.Components.CVRTranslatable
+      label: CVRTranslatable
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRTranslatable
+    - id: ABI.CCK.Components.CVRVariableBuffer
+      label: CVRVariableBuffer
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRVariableBuffer
+    - id: ABI.CCK.Components.CVRVideoPlayer
+      label: CVRVideoPlayer
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRVideoPlayer
+    - id: ABI.CCK.Components.CVRWorld
+      label: CVRWorld
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRWorld
+    - id: ABI.CCK.Components.CVRWorldModifiers
+      label: CVRWorldModifiers
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.CVRWorldModifiers
+    - id: ABI.CCK.Components.Damage
+      label: Damage
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.Damage
+    - id: ABI.CCK.Components.FluidVolume
+      label: FluidVolume
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.FluidVolume
+    - id: ABI.CCK.Components.ForceApplicator
+      label: ForceApplicator
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.ForceApplicator
+    - id: ABI.CCK.Components.FPRExclusion
+      label: FPRExclusion
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.FPRExclusion
+    - id: ABI.CCK.Components.GameInstanceController
+      label: GameInstanceController
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.GameInstanceController
+    - id: ABI.CCK.Components.GravityZone
+      label: GravityZone
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.GravityZone
+    - id: ABI.CCK.Components.GunController
+      label: GunController
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.GunController
+    - id: ABI.CCK.Components.ObjectHealth
+      label: ObjectHealth
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.ObjectHealth
+    - id: ABI.CCK.Components.PhysicsInfluencer
+      label: PhysicsInfluencer
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.PhysicsInfluencer
+    - id: ABI.CCK.Components.PlayerMaterialParser
+      label: PlayerMaterialParser
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.PlayerMaterialParser
+    - id: ABI.CCK.Components.ScoreBoardController
+      label: ScoreBoardController
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.ScoreBoardController
+    - id: ABI.CCK.Components.SpawnablePickupMarker
+      label: SpawnablePickupMarker
+      common: true
+      enabled: false
+      types:
+        - ABI.CCK.Components.SpawnablePickupMarker

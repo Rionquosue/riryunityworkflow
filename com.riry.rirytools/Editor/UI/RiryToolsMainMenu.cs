@@ -11,20 +11,26 @@ namespace Riry.RiryTools.Editor
     /// Each tab draws the tool's own window, hosted unseen, so the tools work there as
     /// they do on their own; their own menu entries are unchanged. Documentation is a
     /// link at the bottom right. Menu Mockup stays in the Tools menu only.
-    /// Opened from Tools > RiryTools > Main Menu (Editor/UI/RiryMenus.cs).
+    /// Opened from Tools > RiryTools > Main Menu (Editor/UI/RiryToolsMenuBar.cs).
     /// </summary>
     internal sealed class RiryToolsMainMenu : EditorWindow
     {
-        // Set by Editor/VRChat/RiryVRChatMenus.cs when the VRChat SDK is in the project.
-        internal static Func<EditorWindow> CreateConstraintTrain;
+        // Set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs when the VRChat SDK is in the project.
+        // The Constraint Tool window, which draws its own Train, Bezier and Insertable prop sub-tabs.
+        internal static Func<EditorWindow> CreateConstraintTool;
+        internal static Func<EditorWindow> CreateMenuTool;
+        internal static Func<EditorWindow> CreateFindReplace;
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Clean Animation Keys", "Constraint Train", "GUID Tools", "IconCap", "Import Presets", "Stop Auto Game"
+            "AutoSync", "Blendshape Sync", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools" 
         };
+        // Tools that need more room than a tab: the Tools tab has a button for each, which opens it in its own window.
+        private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
+        private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner", "Extract Animations" };
         private static readonly string[] ImportTabs =
         {
-            "Set Folder Import Presets", "Save Import Preset", "Extract Animation", "Open Import Preset Library"
+            "Set Folder Import Presets", "Save Import Preset", "Open Import Preset Library"
         };
 
         /// <summary>A tool window drawn in a tab; never shown on its own.</summary>
@@ -35,74 +41,156 @@ namespace Riry.RiryTools.Editor
             public EditorWindow Window;
         }
 
-        // About three times a standard tab row; Import Presets' sub-tabs about twice.
-        private static readonly float TabHeight = 3f * (EditorGUIUtility.singleLineHeight + 2f);
-        private static readonly float ImportTabHeight = 2f * (EditorGUIUtility.singleLineHeight + 2f);
-        private GUIStyle tabStyle;
+        // The tab strip: flat cells of equal width with no gaps, the active one lighter and bold, a
+        // hover tint, wrapping onto more rows when the window is narrow (like YGDR Animator Editor's).
+        // Internal so other tab strips (Menu Mockup's Tabs block) look the same.
+        internal const float TabMinWidth = 110f;
+        internal const float TabMinHeight = 24f;
+        internal static readonly Color DarkTab = new Color32(56, 56, 56, 255);
+        internal static readonly Color DarkActiveTab = new Color32(90, 90, 90, 255);
+        internal static readonly Color LightTab = new Color32(200, 200, 200, 255);
+        internal static readonly Color LightActiveTab = new Color32(160, 160, 160, 255);
+        internal static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.5f);
+        // Outline around every tab, in whole pixels so it draws crisply.
+        internal const float TabBorder = 2f;
+        // Space above the sub-tab strips (Constraint Tool, Import Presets), under the main tabs.
+        internal const float SubTabGap = 8f;
+        // Space above the main tabs, so their top outline isn't hidden under the window's own tab.
+        internal const float TopMargin = 2f;
+        internal const float HoverTint = 0.1f;
+        private static GUIStyle tabLabel;
+        private static GUIStyle activeTabLabel;
 
         [SerializeField] private int tab;
         [SerializeField] private int importTab;
+        [SerializeField] private int animatorTab;
+        // The current tab's scroll position; back to the top when the tab changes.
+        [SerializeField] private Vector2 tabScroll;
         [SerializeField] private List<Hosted> hosted = new List<Hosted>();
+        // The hosted tool drawn in this GUI pass, so the others hear they were not (IRiryHostedTool.NotDrawn).
+        [NonSerialized] private EditorWindow drawn;
 
         internal static void Open()
         {
             RiryToolsMainMenu window = GetWindow<RiryToolsMainMenu>("RiryTools");
             window.minSize = new Vector2(480f, 380f);
+            window.wantsMouseMove = true;
             window.Show();
         }
 
         private void OnGUI()
         {
-            // The tool tabs are three lines tall, Import Presets' sub-tabs two, and their names wrap
-            // when the window is narrow.
-            // A name the skin has no "left"/"mid"/"right" styles for, so Toolbar draws every tab
-            // with this style instead of the skin's own, which do not wrap.
-            if (tabStyle == null)
-                tabStyle = new GUIStyle(GUI.skin.button) { name = "RiryToolsTab", wordWrap = true, fixedHeight = 0f };
-            tab = GUILayout.Toolbar(tab, Tabs, tabStyle, GUILayout.Height(TabHeight));
+            wantsMouseMove = true;
+            GUILayout.Space(TopMargin);
+            int chosen = TabStrip(this, tab, Tabs);
+            if (chosen != tab) tabScroll = Vector2.zero;
+            tab = chosen;
             EditorGUILayout.Space(4f);
-            using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true)))
+            drawn = null;
+            // Menu Tool scrolls its own parts: its radial preview is placed over the window and cannot follow a scroll view.
+            if (Current == "Menu Tool")
             {
-                DrawTab();
+                using (new EditorGUILayout.VerticalScope(GUILayout.ExpandHeight(true))) DrawTab();
+            }
+            else
+            {
+                // A scroll view, so a tool taller or wider than the window stays usable.
+                using (var scroll = new EditorGUILayout.ScrollViewScope(tabScroll, GUILayout.ExpandHeight(true)))
+                {
+                    tabScroll = scroll.scrollPosition;
+                    DrawTab();
+                }
+            }
+            foreach (Hosted entry in hosted)
+            {
+                if (entry.Window != null && entry.Window != drawn && entry.Window is IRiryHostedTool tool) tool.NotDrawn();
             }
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.FlexibleSpace();
-                if (EditorGUILayout.LinkButton("Documentation")) Application.OpenURL(RiryMenus.DocumentationLink);
+                if (EditorGUILayout.LinkButton("Documentation")) Application.OpenURL(RiryToolsMenuBar.DocumentationLink);
             }
+        }
+
+        // The current tab's name; the tabs are told apart by name, not by number.
+        private string Current
+        {
+            get { return Tabs[Mathf.Clamp(tab, 0, Tabs.Length - 1)]; }
         }
 
         private void DrawTab()
         {
-            switch (tab)
+            switch (Current)
             {
-                case 0:
+                case "AutoSync":
                     bool sync = EditorGUILayout.ToggleLeft("Sync", AutoSync.Enabled);
-                    if (sync != AutoSync.Enabled) GitActions.ToggleSync();
+                    if (sync != AutoSync.Enabled) { AutoSyncGitActions.ToggleSync(); RiryToolGUI.ExitAfterModal(); }
                     if (!GitState.GitInstalled) EditorGUILayout.HelpBox(new GitNotInstalledException(null).Message, MessageType.Info);
                     else Draw(Active());
                     break;
-                case 1:
+                case "Animator Tools":
+                    EditorGUILayout.Space(SubTabGap);
+                    animatorTab = TabStrip(this, animatorTab, AnimatorTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                    EditorGUILayout.Space(4f);
+                    // Find and Replace needs the VRChat SDK; Controller Cleaner does not.
+                    if (animatorTab == 0 && CreateFindReplace == null)
+                    {
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Find and Replace").Message, MessageType.Info);
+                        break;
+                    }
+                    Draw(Active());
+                    break;
+                case "Blendshape Sync":
                     // The running jobs for review; a job is added or edited in its popup.
                     BlendshapeSyncJobList.Draw();
                     break;
-                case 3:
-                    if (CreateConstraintTrain == null)
-                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Train").Message, MessageType.Info);
-                    else Draw(Active());
+                case "Constraint Tool":
+                    // The Constraint Tool window draws its own sub-tabs (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs).
+                    if (CreateConstraintTool == null)
+                    {
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Constraint Tool").Message, MessageType.Info);
+                        break;
+                    }
+                    Draw(Active());
                     break;
-                case 6:
-                    importTab = GUILayout.Toolbar(importTab, ImportTabs, tabStyle, GUILayout.Height(ImportTabHeight));
+                case "Menu Tool":
+                    if (CreateMenuTool == null)
+                    {
+                        EditorGUILayout.HelpBox(new VrcSdkNotFoundException("Menu Tool").Message, MessageType.Info);
+                        break;
+                    }
+                    Draw(Active());
+                    break;
+                case "Import Presets":
+                    EditorGUILayout.Space(SubTabGap);
+                    importTab = TabStrip(this, importTab, ImportTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
                     EditorGUILayout.Space(4f);
-                    if (importTab == 3)
+                    if (importTab == 2)
                     {
                         if (GUILayout.Button("Open Import Preset Library", GUILayout.Height(28f))) ImportPresetActions.OpenLibrary();
                     }
                     else Draw(Active());
                     break;
-                case 7:
-                    StopAutoGame.Enabled = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
+                case "Tools":
+                    // Each opens in its own window, not in this one, which may be docked small.
+                    foreach (string tool in PopupTools)
+                    {
+                        if (!GUILayout.Button(tool, GUILayout.Height(28f))) continue;
+                        if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
+                        else EditorApplication.delayCall += AvatarMigratorWindow.OpenPopup;
+                    }
+                    if (GUILayout.Button(MaterialCleaner.Title, GUILayout.Height(28f))) EditorApplication.delayCall += MaterialCleanerWindow.Open;
+                    if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
+                    // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
+                    if (GUILayout.Button(RefreshScripts.DisplayName, GUILayout.Height(28f))) RefreshScripts.Run();
+                    EditorGUILayout.Space(4f);
+                    // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
+                    bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
                         "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
+                    if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
+                    bool guard = EditorGUILayout.ToggleLeft(new GUIContent("Script Load Guard",
+                        "Block saving a scene or prefab that loaded with far fewer objects than its file holds."), ScriptLoadGuard.Enabled);
+                    if (guard != ScriptLoadGuard.Enabled) ScriptLoadGuard.Enabled = guard;
                     break;
                 default:
                     Draw(Active());
@@ -113,14 +201,20 @@ namespace Riry.RiryTools.Editor
         // The hosted window for the current tab, made on first use; null for tabs without one.
         private EditorWindow Active()
         {
-            switch (tab)
+            switch (Current)
             {
-                case 0: return Host("Configuration", () => CreateInstance<GitConfigureWindow>(), window => ((GitConfigureWindow)window).Reload());
-                case 2: return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
-                case 3: return CreateConstraintTrain == null ? null : Host("Constraint Train", CreateConstraintTrain, null);
-                case 4: return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
-                case 5: return Host("IconCap", () => CreateInstance<IconCapWindow>(), null);
-                case 6:
+                case "AutoSync": return Host("Configuration", () => CreateInstance<AutoSyncGitConfigureWindow>(), window => ((AutoSyncGitConfigureWindow)window).Reload());
+                case "Animator Tools":
+                    if (animatorTab == 1) return Host("Clean Animation Keys", () => CreateInstance<CleanAnimationKeysWindow>(), null);
+                    if (animatorTab == 2) return Host(ControllerCleanerWindow.Title, () => CreateInstance<ControllerCleanerWindow>(), null);
+                    if (animatorTab == 3)
+                        return Host("Extract Animations", () => CreateInstance<ImportPresetExtractAnimationWindow>(),
+                            window => ((ImportPresetExtractAnimationWindow)window).ShowSelection());
+                    return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
+                case "Constraint Tool": return CreateConstraintTool == null ? null : Host("Constraint Tool", CreateConstraintTool, null);
+                case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
+                case "Menu Tool": return CreateMenuTool == null ? null : Host("Menu Tool", CreateMenuTool, null);
+                case "Import Presets":
                     switch (importTab)
                     {
                         case 0:
@@ -129,13 +223,78 @@ namespace Riry.RiryTools.Editor
                         case 1:
                             return Host("Save Import Preset", () => CreateInstance<ImportPresetSaveWindow>(),
                                 window => ((ImportPresetSaveWindow)window).UseImporter(ImportPresetActions.SelectedImporter()));
-                        case 2:
-                            return Host("Extract Animation", () => CreateInstance<ExtractAnimationWindow>(),
-                                window => ((ExtractAnimationWindow)window).ShowSelection());
                     }
                     return null;
                 default: return null;
             }
+        }
+
+        /// <summary>
+        /// A row of tabs, wrapping onto more rows when they don't fit at TabMinWidth. Every tab in
+        /// a row is the same width, and as tall as its name needs (at least TabMinHeight).
+        /// Returns the tab chosen. owner is the window it is drawn in (its width, and repainted on hover).
+        /// Also used by Constraint Tool's window.
+        /// </summary>
+        internal static int TabStrip(EditorWindow owner, int selected, string[] names, float inset = 0f)
+        {
+            if (tabLabel == null)
+            {
+                tabLabel = new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter, wordWrap = true, fontSize = 12, padding = new RectOffset(4, 4, 3, 3)
+                };
+                activeTabLabel = new GUIStyle(tabLabel) { fontStyle = FontStyle.Bold };
+            }
+            // inset: room kept free on the right (the tab scroll view's scrollbar, for the sub-tabs).
+            float available = owner.position.width - 8f - inset;
+            int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
+            int rows = (names.Length + perRow - 1) / perRow;
+            float width = available / perRow;
+            // Measured at the narrowest a cell gets (TabMinWidth), not the current width: measured at the current
+            // width, the strip shrank to one line in the band of widths where every name happened to fit, then
+            // jumped back when the cells narrowed again. Now it only changes when the number of rows does.
+            float measure = Mathf.Min(width, TabMinWidth);
+            float height = TabMinHeight;
+            foreach (string name in names) height = Mathf.Max(height, activeTabLabel.CalcHeight(new GUIContent(name), measure));
+            Rect area = GUILayoutUtility.GetRect(available, rows * height, GUILayout.ExpandWidth(true));
+            bool dark = EditorGUIUtility.isProSkin;
+            Event current = Event.current;
+            // The rows and height are worked out from the window (the same in every event); the cells then fill the rect
+            // the layout gave, so the strip has equal margins and the sub-tabs line up with the main tabs. In Layout the
+            // rect is a placeholder, and nothing is drawn.
+            if (current.type != EventType.Layout) width = area.width / perRow;
+            for (int i = 0; i < names.Length; i++)
+            {
+                // Edges rounded to whole pixels: at fractional positions the outlines drew faintly or not at all.
+                int column = i % perRow;
+                int row = i / perRow;
+                float left = Mathf.Round(area.x + column * width);
+                float top = Mathf.Round(area.y + row * height);
+                var cell = new Rect(left, top, Mathf.Round(area.x + (column + 1) * width) - left, Mathf.Round(area.y + (row + 1) * height) - top);
+                bool active = i == selected;
+                if (current.type == EventType.Repaint)
+                {
+                    Color color = active ? (dark ? DarkActiveTab : LightActiveTab) : (dark ? DarkTab : LightTab);
+                    if (!active && cell.Contains(current.mousePosition))
+                        color = dark ? color + new Color(HoverTint, HoverTint, HoverTint, 0f) : color - new Color(HoverTint / 2f, HoverTint / 2f, HoverTint / 2f, 0f);
+                    EditorGUI.DrawRect(cell, color);
+                    // An outline TabBorder thick on every side: each tab draws its right and bottom edges, and the
+                    // first column and row their left and top, so shared edges aren't doubled.
+                    EditorGUI.DrawRect(new Rect(cell.xMax - TabBorder, cell.y, TabBorder, cell.height), TabSeparator);
+                    EditorGUI.DrawRect(new Rect(cell.x, cell.yMax - TabBorder, cell.width, TabBorder), TabSeparator);
+                    if (column == 0) EditorGUI.DrawRect(new Rect(cell.x, cell.y, TabBorder, cell.height), TabSeparator);
+                    if (row == 0) EditorGUI.DrawRect(new Rect(cell.x, cell.y, cell.width, TabBorder), TabSeparator);
+                    (active ? activeTabLabel : tabLabel).Draw(cell, new GUIContent(names[i]), false, false, false, false);
+                }
+                else if (current.type == EventType.MouseDown && current.button == 0 && cell.Contains(current.mousePosition))
+                {
+                    selected = i;
+                    GUI.changed = true;
+                    current.Use();
+                }
+                else if (current.type == EventType.MouseMove && cell.Contains(current.mousePosition)) owner.Repaint();
+            }
+            return selected;
         }
 
         private EditorWindow Host(string key, Func<EditorWindow> create, Action<EditorWindow> initialize)
@@ -150,9 +309,13 @@ namespace Riry.RiryTools.Editor
             return entry.Window;
         }
 
-        private static void Draw(EditorWindow window)
+        private void Draw(EditorWindow window)
         {
-            if (window != null) Call(window, "OnGUI");
+            if (window == null) return;
+            // Set every draw: hosted windows outlive a script reload, this reference does not.
+            if (window is IRiryHostedTool tool) tool.Surface = this;
+            drawn = window;
+            Call(window, "OnGUI");
         }
 
         // Calls one of the hosted window's own message methods, when it has it.
@@ -200,7 +363,11 @@ namespace Riry.RiryTools.Editor
         // The current tab's hosted window if it was made, without making it.
         private EditorWindow ActiveIfMade()
         {
-            string key = tab == 0 ? "Configuration" : tab == 6 ? (importTab < 3 ? ImportTabs[importTab] : null) : tab == 1 || tab == 7 ? null : Tabs[tab];
+            string name = Current;
+            string key = name == "AutoSync" ? "Configuration"
+                : name == "Import Presets" ? (importTab < 2 ? ImportTabs[importTab] : null)
+                : name == "Animator Tools" ? AnimatorTabs[Mathf.Clamp(animatorTab, 0, AnimatorTabs.Length - 1)]
+                : name == "Blendshape Sync" || name == "Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
@@ -218,22 +385,44 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Main Menu
-// The menu entry, Tools > RiryTools > Main Menu, is in RiryMenus.cs.
+// The menu entry, Tools > RiryTools > Main Menu, is in RiryToolsMenuBar.cs.
 // ============================================================================
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
-//   Tabs                     AutoSync, Blendshape Sync, Clean Animation Keys, Constraint Train, GUID Tools, IconCap,
-//                            Import Presets, Stop Auto Game (menu order; not Menu Mockup or Documentation).
+//   Tabs                     AutoSync, Blendshape Sync, Constraint Tool, GUID Tools, Import Presets,
+//                            Menu Tool, Tools (not Menu Mockup or Documentation). Current is the selected tab's
+//                            name; tabs are handled by name.
+//   Menu Tool tab            CreateMenuTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the
+//                            hosted MenuToolWindow (MenuToolWindow.CreateHosted). It shows the Parameter budget, drawn
+//                            outside the tab scroll view (the budget scrolls itself); its Menu manager tab opens the Menu
+//                            Tool window.
+//   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw, and NotDrawn() in a GUI
+//                            pass that drew another tab (drawn: the one drawn), so Menu Tool's radial leaves at once.
+//   Tools tab / PopupTools   A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
+//                            the tool in its own floating window (OpenPopup), not inside this one; then Refresh Scripts
+//                            (RefreshScripts.Run), the Stop Auto Game toggle (StopAutoGame.Enabled, set only when clicked) and
+//                            the Script Load Guard toggle (ScriptLoadGuard.Enabled, the same way).
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
-//   CreateConstraintTrain    Set by Editor/VRChat/RiryVRChatMenus.cs; null without the VRChat SDK (the tab says so).
+//   Constraint Tool tab      CreateConstraintTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK,
+//                            and the tab says so) makes the hosted ConstraintToolWindow, which draws its own Train, Bezier and
+//                            Insertable prop sub-tabs (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs).
 //   Hosted / hosted          Each tab's tool window, made on first use and never shown; drawn by calling its OnGUI.
 //   Active() / Host(...)     The current tab's tool, made and set up like its Open would.
 //   Call(window, method)     Calls the tool's own OnGUI, OnInspectorUpdate, OnSelectionChange, OnProjectChange or
 //                            OnHierarchyChange, so it behaves as when shown.
-//   OnGUI()                  The tabs, the current tool, and the Documentation link at the bottom right.
-//   TabHeight / ImportTabHeight / tabStyle
-//                            Tool tabs about three rows tall, Import Presets' sub-tabs two, names wrapping;
-//                            tabStyle is named RiryToolsTab so Toolbar does not swap in the skin's non-wrapping styles.
-//   AutoSync tab             Sync toggle (GitActions.ToggleSync) above Configuration; Stop Auto Game tab: its toggle.
-//   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSyncJobWindow.cs): the running jobs, and Add Job.
+//   OnGUI()                  The tabs, the current tool in a scroll view (tabScroll, [SerializeField], reset on a tab
+//                            change), and the Documentation link at the bottom right.
+//   Tab constants            TabMinWidth, TabMinHeight, DarkTab, DarkActiveTab, LightTab, LightActiveTab, TabSeparator,
+//                            TabBorder, HoverTint: internal, so Menu Mockup's Tabs block draws the same strip.
+//   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tool's and Import Presets' sub-tabs: flat cells of equal width (at least TabMinWidth,
+//                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
+//                            TabMinHeight, 24), so the height doesn't change with the window's width; the active tab lighter (DarkActiveTab / LightActiveTab) and bold, a hover tint
+//                            (HoverTint), like YGDR Animator Editor's tab strip. Every tab has a TabBorder (2 px) outline
+//                            in TabSeparator, on edges rounded to whole pixels. The rows come from the window width less
+//                            inset; the cells then fill the rect the layout gives, so the margins are equal and the sub-tabs
+//                            line up with the main tabs.
+//   TopMargin / SubTabGap    2 px above the main tabs (and Constraint Tool window's); 8 px between them and a tab's sub-tabs
+//                            (Constraint Tool, Import Presets).
+//   AutoSync tab             Sync toggle (AutoSyncGitActions.ToggleSync) above Configuration.
+//   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSync/BlendshapeSyncJobList.cs): the running jobs, and Add Job.

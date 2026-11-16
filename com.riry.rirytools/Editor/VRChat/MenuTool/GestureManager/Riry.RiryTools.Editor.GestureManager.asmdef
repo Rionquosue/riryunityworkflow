@@ -1,0 +1,38 @@
+{
+  "name": "Riry.RiryTools.Editor.GestureManager",
+  "rootNamespace": "Riry.RiryTools.Editor",
+  "references": [
+    "Riry.RiryTools.Editor",
+    "Riry.RiryTools.Editor.VRChat",
+    "vrchat.blackstartx.gesture-manager",
+    "vrchat.blackstartx.gesture-manager.editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "VRCSDK3A.dll",
+    "VRCSDKBase.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "RIRYTOOLS_VRC_CONSTRAINTS",
+    "RIRYTOOLS_GESTURE_MANAGER"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.7.0",
+      "define": "RIRYTOOLS_VRC_CONSTRAINTS"
+    },
+    {
+      "name": "vrchat.blackstartx.gesture-manager",
+      "expression": "3.9.0",
+      "define": "RIRYTOOLS_GESTURE_MANAGER"
+    }
+  ],
+  "noEngineReferences": false
+}

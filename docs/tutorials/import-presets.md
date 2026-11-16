@@ -57,5 +57,3 @@ beside the model.
 
 Each `.blend` in the folder is exported to an FBX beside it, which then follows
 the folder's FBX rules.
-
-Reference: [design/import-presets.md](../design/import-presets.md)

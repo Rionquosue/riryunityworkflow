@@ -77,10 +77,9 @@ namespace Riry.RiryTools.Editor
             if (importer == null) return;
 
             EnsureGeneric(importer);
-            AnimationExtractSettings settings = AnimationExtractSettings.Load(assetPath);
-            List<string> skipped;
-            int written = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, out skipped);
-            ReportSkipped(assetPath, skipped);
+            ImportPresetAnimationExtraction settings = ImportPresetAnimationExtraction.Load(assetPath);
+            Extraction result = ExtractClips(assetPath, settings, ImportPresetOwnedFiles.IsUnchanged, false);
+            ReportSkipped(assetPath, result.Skipped);
 
             ImportPresetMarker.Rules rules = ImportPresetMarker.RulesFor(assetPath);
             string applied = null;
@@ -91,27 +90,57 @@ namespace Riry.RiryTools.Editor
                     ImportPresetLibrary.TryApply(importer, target.Configuration, target.Preset, out applied))
                     importer.SaveAndReimport();
             }
-            Debug.Log("Import Presets: extracted " + written + " clip(s) from " + assetPath + " to " +
-                Destination(assetPath, settings) + (applied != null ? ", then applied " + applied + "." : "."));
+            result.Log(assetPath, "extracted " + result.Written + " clip(s) from " + assetPath + " to " + result.Folder +
+                (applied != null ? ", then applied " + applied : ""));
+        }
+
+        /// <summary>What one extraction did, so each model gets one Console line.</summary>
+        internal sealed class Extraction
+        {
+            public int Written;
+            public readonly List<string> Skipped = new List<string>();
+            /// <summary>The folder the clips went to (Destination, or Animations/ when it was not valid).</summary>
+            public string Folder;
+            /// <summary>The cleaning's summary, or null when the clips were not cleaned.</summary>
+            public string Cleaned;
+            public bool CleanFailed;
+
+            /// <summary>Logs the line with the cleaning appended, pinging the model: a warning when cleaning failed.</summary>
+            internal void Log(string modelPath, string line)
+            {
+                line += Cleaned != null ? "; " + Cleaned : ".";
+                UnityEngine.Object model = AssetDatabase.LoadMainAssetAtPath(modelPath);
+                if (CleanFailed) RiryLog.Warn(RiryLog.ImportPresets, line, model);
+                else RiryLog.Info(RiryLog.ImportPresets, line, model);
+            }
         }
 
         /// <summary>
         /// Extracts clips from a model whose settings may already be configured:
         /// a snapshot of its settings is restored after a temporary Generic import.
+        /// <paramref name="undoable"/>: only the Extract button's run is recorded for Undo; automatic runs
+        /// (first import, re-export, Folder Rules Apply) are not, so they never take the user's next Ctrl+Z.
         /// </summary>
-        internal static int ExtractPreservingSettings(ModelImporter importer, AnimationExtractSettings settings,
-            Func<string, bool> mayReplace, out List<string> skipped)
+        internal static Extraction ExtractPreservingSettings(ModelImporter importer, ImportPresetAnimationExtraction settings,
+            Func<string, bool> mayReplace, bool undoable)
         {
             Preset snapshot = new Preset(importer);
             bool changed = false;
             try
             {
                 changed = EnsureGeneric(importer);
-                return ExtractClips(importer.assetPath, settings, mayReplace, out skipped);
+                return ExtractClips(importer.assetPath, settings, mayReplace, undoable);
             }
             finally
             {
-                if (changed && snapshot.ApplyTo(importer)) importer.SaveAndReimport();
+                if (changed)
+                {
+                    if (snapshot.ApplyTo(importer)) importer.SaveAndReimport();
+                    else
+                        RiryLog.Error(RiryLog.ImportPresets, "Could not put back the import settings of " + importer.assetPath +
+                            " after extracting its clips, so it was left as Generic. Set its Rig (and the rest) again in the " +
+                            "Inspector, or reapply its preset.", AssetDatabase.LoadMainAssetAtPath(importer.assetPath));
+                }
                 UnityEngine.Object.DestroyImmediate(snapshot);
             }
         }
@@ -134,17 +163,16 @@ namespace Riry.RiryTools.Editor
         /// <summary>Whether clips are extracted before the model's preset is applied: its Automatically extract animations.</summary>
         internal static bool ShouldExtract(string modelPath)
         {
-            AnimationExtractSettings settings = AnimationExtractSettings.Load(modelPath);
+            ImportPresetAnimationExtraction settings = ImportPresetAnimationExtraction.Load(modelPath);
             return settings != null && settings.AutoExtract;
         }
 
         /// <summary>The settings' Destination when it is valid, else Animations/ next to the model.</summary>
-        internal static string Destination(string modelPath, AnimationExtractSettings settings)
+        internal static string Destination(string modelPath, ImportPresetAnimationExtraction settings)
         {
             if (settings == null || settings.Destination.Length == 0) return AnimationsFolder(modelPath);
             if (DestinationProblem(settings.Destination) == null) return settings.Destination;
-            Debug.LogWarning("Import Presets: " + settings.Destination + " is not a folder in Assets; extracting " +
-                modelPath + " to " + AnimationsFolder(modelPath) + ".");
+            // Reported once, by the extraction that uses it (ExtractClips).
             return AnimationsFolder(modelPath);
         }
 
@@ -210,51 +238,91 @@ namespace Riry.RiryTools.Editor
             return clips;
         }
 
-        private static int ExtractClips(string modelPath, AnimationExtractSettings settings, Func<string, bool> mayReplace,
-            out List<string> skipped)
-        {
-            skipped = new List<string>();
-            List<AnimationClip> clips = Clips(modelPath);
-            if (clips.Count == 0) return 0;
+        internal const string UndoName = "Extract Animation";
 
+        private static Extraction ExtractClips(string modelPath, ImportPresetAnimationExtraction settings, Func<string, bool> mayReplace,
+            bool undoable)
+        {
+            var result = new Extraction();
+            List<string> skipped = result.Skipped;
             string folder = Destination(modelPath, settings);
+            result.Folder = folder;
+            List<AnimationClip> clips = Clips(modelPath);
+            if (clips.Count == 0) return result;
+
+            if (settings != null && settings.Destination.Length > 0 && DestinationProblem(settings.Destination) != null)
+                RiryLog.Warn(RiryLog.ImportPresets, settings.Destination + " is not a folder in Assets; extracting " +
+                    modelPath + " to " + folder + ".");
             EnsureFolder(folder);
 
             string modelName = Path.GetFileNameWithoutExtension(modelPath);
+            string modelGuid = AssetDatabase.AssetPathToGUID(modelPath);
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var written = new List<string>();
-            foreach (AnimationClip clip in clips)
+            // One Undo step: replacing a clip (and cleaning it) undoes back to the clip as it was.
+            // New clip files are not removed by Undo.
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName(UndoName);
+            try
             {
-                string path = folder + "/" + ClipFileName(modelName, clip.name, used);
-                var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
-                if ((existing != null || File.Exists(path)) && !mayReplace(path))
+                foreach (AnimationClip clip in clips)
                 {
-                    skipped.Add(path);
-                    continue;
+                    string path = folder + "/" + ClipFileName(modelName, clip.name, used);
+                    // A clip extracted from another model of the same name is never replaced, even when asked.
+                    if (ImportPresetOwnedFiles.OwnedByOther(path, modelGuid))
+                    {
+                        skipped.Add(path + " (extracted from " + ImportPresetOwnedFiles.OwnerPath(path) + "; set another Destination)");
+                        continue;
+                    }
+                    var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                    if ((existing != null || File.Exists(path)) && !mayReplace(path))
+                    {
+                        skipped.Add(path);
+                        continue;
+                    }
+                    AnimationClip copy = UnityEngine.Object.Instantiate(clip);
+                    copy.name = Path.GetFileNameWithoutExtension(path);
+                    if (existing != null)
+                    {
+                        // Copy into the existing asset so its GUID and references stay. Recorded first,
+                        // so Ctrl+Z puts the replaced clip back instead of losing it.
+                        Undo.RegisterCompleteObjectUndo(existing, UndoName);
+                        EditorUtility.CopySerialized(copy, existing);
+                        UnityEngine.Object.DestroyImmediate(copy);
+                        EditorUtility.SetDirty(existing);
+                    }
+                    else
+                    {
+                        AssetDatabase.CreateAsset(copy, path);
+                    }
+                    written.Add(path);
                 }
-                AnimationClip copy = UnityEngine.Object.Instantiate(clip);
-                copy.name = Path.GetFileNameWithoutExtension(path);
-                if (existing != null)
-                {
-                    // Copy into the existing asset so its GUID and references stay.
-                    EditorUtility.CopySerialized(copy, existing);
-                    UnityEngine.Object.DestroyImmediate(copy);
-                    EditorUtility.SetDirty(existing);
-                }
-                else
-                {
-                    AssetDatabase.CreateAsset(copy, path);
-                }
-                written.Add(path);
+                AssetDatabase.SaveAssets();
+                if (settings != null && settings.AutoClean && written.Count > 0) Clean(written, settings, result);
             }
-            AssetDatabase.SaveAssets();
-            if (settings != null && settings.AutoClean && written.Count > 0) Clean(written, settings);
+            finally
+            {
+                Undo.SetCurrentGroupName(UndoName);
+                Undo.CollapseUndoOperations(undoGroup);
+                // An automatic run leaves nothing for Ctrl+Z: its records (the replaced clips and the clean) are cleared.
+                if (!undoable)
+                {
+                    foreach (string path in written)
+                    {
+                        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                        if (clip != null) Undo.ClearUndo(clip);
+                    }
+                }
+            }
             // Recorded after cleaning, so a cleaned clip still counts as unchanged.
-            foreach (string path in written) ImportPresetOwnedFiles.Record(path);
-            return written.Count;
+            foreach (string path in written) ImportPresetOwnedFiles.Record(path, modelGuid);
+            result.Written = written.Count;
+            return result;
         }
 
-        private static void Clean(List<string> paths, AnimationExtractSettings settings)
+        // Cleans the clips; the summary goes into the model's line. A failed clip is logged by CleanAnimationKeys itself.
+        private static void Clean(List<string> paths, ImportPresetAnimationExtraction settings, Extraction result)
         {
             var clips = new List<AnimationClip>();
             foreach (string path in paths)
@@ -264,12 +332,13 @@ namespace Riry.RiryTools.Editor
             }
             try
             {
-                Debug.Log("Import Presets: " + CleanAnimationKeys.Clean(clips, settings.CleanOptions, settings.Whitelist));
+                result.Cleaned = CleanAnimationKeys.Clean(clips, settings.CleanOptions, settings.Whitelist);
                 AssetDatabase.SaveAssets();
             }
             catch (InvalidOperationException exception)
             {
-                Debug.LogWarning("Import Presets: cleaning keys failed: " + exception.Message);
+                result.Cleaned = "cleaning keys failed: " + exception.Message;
+                result.CleanFailed = true;
             }
         }
 
@@ -298,30 +367,32 @@ namespace Riry.RiryTools.Editor
         private static void ReportSkipped(string modelPath, List<string> skipped)
         {
             if (skipped.Count == 0) return;
-            Debug.LogWarning("Import Presets: kept " + skipped.Count + " clip(s) from " + modelPath +
-                " that were edited or not created by this tool:\n" + string.Join("\n", skipped));
+            RiryLog.Warn(RiryLog.ImportPresets, "Kept " + skipped.Count + " clip(s) from " + modelPath +
+                " that were edited, not created by this tool, or extracted from another model:\n" + string.Join("\n", skipped));
         }
 
         /// <summary>
         /// Extract in the Extract Animation window: asks once about clips the user
         /// edited or made, then extracts the model with the window's settings.
         /// </summary>
-        internal static void Extract(ModelImporter importer, AnimationExtractSettings settings)
+        internal static void Extract(ModelImporter importer, ImportPresetAnimationExtraction settings)
         {
             string folder = Destination(importer.assetPath, settings);
             int blocked = 0;
+            string modelGuid = AssetDatabase.AssetPathToGUID(importer.assetPath);
             foreach (string path in PlannedPaths(importer.assetPath, folder))
             {
-                if (File.Exists(path) && !ImportPresetOwnedFiles.IsUnchanged(path)) blocked++;
+                // Another model's clips are kept whatever is chosen, so they are not asked about.
+                if (File.Exists(path) && !ImportPresetOwnedFiles.IsUnchanged(path) && !ImportPresetOwnedFiles.OwnedByOther(path, modelGuid))
+                    blocked++;
             }
             bool replaceAll = blocked > 0 && EditorUtility.DisplayDialog("Extract Animation",
                 blocked + " clip(s) in " + folder + " were edited or not created by this tool. Replace them too?",
                 "Replace", "Keep");
-            List<string> skipped;
-            int written = ExtractPreservingSettings(importer, settings,
-                path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), out skipped);
-            ReportSkipped(importer.assetPath, skipped);
-            Debug.Log("Import Presets: extracted " + written + " clip(s) from " + importer.assetPath + " to " + folder + ".");
+            Extraction result = ExtractPreservingSettings(importer, settings,
+                path => replaceAll || ImportPresetOwnedFiles.IsUnchanged(path), true);
+            ReportSkipped(importer.assetPath, result.Skipped);
+            result.Log(importer.assetPath, "extracted " + result.Written + " clip(s) from " + importer.assetPath + " to " + result.Folder);
         }
 
         /// <summary>The model selected in the Project window, or null.</summary>

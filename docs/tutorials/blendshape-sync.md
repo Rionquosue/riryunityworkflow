@@ -47,5 +47,3 @@ body and `Chest_Large` on a shirt):
 
 Syncing pauses on its own during Play Mode, animation preview or recording, and
 Animator graph editing.
-
-Reference: [design/blendshape-sync.md](../design/blendshape-sync.md)
