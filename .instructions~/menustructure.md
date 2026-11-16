@@ -70,7 +70,10 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Refresh Scripts
         * Menu Mockup
         * [ ] Stop all tool scripts
+    * FTEmulator
     * Documentation
+
+FTEmulator has no right-click entry.
 
 ### Main menu
 
@@ -194,3 +197,31 @@ Where [] contains the currently active tab.
 | Find Null references |  |  |  |  |  |
 | Menu Mockup |  |  |  |  |  |
 | ☐ Stop all tool scripts |  |  |  |  |  |
+
+---
+
+The Tools tab has two sub-tabs: General holds every tool the tab had, FTEmulator hosts the FTEmulator window. Its debug tables need the width, so they open as a popup (Open debug window).
+
+| [Tools] |  |  |  |  |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [General] | FTEmulator |  |  |  |  |
+| Avatar Migration Assistant |  |  |  |  |  |
+| IconCap |  |  |  |  |  |
+| Material Cleaner |  |  |  |  |  |
+| Find Null references |  |  |  |  |  |
+| Refresh Scripts |  |  |  |  |  |
+| ☐ Stop Auto Game |  |  |  |  |  |
+| ☐ Script Load Guard |  |  |  |  |  |
+
+---
+
+| [Tools] |  |  |  |  |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| General | [FTEmulator] |  |  |  |  |
+| State, Gesture Manager, Avatar, Avatar backend |  |  |  |  |  |
+| Input, Hardware limits, Behavior, View allowed channels |  |  |  |  |  |
+| Start | Stop |  |  |  |  |
+| ☐ Active listening |  |  |  |  |  |
+| ☐ Freeze output |  |  |  |  |  |
+| Open debug window (opens popup) | Reset overrides |  |  |  |  |
+| OSC connection or Manual input |  |  |  |  |  |

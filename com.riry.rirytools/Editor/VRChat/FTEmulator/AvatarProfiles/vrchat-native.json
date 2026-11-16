@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "vrchat-native",
+  "kind": "template",
+  "name": "Native",
+  "backend": "native",
+  "version": "SDK 3.10.6",
+  "evidence": [
+    "S4 VRChat native face tracking (creators.vrchat.com/avatars/face-tracking), com.vrchat.avatars 3.10.6"
+  ],
+  "notes": [
+    "Detected from the avatar descriptor: Face Tracking enabled with meshes, sets or parameter behaviours."
+  ],
+  "signatures": {}
+}

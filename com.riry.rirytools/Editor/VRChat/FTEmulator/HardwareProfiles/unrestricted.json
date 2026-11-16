@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "unrestricted",
+  "name": "Unrestricted input",
+  "detail": "No hardware emulation",
+  "version": "1",
+  "order": 0,
+  "unrestricted": true,
+  "eyeTracking": true,
+  "faceTracking": true,
+  "evidence": [],
+  "notes": [
+    "Every tracking key is its own control. No hardware limits are applied."
+  ],
+  "controls": [],
+  "outputs": []
+}

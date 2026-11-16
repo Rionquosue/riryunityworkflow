@@ -1,0 +1,630 @@
+{
+  "schema": 1,
+  "id": "quest-pro-base-fb1",
+  "name": "Base Quest Pro",
+  "detail": "FB1 63-channel baseline",
+  "version": "1",
+  "order": 10,
+  "eyeTracking": true,
+  "faceTracking": true,
+  "evidence": [
+    "H1 Meta XR_FB_face_tracking expression set (OculusXRMovementTypes, v63): 63 expressions",
+    "H2 VRCFT Meta Movement comparison table (docs.vrcft.io, tutorial-avatars-extras/compatibility/meta-movement)"
+  ],
+  "notes": [
+    "LipPuckerL/R and MouthLeft/Right are one value per side: the upper and lower outputs stay equal. Richer input is reduced to their mean.",
+    "The comparison table's EYES_SQUINT / EYES_WIDEN rows are read as LidTightener / UpperLidRaiser, the FB1 names.",
+    "No tongue, pupil, jaw backward, jaw clench, throat or neck channels."
+  ],
+  "controls": [
+    {
+      "name": "BrowLowererL",
+      "group": "Brow",
+      "from": "BrowLowererLeft"
+    },
+    {
+      "name": "BrowLowererR",
+      "group": "Brow",
+      "from": "BrowLowererRight"
+    },
+    {
+      "name": "CheekPuffL",
+      "group": "Cheek",
+      "from": "CheekPuffLeft"
+    },
+    {
+      "name": "CheekPuffR",
+      "group": "Cheek",
+      "from": "CheekPuffRight"
+    },
+    {
+      "name": "CheekRaiserL",
+      "group": "Cheek",
+      "from": "CheekSquintLeft"
+    },
+    {
+      "name": "CheekRaiserR",
+      "group": "Cheek",
+      "from": "CheekSquintRight"
+    },
+    {
+      "name": "CheekSuckL",
+      "group": "Cheek",
+      "from": "CheekSuckLeft"
+    },
+    {
+      "name": "CheekSuckR",
+      "group": "Cheek",
+      "from": "CheekSuckRight"
+    },
+    {
+      "name": "ChinRaiserB",
+      "group": "Mouth",
+      "from": "MouthRaiserLower"
+    },
+    {
+      "name": "ChinRaiserT",
+      "group": "Mouth",
+      "from": "MouthRaiserUpper"
+    },
+    {
+      "name": "DimplerL",
+      "group": "Mouth",
+      "from": "MouthDimpleLeft"
+    },
+    {
+      "name": "DimplerR",
+      "group": "Mouth",
+      "from": "MouthDimpleRight"
+    },
+    {
+      "name": "EyesClosedL",
+      "group": "Eye",
+      "from": "EyeClosedLeft"
+    },
+    {
+      "name": "EyesClosedR",
+      "group": "Eye",
+      "from": "EyeClosedRight"
+    },
+    {
+      "name": "EyesLookDownL",
+      "group": "Eye",
+      "from": "EyeLookDownLeft"
+    },
+    {
+      "name": "EyesLookDownR",
+      "group": "Eye",
+      "from": "EyeLookDownRight"
+    },
+    {
+      "name": "EyesLookLeftL",
+      "group": "Eye",
+      "from": "EyeLookOutLeft"
+    },
+    {
+      "name": "EyesLookLeftR",
+      "group": "Eye",
+      "from": "EyeLookInRight"
+    },
+    {
+      "name": "EyesLookRightL",
+      "group": "Eye",
+      "from": "EyeLookInLeft"
+    },
+    {
+      "name": "EyesLookRightR",
+      "group": "Eye",
+      "from": "EyeLookOutRight"
+    },
+    {
+      "name": "EyesLookUpL",
+      "group": "Eye",
+      "from": "EyeLookUpLeft"
+    },
+    {
+      "name": "EyesLookUpR",
+      "group": "Eye",
+      "from": "EyeLookUpRight"
+    },
+    {
+      "name": "InnerBrowRaiserL",
+      "group": "Brow",
+      "from": "BrowInnerUpLeft"
+    },
+    {
+      "name": "InnerBrowRaiserR",
+      "group": "Brow",
+      "from": "BrowInnerUpRight"
+    },
+    {
+      "name": "JawDrop",
+      "group": "Jaw",
+      "from": "JawOpen"
+    },
+    {
+      "name": "JawSidewaysLeft",
+      "group": "Jaw",
+      "from": "JawLeft"
+    },
+    {
+      "name": "JawSidewaysRight",
+      "group": "Jaw",
+      "from": "JawRight"
+    },
+    {
+      "name": "JawThrust",
+      "group": "Jaw",
+      "from": "JawForward"
+    },
+    {
+      "name": "LidTightenerL",
+      "group": "Eye",
+      "from": "EyeSquintLeft"
+    },
+    {
+      "name": "LidTightenerR",
+      "group": "Eye",
+      "from": "EyeSquintRight"
+    },
+    {
+      "name": "LipCornerDepressorL",
+      "group": "Mouth",
+      "from": "MouthFrownLeft"
+    },
+    {
+      "name": "LipCornerDepressorR",
+      "group": "Mouth",
+      "from": "MouthFrownRight"
+    },
+    {
+      "name": "LipCornerPullerL",
+      "group": "Mouth",
+      "from": "MouthCornerPullLeft"
+    },
+    {
+      "name": "LipCornerPullerR",
+      "group": "Mouth",
+      "from": "MouthCornerPullRight"
+    },
+    {
+      "name": "LipFunnelerLB",
+      "group": "Lips",
+      "from": "LipFunnelLowerLeft"
+    },
+    {
+      "name": "LipFunnelerLT",
+      "group": "Lips",
+      "from": "LipFunnelUpperLeft"
+    },
+    {
+      "name": "LipFunnelerRB",
+      "group": "Lips",
+      "from": "LipFunnelLowerRight"
+    },
+    {
+      "name": "LipFunnelerRT",
+      "group": "Lips",
+      "from": "LipFunnelUpperRight"
+    },
+    {
+      "name": "LipPressorL",
+      "group": "Mouth",
+      "from": "MouthPressLeft"
+    },
+    {
+      "name": "LipPressorR",
+      "group": "Mouth",
+      "from": "MouthPressRight"
+    },
+    {
+      "name": "LipPuckerL",
+      "group": "Lips",
+      "from": "(LipPuckerUpperLeft + LipPuckerLowerLeft) / 2"
+    },
+    {
+      "name": "LipPuckerR",
+      "group": "Lips",
+      "from": "(LipPuckerUpperRight + LipPuckerLowerRight) / 2"
+    },
+    {
+      "name": "LipStretcherL",
+      "group": "Mouth",
+      "from": "MouthStretchLeft"
+    },
+    {
+      "name": "LipStretcherR",
+      "group": "Mouth",
+      "from": "MouthStretchRight"
+    },
+    {
+      "name": "LipSuckLB",
+      "group": "Lips",
+      "from": "LipSuckLowerLeft"
+    },
+    {
+      "name": "LipSuckLT",
+      "group": "Lips",
+      "from": "LipSuckUpperLeft"
+    },
+    {
+      "name": "LipSuckRB",
+      "group": "Lips",
+      "from": "LipSuckLowerRight"
+    },
+    {
+      "name": "LipSuckRT",
+      "group": "Lips",
+      "from": "LipSuckUpperRight"
+    },
+    {
+      "name": "LipTightenerL",
+      "group": "Mouth",
+      "from": "MouthTightenerLeft"
+    },
+    {
+      "name": "LipTightenerR",
+      "group": "Mouth",
+      "from": "MouthTightenerRight"
+    },
+    {
+      "name": "LipsToward",
+      "group": "Mouth",
+      "from": "MouthClosed"
+    },
+    {
+      "name": "LowerLipDepressorL",
+      "group": "Mouth",
+      "from": "MouthLowerDownLeft"
+    },
+    {
+      "name": "LowerLipDepressorR",
+      "group": "Mouth",
+      "from": "MouthLowerDownRight"
+    },
+    {
+      "name": "MouthLeft",
+      "group": "Mouth",
+      "from": "(MouthUpperLeft + MouthLowerLeft) / 2"
+    },
+    {
+      "name": "MouthRight",
+      "group": "Mouth",
+      "from": "(MouthUpperRight + MouthLowerRight) / 2"
+    },
+    {
+      "name": "NoseWrinklerL",
+      "group": "Nose",
+      "from": "NoseSneerLeft"
+    },
+    {
+      "name": "NoseWrinklerR",
+      "group": "Nose",
+      "from": "NoseSneerRight"
+    },
+    {
+      "name": "OuterBrowRaiserL",
+      "group": "Brow",
+      "from": "BrowOuterUpLeft"
+    },
+    {
+      "name": "OuterBrowRaiserR",
+      "group": "Brow",
+      "from": "BrowOuterUpRight"
+    },
+    {
+      "name": "UpperLidRaiserL",
+      "group": "Eye",
+      "from": "EyeWideLeft"
+    },
+    {
+      "name": "UpperLidRaiserR",
+      "group": "Eye",
+      "from": "EyeWideRight"
+    },
+    {
+      "name": "UpperLipRaiserL",
+      "group": "Mouth",
+      "from": "MouthUpperUpLeft"
+    },
+    {
+      "name": "UpperLipRaiserR",
+      "group": "Mouth",
+      "from": "MouthUpperUpRight"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "BrowLowererLeft",
+      "value": "BrowLowererL"
+    },
+    {
+      "key": "BrowLowererRight",
+      "value": "BrowLowererR"
+    },
+    {
+      "key": "BrowPinchLeft",
+      "value": "BrowLowererL",
+      "derived": true,
+      "note": "Movement has no brow pinch; follows BrowLowerer."
+    },
+    {
+      "key": "BrowPinchRight",
+      "value": "BrowLowererR",
+      "derived": true,
+      "note": "Movement has no brow pinch; follows BrowLowerer."
+    },
+    {
+      "key": "CheekPuffLeft",
+      "value": "CheekPuffL"
+    },
+    {
+      "key": "CheekPuffRight",
+      "value": "CheekPuffR"
+    },
+    {
+      "key": "CheekSquintLeft",
+      "value": "CheekRaiserL"
+    },
+    {
+      "key": "CheekSquintRight",
+      "value": "CheekRaiserR"
+    },
+    {
+      "key": "CheekSuckLeft",
+      "value": "CheekSuckL"
+    },
+    {
+      "key": "CheekSuckRight",
+      "value": "CheekSuckR"
+    },
+    {
+      "key": "MouthRaiserLower",
+      "value": "ChinRaiserB"
+    },
+    {
+      "key": "MouthRaiserUpper",
+      "value": "ChinRaiserT"
+    },
+    {
+      "key": "MouthDimpleLeft",
+      "value": "DimplerL"
+    },
+    {
+      "key": "MouthDimpleRight",
+      "value": "DimplerR"
+    },
+    {
+      "key": "EyeClosedLeft",
+      "value": "EyesClosedL"
+    },
+    {
+      "key": "EyeClosedRight",
+      "value": "EyesClosedR"
+    },
+    {
+      "key": "EyeLookDownLeft",
+      "value": "EyesLookDownL"
+    },
+    {
+      "key": "EyeLookDownRight",
+      "value": "EyesLookDownR"
+    },
+    {
+      "key": "EyeLookOutLeft",
+      "value": "EyesLookLeftL"
+    },
+    {
+      "key": "EyeLookInRight",
+      "value": "EyesLookLeftR"
+    },
+    {
+      "key": "EyeLookInLeft",
+      "value": "EyesLookRightL"
+    },
+    {
+      "key": "EyeLookOutRight",
+      "value": "EyesLookRightR"
+    },
+    {
+      "key": "EyeLookUpLeft",
+      "value": "EyesLookUpL"
+    },
+    {
+      "key": "EyeLookUpRight",
+      "value": "EyesLookUpR"
+    },
+    {
+      "key": "BrowInnerUpLeft",
+      "value": "InnerBrowRaiserL"
+    },
+    {
+      "key": "BrowInnerUpRight",
+      "value": "InnerBrowRaiserR"
+    },
+    {
+      "key": "JawOpen",
+      "value": "JawDrop"
+    },
+    {
+      "key": "JawLeft",
+      "value": "JawSidewaysLeft"
+    },
+    {
+      "key": "JawRight",
+      "value": "JawSidewaysRight"
+    },
+    {
+      "key": "JawForward",
+      "value": "JawThrust"
+    },
+    {
+      "key": "EyeSquintLeft",
+      "value": "LidTightenerL"
+    },
+    {
+      "key": "EyeSquintRight",
+      "value": "LidTightenerR"
+    },
+    {
+      "key": "MouthFrownLeft",
+      "value": "LipCornerDepressorL"
+    },
+    {
+      "key": "MouthFrownRight",
+      "value": "LipCornerDepressorR"
+    },
+    {
+      "key": "MouthCornerPullLeft",
+      "value": "LipCornerPullerL"
+    },
+    {
+      "key": "MouthCornerPullRight",
+      "value": "LipCornerPullerR"
+    },
+    {
+      "key": "MouthCornerSlantLeft",
+      "value": "LipCornerPullerL",
+      "derived": true,
+      "note": "The comparison table blends the smile into MouthCornerPull and MouthCornerSlant."
+    },
+    {
+      "key": "MouthCornerSlantRight",
+      "value": "LipCornerPullerR",
+      "derived": true,
+      "note": "The comparison table blends the smile into MouthCornerPull and MouthCornerSlant."
+    },
+    {
+      "key": "LipFunnelLowerLeft",
+      "value": "LipFunnelerLB"
+    },
+    {
+      "key": "LipFunnelUpperLeft",
+      "value": "LipFunnelerLT"
+    },
+    {
+      "key": "LipFunnelLowerRight",
+      "value": "LipFunnelerRB"
+    },
+    {
+      "key": "LipFunnelUpperRight",
+      "value": "LipFunnelerRT"
+    },
+    {
+      "key": "MouthPressLeft",
+      "value": "LipPressorL"
+    },
+    {
+      "key": "MouthPressRight",
+      "value": "LipPressorR"
+    },
+    {
+      "key": "LipPuckerUpperLeft",
+      "value": "LipPuckerL"
+    },
+    {
+      "key": "LipPuckerLowerLeft",
+      "value": "LipPuckerL"
+    },
+    {
+      "key": "LipPuckerUpperRight",
+      "value": "LipPuckerR"
+    },
+    {
+      "key": "LipPuckerLowerRight",
+      "value": "LipPuckerR"
+    },
+    {
+      "key": "MouthStretchLeft",
+      "value": "LipStretcherL"
+    },
+    {
+      "key": "MouthStretchRight",
+      "value": "LipStretcherR"
+    },
+    {
+      "key": "LipSuckLowerLeft",
+      "value": "LipSuckLB"
+    },
+    {
+      "key": "LipSuckUpperLeft",
+      "value": "LipSuckLT"
+    },
+    {
+      "key": "LipSuckLowerRight",
+      "value": "LipSuckRB"
+    },
+    {
+      "key": "LipSuckUpperRight",
+      "value": "LipSuckRT"
+    },
+    {
+      "key": "MouthTightenerLeft",
+      "value": "LipTightenerL"
+    },
+    {
+      "key": "MouthTightenerRight",
+      "value": "LipTightenerR"
+    },
+    {
+      "key": "MouthClosed",
+      "value": "LipsToward"
+    },
+    {
+      "key": "MouthLowerDownLeft",
+      "value": "LowerLipDepressorL"
+    },
+    {
+      "key": "MouthLowerDownRight",
+      "value": "LowerLipDepressorR"
+    },
+    {
+      "key": "MouthUpperLeft",
+      "value": "MouthLeft"
+    },
+    {
+      "key": "MouthLowerLeft",
+      "value": "MouthLeft"
+    },
+    {
+      "key": "MouthUpperRight",
+      "value": "MouthRight"
+    },
+    {
+      "key": "MouthLowerRight",
+      "value": "MouthRight"
+    },
+    {
+      "key": "NoseSneerLeft",
+      "value": "NoseWrinklerL"
+    },
+    {
+      "key": "NoseSneerRight",
+      "value": "NoseWrinklerR"
+    },
+    {
+      "key": "BrowOuterUpLeft",
+      "value": "OuterBrowRaiserL"
+    },
+    {
+      "key": "BrowOuterUpRight",
+      "value": "OuterBrowRaiserR"
+    },
+    {
+      "key": "EyeWideLeft",
+      "value": "UpperLidRaiserL"
+    },
+    {
+      "key": "EyeWideRight",
+      "value": "UpperLidRaiserR"
+    },
+    {
+      "key": "MouthUpperUpLeft",
+      "value": "UpperLipRaiserL"
+    },
+    {
+      "key": "MouthUpperUpRight",
+      "value": "UpperLipRaiserR"
+    }
+  ]
+}

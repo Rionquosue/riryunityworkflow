@@ -1,4 +1,7 @@
 using System.Runtime.CompilerServices;
 
-// The Menu Tool's Gesture Manager bridge (Editor/VRChat/MenuTool/GestureManager) implements its radial preview.
+// The Gesture Manager bridge implements the Menu Tool's radial preview (Editor/VRChat/MenuTool/GestureManager) and
+// FTEmulator's output (Editor/VRChat/FTEmulator/GestureManager).
 [assembly: InternalsVisibleTo("Riry.RiryTools.Editor.GestureManager")]
+// FTEmulator's tests (Editor/VRChat/FTEmulator/Tests), compiled only with the Unity Test Framework.
+[assembly: InternalsVisibleTo("Riry.RiryTools.Editor.FTEmulatorTests")]

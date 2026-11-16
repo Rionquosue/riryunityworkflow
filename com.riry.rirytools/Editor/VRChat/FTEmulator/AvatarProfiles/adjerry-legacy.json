@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "adjerry-legacy",
+  "kind": "template",
+  "name": "Adjerry legacy",
+  "backend": "legacy",
+  "version": "7.0.5",
+  "parameterSet": "vrcft-unified-v2",
+  "evidence": [
+    "S10 Adjerry91/VRCFaceTracking-Templates (adjerry91.vrcft.templates 7.0.5), controller parameter prefixes read 2026-11-16"
+  ],
+  "notes": [
+    "Raw inputs are FT/v2/...; OSCm/Smooth, OSCm/Proxy and BinaryOut parameters are the template's own outputs."
+  ],
+  "signatures": {
+    "parameterPrefixes": [
+      "OSCm/Smooth/FT/v2/",
+      "BinaryOut/FT/v2/"
+    ],
+    "packages": [
+      {
+        "name": "adjerry91.vrcft.templates"
+      }
+    ]
+  }
+}

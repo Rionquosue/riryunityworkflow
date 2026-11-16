@@ -1,0 +1,215 @@
+{
+  "schema": 1,
+  "id": "vive-pro-eye",
+  "name": "Vive Pro Eye",
+  "detail": "Eyes only",
+  "version": "1",
+  "order": 50,
+  "eyeTracking": true,
+  "faceTracking": false,
+  "evidence": [
+    "H4 VRCFT Vive Pro Eye guide and SRanipal hardware matrix",
+    "H5 VRCFaceTracking/SRanipalTrackingModule SRanipalTrackingInterface.cs at deecdfa3932c32899920415b837f10211c13b2ec"
+  ],
+  "notes": [
+    "Sensor controls: per-eye gaze, openness, pupil diameter, squeeze and wide.",
+    "Pupil diameter is normalised (0.5 neutral); dilation and constriction are derived from it by a fixed rule, not measured separately.",
+    "Brows follow squeeze and wide only with Documented module behavior."
+  ],
+  "controls": [
+    {
+      "name": "LeftGazeX",
+      "group": "Gaze",
+      "from": "EyeLookInLeft - EyeLookOutLeft",
+      "min": -1
+    },
+    {
+      "name": "LeftGazeY",
+      "group": "Gaze",
+      "from": "EyeLookUpLeft - EyeLookDownLeft",
+      "min": -1
+    },
+    {
+      "name": "LeftEyeOpenness",
+      "group": "Eyelid",
+      "from": "1 - EyeClosedLeft",
+      "neutral": 1
+    },
+    {
+      "name": "LeftPupilDiameter",
+      "group": "Pupil",
+      "from": "clamp(0.5 + (EyeDilationLeft - EyeConstrictLeft) / 2, 0, 1)",
+      "neutral": 0.5
+    },
+    {
+      "name": "LeftEyeSqueeze",
+      "group": "Eyelid",
+      "from": "EyeSquintLeft"
+    },
+    {
+      "name": "LeftEyeWide",
+      "group": "Eyelid",
+      "from": "EyeWideLeft"
+    },
+    {
+      "name": "RightGazeX",
+      "group": "Gaze",
+      "from": "EyeLookOutRight - EyeLookInRight",
+      "min": -1
+    },
+    {
+      "name": "RightGazeY",
+      "group": "Gaze",
+      "from": "EyeLookUpRight - EyeLookDownRight",
+      "min": -1
+    },
+    {
+      "name": "RightEyeOpenness",
+      "group": "Eyelid",
+      "from": "1 - EyeClosedRight",
+      "neutral": 1
+    },
+    {
+      "name": "RightPupilDiameter",
+      "group": "Pupil",
+      "from": "clamp(0.5 + (EyeDilationRight - EyeConstrictRight) / 2, 0, 1)",
+      "neutral": 0.5
+    },
+    {
+      "name": "RightEyeSqueeze",
+      "group": "Eyelid",
+      "from": "EyeSquintRight"
+    },
+    {
+      "name": "RightEyeWide",
+      "group": "Eyelid",
+      "from": "EyeWideRight"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "EyeLookInLeft",
+      "value": "max(LeftGazeX, 0)"
+    },
+    {
+      "key": "EyeLookOutLeft",
+      "value": "max(-LeftGazeX, 0)"
+    },
+    {
+      "key": "EyeLookUpLeft",
+      "value": "max(LeftGazeY, 0)"
+    },
+    {
+      "key": "EyeLookDownLeft",
+      "value": "max(-LeftGazeY, 0)"
+    },
+    {
+      "key": "EyeClosedLeft",
+      "value": "1 - LeftEyeOpenness"
+    },
+    {
+      "key": "EyeDilationLeft",
+      "value": "clamp((LeftPupilDiameter - 0.5) * 2, 0, 1)",
+      "note": "Normalised: 0.5 is 5 mm on VRCFT's 0..10 mm scale."
+    },
+    {
+      "key": "EyeConstrictLeft",
+      "value": "clamp((0.5 - LeftPupilDiameter) * 2, 0, 1)",
+      "note": "Normalised: 0.5 is 5 mm on VRCFT's 0..10 mm scale."
+    },
+    {
+      "key": "EyeSquintLeft",
+      "value": "LeftEyeSqueeze"
+    },
+    {
+      "key": "EyeWideLeft",
+      "value": "LeftEyeWide"
+    },
+    {
+      "key": "BrowInnerUpLeft",
+      "value": "LeftEyeWide",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "BrowOuterUpLeft",
+      "value": "LeftEyeWide",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "BrowPinchLeft",
+      "value": "LeftEyeSqueeze",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "BrowLowererLeft",
+      "value": "LeftEyeSqueeze",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "EyeLookOutRight",
+      "value": "max(RightGazeX, 0)"
+    },
+    {
+      "key": "EyeLookInRight",
+      "value": "max(-RightGazeX, 0)"
+    },
+    {
+      "key": "EyeLookUpRight",
+      "value": "max(RightGazeY, 0)"
+    },
+    {
+      "key": "EyeLookDownRight",
+      "value": "max(-RightGazeY, 0)"
+    },
+    {
+      "key": "EyeClosedRight",
+      "value": "1 - RightEyeOpenness"
+    },
+    {
+      "key": "EyeDilationRight",
+      "value": "clamp((RightPupilDiameter - 0.5) * 2, 0, 1)",
+      "note": "Normalised: 0.5 is 5 mm on VRCFT's 0..10 mm scale."
+    },
+    {
+      "key": "EyeConstrictRight",
+      "value": "clamp((0.5 - RightPupilDiameter) * 2, 0, 1)",
+      "note": "Normalised: 0.5 is 5 mm on VRCFT's 0..10 mm scale."
+    },
+    {
+      "key": "EyeSquintRight",
+      "value": "RightEyeSqueeze"
+    },
+    {
+      "key": "EyeWideRight",
+      "value": "RightEyeWide"
+    },
+    {
+      "key": "BrowInnerUpRight",
+      "value": "RightEyeWide",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "BrowOuterUpRight",
+      "value": "RightEyeWide",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "BrowPinchRight",
+      "value": "RightEyeSqueeze",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    },
+    {
+      "key": "BrowLowererRight",
+      "value": "RightEyeSqueeze",
+      "derived": true,
+      "note": "The inspected module derives brows from the eyelid sensors."
+    }
+  ]
+}

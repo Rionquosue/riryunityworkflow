@@ -5,7 +5,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Every menu bar entry of this package: the Tools dropdown and the Git menu.
     /// Right-click entries (Project window and Hierarchy) are in RiryToolsRightClickMenu.cs.
-    /// Constraint Tool's, Menu Tool's and Find and Replace's entries are in
+    /// Constraint Tool's, Menu Tool's, Find and Replace's and FTEmulator's entries are in
     /// Editor/VRChat/UI/RiryToolsVRChatMenus.cs, because they only compile with the VRChat SDK.
     /// Without the SDK, the same entries at the bottom of this file show a
     /// "VRCSDK not found" popup instead.
@@ -58,6 +58,8 @@ namespace Riry.RiryTools.Editor
         // Find and Replace's place under RiryTools, the same in the Tools menu and the Project and Hierarchy right-click menus.
         internal const string FindReplaceLabel = "Animator Tools/Find and Replace";
         internal const string FindReplaceTools = "Tools/RiryTools/" + FindReplaceLabel;
+        // FTEmulator is in the Tools menu and the Main Menu's Tools tab only: it has no right-click entry.
+        internal const string FTEmulatorTools = "Tools/RiryTools/FTEmulator";
 
         // =====================================================================
         // Tools dropdown
@@ -190,6 +192,9 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(FindReplaceTools, false, 1995)]
         private static void FindReplaceToolsItem() { VrcSdkMissing("Find and Replace"); }
+
+        [MenuItem(FTEmulatorTools, false, 2067)]
+        private static void FTEmulatorToolsItem() { VrcSdkMissing("FTEmulator"); }
 #endif
     }
 }
@@ -228,6 +233,9 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
 //                                                      found" popup (this file)
+//   Tools/RiryTools/FTEmulator (2067)               -> FTEmulatorWindow.Open (Editor/VRChat/UI/FTEmulator/FTEmulatorWindow.cs, entry in
+//                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
+//                                                      found" popup (this file). No right-click entry.
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
 //
 // GIT MENU (main menu bar)
@@ -241,4 +249,5 @@ namespace Riry.RiryTools.Editor
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadGuardFailureWindow.cs
 //   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs,
 //                                                      its Bezier tab Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs
+//   FTEmulator Debug window                         -> Editor/VRChat/UI/FTEmulator/FTEmulatorDebugWindow.cs, opened from the FTEmulator window
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.

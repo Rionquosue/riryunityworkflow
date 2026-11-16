@@ -1,0 +1,407 @@
+{
+  "schema": 1,
+  "id": "vive-facial-tracker",
+  "name": "Vive Facial Tracker",
+  "detail": "Lower face only",
+  "version": "1",
+  "order": 60,
+  "eyeTracking": false,
+  "faceTracking": true,
+  "evidence": [
+    "H4 VRCFT Vive Pro Eye guide and SRanipal hardware matrix",
+    "H5 VRCFaceTracking/SRanipalTrackingModule SRanipalTrackingInterface.cs at deecdfa3932c32899920415b837f10211c13b2ec"
+  ],
+  "notes": [
+    "SRanipal lip controls. CheekSuck drives both sides, MouthPout all four pucker quadrants, the two tongue steps one TongueOut.",
+    "No tongue twist, flat, squish or curl; no nose wrinkle or lip press.",
+    "Cheek squint, dimple and stretch follow the smile and sad controls only with Documented module behavior.",
+    "The lower funnel and left stretch assignments are kept as the inspected module has them."
+  ],
+  "controls": [
+    {
+      "name": "JawOpen",
+      "group": "Jaw",
+      "from": "clamp(JawOpen - MouthClosed, 0, 1)"
+    },
+    {
+      "name": "JawLeft",
+      "group": "Jaw",
+      "from": "JawLeft"
+    },
+    {
+      "name": "JawRight",
+      "group": "Jaw",
+      "from": "JawRight"
+    },
+    {
+      "name": "JawForward",
+      "group": "Jaw",
+      "from": "JawForward"
+    },
+    {
+      "name": "MouthApeShape",
+      "group": "Closure",
+      "from": "MouthClosed"
+    },
+    {
+      "name": "MouthUpperUpLeft",
+      "group": "Vertical lips",
+      "from": "clamp(MouthUpperUpLeft + (LipFunnelUpperLeft + LipFunnelUpperRight) / 2, 0, 1)"
+    },
+    {
+      "name": "MouthUpperUpRight",
+      "group": "Vertical lips",
+      "from": "clamp(MouthUpperUpRight + (LipFunnelUpperLeft + LipFunnelUpperRight) / 2, 0, 1)"
+    },
+    {
+      "name": "MouthLowerDownLeft",
+      "group": "Vertical lips",
+      "from": "clamp(MouthLowerDownLeft + (LipFunnelLowerLeft + LipFunnelLowerRight) / 2, 0, 1)"
+    },
+    {
+      "name": "MouthLowerDownRight",
+      "group": "Vertical lips",
+      "from": "clamp(MouthLowerDownRight + (LipFunnelLowerLeft + LipFunnelLowerRight) / 2, 0, 1)"
+    },
+    {
+      "name": "MouthUpperOverturn",
+      "group": "Lip contour",
+      "from": "(LipFunnelUpperLeft + LipFunnelUpperRight) / 2"
+    },
+    {
+      "name": "MouthLowerOverturn",
+      "group": "Lip contour",
+      "from": "(LipFunnelLowerLeft + LipFunnelLowerRight) / 2"
+    },
+    {
+      "name": "MouthPout",
+      "group": "Lip contour",
+      "from": "(LipPuckerUpperLeft + LipPuckerUpperRight + LipPuckerLowerLeft + LipPuckerLowerRight) / 4"
+    },
+    {
+      "name": "MouthUpperInside",
+      "group": "Lip inward",
+      "from": "(LipSuckUpperLeft + LipSuckUpperRight) / 2"
+    },
+    {
+      "name": "MouthLowerInside",
+      "group": "Lip inward",
+      "from": "(LipSuckLowerLeft + LipSuckLowerRight) / 2"
+    },
+    {
+      "name": "MouthUpperLeft",
+      "group": "Lateral lips",
+      "from": "MouthUpperLeft"
+    },
+    {
+      "name": "MouthUpperRight",
+      "group": "Lateral lips",
+      "from": "MouthUpperRight"
+    },
+    {
+      "name": "MouthLowerLeft",
+      "group": "Lateral lips",
+      "from": "MouthLowerLeft"
+    },
+    {
+      "name": "MouthLowerRight",
+      "group": "Lateral lips",
+      "from": "MouthLowerRight"
+    },
+    {
+      "name": "MouthSmileLeft",
+      "group": "Corners",
+      "from": "max(MouthCornerPullLeft, MouthCornerSlantLeft)"
+    },
+    {
+      "name": "MouthSmileRight",
+      "group": "Corners",
+      "from": "max(MouthCornerPullRight, MouthCornerSlantRight)"
+    },
+    {
+      "name": "MouthSadLeft",
+      "group": "Corners",
+      "from": "MouthFrownLeft"
+    },
+    {
+      "name": "MouthSadRight",
+      "group": "Corners",
+      "from": "MouthFrownRight"
+    },
+    {
+      "name": "MouthLowerOverlay",
+      "group": "Overlay",
+      "from": "MouthRaiserLower"
+    },
+    {
+      "name": "CheekPuffLeft",
+      "group": "Cheeks",
+      "from": "CheekPuffLeft"
+    },
+    {
+      "name": "CheekPuffRight",
+      "group": "Cheeks",
+      "from": "CheekPuffRight"
+    },
+    {
+      "name": "CheekSuck",
+      "group": "Cheeks",
+      "from": "(CheekSuckLeft + CheekSuckRight) / 2"
+    },
+    {
+      "name": "TongueLongStep1",
+      "group": "Tongue",
+      "from": "clamp(TongueOut * 2, 0, 1)"
+    },
+    {
+      "name": "TongueLongStep2",
+      "group": "Tongue",
+      "from": "clamp(TongueOut * 2 - 1, 0, 1)"
+    },
+    {
+      "name": "TongueUp",
+      "group": "Tongue",
+      "from": "TongueUp"
+    },
+    {
+      "name": "TongueDown",
+      "group": "Tongue",
+      "from": "TongueDown"
+    },
+    {
+      "name": "TongueLeft",
+      "group": "Tongue",
+      "from": "TongueLeft"
+    },
+    {
+      "name": "TongueRight",
+      "group": "Tongue",
+      "from": "TongueRight"
+    },
+    {
+      "name": "TongueRoll",
+      "group": "Tongue",
+      "from": "TongueRoll"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "JawOpen",
+      "value": "JawOpen + MouthApeShape"
+    },
+    {
+      "key": "JawLeft",
+      "value": "JawLeft"
+    },
+    {
+      "key": "JawRight",
+      "value": "JawRight"
+    },
+    {
+      "key": "JawForward",
+      "value": "JawForward"
+    },
+    {
+      "key": "MouthClosed",
+      "value": "MouthApeShape"
+    },
+    {
+      "key": "MouthUpperUpRight",
+      "value": "MouthUpperUpRight - MouthUpperOverturn"
+    },
+    {
+      "key": "MouthUpperDeepenRight",
+      "value": "MouthUpperUpRight - MouthUpperOverturn"
+    },
+    {
+      "key": "MouthUpperUpLeft",
+      "value": "MouthUpperUpLeft - MouthUpperOverturn"
+    },
+    {
+      "key": "MouthUpperDeepenLeft",
+      "value": "MouthUpperUpLeft - MouthUpperOverturn"
+    },
+    {
+      "key": "MouthLowerDownLeft",
+      "value": "MouthLowerDownLeft - MouthLowerOverturn"
+    },
+    {
+      "key": "MouthLowerDownRight",
+      "value": "MouthLowerDownRight - MouthLowerOverturn"
+    },
+    {
+      "key": "LipPuckerUpperLeft",
+      "value": "MouthPout"
+    },
+    {
+      "key": "LipPuckerLowerLeft",
+      "value": "MouthPout"
+    },
+    {
+      "key": "LipPuckerUpperRight",
+      "value": "MouthPout"
+    },
+    {
+      "key": "LipPuckerLowerRight",
+      "value": "MouthPout"
+    },
+    {
+      "key": "LipFunnelUpperLeft",
+      "value": "MouthUpperOverturn"
+    },
+    {
+      "key": "LipFunnelUpperRight",
+      "value": "MouthUpperOverturn"
+    },
+    {
+      "key": "LipFunnelLowerLeft",
+      "value": "MouthUpperOverturn",
+      "note": "As in the inspected module; not corrected."
+    },
+    {
+      "key": "LipFunnelLowerRight",
+      "value": "MouthUpperOverturn",
+      "note": "As in the inspected module; not corrected."
+    },
+    {
+      "key": "LipSuckUpperLeft",
+      "value": "MouthUpperInside"
+    },
+    {
+      "key": "LipSuckUpperRight",
+      "value": "MouthUpperInside"
+    },
+    {
+      "key": "LipSuckLowerLeft",
+      "value": "MouthLowerInside"
+    },
+    {
+      "key": "LipSuckLowerRight",
+      "value": "MouthLowerInside"
+    },
+    {
+      "key": "MouthUpperLeft",
+      "value": "MouthUpperLeft"
+    },
+    {
+      "key": "MouthUpperRight",
+      "value": "MouthUpperRight"
+    },
+    {
+      "key": "MouthLowerLeft",
+      "value": "MouthLowerLeft"
+    },
+    {
+      "key": "MouthLowerRight",
+      "value": "MouthLowerRight"
+    },
+    {
+      "key": "MouthCornerPullLeft",
+      "value": "MouthSmileLeft"
+    },
+    {
+      "key": "MouthCornerPullRight",
+      "value": "MouthSmileRight"
+    },
+    {
+      "key": "MouthCornerSlantLeft",
+      "value": "MouthSmileLeft"
+    },
+    {
+      "key": "MouthCornerSlantRight",
+      "value": "MouthSmileRight"
+    },
+    {
+      "key": "MouthFrownLeft",
+      "value": "MouthSadLeft"
+    },
+    {
+      "key": "MouthFrownRight",
+      "value": "MouthSadRight"
+    },
+    {
+      "key": "MouthRaiserUpper",
+      "value": "MouthLowerOverlay - MouthUpperInside"
+    },
+    {
+      "key": "MouthRaiserLower",
+      "value": "MouthLowerOverlay"
+    },
+    {
+      "key": "CheekPuffLeft",
+      "value": "CheekPuffLeft"
+    },
+    {
+      "key": "CheekPuffRight",
+      "value": "CheekPuffRight"
+    },
+    {
+      "key": "CheekSuckLeft",
+      "value": "CheekSuck"
+    },
+    {
+      "key": "CheekSuckRight",
+      "value": "CheekSuck"
+    },
+    {
+      "key": "TongueOut",
+      "value": "(TongueLongStep1 + TongueLongStep2) / 2"
+    },
+    {
+      "key": "TongueUp",
+      "value": "TongueUp"
+    },
+    {
+      "key": "TongueDown",
+      "value": "TongueDown"
+    },
+    {
+      "key": "TongueLeft",
+      "value": "TongueLeft"
+    },
+    {
+      "key": "TongueRight",
+      "value": "TongueRight"
+    },
+    {
+      "key": "TongueRoll",
+      "value": "TongueRoll"
+    },
+    {
+      "key": "CheekSquintLeft",
+      "value": "MouthSmileLeft",
+      "derived": true,
+      "note": "Module enhancement from the smile."
+    },
+    {
+      "key": "CheekSquintRight",
+      "value": "MouthSmileRight",
+      "derived": true,
+      "note": "Module enhancement from the smile."
+    },
+    {
+      "key": "MouthDimpleLeft",
+      "value": "MouthSmileLeft",
+      "derived": true,
+      "note": "Module enhancement from the smile."
+    },
+    {
+      "key": "MouthDimpleRight",
+      "value": "MouthSmileRight",
+      "derived": true,
+      "note": "Module enhancement from the smile."
+    },
+    {
+      "key": "MouthStretchLeft",
+      "value": "MouthSadRight",
+      "derived": true,
+      "note": "As in the inspected module; not corrected."
+    },
+    {
+      "key": "MouthStretchRight",
+      "value": "MouthSadRight",
+      "derived": true,
+      "note": "As in the inspected module; not corrected."
+    }
+  ]
+}
