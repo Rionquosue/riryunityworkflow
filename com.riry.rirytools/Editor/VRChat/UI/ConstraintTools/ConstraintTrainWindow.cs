@@ -15,7 +15,7 @@ namespace Riry.RiryTools.Editor
     /// ConstraintTrainWindow.UI.cs. The window and its Open methods are in
     /// ConstraintToolWindow.cs, and the menu entries in RiryToolsVRChatMenus.cs.
     /// </summary>
-    internal sealed partial class ConstraintTrainWindow : EditorWindow
+    internal sealed partial class ConstraintTrainWindow : RiryToolUndoWindow
     {
         private const string UndoName = "Constraint Train";
         private const string SettingsUndo = "Constraint Train settings";
@@ -56,10 +56,7 @@ namespace Riry.RiryTools.Editor
         // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
         private void Act(Action action)
         {
-            string before = status;
-            action();
-            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
-                RiryLog.Info(RiryLog.ConstraintTool, "Train: " + status);
+            ConstraintToolStatus.Act(action, () => status, "Train");
         }
 
         private T Act<T>(Func<T> action)
@@ -92,20 +89,14 @@ namespace Riry.RiryTools.Editor
             Repaint();
         }
 
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-        }
-
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             Repaint();
         }
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-            Undo.undoRedoPerformed += OnUndoRedo;
+            base.OnEnable();
             minSize = new Vector2(420, 480);
             if (chainStarts == null || chainStarts.Length != ConstraintTrainPlanner.MaxChains)
             {

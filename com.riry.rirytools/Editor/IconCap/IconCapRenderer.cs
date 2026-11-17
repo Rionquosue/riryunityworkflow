@@ -69,7 +69,7 @@ namespace Riry.RiryTools.Editor
             GameObject isolated = null;
             if (!string.IsNullOrEmpty(objects.Isolated))
             {
-                isolated = IconCapAssets.Find<GameObject>(objects.Isolated);
+                isolated = SceneObjectId.Find<GameObject>(objects.Isolated);
                 if (isolated == null)
                 {
                     problem = "The isolated item is not in the open scenes.";
@@ -79,7 +79,7 @@ namespace Riry.RiryTools.Editor
             var selected = new List<Renderer>();
             foreach (string id in objects.Renderers)
             {
-                var renderer = IconCapAssets.Find<Renderer>(id);
+                var renderer = SceneObjectId.Find<Renderer>(id);
                 if (renderer != null) selected.Add(renderer);
             }
             if (isolated == null && objects.OnlySelected && selected.Count < objects.Renderers.Count)

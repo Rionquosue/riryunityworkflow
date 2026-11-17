@@ -96,17 +96,7 @@ namespace Riry.RiryTools.Editor
         // One step: logged and reported on failure, the run goes on.
         private void Step(string name, Action step)
         {
-            EditorUtility.DisplayProgressBar(AvatarMigratorWindow.Title, name, 0.5f);
-            try
-            {
-                step();
-            }
-            catch (Exception exception)
-            {
-                // Named by its step; the run report lists it too, so this is the one with the stack.
-                RiryLog.Exception(RiryLog.AvatarMigration, name + " failed", exception, targetRoot.gameObject);
-                report.Failures.Add(name + ": " + exception.Message);
-            }
+            AvatarMigratorStep.Run(name, step, report, targetRoot);
         }
 
         private void CopyStep(AvatarMigratorCopyType type, AvatarMigratorTypeSettings typeSettings)

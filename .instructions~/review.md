@@ -1,6 +1,6 @@
 # Review: components not necessary for a tool's functionality
 
-Assessed on `betastaging` at `14f8055`. A component is listed when removing it, or folding it into the copy it repeats, changes nothing a tool does. Found by reading the code and by scripted checks (repeated blocks, declarations nothing references); nothing was compiled or run in Unity. Nothing listed here has been removed.
+Assessed on `betastaging` at `14f8055`. A component is listed when removing it, or folding it into the copy it repeats, changes nothing a tool does. Found by reading the code and by scripted checks (repeated blocks, declarations nothing references); nothing was compiled or run in Unity. What has been removed since is under Removed; everything else listed is still in the package.
 
 Paths are relative to `com.riry.rirytools/Editor/`.
 
@@ -8,23 +8,18 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 
 1. **Menu Tool.** Every `#if RIRYTOOLS_MENUTOOL_MA` block: the whole of `VRChat/MenuTool/MenuToolScanner.ModularAvatar.cs` and 47 blocks in `MenuToolModel.cs` (3), `MenuToolPlan.cs` (4), `MenuToolPlanner.cs` (27), `MenuToolApply.cs` (7), `MenuToolScanner.cs` (5) and `VRChat/UI/MenuTool/MenuToolIcons.cs` (1). The symbol is never defined (`docs/variables.md`), so none of it is in the built tool. Kept on purpose until Modular Avatar support returns.
 
-## Never referenced
+## Removed
 
-1. **FTEmulator.** `FTEmulatorDiagnostics.ProfileData` (`VRChat/FTEmulator/FTEmulatorDiagnostics.cs:33`): a constant only its own glossary names.
-2. **FTEmulator.** `FTEmulatorDebugWindow.DiagnosticsTab` (`VRChat/UI/FTEmulator/FTEmulatorDebugWindow.cs:24`): a constant only its own glossary names.
+Not compiled or run in Unity.
 
-## Repeated code: one copy is enough
-
-1. **Menu Tool.** `VRChat/MenuTool/MenuToolApply.cs`: the last 10 lines of `Move` (204) and of `MoveInPlace` (222) are the same.
-2. **Controller Cleaner, Material Cleaner.** `AnimatorTools/ControllerCleanerSources.cs` and `Utilities/MaterialCleanerSources.cs`: `InOpenScenes` walks the open scenes' components and properties the same way, and `InProject` and `Editable` differ only by the asset type.
-3. **Controller Cleaner, Material Cleaner.** `UI/AnimatorTools/ControllerCleanerWindow.cs` and `UI/Utilities/MaterialCleanerWindow.cs`: `Scan` is the same apart from the type.
-4. **Blendshape Sync, IconCap.** `BlendshapeSync/BlendshapeSyncJob.cs` `Id` and `Find` repeat `IconCapAssets.SceneId` and `Find` (`IconCap/IconCapData.cs`).
-5. **Avatar Migration Assistant, Blendshape Sync.** `BlendshapeNames` (`AvatarMigrator/AvatarMigratorCopyRun.TypeRules.cs`) and `GetNames` (`BlendshapeSync/BlendshapeSyncWindow.Plan.cs`) are the same; `ShapeNames` (`AvatarMigrator/AvatarMigratorMatchObjects.cs`) is the same loop into a set.
-6. **Avatar Migration Assistant, Clean Animation Keys.** `BlendshapePrefix = "blendShape."` is declared in `AvatarMigrator/AvatarMigratorRetargetAnim.cs` and in `AnimatorTools/CleanAnimationKeys.cs`.
-7. **Avatar Migration Assistant.** `Step(name, step)` in `AvatarMigrator/AvatarMigratorCopyRun.cs` (97) and `AvatarMigrator/AvatarMigratorRetargetAnim.cs` (77) is the same apart from where the target root is read.
-8. **Constraint Tool.** `Act(action)` in `ConstraintTrainWindow.cs`, `ConstraintBezierWindow.cs` and `InsertablePropWindow.cs` (`VRChat/UI/ConstraintTools/`) is the same apart from the tab name in the log line.
-9. **Menu Tool.** `VRChat/MenuTool/MenuToolPlanner.cs`: the two checks at 193 and 226 open with the same 6 lines (find the entry, "is no longer in the menu").
-10. **Clean Animation Keys, Extract Animations, Menu Mockup, Constraint Tool.** The `OnEnable` and `OnDisable` pair that subscribes `Undo.undoRedoPerformed` is repeated in `CleanAnimationKeysWindow`, `ImportPresetExtractAnimationWindow`, `MenuMockupEditWindow`, `ConstraintBezierWindow`, `ConstraintTrainWindow` and `InsertablePropWindow`. Each window needs the subscription; the repeated text is what is not needed.
+1. **FTEmulator.** The unused constants `FTEmulatorDiagnostics.ProfileData` and `FTEmulatorDebugWindow.DiagnosticsTab`.
+2. **Menu Tool.** `MenuToolApply.cs`: `Move` and `MoveInPlace` share `MoveControl`. `MenuToolPlanner.cs`: three checks share `FindEntry`.
+3. **Controller Cleaner, Material Cleaner.** The scene walk and the project search are in `Components/ReferencedAssets.cs`; both `Sources` scripts call it. Both windows' `Scan` use `RiryToolGUI.ProgressEach`.
+4. **Blendshape Sync, IconCap.** Scene object ids are in `Components/SceneObjectId.cs`.
+5. **Avatar Migration Assistant, Blendshape Sync, Clean Animation Keys.** Blendshape names and the `blendShape.` curve prefix are in `Components/BlendshapeNames.cs`.
+6. **Avatar Migration Assistant.** Both runs' `Step` call `AvatarMigrator/AvatarMigratorStep.cs`.
+7. **Constraint Tool.** The three tabs' `Act` call `VRChat/Components/ConstraintToolStatus.cs`.
+8. **Windows that refresh after Undo and Redo.** `CleanAnimationKeysWindow`, `ImportPresetExtractAnimationWindow`, `MenuMockupEditWindow`, `IconCapWindow`, `ConstraintBezierWindow`, `ConstraintTrainWindow`, `InsertablePropWindow` and `MenuToolWindow` inherit the subscription from `UI/Components/RiryToolUndoWindow.cs`.
 
 ## Not needed for a tool to work, and seen by the user
 

@@ -16,7 +16,6 @@ namespace Riry.RiryTools.Editor
     {
         internal const string DisplayName = "Clean Animation Keys";
 
-        private const string BlendshapePrefix = "blendShape.";
         private const int BoneValueDecimalPlaces = 3;
 
         /// <summary>The built-in keep rules, each a checkbox in the window.</summary>
@@ -62,7 +61,7 @@ namespace Riry.RiryTools.Editor
                 {
                     key = "shape\n" + binding.path + "\n" + binding.propertyName;
                     if (!groups.TryGetValue(key, out group))
-                        groups.Add(key, group = new Group(true, binding.propertyName.Substring(BlendshapePrefix.Length)));
+                        groups.Add(key, group = new Group(true, binding.propertyName.Substring(BlendshapeNames.CurvePrefix.Length)));
                 }
                 else
                 {
@@ -227,7 +226,7 @@ namespace Riry.RiryTools.Editor
             return binding.type == typeof(SkinnedMeshRenderer) &&
                    binding.propertyName != null &&
                    binding.propertyName.StartsWith(
-                       BlendshapePrefix,
+                       BlendshapeNames.CurvePrefix,
                        StringComparison.Ordinal);
         }
 

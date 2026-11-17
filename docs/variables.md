@@ -310,6 +310,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `BlendshapeSyncJobList.WideRow` | `570`: window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line. | `UI/BlendshapeSync/BlendshapeSyncJobList.cs` |
 | `BlendshapeSyncWindow.Interval` | `0.5` s: automatic sync period. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `BlendshapeSync/BlendshapeSyncJob.cs` |
 | `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights`: Undo names; also mark the tool's own Undo steps. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `BlendshapeSync/BlendshapeSyncWindow.Sync.cs` |
+| `BlendshapeNames.CurvePrefix` | `blendShape.`: what a blendshape curve's property name starts with. | `Components/BlendshapeNames.cs`, `AnimatorTools/CleanAnimationKeys.cs`, `AvatarMigrator/AvatarMigratorRetargetAnim.cs` |
 | `CleanAnimationKeys.BoneValueDecimalPlaces` | `3`: rounding for bone endpoint comparison. | `AnimatorTools/CleanAnimationKeys.cs` |
 | `MaterialCleaner.Title` | `Material Cleaner`: window title and Undo name of Clean (one undo step per click; removes a material's texture slots its shader doesn't have). | `Utilities/MaterialCleaner.cs`, `UI/Utilities/MaterialCleanerWindow.cs` |
 | `CleanAnimationKeys.DisplayName` | `Clean Animation Keys`: dialog, window and Undo name. | `AnimatorTools/CleanAnimationKeys.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs` |

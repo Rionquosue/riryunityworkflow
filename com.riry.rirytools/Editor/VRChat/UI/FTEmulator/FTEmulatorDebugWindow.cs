@@ -21,7 +21,6 @@ namespace Riry.RiryTools.Editor
         internal const int ExpressionsTab = 1;
         internal const int HardwareTab = 2;
         internal const int MappingsTab = 3;
-        internal const int DiagnosticsTab = 4;
         private static readonly string[] Tabs = { "Parameters", "Expressions", "Hardware controls", "Mappings", "Diagnostics" };
         private static readonly string[] MappedNames = { "All", "Mapped", "Unmapped" };
         private static readonly string[] ModeNames = { "Live", "Hold", "Manual", "Off" };

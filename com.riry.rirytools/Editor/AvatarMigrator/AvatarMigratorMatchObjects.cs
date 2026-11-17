@@ -291,10 +291,7 @@ namespace Riry.RiryTools.Editor
 
         private static HashSet<string> ShapeNames(Mesh mesh)
         {
-            var names = new HashSet<string>(StringComparer.Ordinal);
-            if (mesh == null) return names;
-            for (int i = 0; i < mesh.blendShapeCount; i++) names.Add(mesh.GetBlendShapeName(i));
-            return names;
+            return new HashSet<string>(mesh == null ? new string[0] : BlendshapeNames.Of(mesh), StringComparer.Ordinal);
         }
 
         // Shared names over all names of both (so a subset, such as clothing's bones, scores low); 0 when either has none.

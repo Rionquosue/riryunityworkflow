@@ -73,18 +73,8 @@ namespace Riry.RiryTools.Editor
         private void Scan(List<AnimatorController> controllers, string where)
         {
             results = new List<ControllerCleanerScan.Result>();
-            try
-            {
-                for (int i = 0; i < controllers.Count; i++)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + controllers[i].name, (float)i / controllers.Count)) break;
-                    results.Add(ControllerCleanerScan.Scan(controllers[i]));
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            RiryToolGUI.ProgressEach(Title, controllers, controller => "Scanning " + controller.name,
+                controller => results.Add(ControllerCleanerScan.Scan(controller)));
             scanned = where;
             GUI.FocusControl(null);
         }

@@ -53,7 +53,7 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 - **Main Menu:** `UI/RiryToolsMainMenu.cs`. Hosts each tool's window in a tab. VRChat tools are handed to it by `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Tools > RiryTools menu:** `UI/RiryToolsMenuBar.cs`; the VRChat entries are in `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Right click menus (Hierarchy, Project):** `UI/RiryToolsRightClickMenu.cs`.
-- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, Controller Cleaner's scan and clean (also used by GUID Tools), Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources and generated objects, shared by Train, Bezier and Insertable prop).
+- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, scene object ids, blendshape names, referenced assets, Controller Cleaner's scan and clean (also used by GUID Tools), Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `RiryToolUndoWindow`: the base of windows that refresh after Undo and Redo; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources, generated objects and logged status, shared by Train, Bezier and Insertable prop).
 - **A tool:** its logic folder and its `UI/<folder>/` window, per the table above.
 - **FTEmulator:** `VRChat/FTEmulator/FTEmulator.cs` (lifecycle, one session), `FTEmulatorSession.cs` (the per-frame pipeline); its Gesture Manager output is `VRChat/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`. Its data is JSON, found by folder GUID (`FTEmulatorCatalog`). Its windows are in `VRChat/UI/FTEmulator/`.
 
@@ -96,6 +96,7 @@ com.riry.rirytools/
     │   ├── AvatarMigratorRetargetAnim.VRCFuryMover.cs
     │   ├── AvatarMigratorRunReport.cs
     │   ├── AvatarMigratorSettings.cs
+    │   ├── AvatarMigratorStep.cs
     │   ├── AvatarMigratorYaml.cs
     │   └── types.yml
     ├── BlendshapeSync/
@@ -105,6 +106,7 @@ com.riry.rirytools/
     │   ├── BlendshapeSyncWindow.Plan.cs
     │   └── BlendshapeSyncWindow.Sync.cs
     ├── Components/
+    │   ├── BlendshapeNames.cs
     │   ├── ControllerCleanerClean.cs
     │   ├── ControllerCleanerScan.cs
     │   ├── FuzzyMatch.cs
@@ -113,10 +115,12 @@ com.riry.rirytools/
     │   ├── GitRunner.cs
     │   ├── GitState.cs
     │   ├── HierarchyPath.cs
+    │   ├── ReferencedAssets.cs
     │   ├── RiryLog.cs
     │   ├── RiryToolsPaths.cs
     │   ├── RiryToolsProjectFolder.cs
     │   ├── RiryToolsTypes.cs
+    │   ├── SceneObjectId.cs
     │   └── VrcSdkNotFoundException.cs
     ├── Debug/
     │   ├── FindNullReferences.cs
@@ -188,7 +192,8 @@ com.riry.rirytools/
     │   │   └── BlendshapeSyncWindow.UI.cs
     │   ├── Components/
     │   │   ├── IRiryHostedTool.cs
-    │   │   └── RiryToolGUI.cs
+    │   │   ├── RiryToolGUI.cs
+    │   │   └── RiryToolUndoWindow.cs
     │   ├── Debug/
     │   │   ├── FindNullReferencesWindow.cs
     │   │   ├── MenuMockupComponentsWindow.cs
@@ -239,7 +244,8 @@ com.riry.rirytools/
     │   ├── Components/
     │   │   ├── ConstraintToolChains.cs
     │   │   ├── ConstraintToolObjects.cs
-    │   │   └── ConstraintToolSources.cs
+    │   │   ├── ConstraintToolSources.cs
+    │   │   └── ConstraintToolStatus.cs
     │   ├── ConstraintTools/
     │   │   ├── ConstraintBezier/
     │   │   │   └── ConstraintBezierCurve.cs

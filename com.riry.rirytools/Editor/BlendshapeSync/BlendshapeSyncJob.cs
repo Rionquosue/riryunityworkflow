@@ -98,7 +98,7 @@ namespace Riry.RiryTools.Editor
 
         internal SavedJob Save()
         {
-            var saved = new SavedJob { Master = Id(master), Name = jobName ?? "", Auto = runAutomatically, CaseSensitive = caseSensitive };
+            var saved = new SavedJob { Master = SceneObjectId.Of(master), Name = jobName ?? "", Auto = runAutomatically, CaseSensitive = caseSensitive };
             foreach (ChildEntry child in children)
             {
                 if (child == null || child.Renderer == null) continue;
@@ -107,7 +107,7 @@ namespace Riry.RiryTools.Editor
                 {
                     if (link != null && !IsBlank(link)) links.Add(new ManualLink { Source = link.Source, Destination = link.Destination });
                 }
-                saved.Children.Add(new SavedChild { Renderer = Id(child.Renderer), Links = links });
+                saved.Children.Add(new SavedChild { Renderer = SceneObjectId.Of(child.Renderer), Links = links });
             }
             saved.Children.AddRange(missingChildren);
             return saved;
@@ -125,7 +125,7 @@ namespace Riry.RiryTools.Editor
             missingChildren.Clear();
             foreach (SavedChild child in saved.Children ?? new List<SavedChild>())
             {
-                SkinnedMeshRenderer renderer = Find(child.Renderer);
+                SkinnedMeshRenderer renderer = SceneObjectId.Find<SkinnedMeshRenderer>(child.Renderer);
                 if (renderer == null)
                 {
                     missingChildren.Add(child);
@@ -142,18 +142,6 @@ namespace Riry.RiryTools.Editor
             nextTick = EditorApplication.timeSinceStartup + Interval;
             InvalidatePlan();
             return missingChildren.Count;
-        }
-
-        private static string Id(UnityEngine.Object target)
-        {
-            return target == null ? "" : GlobalObjectId.GetGlobalObjectIdSlow(target).ToString();
-        }
-
-        internal static SkinnedMeshRenderer Find(string id)
-        {
-            GlobalObjectId parsed;
-            if (string.IsNullOrEmpty(id) || !GlobalObjectId.TryParse(id, out parsed)) return null;
-            return GlobalObjectId.GlobalObjectIdentifierToObjectSlow(parsed) as SkinnedMeshRenderer;
         }
     }
 }
