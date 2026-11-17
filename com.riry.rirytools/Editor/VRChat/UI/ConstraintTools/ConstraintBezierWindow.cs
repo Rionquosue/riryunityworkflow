@@ -21,7 +21,7 @@ namespace Riry.RiryTools.Editor
     /// pose, so no rotation changes at rest. This file holds the state and the actions; the
     /// drawing is in ConstraintBezierWindow.UI.cs. Shown in a tab of ConstraintToolWindow.
     /// </summary>
-    internal sealed partial class ConstraintBezierWindow : EditorWindow
+    internal sealed partial class ConstraintBezierWindow : RiryToolUndoWindow
     {
         internal enum Mode { Stretch, KeepLength }
         internal enum Target { DeformBones, MechanismChain }
@@ -47,10 +47,7 @@ namespace Riry.RiryTools.Editor
         // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
         private void Act(Action action)
         {
-            string before = status;
-            action();
-            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
-                RiryLog.Info(RiryLog.ConstraintTool, "Bezier: " + status);
+            ConstraintToolStatus.Act(action, () => status, "Bezier");
         }
         private Vector2 scroll;
 
@@ -66,18 +63,7 @@ namespace Riry.RiryTools.Editor
             Repaint();
         }
 
-        private void OnEnable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-        }
-
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             Repaint();
         }

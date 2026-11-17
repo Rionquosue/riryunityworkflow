@@ -72,18 +72,8 @@ namespace Riry.RiryTools.Editor
         private void Scan(List<Material> materials, string where)
         {
             results = new List<MaterialCleaner.Result>();
-            try
-            {
-                for (int i = 0; i < materials.Count; i++)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar(MaterialCleaner.Title, "Scanning " + materials[i].name, (float)i / materials.Count)) break;
-                    results.Add(MaterialCleaner.Scan(materials[i]));
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            RiryToolGUI.ProgressEach(MaterialCleaner.Title, materials, material => "Scanning " + material.name,
+                material => results.Add(MaterialCleaner.Scan(material)));
             scanned = where;
             GUI.FocusControl(null);
         }

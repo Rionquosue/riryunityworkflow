@@ -24,7 +24,7 @@ namespace Riry.RiryTools.Editor
             for (int i = 0; i < weights.Length; i++) weights[i] = renderer.GetBlendShapeWeight(i);
             originals.Add(new OriginalState
             {
-                Renderer = renderer, Mesh = mesh, Names = GetNames(mesh), Weights = weights
+                Renderer = renderer, Mesh = mesh, Names = BlendshapeNames.Of(mesh), Weights = weights
             });
         }
 

@@ -32,6 +32,26 @@ namespace Riry.RiryTools.Editor
             if (owner != null) Undo.RecordObject(owner, undoName);
             return edited;
         }
+
+        /// <summary>
+        /// Runs each on every item behind a cancellable progress bar that shows the item's label; Cancel stops before
+        /// the next item. The bar is cleared when done, cancelled or failed.
+        /// </summary>
+        internal static void ProgressEach<T>(string title, IList<T> items, System.Func<T, string> label, System.Action<T> each)
+        {
+            try
+            {
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (EditorUtility.DisplayCancelableProgressBar(title, label(items[i]), (float)i / items.Count)) break;
+                    each(items[i]);
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
     }
 }
 

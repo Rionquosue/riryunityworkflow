@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     /// (Editor/ImportPresets/ImportPresetAnimationExtraction.cs); extraction is in
     /// Editor/ImportPresets/ImportPresetAnimations.cs.
     /// </summary>
-    internal sealed class ImportPresetExtractAnimationWindow : EditorWindow
+    internal sealed class ImportPresetExtractAnimationWindow : RiryToolUndoWindow
     {
         [SerializeField] private GameObject target;
         [SerializeField] private ImportPresetAnimationExtraction settings = new ImportPresetAnimationExtraction();
@@ -61,21 +61,15 @@ namespace Riry.RiryTools.Editor
         // The target as last chosen: picking a model is not an Undo step, so Undo never switches it back (OnUndoRedo).
         [NonSerialized] private GameObject keptTarget;
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
             keptTarget = target;
-            Undo.undoRedoPerformed -= OnUndoRedo;
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
+            base.OnEnable();
         }
 
         // A setting put back by Undo or Redo is saved to the settings file, as the edit was. A step recorded for an earlier
         // target leaves the current target and its file as they are.
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             if (target != keptTarget) SetTarget(keptTarget);
             else SettingsChanged();

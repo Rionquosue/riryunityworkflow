@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
     /// The Clean Animation Keys window: the animations to clean, the whitelist,
     /// the keep rules and Clean. Logic is in Editor/AnimatorTools/CleanAnimationKeys.cs.
     /// </summary>
-    internal sealed class CleanAnimationKeysWindow : EditorWindow
+    internal sealed class CleanAnimationKeysWindow : RiryToolUndoWindow
     {
         private const int MaxAnimations = 64;
         private const float AnimationListHeight = 150.0f;
@@ -121,19 +121,8 @@ namespace Riry.RiryTools.Editor
             if (extract != null) extract.SettingsChanged();
         }
 
-        private void OnEnable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-        }
-
         // A list, whitelist or option put back by Undo or Redo: refresh, and in Configure save the settings again.
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             keyedNames = null;
             summary = null;

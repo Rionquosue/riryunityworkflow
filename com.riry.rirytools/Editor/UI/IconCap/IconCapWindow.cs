@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// The live preview renders only while the window is shown: it is requested when the
     /// window draws and rendered on the next editor update (Watch).
     /// </summary>
-    internal sealed partial class IconCapWindow : EditorWindow
+    internal sealed partial class IconCapWindow : RiryToolUndoWindow
     {
         private const float WideWidth = 640f;
         // Narrower windows than these put a row's parts on two lines (each is the row's width plus a buffer).
@@ -123,7 +123,7 @@ namespace Riry.RiryTools.Editor
             };
         }
 
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             if (kept != null)
             {
@@ -151,18 +151,17 @@ namespace Riry.RiryTools.Editor
             Repaint();
         }
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-            Undo.undoRedoPerformed += OnUndoRedo;
+            base.OnEnable();
             Keep();
             EditorApplication.update += Watch;
             if (slots.TrueForAll(slot => slot == null)) SnapToSelection();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
-            Undo.undoRedoPerformed -= OnUndoRedo;
+            base.OnDisable();
             EditorApplication.update -= Watch;
             ReleasePreviews();
         }
@@ -349,10 +348,10 @@ namespace Riry.RiryTools.Editor
 
         private IconCapObjects CurrentObjects()
         {
-            var objects = new IconCapObjects { OnlySelected = onlySelected, Isolated = IconCapAssets.SceneId(isolated) };
+            var objects = new IconCapObjects { OnlySelected = onlySelected, Isolated = SceneObjectId.Of(isolated) };
             foreach (SkinnedMeshRenderer slot in slots)
             {
-                if (slot != null) objects.Renderers.Add(IconCapAssets.SceneId(slot));
+                if (slot != null) objects.Renderers.Add(SceneObjectId.Of(slot));
             }
             return objects;
         }
@@ -666,13 +665,13 @@ namespace Riry.RiryTools.Editor
         {
             if (entry == null) return;
             var selection = new List<UnityEngine.Object>();
-            var isolatedItem = IconCapAssets.Find<GameObject>(entry.Objects.Isolated);
+            var isolatedItem = SceneObjectId.Find<GameObject>(entry.Objects.Isolated);
             if (isolatedItem != null) selection.Add(isolatedItem);
             else
             {
                 foreach (string id in entry.Objects.Renderers)
                 {
-                    var renderer = IconCapAssets.Find<Renderer>(id);
+                    var renderer = SceneObjectId.Find<Renderer>(id);
                     if (renderer != null) selection.Add(renderer.gameObject);
                 }
             }

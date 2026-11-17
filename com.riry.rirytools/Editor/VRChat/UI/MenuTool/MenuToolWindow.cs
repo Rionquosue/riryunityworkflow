@@ -16,7 +16,7 @@ namespace Riry.RiryTools.Editor
     /// owns each control (Menu manager tab). Planning only writes the plan JSON; Apply is one undo step.
     /// Opened from Tools > RiryTools > Menu Tool (its own window) or as the Main Menu's Menu Tool tab.
     /// </summary>
-    internal sealed class MenuToolWindow : EditorWindow, IRiryHostedTool
+    internal sealed class MenuToolWindow : RiryToolUndoWindow, IRiryHostedTool
     {
         internal const string Title = "Menu Tool";
         private static readonly string[] Tabs = { "Parameter budget", "Menu manager" };
@@ -150,19 +150,14 @@ namespace Riry.RiryTools.Editor
             window.Focus();
         }
 
-        private void OnEnable()
+        protected override void OnDisable()
         {
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
+            base.OnDisable();
             DisposePreview();
         }
 
         // An undone or redone plan change (or Apply) is written back to its avatar's plan file.
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             if (plan != null && !string.IsNullOrEmpty(plan.Key) && plan.Json != savedPlan)
             {

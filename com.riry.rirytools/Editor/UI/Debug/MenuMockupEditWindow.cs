@@ -18,7 +18,7 @@ namespace Riry.RiryTools.Editor
     /// change can be undone (Edit > Undo). The aspect ratio of the mockup is shown at
     /// the top. The model and file format are in Editor/Debug/MenuMockup*.cs.
     /// </summary>
-    internal sealed class MenuMockupEditWindow : EditorWindow
+    internal sealed class MenuMockupEditWindow : RiryToolUndoWindow
     {
         internal const string DragKey = "RiryTools.MenuMockup.Type";
         private const float BarHeight = 20f;
@@ -105,17 +105,7 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private void OnEnable()
-        {
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
-        }
-
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             EndDrag();
             pressed = null;

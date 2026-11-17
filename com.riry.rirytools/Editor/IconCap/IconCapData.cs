@@ -275,18 +275,6 @@ namespace Riry.RiryTools.Editor
             string path = AssetDatabase.GUIDToAssetPath(guid);
             return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<T>(path);
         }
-
-        internal static string SceneId(UnityEngine.Object target)
-        {
-            return target == null ? "" : GlobalObjectId.GetGlobalObjectIdSlow(target).ToString();
-        }
-
-        internal static T Find<T>(string id) where T : UnityEngine.Object
-        {
-            GlobalObjectId parsed;
-            if (string.IsNullOrEmpty(id) || !GlobalObjectId.TryParse(id, out parsed)) return null;
-            return GlobalObjectId.GlobalObjectIdentifierToObjectSlow(parsed) as T;
-        }
     }
 }
 

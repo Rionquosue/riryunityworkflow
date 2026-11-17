@@ -30,7 +30,6 @@ namespace Riry.RiryTools.Editor
         internal const string OwnershipConflict = "Output not taken";
         internal const string TypeConflict = "Parameter type conflict";
         internal const string NativeUnsupported = "Native feature not emulated";
-        internal const string ProfileData = "Profile data";
 
         internal sealed class Item
         {

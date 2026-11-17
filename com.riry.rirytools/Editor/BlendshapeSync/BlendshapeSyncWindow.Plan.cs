@@ -38,7 +38,7 @@ namespace Riry.RiryTools.Editor
             planDirty = false;
             plannedMasterMesh = master != null ? master.sharedMesh : null;
             plannedMasterCount = plannedMasterMesh != null ? plannedMasterMesh.blendShapeCount : 0;
-            plannedMasterNames = plannedMasterMesh != null ? GetNames(plannedMasterMesh) : null;
+            plannedMasterNames = plannedMasterMesh != null ? BlendshapeNames.Of(plannedMasterMesh) : null;
             string error = RendererError(master);
             if (error != null)
             {
@@ -57,7 +57,7 @@ namespace Riry.RiryTools.Editor
                 {
                     Entry = child, Renderer = child.Renderer, Mesh = mesh,
                     ShapeCount = mesh != null ? mesh.blendShapeCount : 0,
-                    Names = mesh != null ? GetNames(mesh) : null
+                    Names = mesh != null ? BlendshapeNames.Of(mesh) : null
                 });
             }
             foreach (ChildPlan plan in plans)
@@ -180,13 +180,6 @@ namespace Riry.RiryTools.Editor
         private static bool IsBlank(ManualLink link)
         {
             return string.IsNullOrEmpty(link.Source) && string.IsNullOrEmpty(link.Destination);
-        }
-
-        private static string[] GetNames(Mesh mesh)
-        {
-            string[] names = new string[mesh.blendShapeCount];
-            for (int i = 0; i < names.Length; i++) names[i] = mesh.GetBlendShapeName(i);
-            return names;
         }
 
         private static bool NamesAreCurrent(Mesh mesh, string[] names)
