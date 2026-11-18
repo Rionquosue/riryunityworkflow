@@ -20,3 +20,4 @@ Not compiled or run in Unity.
 6. **Avatar Migration Assistant.** Both runs' `Step` call `AvatarMigrator/AvatarMigratorStep.cs`.
 7. **Constraint Tool.** The three tabs' `Act` call `VRChat/Components/ConstraintToolStatus.cs`.
 8. **Windows that refresh after Undo and Redo.** `CleanAnimationKeysWindow`, `ImportPresetExtractAnimationWindow`, `MenuMockupEditWindow`, `IconCapWindow`, `ConstraintBezierWindow`, `ConstraintTrainWindow`, `InsertablePropWindow` and `MenuToolWindow` inherit the subscription from `UI/Components/RiryToolUndoWindow.cs`.
+9. **FTEmulator.** The `Tests/` folder (`FTEmulatorCoreTests.cs`, `FTEmulatorOscTests.cs`, `FTEmulatorPlayModeTests.cs` and the `Riry.RiryTools.Editor.FTEmulatorTests` assembly), and the `InternalsVisibleTo` that let it reach FTEmulator.
