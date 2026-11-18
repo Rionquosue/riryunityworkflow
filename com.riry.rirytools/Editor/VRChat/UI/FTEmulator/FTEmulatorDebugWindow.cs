@@ -370,7 +370,7 @@ namespace Riry.RiryTools.Editor
 //                            hardware, counts, evidence, partial preview reasons, ignored settings and assumptions), or the
 //                            last session's.
 //   Tabs                     Parameters (ParametersTab), Expressions (ExpressionsTab), Hardware controls (HardwareTab),
-//                            Mappings (MappingsTab), Diagnostics (DiagnosticsTab), drawn with RiryToolsMainMenu.TabStrip.
+//                            Mappings (MappingsTab), Diagnostics, drawn with RiryToolsMainMenu.TabStrip.
 //   OnInspectorUpdate()      Ten times a second: a new snapshot; Track notes when each row's value last changed.
 //   DrawTable                The filter (search, All / Mapped / Unmapped, Show blocked, Changed only: changed within
 //                            ChangedSeconds, 2 s), the header, and only the rows in view (RowHeight 20). Columns: name, Type,

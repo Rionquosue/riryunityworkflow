@@ -201,4 +201,4 @@ namespace Riry.RiryTools.Editor
 //   PlanIsCurrent()            The plan still matches the master and children (meshes, names, counts).
 //   BuildPlan() / TryBuildLinks(...)  Match blendshape names to indices (manual links first, then names; FindUnique).
 //   IsBlank(link)              A manual link row with neither name set.
-//   GetNames(mesh) / NamesAreCurrent(mesh, names)  A mesh's blendshape names, and whether they are unchanged.
+//   NamesAreCurrent(mesh, names)  Whether a mesh's blendshape names (BlendshapeNames.Of) are unchanged.

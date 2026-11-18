@@ -153,5 +153,5 @@ namespace Riry.RiryTools.Editor
 //
 // BlendshapeSyncWindow, job part (this file)
 //   JobNumber, Master, ChildCount, Auto, HasOriginals, Problem, RunSync(), RunRestore().
-//   SavedJob / SavedChild / Save() / Load(saved, master) / Find(id)  Renderers saved as GlobalObjectId strings.
+//   SavedJob / SavedChild / Save() / Load(saved, master)  Renderers saved as GlobalObjectId strings (SceneObjectId).
 //   missingChildren     [S] Saved children not found on Load; saved again with the job, so they are never dropped.

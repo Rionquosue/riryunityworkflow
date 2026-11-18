@@ -11,7 +11,7 @@
 
 ## Rules
 
-1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager; `Editor/VRChat/FTEmulator/GestureManager/` joins it through an `.asmref`). FTEmulator's tests are a fourth, test-only assembly (`Editor/VRChat/FTEmulator/Tests/`, Unity Test Framework), left out of projects without the Test Framework. Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tool lives entirely in `Editor/VRChat/`).
+1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager; `Editor/VRChat/FTEmulator/GestureManager/` joins it through an `.asmref`). Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tool lives entirely in `Editor/VRChat/`).
 2. **Logic folders.** A tool's logic is in its own folder, named after the tool (`AutoSync/`, `AvatarMigrator/`, `BlendshapeSync/`, `GuidTools/`, `IconCap/`, `ImportPresets/`, `MenuTool/`, `ConstraintTools/`, `FTEmulator/`). A tool's data files are in folders inside it (`FTEmulator/HardwareProfiles/`, `AvatarProfiles/`, `MappingSchemas/`).
 3. **Category folders.** A small tool (a single script with a single job) does not get its own folder. It goes in a category folder: `Debug/` (debugging aids), `Utilities/` (general helpers) or `AnimatorTools/`. A tool the owner places in a category keeps all its files there, even when it has several (Menu Mockup in `Debug/`, Attach To in `Utilities/`).
 4. **UI and feature logic.** Give UI and feature logic separate scripts and types. Put windows, panels, controls, dialogs, and progress displays in the owning assembly’s `UI/<ToolOrCategory>/` folder. Keep Main Menu and menu registration scripts directly under `UI/`, and put reusable controls in their own scripts under `UI/Components/`. UI scripts gather input, call feature operations, and present their results. Put feature state, operation validation, planning, execution, and persistence in the tool’s logic folder. Feature types must run without opening or depending on a UI type. Use inputs, results, and progress or cancellation callbacks where needed. A partial type follows the same rule across all its files.
@@ -278,11 +278,6 @@ com.riry.rirytools/
     │   │   │   └── vive-pro-stock.json
     │   │   ├── MappingSchemas/
     │   │   │   └── unified-expressions.json
-    │   │   ├── Tests/
-    │   │   │   ├── FTEmulatorCoreTests.cs
-    │   │   │   ├── FTEmulatorOscTests.cs
-    │   │   │   ├── FTEmulatorPlayModeTests.cs
-    │   │   │   └── Riry.RiryTools.Editor.FTEmulatorTests.asmdef
     │   │   ├── FTEmulator.cs
     │   │   ├── FTEmulatorAvatarScanner.cs
     │   │   ├── FTEmulatorBlendshapeWriter.cs
