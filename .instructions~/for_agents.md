@@ -47,6 +47,7 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 - Unity 2022.3 LTS, C# 9. Assemblies `Riry.RiryTools.Editor`, `Riry.RiryTools.Editor.VRChat` (needs `RIRYTOOLS_VRC_CONSTRAINTS`, VRChat SDK 3.7.0+) and `Riry.RiryTools.Editor.GestureManager` (`RIRYTOOLS_GESTURE_MANAGER`, Gesture Manager 3.9+). `RIRYTOOLS_VRC_BIT_WIDTH` for `com.vrchat.avatars` 3.10.6+.
 - Every code file ends with a GLOSSARY block of its members; update it only when instructed.
 - `docs/variables.md` lists every stored key, path, GUID, symbol, constant, menu path and workflow variable; keep it current.
+- `docs/ui-languagespec.md` lists where the text of every UI element lives (file, method, kind of text and lines); keep it current.
 - Every new file gets a `.meta` with a fresh uuid4 hex GUID. Never delete or regenerate an existing `.meta`.
 - The product is `RiryTools` everywhere. Settings keys `RiryTools.<Tool>.<Setting>`. Menus under `Tools > RiryTools`; no "..." in entry names; never hard-code Alt key sequences.
 

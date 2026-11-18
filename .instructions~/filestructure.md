@@ -6,7 +6,7 @@
 
 - `.instructions~/`: Working instructions for LLMs while maintaining this repo. Start with `for_agents.md`.
 - `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`.
-- `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
+- `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
 - `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
 
 ## Rules
