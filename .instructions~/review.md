@@ -26,4 +26,3 @@ Not compiled or run in Unity.
 Removing these changes what the user sees, so each is the owner's decision.
 
 1. **AutoSync.** `Git/Sync` and `Git/Configuration` (`UI/RiryToolsMenuBar.cs`) call the same methods as `Tools/RiryTools/AutoSync/Sync` and `Configuration`.
-2. **Menus.** The `&` menu keys in `UI/RiryToolsMenuBar.cs` (`Avatar Migratio&n Assistant`, `Ic&onCap`, `M&enu Tool`, `Constraint &Tool`): every entry opens the same without them.
