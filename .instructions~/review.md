@@ -20,9 +20,3 @@ Not compiled or run in Unity.
 6. **Avatar Migration Assistant.** Both runs' `Step` call `AvatarMigrator/AvatarMigratorStep.cs`.
 7. **Constraint Tool.** The three tabs' `Act` call `VRChat/Components/ConstraintToolStatus.cs`.
 8. **Windows that refresh after Undo and Redo.** `CleanAnimationKeysWindow`, `ImportPresetExtractAnimationWindow`, `MenuMockupEditWindow`, `IconCapWindow`, `ConstraintBezierWindow`, `ConstraintTrainWindow`, `InsertablePropWindow` and `MenuToolWindow` inherit the subscription from `UI/Components/RiryToolUndoWindow.cs`.
-
-## Not needed for a tool to work, and seen by the user
-
-Removing these changes what the user sees, so each is the owner's decision.
-
-1. **AutoSync.** `Git/Sync` and `Git/Configuration` (`UI/RiryToolsMenuBar.cs`) call the same methods as `Tools/RiryTools/AutoSync/Sync` and `Configuration`.
