@@ -160,4 +160,4 @@ namespace Riry.RiryTools.Editor
 //   ExportText(header)       Everything as text, without images or packet contents.
 //   Codes                    PacketRejected, NativeBlobRejected, AddressLimit, PortInUse, ReceiverFault, QueryFault,
 //                            DiscoveryFault, OtherClient, StaleGeneration, MappingFailure, ProfileBlock, OwnershipConflict,
-//                            TypeConflict, NativeUnsupported, ProfileData.
+//                            TypeConflict, NativeUnsupported.

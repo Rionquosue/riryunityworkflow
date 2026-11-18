@@ -293,4 +293,4 @@ namespace Riry.RiryTools.Editor
 // IconCapSettings         Size, Camera, Background, Options, Effects: what a capture is made with; a preset holds these.
 // IconCapEntry            One capture: FileName, SavedPath (empty until exported), Settings, Objects; Image this session.
 // IconCapJob / IconCapJobFile  A named list of entries / an export folder's .iconcap.json.
-// IconCapAssets           Copy (a deep copy), Guid / Load (assets), SceneId / Find (scene objects).
+// IconCapAssets           Copy (a deep copy), Guid / Load (assets). Scene objects are kept with SceneObjectId.
