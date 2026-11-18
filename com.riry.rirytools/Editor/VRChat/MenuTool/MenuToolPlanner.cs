@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -150,6 +150,9 @@ namespace Riry.RiryTools.Editor
                 check.Errors.Add("The icon texture is no longer in the project.");
                 return check;
             }
+            if (MenuToolIconPreset.TooLarge(texture))
+                check.Warnings.Add(texture.name + " is " + texture.width + "x" + texture.height + "; the VRChat SDK only uploads icons up to " +
+                    MenuToolIconPreset.MaxSize + " px. Apply the " + MenuToolIconPreset.PresetName + " preset in the Menu manager after Apply.");
             if (check.Entry.Generated)
             {
                 check.Errors.Add(check.Entry.Name + " is made by VRCFury's pagination and cannot take an icon.");

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,6 +94,8 @@ namespace Riry.RiryTools.Editor
             CollectParameterUse(context);
             AddControllers(context, components);
             CheckCapacity(scan, scan.Root);
+            CheckNamesAndIcons(scan, scan.Root);
+            if (MenuToolIconPreset.TooLarge(scan.NextIcon) && !scan.LargeIcons.Contains(scan.NextIcon)) scan.LargeIcons.Add(scan.NextIcon);
             return scan;
         }
 
@@ -354,6 +356,18 @@ namespace Riry.RiryTools.Editor
                     if (!string.IsNullOrEmpty(parameter.name)) names.Add(parameter.name);
                     if (!string.IsNullOrEmpty(parameter.source)) names.Add(parameter.source);
                 }
+            }
+        }
+
+        // Controls sharing a name in one submenu, and icons over the SDK's size limit, in the menu as it is assembled.
+        private static void CheckNamesAndIcons(MenuToolScan scan, MenuToolEntry menu)
+        {
+            foreach (IGrouping<string, MenuToolEntry> same in menu.Children.GroupBy(c => c.Name).Where(g => g.Count() > 1))
+                scan.Duplicates.Add((menu.Parent == null ? "Root menu" : menu.Path) + ": \"" + same.Key + "\" (" + same.Count() + ")");
+            foreach (MenuToolEntry child in menu.Children)
+            {
+                if (MenuToolIconPreset.TooLarge(child.Icon) && !scan.LargeIcons.Contains(child.Icon)) scan.LargeIcons.Add(child.Icon);
+                if (child.IsSubMenu) CheckNamesAndIcons(scan, child);
             }
         }
 

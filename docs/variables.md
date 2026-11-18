@@ -164,9 +164,11 @@ Not stored, but named like settings keys.
 
 | Name | Use | Scripts |
 |---|---|---|
+| `Documents/RiryTools/FTEmulator/Recordings/` | `<yyyyMMdd-HHmmss>.ftrec` OSC recordings: `RTFR` header, version `1`, packet count, then each packet's time (seconds), length and bytes. Read back as untrusted (counts, lengths and times checked). Path is `FTEmulatorRecording.Folder`. | `VRChat/FTEmulator/FTEmulatorRecording.cs`, `VRChat/UI/FTEmulator/FTEmulatorWindow.cs` |
 | `Documents/RiryTools/GitTemplates/` | `<name>.gitignore` and `<name>.gitattributes` templates. Path is `AutoSyncGitTemplates.RootPath`. | `AutoSync/AutoSyncGitTemplates.cs`, `AutoSync/AutoSyncGitActions.cs`, `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs` |
 | `Documents/RiryTools/iconcap presets/` | `<name>.json` IconCap presets (size, camera settings, background, capture options, effect stack). Path is `IconCapFiles.PresetFolder`. | `IconCap/IconCapFiles.cs`, `UI/IconCap/IconCapWindow.cs`, `UI/IconCap/IconCapWindow.UI.cs` |
 | `Documents/RiryTools/ImportPresets/<configuration>/` | `*.preset` and optional `config.json`. Path is `ImportPresetLibrary.RootPath`. | `ImportPresets/ImportPresetLibrary.cs`, `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresets/ImportPresetFolderWindow.cs`, `UI/ImportPresets/ImportPresetSaveWindow.cs` |
+| `Documents/RiryTools/ImportPresets/menu_icon.preset` | Menu Tool's icon preset: a TextureImporter preset with every max size at `256`, made from the first oversized icon's importer when missing; only its max size settings are applied. Path is `MenuToolIconPreset.PresetPath`. | `VRChat/MenuTool/MenuToolIconPreset.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `Documents/RiryTools/ImportPresets/preferences.yml` | Import Presets tags (`tags:` list). Path is `ImportPresetPreferences.FilePath`. | `ImportPresets/ImportPresetPreferences.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
 | `Documents/RiryTools/migrator/types.yml` | Avatar Migration Assistant's type list (categories of entries: id, label, common, enabled, sdk, rule, types); copied from the package's `AvatarMigrator/types.yml` when missing, then read from here. Path is `AvatarMigratorCopyTypes.FilePath`. | `AvatarMigrator/AvatarMigratorCopyTypes.cs`, `UI/AvatarMigrator/AvatarMigratorWindow.cs` |
 | `Documents/RiryTools/Mockups/` | `<name>.yml` saved mockups (annotated; Unity never compiles them). Path is `MenuMockup.Folder`. | `Debug/MenuMockup.cs`, `UI/Debug/MenuMockupComponentsWindow.cs`, `UI/Debug/MenuMockupNameWindow.cs` |
@@ -179,6 +181,7 @@ Not stored, but named like settings keys.
 | Branch | The checked-out branch AutoSync commits to. | `AutoSync/AutoSyncJob.cs` |
 | Commit contents | The saved `.unity` and `.prefab` files and their `.meta` files. | `AutoSync/AutoSyncJob.cs` |
 | Commit title | Time of the save, `yyyy-MM-dd'T'HH:mm:sszzz` (`2026-10-30T14:05:12+01:00`). Format is `AutoSync.TimeFormat`. | `AutoSync/AutoSync.cs` |
+| Conflict branch | `autosync-conflict-<yyyyMMdd-HHmmss>`: made at HEAD and checked out when rebasing onto the remote's new commits conflicts (the rebase is aborted first); pushed instead of the original branch. | `AutoSync/AutoSyncJob.cs`, `AutoSync/AutoSync.cs`, `UI/AutoSync/AutoSyncConflictNotice.cs` |
 | Default templates | `Unity.gitignore` and `Unity.gitattributes`. Name is `AutoSyncGitTemplates.DefaultName`. | `AutoSync/AutoSyncGitTemplates.cs`, `AutoSync/AutoSyncGitActions.cs` |
 | Fallback identity | `RiryTools AutoSync` / `autosync@localhost`, only when `user.name` or `user.email` is unset. | `AutoSync/AutoSyncJob.cs` |
 | LFS query | HTTP(S): `POST <remote>.git/info/lfs/objects/batch` (or `remote.<name>.lfsurl`, `lfs.url`), one all-zero object. SSH: `git-lfs-authenticate <path> download` with `core.sshCommand` or `ssh`. | `AutoSync/AutoSyncGitLfsQuery.cs` |
@@ -191,6 +194,7 @@ Not stored, but named like settings keys.
 |---|---|---|
 | `-c core.fsync=committed` | Argument for AutoSync commits. | `AutoSync/AutoSyncJob.cs` |
 | `-c core.quotepath=off` | Argument on every Git command. | `Components/GitRunner.cs` |
+| `-c rebase.autoStash=true` | Argument for the rebase onto the remote's new commits before a push: other changed files are stashed and put back. | `AutoSync/AutoSyncJob.cs` |
 | `GIT_AUTHOR_*`, `GIT_COMMITTER_*` | The fallback identity. | `AutoSync/AutoSyncJob.cs` |
 | `GIT_LITERAL_PATHSPECS=1` | Saved paths are not patterns. | `AutoSync/AutoSyncJob.cs`, `AutoSync/AutoSyncGitLargeFiles.cs`, `ImportPresets/ImportPresetAnimationExtraction.cs` |
 | `GIT_TERMINAL_PROMPT=0` | Set on every command: Git never waits on a terminal prompt; sign-in goes through Git's credential manager. | `Components/GitRunner.cs` |
@@ -264,6 +268,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `ImportPresetBetterFBX.SourceExtension` | `blend`: the only file type Blender exports. | `ImportPresets/ImportPresetBetterFBX.cs`, `ImportPresets/ImportPresetFolderRules.cs`, `ImportPresets/ImportPresetPostprocessor.cs`, `UI/ImportPresets/ImportPresetFolderWindow.cs` |
 | `ImportPresetBetterFBX.SuccessMarker` | `RIRYTOOLS_BETTER_FBX_OK`: printed by the export script on success. | `ImportPresets/ImportPresetBetterFBX.cs` |
 | `ImportPresetBetterFBX.TimeoutSeconds` | `600`: Blender run limit. | `ImportPresets/ImportPresetBetterFBX.cs` |
+| `ImportPresetDropChoices.PickLifetime` | `60` s: how long a preset picked with the scroll wheel during a drag is used for the dropped file's import. | `ImportPresets/ImportPresetDropChoices.cs` |
 | `ImportPresetFolderRules.Labels` | `Image files`, `Model files`, `Audio files`, `Video files`, `Font files`: file type names; other importers show as `<Type> files`. | `ImportPresets/ImportPresetFolderRules.cs` |
 | `ImportPresetFolderWindow.MaxSuggestions` | `8`: folder suggestions in Set Folder Import Presets. | `UI/ImportPresets/ImportPresetFolderWindow.cs` |
 | `ImportPresetLibrary.ConfigFileName` / `PresetExtension` | `config.json` / `.preset`: configuration files. | `ImportPresets/ImportPresetLibrary.cs` |
@@ -305,12 +310,14 @@ Moving or renaming a file must move its `.meta` with it.
 
 | Name | Use | Scripts |
 |---|---|---|
+| `BehaviourFindReplace.RegexTimeout` | `200` ms: the longest Find and Replace's Regex match may run on one string. | `VRChat/AnimatorTools/BehaviourFindReplace.cs` |
 | `BlendshapeSyncJobList.WideRow` | `570`: window width below which a Main Menu Blendshape Sync job row puts its buttons on a second line. | `UI/BlendshapeSync/BlendshapeSyncJobList.cs` |
 | `BlendshapeSyncWindow.Interval` | `0.5` s: automatic sync period. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `UI/BlendshapeSync/BlendshapeSyncWindow.UI.cs`, `BlendshapeSync/BlendshapeSyncJob.cs` |
 | `BlendshapeSyncWindow.SyncUndoName` / `RestoreUndoName` | `Sync Blendshape Weights` / `Restore Original Blendshape Weights`: Undo names; also mark the tool's own Undo steps. | `UI/BlendshapeSync/BlendshapeSyncWindow.cs`, `BlendshapeSync/BlendshapeSyncWindow.Sync.cs` |
 | `BlendshapeNames.CurvePrefix` | `blendShape.`: what a blendshape curve's property name starts with. | `Components/BlendshapeNames.cs`, `AnimatorTools/CleanAnimationKeys.cs`, `AvatarMigrator/AvatarMigratorRetargetAnim.cs` |
 | `CleanAnimationKeys.BoneValueDecimalPlaces` | `3`: rounding for bone endpoint comparison. | `AnimatorTools/CleanAnimationKeys.cs` |
-| `MaterialCleaner.Title` | `Material Cleaner`: window title and Undo name of Clean (one undo step per click; removes a material's texture slots its shader doesn't have). | `Utilities/MaterialCleaner.cs`, `UI/Utilities/MaterialCleanerWindow.cs` |
+| `ControllerCleanerWindow.Title` | `Controller Cleaner`: window title, dialogs and Undo name of Clean (one undo group per click, also for the clean offered after a GUID repair; `ControllerCleanerClean` records the controller, its state machines and states, and destroys unused sub-assets with Undo). | `UI/AnimatorTools/ControllerCleanerWindow.cs`, `Components/ControllerCleanerClean.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs` |
+| `MaterialCleaner.Title` | `Material Cleaner`: window title and Undo name of Clean (one undo step per click; removes a material's texture, float and color entries its shader doesn't have). | `Utilities/MaterialCleaner.cs`, `UI/Utilities/MaterialCleanerWindow.cs` |
 | `CleanAnimationKeys.DisplayName` | `Clean Animation Keys`: dialog, window and Undo name. | `AnimatorTools/CleanAnimationKeys.cs`, `UI/AnimatorTools/CleanAnimationKeysWindow.cs` |
 | `CleanAnimationKeysButton.ButtonElementName` | `rirytools-clean-animation-keys`: UI Toolkit name of the **Clean Keys** button. | `UI/AnimatorTools/CleanAnimationKeysButton.cs` |
 | `CleanAnimationKeysButton.ButtonLeft` / `ButtonBottom` | `170` / `1`: **Clean Keys** button in the Animation window's hierarchy-pane bottom bar, right of Dopesheet and Curves. | `UI/AnimatorTools/CleanAnimationKeysButton.cs` |
@@ -362,6 +369,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `MenuToolBudgetCount.MaxBits` / `MaxParameters` | `256` / `8192`: VRChat's synced bits and custom expression parameters. | `VRChat/MenuTool/MenuToolBudget.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolCompressor.BatchTime` | `0.1` s: VRCFury's time per compressed batch, used to pick between control type sets (a later set only if it halves the sync time). | `VRChat/MenuTool/MenuToolCompressor.cs` |
 | `MenuToolCompressor.MaxCost()` | `256` (`MAX_PARAMETER_COST`), less `19` with DexProtect: VRCFury's limit for compression. | `VRChat/MenuTool/MenuToolCompressor.cs`, `VRChat/MenuTool/MenuToolBudget.cs` |
+| `MenuToolIconPreset.MaxSize` / `PresetName` | `256` / `menu_icon`: the largest icon the VRChat SDK uploads, and the import preset that sets oversized icons' max size. | `VRChat/MenuTool/MenuToolIconPreset.cs`, `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolPlanner.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolScanner.MaxControls` | `8`: controls per menu (VRChat's limit); more are paged by VRCFury, otherwise flagged. | `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/MenuTool/MenuToolPlanner.cs`, `VRChat/MenuTool/MenuToolPreviewMenus.cs` |
 | `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19`: the target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolWindow.IconPicker` | `0x52694963`: control ID of the Assign Menu Icon object picker. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
@@ -386,6 +394,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `FTEmulatorOscQuery` timing | Announce every `15` s (three times a second apart at first), ask for tracking apps every `3` s, `30` s once one answered, HOST_INFO at most every `5` s per app, at most `8` apps. | `VRChat/FTEmulator/FTEmulatorOscQuery.cs` |
 | `FTEmulatorOscReceiver.MaxAddresses` | `2048`: parameter addresses kept pending between reads; the newest value per address wins. | `VRChat/FTEmulator/FTEmulatorOscReceiver.cs` |
 | `FTEmulatorParameterStore.GraceSeconds` / `FadeSeconds` | `0.25` s a Live value stays after input stops, then `0.2` s to fade to neutral; after that it is not driven. | `VRChat/FTEmulator/FTEmulatorParameterStore.cs` |
+| `FTEmulatorRecording.Extension` / `MaxPackets` | `.ftrec` / `2000000`: recording file extension, and the most packets a recording keeps or loads. | `VRChat/FTEmulator/FTEmulatorRecording.cs` |
 | `FTEmulatorSession.UserFaceTracking` / `UserEyeTracking` | The native status parameters, set by the session. `VerifyEvery` 30 frames and `VerifyTolerance` 0.02: written parameters read back. | `VRChat/FTEmulator/FTEmulatorSession.cs` |
 
 ## Menu paths
@@ -426,6 +435,7 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Debug Tools/Stop all tool scripts` | (2068) [check mark] `StopAllToolScripts.Set`: the emergency stop; works while stopped. Also the toggle on the Main Menu's Debug Tools tab, and the only control the Main Menu shows while stopped. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs`, `Components/StopAllToolScripts.cs` |
 | `Tools/RiryTools/Script Load Guard` | (2061) Turns Script Load Guard on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Stop Auto Game` | (2060) Turns Stop Auto Game on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Utilities/Material Cleaner` | (2042) The Material Cleaner window; also the Main Menu's Tools tab. | `UI/RiryToolsMenuBar.cs` |
 
 ### Project window right-click
 

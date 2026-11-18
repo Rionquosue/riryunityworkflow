@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -514,6 +514,7 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             stateProblem = null;
+            FTEmulatorRecording.Advance(now, source as FTEmulatorOscReceiver);
             float delta = lastTick < 0 ? 0f : (float)Math.Min(Math.Max(now - lastTick, 0.0), 0.1);
             lastTick = now;
             frame++;
@@ -747,6 +748,8 @@ namespace Riry.RiryTools.Editor
             if (!started || stopped) return;
             stopped = true;
             cancel.Cancel();
+            string saved = FTEmulatorRecording.StopAll();
+            if (saved != null) Info?.Invoke("Recording saved to " + saved);
             StopSource();
             if (source != null) source.Dispose();
             source = null;

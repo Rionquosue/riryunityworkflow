@@ -170,6 +170,7 @@ com.riry.rirytools/
     │   ├── ImportPresetAnimationExtraction.cs
     │   ├── ImportPresetAnimations.cs
     │   ├── ImportPresetBetterFBX.cs
+    │   ├── ImportPresetDropChoices.cs
     │   ├── ImportPresetFolderRules.cs
     │   ├── ImportPresetLibrary.cs
     │   ├── ImportPresetMarker.cs
@@ -183,6 +184,7 @@ com.riry.rirytools/
     │   │   ├── CleanAnimationKeysWindow.cs
     │   │   └── ControllerCleanerWindow.cs
     │   ├── AutoSync/
+    │   │   ├── AutoSyncConflictNotice.cs
     │   │   ├── AutoSyncGitConfigureWindow.cs
     │   │   ├── AutoSyncGitConfigureWindow.UI.cs
     │   │   ├── AutoSyncGitLargeFilesWindow.cs
@@ -223,6 +225,7 @@ com.riry.rirytools/
     │   │   ├── IconCapWindow.cs
     │   │   └── IconCapWindow.UI.cs
     │   ├── ImportPresets/
+    │   │   ├── ImportPresetDragOverlay.cs
     │   │   ├── ImportPresetExtractAnimationWindow.cs
     │   │   ├── ImportPresetFolderWindow.cs
     │   │   ├── ImportPresetFolderWindow.UI.cs
@@ -303,6 +306,7 @@ com.riry.rirytools/
     │   │   ├── FTEmulatorOscQuery.cs
     │   │   ├── FTEmulatorOscReceiver.cs
     │   │   ├── FTEmulatorParameterStore.cs
+    │   │   ├── FTEmulatorRecording.cs
     │   │   ├── FTEmulatorSession.cs
     │   │   ├── FTEmulatorSettings.cs
     │   │   ├── FTEmulatorTemplateResolver.cs
@@ -319,6 +323,7 @@ com.riry.rirytools/
     │   │   ├── MenuToolBudget.cs
     │   │   ├── MenuToolCompressor.cs
     │   │   ├── MenuToolEntryState.cs
+    │   │   ├── MenuToolIconPreset.cs
     │   │   ├── MenuToolModel.cs
     │   │   ├── MenuToolPlan.cs
     │   │   ├── MenuToolPlanner.cs

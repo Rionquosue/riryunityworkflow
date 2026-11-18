@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -8,7 +8,8 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Controller Cleaner's clean: removes a scan's unused sub-assets from the controller file, then the transition slots
-    /// left empty, and saves it. Removing sub-assets can't be undone with Ctrl+Z, so the caller warns first and logs them.
+    /// left empty, and saves it. Everything is recorded for Undo, so the caller's undo group is undone with one Ctrl+Z; the
+    /// restored controller is written to its file on the next save.
     /// </summary>
     internal static class ControllerCleanerClean
     {
@@ -16,12 +17,13 @@ namespace Riry.RiryTools.Editor
         internal static List<string> Clean(ControllerCleanerScan.Result result)
         {
             var removed = new List<string>();
+            // The used objects whose transition lists change below, recorded before anything is destroyed.
+            Undo.RegisterCompleteObjectUndo(UsedObjects(result).ToArray(), "Controller Cleaner");
             foreach (Object item in result.Unused)
             {
                 if (item == null) continue;
                 removed.Add(item.name + " (" + item.GetType().Name + ")");
-                AssetDatabase.RemoveObjectFromAsset(item);
-                Object.DestroyImmediate(item, true);
+                Undo.DestroyObjectImmediate(item);
             }
             foreach (AnimatorControllerLayer layer in result.Controller.layers)
             {
@@ -31,6 +33,25 @@ namespace Riry.RiryTools.Editor
             AssetDatabase.SaveAssetIfDirty(result.Controller);
             result.Unused.Clear();
             return removed;
+        }
+
+        // The controller and every state machine and state its layers still reach.
+        private static List<Object> UsedObjects(ControllerCleanerScan.Result result)
+        {
+            var used = new List<Object> { result.Controller };
+            foreach (AnimatorControllerLayer layer in result.Controller.layers) AddMachine(layer.stateMachine, used, result.Unused);
+            return used;
+        }
+
+        private static void AddMachine(AnimatorStateMachine machine, List<Object> used, ICollection<Object> unused)
+        {
+            if (machine == null || unused.Contains(machine) || used.Contains(machine)) return;
+            used.Add(machine);
+            foreach (ChildAnimatorState child in machine.states)
+            {
+                if (child.state != null && !unused.Contains(child.state)) used.Add(child.state);
+            }
+            foreach (ChildAnimatorStateMachine child in machine.stateMachines) AddMachine(child.stateMachine, used, unused);
         }
 
         private static void DropEmptyTransitions(AnimatorStateMachine machine)

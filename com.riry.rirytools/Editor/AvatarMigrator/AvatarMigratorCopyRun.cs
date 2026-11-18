@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -56,6 +56,29 @@ namespace Riry.RiryTools.Editor
             var run = new AvatarMigratorCopyRun(map, settings, answers, ignored);
             run.Run();
             return run.report;
+        }
+
+        /// <summary>
+        /// The same run, then every change undone (the run is only scene changes, all recorded for Undo), so the report says
+        /// what Copy would copy, repoint and drop while the target is left as it was.
+        /// </summary>
+        internal static AvatarMigratorRunReport DryRun(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, AvatarMigratorPreFlightAnswers answers,
+            HashSet<Transform> ignored)
+        {
+            Undo.IncrementCurrentGroup();
+            int before = Undo.GetCurrentGroup();
+            AvatarMigratorRunReport report;
+            try
+            {
+                report = Execute(map, settings, answers, ignored);
+            }
+            finally
+            {
+                Undo.RevertAllDownToGroup(before);
+            }
+            report.DryRun = true;
+            report.RepackedRoots.Clear();
+            return report;
         }
 
         private void Run()

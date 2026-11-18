@@ -45,8 +45,8 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (27, lines 23-63) |
-| `VrcSdkMissing` | Dialogs (1, line 271) |
+| `attributes and constants` | Menu entries (28, lines 23-64) |
+| `VrcSdkMissing` | Dialogs (1, line 278) |
 
 ### `UI/RiryToolsRightClickMenu.cs`
 
@@ -78,10 +78,11 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OnGUI` | Labels (3, lines 144-152), Toggles (4, lines 157-163), Buttons (1, line 172) |
-| `DrawAnimations` | Buttons (1, line 204) |
-| `DrawWhitelist` | Buttons (1, line 220) |
-| `Clean` | Dialogs (2, lines 300-311) |
+| `OnGUI` | Labels (3, lines 152-160), Toggles (4, lines 165-171), Buttons (1, line 183) |
+| `DrawPreview` | Labels (1, line 196) |
+| `DrawAnimations` | Buttons (1, line 251) |
+| `DrawWhitelist` | Buttons (1, line 267) |
+| `Clean` | Dialogs (2, lines 347-360) |
 
 ### `AnimatorTools/CleanAnimationKeys.cs`
 
@@ -108,11 +109,11 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OpenPopup` | Window titles (1, line 44) |
-| `OnGUI` | Field labels (4, lines 59-83), Buttons (2, lines 71-78), Labels (3, lines 87-96) |
-| `DrawMap` | Field labels (1, line 108) |
-| `Apply` | Dialogs (2, lines 158-169) |
-| `ApplyToChild` | Dialogs (2, lines 199-207) |
+| `OpenPopup` | Window titles (1, line 47) |
+| `OnGUI` | Field labels (5, lines 62-98), Buttons (2, lines 74-93), Help boxes (1, line 87), Labels (3, lines 102-111) |
+| `DrawMap` | Field labels (1, line 123) |
+| `Apply` | Dialogs (2, lines 180-191) |
+| `ApplyToChild` | Dialogs (2, lines 221-229) |
 
 ### `VRChat/AnimatorTools/BehaviourFindReplaceChildPrefab.cs`
 
@@ -152,6 +153,12 @@ settings keys, file contents and other strings the user never sees as UI.
 
 ## AutoSync
 
+### `UI/AutoSync/AutoSyncConflictNotice.cs`
+
+| Method | Text |
+|---|---|
+| `Show` | Dialogs (1, line 18) |
+
 ### `UI/AutoSync/AutoSyncGitConfigureWindow.UI.cs`
 
 | Method | Text |
@@ -171,7 +178,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `CommitNow` | Text shown through a variable (1, line 129) |
-| `LargeFileNotice` | Dialogs (1, line 209) |
+| `LargeFileNotice` | Dialogs (1, line 212) |
 
 ### `AutoSync/AutoSyncGitActions.cs`
 
@@ -203,7 +210,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `Open` | Text shown through a variable (2, lines 75-78) |
+| `Open` | Text shown through a variable (2, lines 81-84) |
 
 ## Avatar Migration Assistant
 
@@ -240,12 +247,12 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `AvatarMigratorWindow` | Text shown through a variable (2, lines 25-28) |
-| `OnGUI` | Buttons (1, line 137) |
-| `DrawMatching` | Foldouts (1, line 144), Field labels (1, line 147), Toggles (1, line 150) |
-| `DrawCopy` | Foldouts (1, line 158), Labels (1, line 161) |
-| `DrawType` | Toggles (19, lines 221-254), Field labels (1, line 224) |
-| `DrawIgnore` | Foldouts (1, line 263), Notifications (1, line 273), Toggles (1, line 284) |
-| `DrawAnimations` | Foldouts (1, line 291), Labels (2, lines 296-312), Buttons (2, lines 298-325), Toggles (1, line 316) |
+| `OnGUI` | Buttons (2, lines 139-140) |
+| `DrawMatching` | Foldouts (1, line 150), Field labels (1, line 153), Toggles (1, line 156) |
+| `DrawCopy` | Foldouts (1, line 164), Labels (1, line 167) |
+| `DrawType` | Toggles (19, lines 227-260), Field labels (1, line 230) |
+| `DrawIgnore` | Foldouts (1, line 269), Notifications (1, line 279), Toggles (1, line 290) |
+| `DrawAnimations` | Foldouts (1, line 297), Labels (2, lines 302-318), Buttons (2, lines 304-331), Toggles (1, line 322) |
 
 ### `AvatarMigrator/AvatarMigratorCopyRun.UpgradeConstraints.cs`
 
@@ -442,7 +449,8 @@ settings keys, file contents and other strings the user never sees as UI.
 | `DrawInputAndHardware` | Field labels (3, lines 172-189), Buttons (1, line 198) |
 | `DrawControls` | Buttons (4, lines 207-240), Toggles (2, lines 228-232) |
 | `DrawOsc` | Labels (6, lines 247-260), Field labels (1, line 249), Toggles (1, line 251), Buttons (2, lines 267-272) |
-| `DrawManual` | Labels (2, lines 279-286), Toggles (1, line 280) |
+| `DrawRecording` | Labels (3, lines 282-284), Buttons (5, lines 291-310) |
+| `DrawManual` | Labels (2, lines 338-345), Toggles (1, line 339) |
 
 ### `VRChat/FTEmulator/FTEmulator.cs`
 
@@ -512,7 +520,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Start` | Text shown through a variable (3, lines 224-226) |
-| `Snapshot` | Text shown through a variable (3, lines 859-886) |
+| `Snapshot` | Text shown through a variable (3, lines 862-889) |
 
 ### `VRChat/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`
 
@@ -539,7 +547,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `Rescan` | Dialogs (1, line 96) |
 | `ScrubUnusedOverrides` | Dialogs (2, lines 201-206) |
 | `OfferControllerCleaner` | Dialogs (1, line 230) |
-| `ApplyRedirects` | Dialogs (5, lines 251-302) |
+| `ApplyRedirects` | Dialogs (5, lines 255-306) |
 
 ### `UI/GuidTools/GuidToolBrokenSaveWindow.cs`
 
@@ -681,6 +689,12 @@ settings keys, file contents and other strings the user never sees as UI.
 
 ## Import Presets
 
+### `UI/ImportPresets/ImportPresetDragOverlay.cs`
+
+| Method | Text |
+|---|---|
+| `Draw` | Labels (3, lines 84-94) |
+
 ### `UI/ImportPresets/ImportPresetFolderWindow.UI.cs`
 
 | Method | Text |
@@ -731,7 +745,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `ConfirmApply` | Dialogs (1, line 353) |
+| `ConfirmApply` | Dialogs (1, line 358) |
 
 ### `ImportPresets/ImportPresetLibrary.cs`
 
@@ -781,15 +795,17 @@ settings keys, file contents and other strings the user never sees as UI.
 | `DrawSummary` | Labels (1, line 638), Help boxes (1, line 639), Buttons (1, line 653), Foldouts (1, line 666) |
 | `DrawShared` | Foldouts (1, line 693), Tooltips (1, line 698), Buttons (1, line 705) |
 | `DrawBlocks` | Foldouts (1, line 712), Labels (1, line 723), Buttons (1, line 727) |
-| `DrawNotes` | Foldouts (1, line 736) |
-| `DrawManager` | Help boxes (1, line 754), Buttons (3, lines 760-765), Labels (1, line 770) |
-| `DrawPlan` | Labels (1, line 785) |
-| `ChangePlan` | Buttons (1, line 818) |
-| `DrawRadial` | Help boxes (1, line 879), Labels (1, line 901) |
-| `DrawBits` | Labels (2, lines 928-939), Foldouts (1, line 941) |
-| `DrawEntryState` | Buttons (3, lines 957-968) |
-| `Discard` | Dialogs (1, line 1043) |
-| `ApplyPlan` | Text shown through a variable (1, line 1056), Dialogs (2, lines 1061-1076) |
+| `DrawMenuChecks` | Help boxes (2, lines 738-742), Buttons (1, line 744) |
+| `ApplyIconPreset` | Dialogs (1, line 753) |
+| `DrawNotes` | Foldouts (1, line 776) |
+| `DrawManager` | Help boxes (1, line 794), Buttons (3, lines 800-805), Labels (1, line 810) |
+| `DrawPlan` | Labels (1, line 826) |
+| `ChangePlan` | Buttons (1, line 859) |
+| `DrawRadial` | Help boxes (1, line 920), Labels (1, line 942) |
+| `DrawBits` | Labels (2, lines 969-980), Foldouts (1, line 982) |
+| `DrawEntryState` | Buttons (3, lines 998-1009) |
+| `Discard` | Dialogs (1, line 1084) |
+| `ApplyPlan` | Text shown through a variable (1, line 1097), Dialogs (2, lines 1102-1117) |
 
 ### `VRChat/MenuTool/MenuToolApply.cs`
 
@@ -813,13 +829,13 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `Check` | Text shown through a variable (2, lines 90-100) |
 | `CheckIcon` | Text shown through a variable (1, line 150) |
-| `CheckRename` | Text shown through a variable (1, line 235) |
-| `Decide` | Text shown through a variable (2, lines 261-338) |
-| `CheckAdd` | Text shown through a variable (3, lines 286-303) |
-| `CheckNewItem` | Text shown through a variable (2, lines 363-364) |
-| `Ownership` | Text shown through a variable (1, line 415) |
-| `IsInstallRoot` | Text shown through a variable (2, lines 443-452) |
-| `Destructive` | Text shown through a variable (4, lines 492-520) |
+| `CheckRename` | Text shown through a variable (1, line 238) |
+| `Decide` | Text shown through a variable (2, lines 264-341) |
+| `CheckAdd` | Text shown through a variable (3, lines 289-306) |
+| `CheckNewItem` | Text shown through a variable (2, lines 366-367) |
+| `Ownership` | Text shown through a variable (1, line 418) |
+| `IsInstallRoot` | Text shown through a variable (2, lines 446-455) |
+| `Destructive` | Text shown through a variable (4, lines 495-523) |
 
 ### `VRChat/MenuTool/MenuToolScanner.ModularAvatar.cs`
 
@@ -849,7 +865,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Scan` | Text shown through a variable (1, line 84) |
-| `CollectParameterUse` | Text shown through a variable (1, line 250) |
+| `CollectParameterUse` | Text shown through a variable (1, line 252) |
 
 ### `VRChat/MenuTool/MenuToolVrcfuryMenu.cs`
 

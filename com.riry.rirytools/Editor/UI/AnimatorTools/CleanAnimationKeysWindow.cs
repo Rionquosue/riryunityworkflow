@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -21,6 +21,11 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private CleanAnimationKeys.Options options = new CleanAnimationKeys.Options();
         [SerializeField] private string search = "";
         [SerializeField] private string summary;
+        // Preview: what Clean would remove, built only while the foldout is open and cleared by any change.
+        [SerializeField] private bool showPreview;
+        [NonSerialized] private List<string> preview;
+        [NonSerialized] private int previewCurves;
+        private Vector2 previewScroll;
         // Set when opened by Configure in Extract Animation: the options and whitelist are that window's settings.
         [SerializeField] private ImportPresetExtractAnimationWindow extract;
         private Vector2 animationScroll;
@@ -91,6 +96,7 @@ namespace Riry.RiryTools.Editor
             if (clip == null || animations.Contains(clip) || animations.Count >= MaxAnimations) return;
             animations.Add(clip);
             keyedNames = null;
+            preview = null;
         }
 
         internal void AddToWhitelist(IEnumerable<string> names)
@@ -118,6 +124,7 @@ namespace Riry.RiryTools.Editor
         private void Changed()
         {
             summary = null;
+            preview = null;
             if (extract != null) extract.SettingsChanged();
         }
 
@@ -126,6 +133,7 @@ namespace Riry.RiryTools.Editor
         {
             keyedNames = null;
             summary = null;
+            preview = null;
             if (extract != null) extract.SettingsChanged();
             Repaint();
         }
@@ -164,6 +172,9 @@ namespace Riry.RiryTools.Editor
                 "Keep a bone's translation, rotation or scale with more than a start and finish key, or whose tangents " +
                 "move between matching endpoints."), options.KeepBoneMidKeys));
             if (EditorGUI.EndChangeCheck()) Changed();
+
+            EditorGUILayout.Space(6.0f);
+            DrawPreview();
             EditorGUILayout.EndScrollView();
 
             if (summary != null) EditorGUILayout.HelpBox(summary, MessageType.Info);
@@ -172,6 +183,41 @@ namespace Riry.RiryTools.Editor
                 if (GUILayout.Button("Clean", GUILayout.Height(28.0f))) { Clean(); RiryToolGUI.ExitAfterModal(); }
             }
             EditorGUILayout.Space(6.0f);
+        }
+
+        // Each animation's shapekeys and bones Clean would remove, with their curve counts. Nothing is changed.
+        private void DrawPreview()
+        {
+            if (showPreview && preview == null) BuildPreview();
+            string title = preview == null ? "Preview" : "Preview (" + previewCurves + " curve(s))";
+            showPreview = EditorGUILayout.Foldout(showPreview, title, true);
+            if (!showPreview) return;
+            previewScroll = EditorGUILayout.BeginScrollView(previewScroll, EditorStyles.helpBox, GUILayout.Height(AnimationListHeight));
+            if (preview.Count == 0) EditorGUILayout.LabelField("Nothing would be removed.", EditorStyles.miniLabel);
+            foreach (string line in preview) EditorGUILayout.LabelField(line, line.StartsWith("    ") ? EditorStyles.miniLabel : EditorStyles.boldLabel);
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void BuildPreview()
+        {
+            preview = new List<string>();
+            previewCurves = 0;
+            foreach (AnimationClip clip in animations)
+            {
+                if (clip == null) continue;
+                if (!CleanAnimationKeys.TryValidateEditableClip(clip, out string error))
+                {
+                    preview.Add(clip.name + ": skipped (" + error + ")");
+                    continue;
+                }
+                List<CleanAnimationKeys.Group> groups = CleanAnimationKeys.Removable(clip, options, whitelist);
+                if (groups.Count == 0) continue;
+                int curves = 0;
+                foreach (CleanAnimationKeys.Group group in groups) curves += group.Bindings.Count;
+                previewCurves += curves;
+                preview.Add(clip.name + ": " + curves + " curve(s)");
+                foreach (CleanAnimationKeys.Group group in groups) preview.Add("    " + group.Label + " (" + group.Bindings.Count + ")");
+            }
         }
 
         // One row per animation plus one empty row to add the next, up to 64; the list scrolls.
@@ -197,6 +243,7 @@ namespace Riry.RiryTools.Editor
                         }
                         keyedNames = null;
                         summary = null;
+            preview = null;
                         GUIUtility.ExitGUI();
                     }
                     using (new EditorGUI.DisabledScope(current == null))
@@ -304,10 +351,12 @@ namespace Riry.RiryTools.Editor
             try
             {
                 summary = CleanAnimationKeys.Clean(animations, options, whitelist);
+                preview = null;
             }
             catch (InvalidOperationException exception)
             {
                 summary = null;
+            preview = null;
                 EditorUtility.DisplayDialog(CleanAnimationKeys.DisplayName, exception.Message, "OK");
             }
         }

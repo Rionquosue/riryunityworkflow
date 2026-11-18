@@ -25,6 +25,7 @@ Shows an avatar's assembled expression menu and parameters, traced to their sour
 - Planned changes: moves (drag, or **Move to…**), Destructive Move, new menus and controls, **Assign Menu Icon**, **Rename Menu Entry** (radial right-click or triple-click in the list), **Delete Menu Entry** (radial right-click or Delete key) and **Move to… > <NULL>** (a VRCFury Move Menu Item to a blank path). Nothing changes until Apply; the plan is saved per avatar.
 - **Apply** makes each change through the system owning the control, as one undo step: menu assets are edited in place, VRCFury items get VRCFury rules, and VRCFury paths inside a moved or renamed submenu follow it.
 - The radial's parameter writes and submenu can be replayed when Gesture Manager starts Play Mode.
+- **Menu manager** warns about controls sharing a name in one submenu, and icons over 256 px, which the VRChat SDK won't upload. **Apply menu_icon** sets those icons' max size to 256 with the `menu_icon` import preset (made in the Import Presets folder the first time). It changes import settings, so it asks first; Ctrl+Z can't undo it. Assign Menu Icon also warns when the picked icon is over 256 px.
 - **Rescan** rebuilds the scan, preview and radial.
 
 ## 5. Flow chart

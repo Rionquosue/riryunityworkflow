@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -174,6 +174,9 @@ namespace Riry.RiryTools.Editor
                 reported = null;
                 Describe(finished.Result);
                 if (finished.Result.Held != null) LargeFileNotice(finished.Result.Held);
+                // Files the remote's commits changed are imported.
+                if (finished.Result.Updated != null) AssetDatabase.Refresh();
+                if (finished.Result.ConflictBranch != null) AutoSyncConflictNotice.Show(finished.Result);
                 return;
             }
             Exception cause = finished.Exception.GetBaseException();

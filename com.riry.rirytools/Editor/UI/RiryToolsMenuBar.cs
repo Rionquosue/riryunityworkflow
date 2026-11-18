@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 
 namespace Riry.RiryTools.Editor
 {
@@ -28,6 +28,7 @@ namespace Riry.RiryTools.Editor
         private const string BlendshapeSync = "Tools/RiryTools/Blendshape Sync";
         private const string CleanAnimationKeysMenu = "Tools/RiryTools/Animator Tools/Clean Animation Keys";
         private const string ControllerCleanerMenu = "Tools/RiryTools/Animator Tools/Controller Cleaner";
+        private const string MaterialCleanerMenu = "Tools/RiryTools/Utilities/Material Cleaner";
         private const string GuidTools = "Tools/RiryTools/GUID Tools";
         // "&o" makes O its menu key (Import Presets has I).
         private const string IconCapMenu = "Tools/RiryTools/Ic&onCap";
@@ -125,6 +126,12 @@ namespace Riry.RiryTools.Editor
         private static bool ControllerCleanerValid() { return !StopAllToolScripts.Active; }
 
         // Constraint Tool is 2030 (RiryToolsVRChatMenus.cs).
+
+        [MenuItem(MaterialCleanerMenu, false, 2042)]
+        private static void MaterialCleanerItem() { MaterialCleanerWindow.Open(); }
+
+        [MenuItem(MaterialCleanerMenu, true)]
+        private static bool MaterialCleanerValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(GuidTools, false, 2040)]
         private static void GuidToolsItem() { GuidToolsWindow.Open(); }
@@ -341,6 +348,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Save Import Preset (2051) -> ImportPresetActions.SaveToLibrary
 //   Tools/RiryTools/Animator Tools/Extract Animations (1997) -> ImportPresetExtractAnimationWindow.Open (Editor/UI/ImportPresets/ImportPresetExtractAnimationWindow.cs)
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
+//   Tools/RiryTools/Utilities/Material Cleaner (2042) -> MaterialCleanerWindow.Open
 //   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/Debug/FindNullReferencesWindow.cs)
 //   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/Utilities/StopAutoGame.cs)

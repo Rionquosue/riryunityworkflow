@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -45,6 +45,12 @@ namespace Riry.RiryTools.Editor
             /// <summary>Committed on a detached HEAD, so not pushed.</summary>
             internal bool Detached;
             internal Held Held;
+            /// <summary>"fast-forwarded" or "rebased" when the branch took the remote's new commits first, else null.</summary>
+            internal string Updated;
+            /// <summary>The branch the commits were moved to when rebasing onto the remote hit a conflict, else null.</summary>
+            internal string ConflictBranch;
+            /// <summary>The branch the conflict branch was made from.</summary>
+            internal string ConflictFrom;
         }
 
         internal string ProjectRoot;
@@ -143,12 +149,39 @@ namespace Riry.RiryTools.Editor
                     return;
                 }
             }
+            branch = TakeRemoteCommits(branch, outcome);
             var push = new List<string> { "push", "--quiet" };
             if (!Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded) push.Add("--set-upstream");
             push.Add(Remote);
             push.Add(branch);
             GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()).RequireSuccess("Pushing " + branch + " to " + Remote);
             outcome.PushedTo = Remote + "/" + branch;
+        }
+
+        /// <summary>
+        /// When the remote branch has commits this one lacks: fast-forwards to them, or rebases the local commits onto them
+        /// (other changed files are stashed and put back). If the rebase conflicts it is aborted, so nothing is lost, and the
+        /// commits move to a new branch, autosync-conflict-&lt;time&gt;, which is checked out (the files stay as they are) and
+        /// pushed instead, for the user to merge by hand. Returns the branch to push.
+        /// </summary>
+        private string TakeRemoteCommits(string branch, Outcome outcome)
+        {
+            GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, "fetch", "--quiet", Remote, branch);
+            string remoteRef = "refs/remotes/" + Remote + "/" + branch;
+            if (!Run("rev-parse", "-q", "--verify", remoteRef).Succeeded) return branch;
+            if (Run("merge-base", "--is-ancestor", remoteRef, "HEAD").Succeeded) return branch;
+            bool fastForward = Run("merge-base", "--is-ancestor", "HEAD", remoteRef).Succeeded;
+            if (Run("-c", "rebase.autoStash=true", "rebase", "--quiet", remoteRef).Succeeded)
+            {
+                outcome.Updated = fastForward ? "fast-forwarded" : "rebased";
+                return branch;
+            }
+            Run("rebase", "--abort");
+            string conflict = "autosync-conflict-" + DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            Run("checkout", "--quiet", "-b", conflict).RequireSuccess("Moving the commits to " + conflict + " after a conflict with " + Remote + "/" + branch);
+            outcome.ConflictBranch = conflict;
+            outcome.ConflictFrom = branch;
+            return conflict;
         }
 
         private GitRunner.Result Run(params string[] arguments)

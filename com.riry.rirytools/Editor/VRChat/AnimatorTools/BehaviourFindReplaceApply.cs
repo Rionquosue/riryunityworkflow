@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -11,7 +11,8 @@ namespace Riry.RiryTools.Editor
     internal static class BehaviourFindReplaceApply
     {
         // Play Audio paths take the repath object's path when one is set (not for a controller asset), Parameter Driver
-        // names the mapped parameter when one is typed; every other found string becomes replace, when it is not empty.
+        // names the mapped parameter when one is typed; every other found string becomes replace, when it is not empty (the
+        // whole string, or for Partial and Regex only the matched text).
         // One undo step. Returns what changed.
         internal static List<Change> Apply(List<Hit> hits, string replace, GameObject repath, string map, bool asset, bool log = true)
         {
@@ -24,10 +25,10 @@ namespace Riry.RiryTools.Editor
                 var serialized = new SerializedObject(behaviour.Key);
                 foreach (Hit hit in behaviour)
                 {
-                    string after = NewValue(hit, replace, asset ? null : repath, map);
-                    if (after == null) continue;
                     SerializedProperty property = serialized.FindProperty(hit.Property);
-                    if (property == null || property.propertyType != SerializedPropertyType.String || property.stringValue == after) continue;
+                    if (property == null || property.propertyType != SerializedPropertyType.String) continue;
+                    string after = NewValue(hit, property.stringValue, replace, asset ? null : repath, map);
+                    if (after == null || property.stringValue == after) continue;
                     made.Add(new Change { Hit = hit, Before = property.stringValue, After = after });
                     property.stringValue = after;
                 }
@@ -40,7 +41,7 @@ namespace Riry.RiryTools.Editor
             return made;
         }
 
-        private static string NewValue(Hit hit, string replace, GameObject repath, string map)
+        private static string NewValue(Hit hit, string value, string replace, GameObject repath, string map)
         {
             if (hit.Kind == Kind.PlayAudio && repath != null)
             {
@@ -48,7 +49,7 @@ namespace Riry.RiryTools.Editor
                     return AnimationUtility.CalculateTransformPath(repath.transform, hit.Root);
             }
             else if (hit.Kind == Kind.Driver && !string.IsNullOrEmpty(map)) return map;
-            return string.IsNullOrEmpty(replace) ? null : replace;
+            return string.IsNullOrEmpty(replace) ? null : Replaced(hit, value, replace);
         }
     }
 }
