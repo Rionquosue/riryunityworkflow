@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
@@ -272,6 +272,65 @@ namespace Riry.RiryTools.Editor
                     if (GUILayout.Button("Copy diagnostics", GUILayout.Height(22f))) EditorGUIUtility.systemCopyBuffer = FTEmulatorDebugWindow.DiagnosticsText();
                 }
             }
+            DrawRecording(session);
+        }
+
+        // Record the OSC packets VRCFaceTracking sends, and play a saved recording back through the receiver.
+        private void DrawRecording(FTEmulatorSession session)
+        {
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.LabelField("Recording", EditorStyles.boldLabel);
+            if (FTEmulatorRecording.Recording) EditorGUILayout.LabelField("Recording", FTEmulatorRecording.RecordedPackets + " packet(s)");
+            if (FTEmulatorRecording.Playing) EditorGUILayout.LabelField("Playing", FTEmulatorRecording.PlayStatus);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(session == null && !FTEmulatorRecording.Recording))
+                {
+                    if (!FTEmulatorRecording.Recording)
+                    {
+                        if (GUILayout.Button(new GUIContent("Record", "Keeps every OSC packet the receiver takes, with its time, until Stop recording or Play Mode ends."),
+                                GUILayout.Height(22f)))
+                            FTEmulatorRecording.StartRecording();
+                    }
+                    else if (GUILayout.Button("Stop recording", GUILayout.Height(22f)))
+                    {
+                        string saved = FTEmulatorRecording.StopRecording();
+                        RiryLog.Info(RiryLog.FTEmulator, saved != null ? "Recording saved to " + saved : "Nothing was recorded.");
+                    }
+                }
+                using (new EditorGUI.DisabledScope(session == null))
+                {
+                    if (!FTEmulatorRecording.Playing)
+                    {
+                        if (GUILayout.Button(new GUIContent("Play recording", "Plays a saved recording through the receiver at its recorded times."), GUILayout.Height(22f)))
+                            PlayRecording();
+                    }
+                    else if (GUILayout.Button("Stop playback", GUILayout.Height(22f))) FTEmulatorRecording.StopPlayback();
+                }
+                if (GUILayout.Button("Open folder", GUILayout.Height(22f)))
+                {
+                    System.IO.Directory.CreateDirectory(FTEmulatorRecording.Folder);
+                    EditorUtility.RevealInFinder(FTEmulatorRecording.Folder);
+                }
+            }
+        }
+
+        private static void PlayRecording()
+        {
+            System.IO.Directory.CreateDirectory(FTEmulatorRecording.Folder);
+            string path = EditorUtility.OpenFilePanel("Play recording", FTEmulatorRecording.Folder, FTEmulatorRecording.Extension.TrimStart('.'));
+            if (!string.IsNullOrEmpty(path))
+            {
+                try
+                {
+                    FTEmulatorRecording.Play(path);
+                }
+                catch (Exception exception) when (exception is System.IO.IOException || exception is System.IO.InvalidDataException || exception is UnauthorizedAccessException)
+                {
+                    RiryLog.Exception(RiryLog.FTEmulator, "Could not play " + path, exception);
+                }
+            }
+            GUIUtility.ExitGUI();
         }
 
         private void DrawManual(FTEmulatorSession session)

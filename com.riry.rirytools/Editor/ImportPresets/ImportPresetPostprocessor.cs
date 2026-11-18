@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -34,6 +34,9 @@ namespace Riry.RiryTools.Editor
             // A Better FBX source is not configured itself; its exported FBX is.
             if (rules.BetterFbx.Contains(extension)) return;
             ImportPresetMarker.Target target = rules.For(assetImporter);
+            // A preset picked with the scroll wheel while the file was dragged onto this folder.
+            ImportPresetMarker.Target picked;
+            if (ImportPresetDropChoices.TryTake(path, out picked)) target = picked;
 
             if (assetImporter is ModelImporter && ImportPresetAnimations.ShouldExtract(path))
             {

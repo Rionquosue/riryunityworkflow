@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -23,6 +23,9 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private Object source;
         [SerializeField] private string search = "";
         [SerializeField] private string replace = "";
+        [SerializeField] private BehaviourFindReplace.Match match = BehaviourFindReplace.Match.Whole;
+        // Why the Regex search is not a valid pattern, shown until the next Search.
+        [NonSerialized] private string patternError;
         [SerializeField] private GameObject repath;
         [SerializeField] private string map = "";
         [SerializeField] private Vector2 foundScroll;
@@ -70,12 +73,24 @@ namespace Riry.RiryTools.Editor
                 search = EditorGUILayout.TextField("Search", search);
                 if (GUILayout.Button("Search", GUILayout.Width(70f))) Search();
             }
+            EditorGUI.BeginChangeCheck();
+            match = (BehaviourFindReplace.Match)EditorGUILayout.Popup(new GUIContent("Match",
+                "Whole string: finds strings containing the search and replaces the whole string. Partial: replaces only the " +
+                "searched text. Regex: finds and replaces with a regular expression ($1 and so on work in Replace with). All ignore case."),
+                (int)match, new[] { new GUIContent("Whole string"), new GUIContent("Partial"), new GUIContent("Regex") });
+            if (EditorGUI.EndChangeCheck())
+            {
+                searched = false;
+                hits.Clear();
+                patternError = null;
+            }
+            if (patternError != null) EditorGUILayout.HelpBox("Not a valid regular expression: " + patternError, MessageType.Warning);
             using (new EditorGUILayout.HorizontalScope())
             {
                 replace = EditorGUILayout.TextField("Replace with", replace);
                 using (new EditorGUI.DisabledScope(!searched || hits.Count == 0))
                 {
-                    if (GUILayout.Button(new GUIContent("Apply", "Replaces the whole of each found string, as one undo step."), GUILayout.Width(70f))) Apply();
+                    if (GUILayout.Button(new GUIContent("Apply", "Replaces each found string (the whole string, or only the matched text for Partial and Regex), as one undo step."), GUILayout.Width(70f))) Apply();
                 }
             }
 
@@ -131,8 +146,15 @@ namespace Riry.RiryTools.Editor
 
         private void Search()
         {
+            patternError = match == BehaviourFindReplace.Match.Regex ? BehaviourFindReplace.PatternError(search) : null;
+            if (patternError != null)
+            {
+                searched = false;
+                hits.Clear();
+                return;
+            }
             searched = true;
-            hits = BehaviourFindReplace.Find(source, search ?? "");
+            hits = BehaviourFindReplace.Find(source, search ?? "", match);
             driverParameters = hits.Where(h => h.Kind == Kind.Driver).Select(h => h.Controller).Distinct()
                 .SelectMany(c => c.parameters.Select(p => p.name)).Distinct().ToList();
             if (driverParameters.Count > 0 && !driverParameters.Contains(map)) map = Ranked(search).FirstOrDefault() ?? "";

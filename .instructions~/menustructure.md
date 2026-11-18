@@ -62,6 +62,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * GUID Rebuild tool
         * GUID Repair tool
         * IconCap
+        * Material Cleaner
     * Import Presets >
         * Set Folder Presets
         * Save Import Preset
@@ -178,14 +179,26 @@ Where [] contains the currently active tab.
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [Set Folder Import Presets] | Import Preset Library |  |  |  |  |
+| [Set Folder Import Presets] | Save Import Preset | Import Preset Library |  |  |  |
 | Set Folder Import Presets UI here |  |  |  |  |  |
 
 ---
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Set Folder Import Presets | [Import Preset Library] |  |  |  |  |
+| Set Folder Import Presets | [Save Import Preset] | Import Preset Library |  |  |  |
+| Asset: the selected asset's path |  |  |  |  |  |
+| Importer: its importer type |  |  |  |  |  |
+| Configuration ▾ (New configuration, or an existing one) |  |  |  |  |  |
+| New name (with New configuration) |  |  |  |  |  |
+| Preset name |  |  |  |  |  |
+| Open Library | Save | Close |  |  |  |
+
+---
+
+| Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Set Folder Import Presets | Save Import Preset | [Import Preset Library] |  |  |  |
 | Display Import Preset Library here |  |  |  |  |  |
 | Click to open in explorer | File input box here | Save import preset (creates from selected in input box) |  |  |  |
 

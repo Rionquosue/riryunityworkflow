@@ -5,7 +5,7 @@ This file lists each tool with a brief description of what it does, based on the
 ## Tools
 ## Avatar Migration Assistant
 
-Avatar Migration Assistant: copies components and settings from an old avatar (source) to a new one (target). Objects are matched between the two avatars, with Manual matching for anything left unmatched; the run then copies the chosen component types, repoints references to the target's objects, corrects rotation and scale, and drops duplicates of components the target already had. Retarget animations duplicates the target's controllers and the clips they use into a migrated folder, rewrites the clips' paths for the new avatar through the object match, and points the target at the duplicates. The source and the original files are never changed, and a copy run is one undo step. Without the VRChat SDK the VRChat parts are left out.
+Avatar Migration Assistant: copies components and settings from an old avatar (source) to a new one (target). Objects are matched between the two avatars, with Manual matching for anything left unmatched; the run then copies the chosen component types, repoints references to the target's objects, corrects rotation and scale, and drops duplicates of components the target already had. Dry run does the same run and reports it, then undoes it all. Retarget animations duplicates the target's controllers and the clips they use into a migrated folder, rewrites the clips' paths for the new avatar through the object match, and points the target at the duplicates. The source and the original files are never changed, and a copy run is one undo step. Without the VRChat SDK the VRChat parts are left out.
 
 ## Blendshape Sync
 
@@ -20,7 +20,7 @@ Constraint Tool: one window with a tab per subtool, all built on VRChat constrai
 
 ## FTEmulator
 
-FTEmulator: a face tracking emulator for Play Mode, paired with Gesture Manager (VRChat Avatars SDK 3.7.0 or newer; native face tracking needs 3.10.6). Input is VRCFaceTracking over OSC (FTEmulator listens on 127.0.0.1 and advertises the avatar through an OSCQuery service, so no VRChat client runs) or values typed by hand. A hardware profile (Base Quest Pro, Quest Pro with TongueOut, Babble lower face, the Vive configurations, or unrestricted) limits the input to the channels that device has and keeps channels it shares coupled. Output goes to the avatar Gesture Manager runs: native face tracking (Blendshapes Sets, Parameter Behaviors, set weight state behaviors) or the FT/v2 parameters of Adjerry and Pawlygon 1.x setups, detected from the avatar. The debug window lists parameters, tracking keys and hardware controls with live and applied values, lets each be held, typed or switched off, and shows what is blocked, unmapped or only partly previewed. Tools > RiryTools > FTEmulator, and the Main Menu's Tools tab.
+FTEmulator: a face tracking emulator for Play Mode, paired with Gesture Manager (VRChat Avatars SDK 3.7.0 or newer; native face tracking needs 3.10.6). Input is VRCFaceTracking over OSC (FTEmulator listens on 127.0.0.1 and advertises the avatar through an OSCQuery service, so no VRChat client runs) or values typed by hand. A hardware profile (Base Quest Pro, Quest Pro with TongueOut, Babble lower face, the Vive configurations, or unrestricted) limits the input to the channels that device has and keeps channels it shares coupled. Output goes to the avatar Gesture Manager runs: native face tracking (Blendshapes Sets, Parameter Behaviors, set weight state behaviors) or the FT/v2 parameters of Adjerry and Pawlygon 1.x setups, detected from the avatar. The debug window lists parameters, tracking keys and hardware controls with live and applied values, lets each be held, typed or switched off, and shows what is blocked, unmapped or only partly previewed. Record keeps the OSC packets the receiver takes and saves them to Documents/RiryTools/FTEmulator/Recordings; Play recording feeds a saved recording back through the receiver at its recorded times. Tools > RiryTools > FTEmulator, and the Main Menu's Tools tab.
 
 ## GUID Tools
 
@@ -28,31 +28,31 @@ GUID Tools: regenerates GUIDs for selected assets and folders' contents while ke
 
 ## Menu Tool
 
-Menu Tool: traces expression menu controls to their sources (avatar descriptor, VRCFury; Modular Avatar is not read for now). The Parameter budget tab compares synced parameter cost with and without VRCFury's Parameter Compressor. The Menu manager tab previews the assembled radial menu in Edit Mode with Gesture Manager's radial, and plans moves, new menus, new controls, icons, renames and deletes, plus Move to <NULL> (a VRCFury Move Menu Item to a blank path). Apply makes them through the system owning each control, as one undo step: menu assets are edited in place, and VRCFury paths inside a moved or renamed submenu follow it. The radial's state can be replayed when Gesture Manager starts Play Mode.
+Menu Tool: traces expression menu controls to their sources (avatar descriptor, VRCFury; Modular Avatar is not read for now). The Parameter budget tab compares synced parameter cost with and without VRCFury's Parameter Compressor. The Menu manager tab warns about controls sharing a name in one submenu and icons over the 256 px the SDK uploads (Apply menu_icon sets their max size with the menu_icon import preset), and previews the assembled radial menu in Edit Mode with Gesture Manager's radial, and plans moves, new menus, new controls, icons, renames and deletes, plus Move to <NULL> (a VRCFury Move Menu Item to a blank path). Apply makes them through the system owning each control, as one undo step: menu assets are edited in place, and VRCFury paths inside a moved or renamed submenu follow it. The radial's state can be replayed when Gesture Manager starts Play Mode.
 
 ## AutoSync
 
-AutoSync: while on, every scene or prefab save is committed to the checked-out Git branch, titled with the time of the save, and pushed to the chosen remote. Only the saved files and their .meta files are committed. Configuration sets the branch, remote, .gitignore and .gitattributes. Off until turned on, per user and per project.
+AutoSync: while on, every scene or prefab save is committed to the checked-out Git branch, titled with the time of the save, and pushed to the chosen remote. When the remote has new commits, the branch is fast-forwarded or rebased onto them first; a conflicting rebase is aborted and the commits are moved to a new autosync-conflict branch, pushed there, and the user is told to merge it by hand, with Sync left on. Only the saved files and their .meta files are committed. Configuration sets the branch, remote, .gitignore and .gitattributes. Off until turned on, per user and per project.
 
 ## Clean Animation Keys
 
-Clean Animation Keys: removes blank blendshape curves and static bone transform curves from animations that key every bone and shapekey. Built-in options and a name whitelist decide what is kept.
+Clean Animation Keys: removes blank blendshape curves and static bone transform curves from animations that key every bone and shapekey. Built-in options and a name whitelist decide what is kept, and Preview lists what Clean would remove.
 
 ## Controller Cleaner
 
-Controller Cleaner (Animator Tools): scans one animator controller, the controllers the open scenes use, or every controller in the project for sub-assets no layer reaches (states, state machines, transitions, blend trees and behaviours), and removes them on Clean. Ctrl+Z can't undo a clean, so it asks first and logs everything removed.
+Controller Cleaner (Animator Tools): scans one animator controller, the controllers the open scenes use, or every controller in the project for sub-assets no layer reaches (states, state machines, transitions, blend trees and behaviours), and removes them on Clean. It asks first; each Clean is one undo step and is logged.
 
 ## Find and Replace
 
-Find and Replace (Animator Tools): finds strings in animator state behaviours (case-insensitive) across an avatar's controllers (playable layers, VRCFury Full Controllers, Modular Avatar Merge Animators) or one animator controller, and replaces whole strings as one undo step. Play Audio paths can be repathed to a scene object and Parameter Driver names mapped to a controller parameter. Changes can be applied to the main prefab or a child prefab. Each result opens its state in the Animator window.
+Find and Replace (Animator Tools): finds strings in animator state behaviours (case-insensitive) across an avatar's controllers (playable layers, VRCFury Full Controllers, Modular Avatar Merge Animators) or one animator controller, and replaces them as one undo step: the whole string, only the searched text (Partial), or regular expression matches (Regex). Play Audio paths can be repathed to a scene object and Parameter Driver names mapped to a controller parameter. Changes can be applied to the main prefab or a child prefab. Each result opens its state in the Animator window.
 
 ## Import Presets
 
-Import Presets: assigns import presets to folders by file type (images, models, and so on, or name tags and endings like "_normal"), applied to files imported for the first time in that folder; reimports never change settings. Filters choose whether tags and "_word" endings make file types of their own, or only extensions count. Also saves presets from an asset's importer and keeps a shared preset library.
+Import Presets: assigns import presets to folders by file type (images, models, and so on, or name tags and endings like "_normal"), applied to files imported for the first time in that folder; reimports never change settings. While files from outside Unity are dragged over such a folder, the preset each will get is shown, and the scroll wheel picks another when there is a choice. Filters choose whether tags and "_word" endings make file types of their own, or only extensions count. Also saves presets from an asset's importer and keeps a shared preset library.
 
 ## Material Cleaner
 
-Material Cleaner: scans one material, the materials the open scenes use, or every material in the project for texture slots its current shader doesn't have, and removes them, with the textures they reference, on Clean. A material whose shader is missing is skipped. Each Clean is one undo step and is logged.
+Material Cleaner: scans one material, the materials the open scenes use, or every material in the project for texture slots, floats and colors its current shader doesn't have, and removes them, with the textures they reference, on Clean. A material whose shader is missing is skipped. Each Clean is one undo step and is logged.
 
 ## Attach To
 
@@ -89,3 +89,7 @@ Menu Mockup: lays out an example editor window from blocks (every component is a
 ## Animator Presets
 
 Animator Presets: a separate package (`com.riry.animatortemplates`) of animator templates. YGDR templates (layers and blend trees) appear in YGDR Animator Editor's layer **+** menu and **Import Template** list; MACS templates (blend trees) appear in a **Riry** submenu of the Animator window's blend tree right-click and are inserted with a window that names each parameter, remakes the AAP clips and adds missing parameters, as one undo step. Needs the VRChat SDK (Harmony) and the tool each extends.
+
+## Stop all tool scripts
+
+Stop all tool scripts (Debug Tools): an emergency switch that keeps every RiryTools script from running. While on, load hooks, importers and save processors do nothing, windows show only a notice and menu entries are greyed out, except this toggle, the Main Menu and Documentation. It stays on for this user and project until turned off; toggling it reloads scripts.

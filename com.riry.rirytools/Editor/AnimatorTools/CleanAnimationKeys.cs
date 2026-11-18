@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -296,7 +296,7 @@ namespace Riry.RiryTools.Editor
             return !float.IsNaN(value) && !float.IsInfinity(value);
         }
 
-        private static bool TryValidateEditableClip(
+        internal static bool TryValidateEditableClip(
             AnimationClip clip,
             out string error)
         {

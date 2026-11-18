@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -15,7 +15,7 @@ namespace Riry.RiryTools.Editor
         {
             RiryLog.Info(RiryLog.AvatarMigration, report.Text());
             var window = CreateInstance<AvatarMigratorRunReportWindow>();
-            window.titleContent = new GUIContent(AvatarMigratorWindow.Title + ": done");
+            window.titleContent = new GUIContent(AvatarMigratorWindow.Title + (report.DryRun ? ": dry run" : ": done"));
             window.report = report;
             Rect main = EditorGUIUtility.GetMainWindowPosition();
             window.position = new Rect(main.center.x - 320f, main.center.y - 240f, 640f, 480f);
