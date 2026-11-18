@@ -31,6 +31,7 @@ namespace Riry.RiryTools.Editor
 
         static GestureManagerEntryState()
         {
+            if (StopAllToolScripts.Active) return;
             EditorApplication.playModeStateChanged += change =>
             {
                 if (change == PlayModeStateChange.EnteredPlayMode) Begin();

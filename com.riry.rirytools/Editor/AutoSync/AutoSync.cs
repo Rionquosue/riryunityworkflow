@@ -32,6 +32,7 @@ namespace Riry.RiryTools.Editor
 
         static AutoSync()
         {
+            if (StopAllToolScripts.Active) return;
             EditorSceneManager.sceneSaved += scene => Saved(scene.path);
             PrefabStage.prefabSaved += root =>
             {

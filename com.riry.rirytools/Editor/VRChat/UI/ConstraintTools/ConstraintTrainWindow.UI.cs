@@ -18,6 +18,7 @@ namespace Riry.RiryTools.Editor
     {
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             bool blocked = EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling;
             if (blocked) EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
 

@@ -18,6 +18,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             string paused = GetPauseReason();
             if (!string.IsNullOrEmpty(paused))
                 EditorGUILayout.HelpBox("Paused: " + paused, MessageType.Info);

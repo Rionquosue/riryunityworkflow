@@ -35,9 +35,10 @@ namespace Riry.RiryTools.Editor
         private const string SaveImportPresetTools = "Tools/RiryTools/Import Presets/Save Import Preset";
         private const string ExtractAnimationsTools = "Tools/RiryTools/Animator Tools/Extract Animations";
         private const string OpenPresetLibrary = "Tools/RiryTools/Import Presets/Open Import Preset Library";
-        private const string MenuMockupMenu = "Tools/RiryTools/Menu Mockup";
+        private const string MenuMockupMenu = "Tools/RiryTools/Debug Tools/Menu Mockup";
         private const string FindNullReferencesMenu = "Tools/RiryTools/Find Null references";
-        private const string RefreshScriptsMenu = "Tools/RiryTools/" + RefreshScripts.DisplayName;
+        private const string RefreshScriptsMenu = "Tools/RiryTools/Debug Tools/" + RefreshScripts.DisplayName;
+        private const string StopAllToolScriptsMenu = "Tools/RiryTools/Debug Tools/" + StopAllToolScripts.DisplayName;
         private const string StopAutoGameMenu = "Tools/RiryTools/Stop Auto Game";
         private const string ScriptLoadGuardMenu = "Tools/RiryTools/Script Load Guard";
         private const string Documentation = "Tools/RiryTools/Documentation";
@@ -74,6 +75,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(SyncTools, true)]
         private static bool SyncToolsValid()
         {
+            if (StopAllToolScripts.Active) return false;
             Menu.SetChecked(SyncTools, AutoSync.Enabled);
             return true;
         }
@@ -81,49 +83,113 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConfigurationTools, false, 2001)]
         private static void ConfigurationToolsItem() { AutoSyncGitActions.OpenConfiguration(); }
 
+
+
+        [MenuItem(ConfigurationTools, true)]
+
+
+        private static bool ConfigurationToolsValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(AvatarMigratorMenu, false, 2005)]
         private static void AvatarMigratorItem() { AvatarMigratorWindow.Open(); }
 
+
+        [MenuItem(AvatarMigratorMenu, true)]
+
+        private static bool AvatarMigratorValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(BlendshapeSync, false, 2010)]
         private static void BlendshapeSyncItem() { BlendshapeSyncJobs.Add(); }
+
+
+        [MenuItem(BlendshapeSync, true)]
+
+        private static bool BlendshapeSyncValid() { return !StopAllToolScripts.Active; }
 
         // In the Animator Tools submenu, before Find and Replace (1995).
         [MenuItem(CleanAnimationKeysMenu, false, 1994)]
         private static void CleanAnimationKeysItem() { CleanAnimationKeysWindow.Open(new UnityEngine.AnimationClip[0]); }
 
+
+        [MenuItem(CleanAnimationKeysMenu, true)]
+
+        private static bool CleanAnimationKeysValid() { return !StopAllToolScripts.Active; }
+
         // After Find and Replace (1995).
         [MenuItem(ControllerCleanerMenu, false, 1996)]
         private static void ControllerCleanerItem() { ControllerCleanerWindow.Open(); }
+
+
+        [MenuItem(ControllerCleanerMenu, true)]
+
+        private static bool ControllerCleanerValid() { return !StopAllToolScripts.Active; }
 
         // Constraint Tool is 2030 (RiryToolsVRChatMenus.cs).
 
         [MenuItem(GuidTools, false, 2040)]
         private static void GuidToolsItem() { GuidToolsWindow.Open(); }
 
+
+
+        [MenuItem(GuidTools, true)]
+
+
+        private static bool GuidToolsValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(IconCapMenu, false, 2045)]
         private static void IconCapItem() { IconCapWindow.Open(); }
 
+
+        [MenuItem(IconCapMenu, true)]
+
+        private static bool IconCapValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(ImportPresetTools, false, 2050)]
         private static void ImportPresetToolsItem() { ImportPresetActions.ChooseFolderPreset(); }
+
+
+        [MenuItem(ImportPresetTools, true)]
+
+        private static bool ImportPresetToolsValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(SaveImportPresetTools, false, 2051)]
         private static void SaveImportPresetToolsItem() { ImportPresetActions.SaveToLibrary(); }
 
         [MenuItem(SaveImportPresetTools, true)]
-        private static bool SaveImportPresetToolsValid() { return ImportPresetActions.ValidateSaveToLibrary(); }
+        private static bool SaveImportPresetToolsValid() { return !StopAllToolScripts.Active && (ImportPresetActions.ValidateSaveToLibrary()); }
 
         // In the Animator Tools submenu, after Controller Cleaner (1996).
         [MenuItem(ExtractAnimationsTools, false, 1997)]
         private static void ExtractAnimationsToolsItem() { ImportPresetExtractAnimationWindow.Open(); }
 
+
+        [MenuItem(ExtractAnimationsTools, true)]
+
+        private static bool ExtractAnimationsToolsValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(OpenPresetLibrary, false, 2053)]
         private static void OpenPresetLibraryItem() { ImportPresetActions.OpenLibrary(); }
+
+
+        [MenuItem(OpenPresetLibrary, true)]
+
+        private static bool OpenPresetLibraryValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(FindNullReferencesMenu, false, 2056)]
         private static void FindNullReferencesItem() { FindNullReferencesWindow.Run(); }
 
+
+        [MenuItem(FindNullReferencesMenu, true)]
+
+        private static bool FindNullReferencesValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(RefreshScriptsMenu, false, 2058)]
         internal static void RefreshScriptsItem() { RefreshScripts.Run(); }
+
+
+        [MenuItem(RefreshScriptsMenu, true)]
+
+        private static bool RefreshScriptsValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(StopAutoGameMenu, false, 2060)]
         private static void StopAutoGameItem() { StopAutoGame.Enabled = !StopAutoGame.Enabled; }
@@ -131,6 +197,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(StopAutoGameMenu, true)]
         private static bool StopAutoGameValid()
         {
+            if (StopAllToolScripts.Active) return false;
             Menu.SetChecked(StopAutoGameMenu, StopAutoGame.Enabled);
             return true;
         }
@@ -141,12 +208,31 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ScriptLoadGuardMenu, true)]
         private static bool ScriptLoadGuardValid()
         {
+            if (StopAllToolScripts.Active) return false;
             Menu.SetChecked(ScriptLoadGuardMenu, ScriptLoadGuard.Enabled);
             return true;
         }
 
         [MenuItem(MenuMockupMenu, false, 2065)]
         private static void MenuMockupItem() { MenuMockup.Open(); }
+
+
+
+        [MenuItem(MenuMockupMenu, true)]
+
+
+        private static bool MenuMockupValid() { return !StopAllToolScripts.Active; }
+
+        // Works while stopped: it is how the stop is turned off.
+        [MenuItem(StopAllToolScriptsMenu, false, 2068)]
+        private static void StopAllToolScriptsItem() { StopAllToolScripts.Set(!StopAllToolScripts.Active); }
+
+        [MenuItem(StopAllToolScriptsMenu, true)]
+        private static bool StopAllToolScriptsValid()
+        {
+            Menu.SetChecked(StopAllToolScriptsMenu, StopAllToolScripts.Active);
+            return true;
+        }
 
         [MenuItem(Documentation, false, 2070)]
         private static void DocumentationItem() { UnityEngine.Application.OpenURL(DocumentationLink); }
@@ -161,12 +247,20 @@ namespace Riry.RiryTools.Editor
         [MenuItem(Sync, true)]
         private static bool SyncValid()
         {
+            if (StopAllToolScripts.Active) return false;
             Menu.SetChecked(Sync, AutoSync.Enabled);
             return true;
         }
 
         [MenuItem(Configuration, false, 2)]
         private static void ConfigurationItem() { AutoSyncGitActions.OpenConfiguration(); }
+
+
+
+        [MenuItem(Configuration, true)]
+
+
+        private static bool ConfigurationValid() { return !StopAllToolScripts.Active; }
 
         /// <summary>
         /// Shows VrcSdkNotFoundException's message as the "VRCSDK not found" popup. A missing SDK is a setup state, not a
@@ -187,14 +281,36 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConstraintTool, false, 2030)]
         private static void ConstraintToolItem() { VrcSdkMissing("Constraint Tool"); }
 
+
+
+        [MenuItem(ConstraintTool, true)]
+
+
+        private static bool ConstraintToolValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(MenuTool, false, 2066)]
         private static void MenuToolItem() { VrcSdkMissing("Menu Tool"); }
+
+
+        [MenuItem(MenuTool, true)]
+
+        private static bool MenuToolValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(FindReplaceTools, false, 1995)]
         private static void FindReplaceToolsItem() { VrcSdkMissing("Find and Replace"); }
 
+
+        [MenuItem(FindReplaceTools, true)]
+
+        private static bool FindReplaceToolsValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(FTEmulatorTools, false, 2067)]
         private static void FTEmulatorToolsItem() { VrcSdkMissing("FTEmulator"); }
+
+
+        [MenuItem(FTEmulatorTools, true)]
+
+        private static bool FTEmulatorToolsValid() { return !StopAllToolScripts.Active; }
 #endif
     }
 }

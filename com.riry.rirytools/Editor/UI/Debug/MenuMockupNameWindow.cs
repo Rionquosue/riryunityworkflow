@@ -30,6 +30,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             mockupName = EditorGUILayout.TextField("Name", mockupName);
             // A name problem shows only after Save was clicked with it.
             if (error != null) EditorGUILayout.HelpBox(error, MessageType.Warning);

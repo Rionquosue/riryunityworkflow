@@ -19,6 +19,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             lastDrawn = EditorApplication.timeSinceStartup;
             bool blocked = EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling;
             if (blocked) EditorGUILayout.HelpBox("Unavailable in Play Mode or while compiling.", MessageType.Info);
@@ -157,6 +158,7 @@ namespace Riry.RiryTools.Editor
         // Scene handles, only while this tab has been drawn in the last two seconds.
         private void OnSceneGUI(SceneView view)
         {
+            if (StopAllToolScripts.Active) return;
             if (EditorApplication.timeSinceStartup - lastDrawn > 2.0) return;
             Dictionary<string, Transform> handles = PairHandles();
             foreach (KeyValuePair<string, Transform> handle in handles)

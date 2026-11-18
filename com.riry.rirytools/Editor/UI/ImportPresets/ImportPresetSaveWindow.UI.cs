@@ -45,6 +45,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             AssetImporter importer = string.IsNullOrEmpty(assetPath) ? null : AssetImporter.GetAtPath(assetPath);
             if (!ImportPresetLibrary.CanSave(importer))
             {

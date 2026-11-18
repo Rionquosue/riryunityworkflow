@@ -59,6 +59,7 @@ namespace Riry.RiryTools.Editor
         // Ten times a second (the Main Menu passes it on to its hosted copy): a new snapshot, then a repaint.
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             FTEmulatorSession session = FTEmulator.Session;
             snapshot = session != null ? session.Snapshot() : FTEmulator.LastSnapshot;
             if (session != null && managerObject == null) managerObject = FTEmulator.Manager;
@@ -67,6 +68,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (hosted)
             {
                 Draw();

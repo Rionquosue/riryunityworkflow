@@ -168,22 +168,26 @@ namespace Riry.RiryTools.Editor
 
         private void OnSelectionChange()
         {
+            if (StopAllToolScripts.Active) return;
             SnapToSelection();
             Repaint();
         }
 
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             Repaint();
         }
 
         private void OnFocus()
         {
+            if (StopAllToolScripts.Active) return;
             ForgetFiles();
         }
 
         private void OnProjectChange()
         {
+            if (StopAllToolScripts.Active) return;
             ForgetFiles();
         }
 
@@ -200,6 +204,7 @@ namespace Riry.RiryTools.Editor
         // repaints when the Scene View camera moves. Nothing is asked for while hidden.
         private void Watch()
         {
+            if (StopAllToolScripts.Active) return;
             SceneView view = SceneView.lastActiveSceneView;
             if (view != null && view.camera != null &&
                 (view.camera.transform.position != viewPosition || view.camera.transform.rotation != viewRotation))

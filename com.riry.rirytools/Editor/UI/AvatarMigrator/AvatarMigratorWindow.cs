@@ -83,12 +83,14 @@ namespace Riry.RiryTools.Editor
 
         private void OnHierarchyChange()
         {
+            if (StopAllToolScripts.Active) return;
             targetPrefabs = null;
             Repaint();
         }
 
         private void OnFocus()
         {
+            if (StopAllToolScripts.Active) return;
             targetPrefabs = null;
         }
 
@@ -113,6 +115,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             scroll = EditorGUILayout.BeginScrollView(scroll);
             GameObject before = target;
             source = SceneObject("Source (old avatar)", source);

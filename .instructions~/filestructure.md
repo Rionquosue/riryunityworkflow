@@ -44,6 +44,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Menu Tool | `VRChat/MenuTool/` | `MenuTool` |
 | Refresh Scripts | `Utilities/` | `RefreshScripts` |
 | Script Load Guard | `Debug/` | `ScriptLoadGuard` |
+| Stop all tool scripts | `Components/` | `StopAllToolScripts` |
 | Stop Auto Game | `Utilities/` | `StopAutoGame` |
 
 ## Entry points
@@ -121,6 +122,7 @@ com.riry.rirytools/
     │   ├── RiryToolsProjectFolder.cs
     │   ├── RiryToolsTypes.cs
     │   ├── SceneObjectId.cs
+    │   ├── StopAllToolScripts.cs
     │   └── VrcSdkNotFoundException.cs
     ├── Debug/
     │   ├── FindNullReferences.cs

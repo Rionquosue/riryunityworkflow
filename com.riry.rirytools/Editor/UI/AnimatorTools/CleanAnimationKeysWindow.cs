@@ -132,6 +132,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (extract != null)
             {
                 options = extract.Settings.CleanOptions;

@@ -50,6 +50,7 @@ namespace Riry.RiryTools.Editor
         [InitializeOnLoadMethod]
         private static void RefreshHook()
         {
+            if (StopAllToolScripts.Active) return;
             EditorApplication.playModeStateChanged -= PlayModeChanged;
             if (Enabled) EditorApplication.playModeStateChanged += PlayModeChanged;
         }

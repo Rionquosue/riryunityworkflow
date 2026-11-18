@@ -8,6 +8,18 @@ namespace Riry.RiryTools.Editor
     internal static class RiryToolGUI
     {
         /// <summary>
+        /// Stop all tool scripts: while it is on, a window draws only this notice. True when it drew it (the window then
+        /// draws nothing else).
+        /// </summary>
+        internal static bool Stopped()
+        {
+            if (!StopAllToolScripts.Active) return false;
+            EditorGUILayout.HelpBox("RiryTools is stopped (" + StopAllToolScripts.DisplayName + "). Turn it off in Tools > RiryTools > Debug Tools.",
+                MessageType.Warning);
+            return true;
+        }
+
+        /// <summary>
         /// Call after an action that can open a dialog or file panel from a window's OnGUI. A modal
         /// window repaints other windows while it is open, which leaves this window's layout groups
         /// out of step; this ends the current draw (GUIUtility.ExitGUI) so the window starts a

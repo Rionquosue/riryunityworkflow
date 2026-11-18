@@ -13,6 +13,7 @@ namespace Riry.RiryTools.Editor
     {
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (captureStack == null) captureStack = new IconCapEffectStackGUI();
             if (generatorStack == null) generatorStack = new IconCapEffectStackGUI();
             // Every change to the capture settings (Size, preset, effect stack, camera, background, options) in this

@@ -44,6 +44,7 @@ namespace Riry.RiryTools.Editor
 
         static FTEmulator()
         {
+            if (StopAllToolScripts.Active) return;
             Register();
         }
 
@@ -51,6 +52,7 @@ namespace Riry.RiryTools.Editor
         [InitializeOnEnterPlayMode]
         private static void OnEnterPlayMode(EnterPlayModeOptions options)
         {
+            if (StopAllToolScripts.Active) return;
             Shutdown("Play Mode restarted");
             Register();
         }

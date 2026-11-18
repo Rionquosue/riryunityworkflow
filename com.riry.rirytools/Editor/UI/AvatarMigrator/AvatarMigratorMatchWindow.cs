@@ -118,6 +118,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (map == null || map.TargetRoot == null)
             {
                 Close();

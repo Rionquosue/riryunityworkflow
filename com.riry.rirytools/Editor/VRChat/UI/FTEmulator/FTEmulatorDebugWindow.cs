@@ -82,6 +82,7 @@ namespace Riry.RiryTools.Editor
         // Ten times a second: a new snapshot, then a repaint.
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             FTEmulatorSession session = FTEmulator.Session;
             snapshot = session != null ? session.Snapshot() : FTEmulator.LastSnapshot;
             if (snapshot != null)
@@ -107,6 +108,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             GUILayout.Space(RiryToolsMainMenu.TopMargin);
             tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs);
             EditorGUILayout.Space(4f);

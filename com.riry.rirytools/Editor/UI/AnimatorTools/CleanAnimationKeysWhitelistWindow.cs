@@ -35,6 +35,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (owner == null)
             {
                 Close();

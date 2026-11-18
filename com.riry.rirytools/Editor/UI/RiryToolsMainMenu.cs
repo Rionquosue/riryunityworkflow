@@ -25,7 +25,7 @@ namespace Riry.RiryTools.Editor
 
         private static readonly string[] Tabs =
         {
-            "AutoSync", "Blendshape Sync", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools" 
+            "AutoSync", "Blendshape Sync", "Constraint Tool", "GUID Tools", "Import Presets", "Menu Tool", "Tools", "Animator Tools", "Debug Tools"
         };
         // The Tools tab's sub-tabs: General (the buttons and toggles below) and FTEmulator (its window, hosted).
         private static readonly string[] ToolsTabs = { "General", "FTEmulator" };
@@ -88,6 +88,13 @@ namespace Riry.RiryTools.Editor
         {
             wantsMouseMove = true;
             GUILayout.Space(TopMargin);
+            // Stop all tool scripts: no tool is drawn, only the notice and the toggle that turns it off.
+            if (StopAllToolScripts.Active)
+            {
+                RiryToolGUI.Stopped();
+                DrawStopToggle();
+                return;
+            }
             int chosen = TabStrip(this, tab, Tabs);
             if (chosen != tab) tabScroll = Vector2.zero;
             tab = chosen;
@@ -196,9 +203,6 @@ namespace Riry.RiryTools.Editor
                         else EditorApplication.delayCall += AvatarMigratorWindow.OpenPopup;
                     }
                     if (GUILayout.Button(MaterialCleaner.Title, GUILayout.Height(28f))) EditorApplication.delayCall += MaterialCleanerWindow.Open;
-                    if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
-                    // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
-                    if (GUILayout.Button(RefreshScripts.DisplayName, GUILayout.Height(28f))) RefreshScripts.Run();
                     EditorGUILayout.Space(4f);
                     // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
                     bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
@@ -208,10 +212,26 @@ namespace Riry.RiryTools.Editor
                         "Block saving a scene or prefab that loaded with far fewer objects than its file holds."), ScriptLoadGuard.Enabled);
                     if (guard != ScriptLoadGuard.Enabled) ScriptLoadGuard.Enabled = guard;
                     break;
+                case "Debug Tools":
+                    // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
+                    if (GUILayout.Button(RefreshScripts.DisplayName, GUILayout.Height(28f))) RefreshScripts.Run();
+                    if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
+                    if (GUILayout.Button("Menu Mockup", GUILayout.Height(28f))) EditorApplication.delayCall += MenuMockup.Open;
+                    EditorGUILayout.Space(4f);
+                    DrawStopToggle();
+                    break;
                 default:
                     Draw(Active());
                     break;
             }
+        }
+
+        // Set only when clicked: turning it on or off reloads scripts.
+        private static void DrawStopToggle()
+        {
+            bool stop = EditorGUILayout.ToggleLeft(new GUIContent(StopAllToolScripts.DisplayName,
+                "Emergency stop: every RiryTools script stops running and its menus are greyed out until this is turned off."), StopAllToolScripts.Active);
+            if (stop != StopAllToolScripts.Active) StopAllToolScripts.Set(stop);
         }
 
         // The hosted window for the current tab, made on first use; null for tabs without one.
@@ -348,6 +368,7 @@ namespace Riry.RiryTools.Editor
         // The messages Unity sends a shown window are passed on to the tab's tool.
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             EditorWindow window = ActiveIfMade();
             if (window != null) Call(window, "OnInspectorUpdate");
             Repaint();
@@ -355,6 +376,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnSelectionChange()
         {
+            if (StopAllToolScripts.Active) return;
             EditorWindow window = ActiveIfMade();
             if (window == null) return;
             Call(window, "OnSelectionChange");
@@ -367,12 +389,14 @@ namespace Riry.RiryTools.Editor
 
         private void OnProjectChange()
         {
+            if (StopAllToolScripts.Active) return;
             EditorWindow window = ActiveIfMade();
             if (window != null) Call(window, "OnProjectChange");
         }
 
         private void OnHierarchyChange()
         {
+            if (StopAllToolScripts.Active) return;
             EditorWindow window = ActiveIfMade();
             if (window != null) Call(window, "OnHierarchyChange");
         }
@@ -385,7 +409,7 @@ namespace Riry.RiryTools.Editor
                 : name == "Import Presets" ? (importTab < 2 ? ImportTabs[importTab] : null)
                 : name == "Animator Tools" ? AnimatorTabs[Mathf.Clamp(animatorTab, 0, AnimatorTabs.Length - 1)]
                 : name == "Tools" ? (toolsTab == FTEmulatorToolsTab ? "FTEmulator" : null)
-                : name == "Blendshape Sync" ? null : name;
+                : name == "Blendshape Sync" || name == "Debug Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }

@@ -23,6 +23,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             scroll = EditorGUILayout.BeginScrollView(scroll);
             EditorGUILayout.LabelField("Repository", GitState.RepositoryExists
                 ? RiryToolsPaths.ProjectRoot

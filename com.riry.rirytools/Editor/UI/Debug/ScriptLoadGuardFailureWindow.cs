@@ -23,6 +23,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             ScriptLoadGuard.Failure failure = ScriptLoadGuard.Current;
             HashSet<string> guarded = ScriptLoadGuard.Guarded();
             string path = failure != null && guarded.Contains(failure.Path) ? failure.Path : string.Join(", ", guarded);

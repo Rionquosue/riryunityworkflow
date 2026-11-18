@@ -34,6 +34,7 @@ namespace Riry.RiryTools.Editor
 
         static MenuToolAvatarKeys()
         {
+            if (StopAllToolScripts.Active) return;
             EditorSceneManager.sceneSaved += OnSceneSaved;
         }
 
