@@ -45,6 +45,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnSelectionChange()
         {
+            if (StopAllToolScripts.Active) return;
             if (UseSelection()) Repaint();
         }
 
@@ -89,6 +90,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(6.0f);
             var chosen = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Target",
                 "The FBX or other model file to extract the clips from. Filled from the Project window selection."),

@@ -67,6 +67,7 @@ namespace Riry.RiryTools.Editor
         [InitializeOnLoadMethod]
         private static void RefreshHook()
         {
+            if (StopAllToolScripts.Active) return;
             Application.logMessageReceived -= LogReceived;
             EditorSceneManager.sceneOpening -= SceneOpening;
             EditorSceneManager.sceneOpened -= SceneOpened;

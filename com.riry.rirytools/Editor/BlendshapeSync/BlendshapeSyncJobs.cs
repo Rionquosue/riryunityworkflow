@@ -28,6 +28,7 @@ namespace Riry.RiryTools.Editor
 
         static BlendshapeSyncJobs()
         {
+            if (StopAllToolScripts.Active) return;
             EditorSceneManager.sceneOpened += (scene, mode) => Load(scene);
             EditorSceneManager.sceneClosing += (scene, removing) => Close(scene);
             EditorSceneManager.sceneSaved += scene => Save(scene);

@@ -100,6 +100,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             if (lfsQuery == null || !lfsQuery.IsCompleted) return;
             lfsStatus = lfsQuery.IsFaulted ? "Git LFS could not be checked: " + lfsQuery.Exception.GetBaseException().Message : lfsQuery.Result;
             lfsQuery = null;

@@ -39,6 +39,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnProjectChange()
         {
+            if (StopAllToolScripts.Active) return;
             allFolders = null;
             Scan();
             Repaint();

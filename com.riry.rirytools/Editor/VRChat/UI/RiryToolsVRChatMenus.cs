@@ -26,26 +26,48 @@ namespace Riry.RiryTools.Editor
         [MenuItem(RiryToolsMenuBar.ConstraintTool, false, 2030)]
         private static void ConstraintToolItem() { ConstraintToolWindow.OpenFromTools(); }
 
+
+
+        [MenuItem(RiryToolsMenuBar.ConstraintTool, true)]
+
+
+        private static bool ConstraintToolValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(RiryToolsMenuBar.MenuTool, false, 2066)]
         private static void MenuToolItem() { MenuToolWindow.Open(); }
+
+
+        [MenuItem(RiryToolsMenuBar.MenuTool, true)]
+
+        private static bool MenuToolValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(RiryToolsMenuBar.FindReplaceTools, false, 1995)]
         private static void FindReplaceToolsItem() { BehaviourFindReplaceWindow.OpenPopup(null); }
 
+
+        [MenuItem(RiryToolsMenuBar.FindReplaceTools, true)]
+
+        private static bool FindReplaceToolsValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(RiryToolsMenuBar.FTEmulatorTools, false, 2067)]
         private static void FTEmulatorToolsItem() { FTEmulatorWindow.Open(); }
+
+
+        [MenuItem(RiryToolsMenuBar.FTEmulatorTools, true)]
+
+        private static bool FTEmulatorToolsValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, false, 22)]
         private static void FindReplaceHierarchyItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeGameObject); }
 
         [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, true)]
-        private static bool FindReplaceHierarchyValid() { return SceneObjectSelected(); }
+        private static bool FindReplaceHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
         [MenuItem(RiryToolsRightClickMenu.FindReplaceAssets, false, 2006)]
         private static void FindReplaceAssetsItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeObject); }
 
         [MenuItem(RiryToolsRightClickMenu.FindReplaceAssets, true)]
-        private static bool FindReplaceAssetsValid() { return Selection.activeObject is UnityEditor.Animations.AnimatorController; }
+        private static bool FindReplaceAssetsValid() { return !StopAllToolScripts.Active && (Selection.activeObject is UnityEditor.Animations.AnimatorController); }
 
         // No MenuCommand parameter, so a multi-selection opens the window once.
         // "GameObject/" entries with a priority below 50 also appear in the Hierarchy's right-click menu.
@@ -53,13 +75,13 @@ namespace Riry.RiryTools.Editor
         private static void ConstraintTrainHierarchyItem() { ConstraintToolWindow.OpenTrainFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.ConstraintTrainHierarchy, true)]
-        private static bool ConstraintTrainHierarchyValid() { return SceneObjectSelected(); }
+        private static bool ConstraintTrainHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
         [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, false, 21)]
         private static void ConstraintBezierHierarchyItem() { ConstraintToolWindow.OpenBezierFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, true)]
-        private static bool ConstraintBezierHierarchyValid() { return SceneObjectSelected(); }
+        private static bool ConstraintBezierHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
         // Scene and Prefab Mode objects only, not prefab assets.
         private static bool SceneObjectSelected()

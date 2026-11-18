@@ -29,6 +29,7 @@ namespace Riry.RiryTools.Editor
 
         static RefreshScripts()
         {
+            if (StopAllToolScripts.Active) return;
             string json = SessionState.GetString(Key, "");
             if (json.Length == 0) return;
             SessionState.EraseString(Key);

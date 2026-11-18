@@ -123,6 +123,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (surface != null)
             {
                 // Hosted: sub-tabs under the Main Menu's tabs, sized to the Main Menu and clear of its tab scroll view's scrollbar.
@@ -143,18 +144,21 @@ namespace Riry.RiryTools.Editor
         // The messages Unity sends a shown window are passed on to the subtool.
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             RiryToolsMainMenu.Call(Current, "OnInspectorUpdate");
             Repaint();
         }
 
         private void OnSelectionChange()
         {
+            if (StopAllToolScripts.Active) return;
             RiryToolsMainMenu.Call(Current, "OnSelectionChange");
             Repaint();
         }
 
         private void OnHierarchyChange()
         {
+            if (StopAllToolScripts.Active) return;
             RiryToolsMainMenu.Call(Current, "OnHierarchyChange");
             Repaint();
         }

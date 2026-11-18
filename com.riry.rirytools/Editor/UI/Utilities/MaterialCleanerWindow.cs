@@ -26,6 +26,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.HorizontalScope())
             {

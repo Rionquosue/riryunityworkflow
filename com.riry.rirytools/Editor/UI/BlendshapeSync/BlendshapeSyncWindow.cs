@@ -194,6 +194,7 @@ namespace Riry.RiryTools.Editor
 
         private void EditorTick()
         {
+            if (StopAllToolScripts.Active) return;
             double now = EditorApplication.timeSinceStartup;
             if (busy || now < nextTick) return;
             // No catch-up loop after an editor stall, and no worker-thread Unity APIs.

@@ -56,6 +56,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnProjectChange()
         {
+            if (StopAllToolScripts.Active) return;
             Scan();
             Repaint();
         }
@@ -90,6 +91,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(4.0f);
             applyToAll = EditorGUILayout.ToggleLeft("Apply to all", applyToAll);
             scroll = EditorGUILayout.BeginScrollView(scroll);

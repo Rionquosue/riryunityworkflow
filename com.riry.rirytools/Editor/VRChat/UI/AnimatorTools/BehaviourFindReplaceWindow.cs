@@ -54,6 +54,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(4f);
             Object chosen = EditorGUILayout.ObjectField(new GUIContent("Source", "An avatar or an object in one (its playable layers, VRCFury Full Controllers and Modular Avatar Merge Animators), or an animator controller."),
                 source, typeof(Object), true);

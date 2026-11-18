@@ -47,19 +47,19 @@ namespace Riry.RiryTools.Editor
         private static void RegenerateGuidItem() { GuidToolRegenerate.RegenerateSelectedGuids(); }
 
         [MenuItem(RegenerateGuidAssets, true)]
-        private static bool RegenerateGuidValid() { return GuidToolRegenerate.HasValidSelection(); }
+        private static bool RegenerateGuidValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
 
         [MenuItem(ImportPreset, false, 2001)]
         private static void ImportPresetItem() { ImportPresetActions.QuickFolderPreset(); }
 
         [MenuItem(ImportPreset, true)]
-        private static bool ImportPresetValid() { return ImportPresetActions.ValidateChooseFolderPreset(); }
+        private static bool ImportPresetValid() { return !StopAllToolScripts.Active && (ImportPresetActions.ValidateChooseFolderPreset()); }
 
         [MenuItem(SaveImportPreset, false, 2002)]
         private static void SaveImportPresetItem() { ImportPresetActions.SaveToLibrary(); }
 
         [MenuItem(SaveImportPreset, true)]
-        private static bool SaveImportPresetValid() { return ImportPresetActions.ValidateSaveToLibrary(); }
+        private static bool SaveImportPresetValid() { return !StopAllToolScripts.Active && (ImportPresetActions.ValidateSaveToLibrary()); }
 
         [MenuItem(ExtractAnimations, false, 2003)]
         private static void ExtractAnimationsItem() { ImportPresetExtractAnimationWindow.Open(); }
@@ -67,6 +67,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ExtractAnimations, true)]
         private static bool ExtractAnimationsValid()
         {
+            if (StopAllToolScripts.Active) return false;
             // Only a model with embedded animations.
             string model = ImportPresetAnimations.SelectedModel();
             return model != null && ImportPresetAnimations.HasClips(model);
@@ -76,7 +77,7 @@ namespace Riry.RiryTools.Editor
         private static void RepairGuidReferencesItem() { GuidToolReferenceRepair.RepairSelected(); }
 
         [MenuItem(RepairGuidReferences, true)]
-        private static bool RepairGuidReferencesValid() { return GuidToolRegenerate.HasValidSelection(); }
+        private static bool RepairGuidReferencesValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
 
         [MenuItem(CleanAnimationKeysAssets, false, 2005)]
         private static void CleanAnimationKeysAssetsItem()
@@ -85,7 +86,7 @@ namespace Riry.RiryTools.Editor
         }
 
         [MenuItem(CleanAnimationKeysAssets, true)]
-        private static bool CleanAnimationKeysAssetsValid() { return Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0; }
+        private static bool CleanAnimationKeysAssetsValid() { return !StopAllToolScripts.Active && (Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0); }
 
         // Animator Tools/Find and Replace is 2006 (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
 
@@ -97,7 +98,7 @@ namespace Riry.RiryTools.Editor
         private static void AttachToItem() { AttachToWindow.Open(); }
 
         [MenuItem(AttachToHierarchy, true)]
-        private static bool AttachToValid() { return AttachTo.Selected().Count > 0; }
+        private static bool AttachToValid() { return !StopAllToolScripts.Active && (AttachTo.Selected().Count > 0); }
 
         // Constraint Tool/Train is 20, Constraint Tool/Bezier 21 and Animator Tools/Find and Replace 22
         // (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
@@ -112,14 +113,36 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConstraintTrainHierarchy, false, 20)]
         private static void ConstraintTrainHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
 
+
+
+        [MenuItem(ConstraintTrainHierarchy, true)]
+
+
+        private static bool ConstraintTrainHierarchyValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(ConstraintBezierHierarchy, false, 21)]
         private static void ConstraintBezierHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
+
+
+        [MenuItem(ConstraintBezierHierarchy, true)]
+
+        private static bool ConstraintBezierHierarchyValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(FindReplaceHierarchy, false, 22)]
         private static void FindReplaceHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Find and Replace"); }
 
+
+        [MenuItem(FindReplaceHierarchy, true)]
+
+        private static bool FindReplaceHierarchyValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(FindReplaceAssets, false, 2006)]
         private static void FindReplaceAssetsItem() { RiryToolsMenuBar.VrcSdkMissing("Find and Replace"); }
+
+
+        [MenuItem(FindReplaceAssets, true)]
+
+        private static bool FindReplaceAssetsValid() { return !StopAllToolScripts.Active; }
 #endif
     }
 }

@@ -28,6 +28,7 @@ namespace Riry.RiryTools.Editor
 
         static CleanAnimationKeysButton()
         {
+            if (StopAllToolScripts.Active) return;
             AssemblyReloadEvents.beforeAssemblyReload += BeforeAssemblyReload;
             EditorApplication.update += WatchForAnimationWindows;
         }

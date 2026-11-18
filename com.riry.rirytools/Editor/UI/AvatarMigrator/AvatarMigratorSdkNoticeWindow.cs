@@ -29,6 +29,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             GUILayout.Space(8f);
             EditorGUILayout.LabelField(Message, EditorStyles.wordWrappedLabel);
             GUILayout.FlexibleSpace();

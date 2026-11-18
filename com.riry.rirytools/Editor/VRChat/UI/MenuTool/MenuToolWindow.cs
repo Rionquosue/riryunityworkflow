@@ -173,9 +173,9 @@ namespace Riry.RiryTools.Editor
             if (radial != null) radial.Hide();
         }
 
-        private void OnHierarchyChange() { MarkStale(); }
+        private void OnHierarchyChange() { if (!StopAllToolScripts.Active) MarkStale(); }
 
-        private void OnProjectChange() { MarkStale(); }
+        private void OnProjectChange() { if (!StopAllToolScripts.Active) MarkStale(); }
 
         private void MarkStale()
         {
@@ -458,6 +458,7 @@ namespace Riry.RiryTools.Editor
         // The picker's close seen from Update: it was focused and no longer is.
         private void Update()
         {
+            if (StopAllToolScripts.Active) return;
             if (iconPickerId == 0) return;
             bool open = focusedWindow != null && focusedWindow.GetType().Name == "ObjectSelector";
             if (open)
@@ -504,6 +505,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             guiOrigin = GUIUtility.GUIToScreenPoint(Vector2.zero);
             PickedIcon();
             DrawWindow();

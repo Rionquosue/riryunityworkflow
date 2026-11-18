@@ -32,6 +32,7 @@ namespace Riry.RiryTools.Editor
 
         static GuidToolBrokenReferenceMonitor()
         {
+            if (StopAllToolScripts.Active) return;
             Application.logMessageReceived += OnLog;
             EditorSceneManager.sceneOpening += (path, mode) => StartLoading();
             EditorSceneManager.sceneOpened += (scene, mode) => Inspect(scene.path);
