@@ -5,13 +5,14 @@
 `~` folders are hidden from Unity and the VPM build. `.meta` files are not listed.
 
 - `.instructions~/`: Working instructions for LLMs while maintaining this repo. Start with `for_agents.md`.
-- `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`.
+- `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`, for both packages.
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
 - `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
+- `com.riry.ftemulator/`: FTEmulator, its own package (listed in the VPM as `com.riry.ftemulator`). It needs `com.riry.rirytools` and uses its internals (`InternalsVisibleTo`). Only Unity Editor code lives here; the VRCFaceTracking companion (module and app) is in `Rionquosue/VRCFT-FtEmuCompanion`.
 
 ## Rules
 
-1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager; `Editor/VRChat/FTEmulator/GestureManager/` joins it through an `.asmref`). Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tool lives entirely in `Editor/VRChat/`).
+1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager). FTEmulator's package has two more: `com.riry.ftemulator/Editor/` (`Riry.RiryTools.Editor.FTEmulator`, VRChat SDK) and `com.riry.ftemulator/Editor/FTEmulator/GestureManager/` (`Riry.RiryTools.Editor.FTEmulator.GestureManager`, Gesture Manager). Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tool lives entirely in `Editor/VRChat/`).
 2. **Logic folders.** A tool's logic is in its own folder, named after the tool (`AutoSync/`, `AvatarMigrator/`, `BlendshapeSync/`, `GuidTools/`, `IconCap/`, `ImportPresets/`, `MenuTool/`, `ConstraintTools/`, `FTEmulator/`). A tool's data files are in folders inside it (`FTEmulator/HardwareProfiles/`, `AvatarProfiles/`, `MappingSchemas/`).
 3. **Category folders.** A small tool (a single script with a single job) does not get its own folder. It goes in a category folder: `Debug/` (debugging aids), `Utilities/` (general helpers) or `AnimatorTools/`. A tool the owner places in a category keeps all its files there, even when it has several (Menu Mockup in `Debug/`, Attach To in `Utilities/`).
 4. **UI and feature logic.** Give UI and feature logic separate scripts and types. Put windows, panels, controls, dialogs, and progress displays in the owning assembly’s `UI/<ToolOrCategory>/` folder. Keep Main Menu and menu registration scripts directly under `UI/`, and put reusable controls in their own scripts under `UI/Components/`. UI scripts gather input, call feature operations, and present their results. Put feature state, operation validation, planning, execution, and persistence in the tool’s logic folder. Feature types must run without opening or depending on a UI type. Use inputs, results, and progress or cancellation callbacks where needed. A partial type follows the same rule across all its files.
@@ -35,7 +36,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Constraint Tool (Train, Bezier, Insertable prop) | `VRChat/ConstraintTools/` | `ConstraintTool`, `ConstraintTrain`, `ConstraintBezier`, `InsertableProp` |
 | Find and Replace | `VRChat/AnimatorTools/` | `BehaviourFindReplace` |
 | Find Null references | `Debug/` | `FindNullReferences` |
-| FTEmulator | `VRChat/FTEmulator/` | `FTEmulator` |
+| FTEmulator | `com.riry.ftemulator/Editor/FTEmulator/` | `FTEmulator` |
 | GUID Tools | `GuidTools/` | `GuidTool` |
 | IconCap | `IconCap/` | `IconCap` |
 | Import Presets | `ImportPresets/` | `ImportPreset` |
@@ -56,7 +57,7 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 - **Right click menus (Hierarchy, Project):** `UI/RiryToolsRightClickMenu.cs`.
 - **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, scene object ids, blendshape names, referenced assets, Controller Cleaner's scan and clean (also used by GUID Tools), Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `RiryToolUndoWindow`: the base of windows that refresh after Undo and Redo; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources, generated objects and logged status, shared by Train, Bezier and Insertable prop).
 - **A tool:** its logic folder and its `UI/<folder>/` window, per the table above.
-- **FTEmulator:** `VRChat/FTEmulator/FTEmulator.cs` (lifecycle, one session), `FTEmulatorSession.cs` (the per-frame pipeline); its Gesture Manager output is `VRChat/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`. Its data is JSON, found by folder GUID (`FTEmulatorCatalog`). Its windows are in `VRChat/UI/FTEmulator/`.
+- **FTEmulator:** `com.riry.ftemulator/Editor/FTEmulator/FTEmulator.cs` (lifecycle, one session), `FTEmulatorSession.cs` (the per-frame pipeline); its Gesture Manager output is `com.riry.ftemulator/Editor/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`. Its data is JSON, found by folder GUID (`FTEmulatorCatalog`). Its windows are in `com.riry.ftemulator/Editor/UI/FTEmulator/`, its menu entry and Main Menu hosting in `com.riry.ftemulator/Editor/UI/FTEmulatorMenus.cs`.
 
 ## Script locations
 
@@ -164,6 +165,7 @@ com.riry.rirytools/
     │   ├── ImportPresetAnimationExtraction.cs
     │   ├── ImportPresetAnimations.cs
     │   ├── ImportPresetBetterFBX.cs
+    │   ├── ImportPresetDropChoices.cs
     │   ├── ImportPresetFolderRules.cs
     │   ├── ImportPresetLibrary.cs
     │   ├── ImportPresetMarker.cs
@@ -177,6 +179,7 @@ com.riry.rirytools/
     │   │   ├── CleanAnimationKeysWindow.cs
     │   │   └── ControllerCleanerWindow.cs
     │   ├── AutoSync/
+    │   │   ├── AutoSyncConflictNotice.cs
     │   │   ├── AutoSyncGitConfigureWindow.cs
     │   │   ├── AutoSyncGitConfigureWindow.UI.cs
     │   │   ├── AutoSyncGitLargeFilesWindow.cs
@@ -217,6 +220,7 @@ com.riry.rirytools/
     │   │   ├── IconCapWindow.cs
     │   │   └── IconCapWindow.UI.cs
     │   ├── ImportPresets/
+    │   │   ├── ImportPresetDragOverlay.cs
     │   │   ├── ImportPresetExtractAnimationWindow.cs
     │   │   ├── ImportPresetFolderWindow.cs
     │   │   ├── ImportPresetFolderWindow.UI.cs
@@ -259,48 +263,6 @@ com.riry.rirytools/
     │   │       ├── InsertablePropAnimator.cs
     │   │       ├── InsertablePropMath.cs
     │   │       └── InsertablePropRig.cs
-    │   ├── FTEmulator/
-    │   │   ├── AvatarProfiles/
-    │   │   │   ├── adjerry-legacy.json
-    │   │   │   ├── pawlygon-legacy.json
-    │   │   │   ├── pawlygon-native.json
-    │   │   │   ├── vrcft-unified-v2.json
-    │   │   │   └── vrchat-native.json
-    │   │   ├── GestureManager/
-    │   │   │   ├── FTEmulatorGestureManager.cs
-    │   │   │   └── Riry.RiryTools.Editor.GestureManager.asmref
-    │   │   ├── HardwareProfiles/
-    │   │   │   ├── babble-lower-v2.1.2.json
-    │   │   │   ├── quest-pro-base-fb1.json
-    │   │   │   ├── quest-pro-official-fb2.json
-    │   │   │   ├── unrestricted.json
-    │   │   │   ├── vive-facial-tracker.json
-    │   │   │   ├── vive-pro-eye-plus-facial.json
-    │   │   │   ├── vive-pro-eye.json
-    │   │   │   └── vive-pro-stock.json
-    │   │   ├── MappingSchemas/
-    │   │   │   └── unified-expressions.json
-    │   │   ├── FTEmulator.cs
-    │   │   ├── FTEmulatorAvatarScanner.cs
-    │   │   ├── FTEmulatorBlendshapeWriter.cs
-    │   │   ├── FTEmulatorCatalog.cs
-    │   │   ├── FTEmulatorDiagnostics.cs
-    │   │   ├── FTEmulatorDnsPacket.cs
-    │   │   ├── FTEmulatorExpression.cs
-    │   │   ├── FTEmulatorHardwareFilter.cs
-    │   │   ├── FTEmulatorJson.cs
-    │   │   ├── FTEmulatorLegacyMapper.cs
-    │   │   ├── FTEmulatorNativeDescriptor.cs
-    │   │   ├── FTEmulatorNativeEvaluator.cs
-    │   │   ├── FTEmulatorNativeSetWeights.cs
-    │   │   ├── FTEmulatorOscCodec.cs
-    │   │   ├── FTEmulatorOscQuery.cs
-    │   │   ├── FTEmulatorOscReceiver.cs
-    │   │   ├── FTEmulatorParameterStore.cs
-    │   │   ├── FTEmulatorSession.cs
-    │   │   ├── FTEmulatorSettings.cs
-    │   │   ├── FTEmulatorTemplateResolver.cs
-    │   │   └── FTEmulatorTypes.cs
     │   ├── MenuTool/
     │   │   ├── GestureManager/
     │   │   │   ├── GestureManagerEntryState.cs
@@ -313,6 +275,7 @@ com.riry.rirytools/
     │   │   ├── MenuToolBudget.cs
     │   │   ├── MenuToolCompressor.cs
     │   │   ├── MenuToolEntryState.cs
+    │   │   ├── MenuToolIconPreset.cs
     │   │   ├── MenuToolModel.cs
     │   │   ├── MenuToolPlan.cs
     │   │   ├── MenuToolPlanner.cs
@@ -333,9 +296,6 @@ com.riry.rirytools/
     │   │   │   ├── ConstraintTrainWindow.UI.cs
     │   │   │   ├── InsertablePropWindow.cs
     │   │   │   └── InsertablePropWindow.UI.cs
-    │   │   ├── FTEmulator/
-    │   │   │   ├── FTEmulatorDebugWindow.cs
-    │   │   │   └── FTEmulatorWindow.cs
     │   │   ├── MenuTool/
     │   │   │   ├── MenuToolAddMenuDialog.cs
     │   │   │   ├── MenuToolBudgetTree.cs
@@ -347,4 +307,59 @@ com.riry.rirytools/
     │   └── Riry.RiryTools.Editor.VRChat.asmdef
     ├── AssemblyInfo.cs
     └── Riry.RiryTools.Editor.asmdef
+```
+
+```text
+com.riry.ftemulator/
+└── Editor/
+    ├── FTEmulator/
+    │   ├── AvatarProfiles/
+    │   │   ├── adjerry-legacy.json
+    │   │   ├── pawlygon-legacy.json
+    │   │   ├── pawlygon-native.json
+    │   │   ├── vrcft-unified-v2.json
+    │   │   └── vrchat-native.json
+    │   ├── GestureManager/
+    │   │   ├── FTEmulatorGestureManager.cs
+    │   │   └── Riry.RiryTools.Editor.FTEmulator.GestureManager.asmdef
+    │   ├── HardwareProfiles/
+    │   │   ├── babble-lower-v2.1.2.json
+    │   │   ├── quest-pro-base-fb1.json
+    │   │   ├── quest-pro-official-fb2.json
+    │   │   ├── unrestricted.json
+    │   │   ├── vive-facial-tracker.json
+    │   │   ├── vive-pro-eye-plus-facial.json
+    │   │   ├── vive-pro-eye.json
+    │   │   └── vive-pro-stock.json
+    │   ├── MappingSchemas/
+    │   │   └── unified-expressions.json
+    │   ├── FTEmulator.cs
+    │   ├── FTEmulatorAvatarScanner.cs
+    │   ├── FTEmulatorBlendshapeWriter.cs
+    │   ├── FTEmulatorCatalog.cs
+    │   ├── FTEmulatorDiagnostics.cs
+    │   ├── FTEmulatorDnsPacket.cs
+    │   ├── FTEmulatorExpression.cs
+    │   ├── FTEmulatorHardwareFilter.cs
+    │   ├── FTEmulatorJson.cs
+    │   ├── FTEmulatorLegacyMapper.cs
+    │   ├── FTEmulatorNativeDescriptor.cs
+    │   ├── FTEmulatorNativeEvaluator.cs
+    │   ├── FTEmulatorNativeSetWeights.cs
+    │   ├── FTEmulatorOscCodec.cs
+    │   ├── FTEmulatorOscQuery.cs
+    │   ├── FTEmulatorOscReceiver.cs
+    │   ├── FTEmulatorParameterStore.cs
+    │   ├── FTEmulatorRecording.cs
+    │   ├── FTEmulatorSession.cs
+    │   ├── FTEmulatorSettings.cs
+    │   ├── FTEmulatorTemplateResolver.cs
+    │   └── FTEmulatorTypes.cs
+    ├── UI/
+    │   ├── FTEmulator/
+    │   │   ├── FTEmulatorDebugWindow.cs
+    │   │   └── FTEmulatorWindow.cs
+    │   └── FTEmulatorMenus.cs
+    ├── AssemblyInfo.cs
+    └── Riry.RiryTools.Editor.FTEmulator.asmdef
 ```

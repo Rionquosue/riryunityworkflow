@@ -12,8 +12,8 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class RiryToolsVRChatMenus
     {
-        // The Main Menu's General Tools > Constraint Tools sub-tab hosts the Constraint Tools window (with its Train, Bezier and Insertable prop
-        // sub-tabs), and its Menu Tools tab the Menu Tools' Parameter budget (its Menu manager opens the Menu Tools window).
+        // The Main Menu's Constraint Tool tab hosts the Constraint Tool window (with its Train, Bezier and Insertable prop
+        // sub-tabs), and its Menu Tool tab the Menu Tool's Parameter budget (its Menu manager opens the Menu Tool window).
         // FTEmulator's entries are in its own package (com.riry.ftemulator, Editor/UI/FTEmulatorMenus.cs).
         static RiryToolsVRChatMenus()
         {
@@ -74,24 +74,6 @@ namespace Riry.RiryTools.Editor
         [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, true)]
         private static bool ConstraintBezierHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
-        [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, false, 23)]
-        private static void InsertablePropHierarchyItem() { ConstraintToolWindow.OpenInsertableFromHierarchy(); }
-
-        [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, true)]
-        private static bool InsertablePropHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
-
-        [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, false, 24)]
-        private static void DualAxisHierarchyItem() { ConstraintToolWindow.OpenDualAxisFromHierarchy(); }
-
-        [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, true)]
-        private static bool DualAxisHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
-
-        [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, false, 25)]
-        private static void ThreeAxisHierarchyItem() { ConstraintToolWindow.OpenThreeAxisFromHierarchy(); }
-
-        [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, true)]
-        private static bool ThreeAxisHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
-
         // Scene and Prefab Mode objects only, not prefab assets.
         private static bool SceneObjectSelected()
         {
@@ -102,23 +84,18 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: VRChat menu entries
-//   Tools/RiryTools/Constraint Tools (2030)       -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs):
-//                                                      the Constraint Tools window on the tab used last
-//   Tools/RiryTools/Menu Tools (2066), menu key E -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs): its own
-//                                                      window; the Main Menu's Menu Tools tab hosts its Parameter budget
+//   Tools/RiryTools/Constraint Tool (2030)       -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs):
+//                                                      the Constraint Tool window on the tab used last
+//   Tools/RiryTools/Menu Tool (2066), menu key E -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs): its own
+//                                                      window; the Main Menu's Menu Tool tab hosts its Parameter budget
 //                                                      (CreateMenuTool = MenuToolWindow.CreateHosted); its Menu manager opens
 //                                                      this window
 //   Tools/RiryTools/Animator Tools/Find and Replace (1995) -> BehaviourFindReplaceWindow.OpenPopup (Editor/VRChat/UI/AnimatorTools/
 //                                                      BehaviourFindReplaceWindow.cs); also in the Hierarchy (22) and Project (2006)
 //                                                      right-click menus, for a scene object and an animator controller
 //   Tools/RiryTools/FTEmulator (2067)            -> in com.riry.ftemulator (Editor/UI/FTEmulatorMenus.cs), not here.
-//   GameObject/RiryTools/Constraint Tools/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy: the Train tab; the active
+//   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy: the Train tab; the active
 //                                                      object becomes the chain start, a selected descendant the end.
-//   GameObject/RiryTools/Constraint Tools/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy: the Bezier tab, the same way.
-//   GameObject/RiryTools/Constraint Tools/Insertable prop (23) -> ConstraintToolWindow.OpenInsertableFromHierarchy: the Insertable
-//                                                      prop tab; the active object becomes the Socket, its avatar the Avatar root.
-//   GameObject/RiryTools/Constraint Tools/Dual axis detector (24) / Three axis detector (25) -> ConstraintToolWindow.
-//                                                      OpenDualAxisFromHierarchy / OpenThreeAxisFromHierarchy: that tab; the active
-//                                                      object becomes Source, another selected object Relative to.
+//   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy: the Bezier tab, the same way.
 //   SceneObjectSelected      Validator of the Hierarchy entries: a scene or Prefab Mode object is active.
 // ============================================================================
