@@ -23,7 +23,7 @@ namespace Riry.RiryTools.Editor
     {
         internal const string DisplayName = "FTEmulator";
 
-        // Set by Editor/VRChat/FTEmulator/GestureManager/FTEmulatorGestureManager.cs when Gesture Manager is in the project.
+        // Set by com.riry.ftemulator/Editor/FTEmulator/GestureManager/FTEmulatorGestureManager.cs when Gesture Manager is in the project.
         internal static Func<IFTEmulatorOutput> CreateOutput;
         internal static Func<Object[]> FindManagers;
         internal static Type ManagerType;

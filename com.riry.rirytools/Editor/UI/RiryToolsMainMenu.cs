@@ -190,8 +190,8 @@ namespace Riry.RiryTools.Editor
                     EditorGUILayout.Space(4f);
                     if (toolsTab == FTEmulatorToolsTab)
                     {
-                        // FTEmulator needs the VRChat SDK.
-                        if (CreateFTEmulator == null) EditorGUILayout.HelpBox(new VrcSdkNotFoundException("FTEmulator").Message, MessageType.Info);
+                        // FTEmulator needs the VRChat SDK and its own package.
+                        if (CreateFTEmulator == null) EditorGUILayout.HelpBox(RiryToolsMenuBar.FTEmulatorUnavailable(), MessageType.Info);
                         else Draw(Active());
                         break;
                     }
@@ -448,7 +448,7 @@ namespace Riry.RiryTools.Editor
 //                            (ScriptLoadGuard.Enabled, the same way).
 //   FTEmulator sub-tab       CreateFTEmulator (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK,
 //                            and the sub-tab says so) makes the hosted FTEmulatorWindow (FTEmulatorWindow.CreateHosted,
-//                            Editor/VRChat/UI/FTEmulator/FTEmulatorWindow.cs), hosted under the key "FTEmulator".
+//                            com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorWindow.cs), hosted under the key "FTEmulator".
 //   ImportTabs               Import Presets' sub-tabs: Set Folder Import Presets, Save Import Preset,
 //                            Extract Animation, Open Import Preset Library (a button).
 //   Constraint Tool tab      CreateConstraintTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK,
