@@ -13,6 +13,7 @@ Companion to RiryTools FTEmulator: a VRCFaceTracking module and a command-line a
 - [VRCFaceTracking](https://github.com/benaclejames/VRCFaceTracking) for the module.
 - [ffmpeg](https://ffmpeg.org/) on `PATH` (or its path set) for video files and webcams.
 - VRChat installed through Steam for OVRLipSync (VRChat's viseme engine), or the path to an `OVRLipSync.dll`.
+- To take visemes from a running VRChat when processing videos: a virtual audio cable (such as VB-Cable), with VRChat's microphone set to the cable's output.
 - Optional: a Babble face model (`.onnx`) you already have, for the mouth.
 
 ## Build
@@ -59,10 +60,12 @@ Video and webcam run MediaPipe's face models (bundled) for the whole face; a Bab
 RiryTools.FTRecorder record --out session.ftrec.jsonl
 ```
 
-Records both VRCFaceTracking's output and the `Viseme` and `Voice` VRChat makes from your microphone, into one file, until Ctrl+C.
+Records both VRCFaceTracking's output and visemes, into one file, until Ctrl+C.
 
 1. In VRCFaceTracking, set the OSC output port to `9010`. The app passes every packet on to VRChat on `9000` and records it. `--proxy IN:OUT` changes the ports.
-2. In VRChat, turn OSC on. VRChat finds the app through OSCQuery and sends it `Viseme` and `Voice`.
+2. Visemes depend on whether VRChat is running when the recording starts:
+   - **VRChat running:** turn OSC on in VRChat. It finds the app through OSCQuery and sends it `Viseme` and `Voice`, which are recorded.
+   - **VRChat not running:** your microphone goes through OVRLipSync, found as for `process`, and its visemes are recorded. `--mic NAME` picks the microphone (default: the first one `ffmpeg -list_devices true -f dshow -i dummy` lists); `--ffmpeg PATH` and `--ovrlipsync PATH` as for `process`.
 
 ### process
 
@@ -70,14 +73,18 @@ Records both VRCFaceTracking's output and the `Viseme` and `Voice` VRChat makes 
 RiryTools.FTRecorder process --video clip.mp4 --out clip.ftrec.jsonl
 ```
 
-Runs a recorded video through the face models and its sound through OVRLipSync. OVRLipSync is taken from `--ovrlipsync PATH`, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the app shows the error and asks for the path; an empty answer stops.
+Runs a recorded video through the face models. Its visemes depend on whether VRChat is running:
+
+- **VRChat running:** the video's sound is played into VRChat through a virtual audio cable (`--cable NAME`, default `CABLE Input`), and the `Viseme` and `Voice` VRChat sends back over OSC are recorded. Turn OSC on in VRChat and set its microphone to the cable's output. This runs at the video's own speed, after a 5 second wait for VRChat to find the app.
+- **VRChat not running:** the sound goes through OVRLipSync, taken from `--ovrlipsync PATH`, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the app shows the error and asks for the path; an empty answer stops.
 
 | Option | Default | Use |
 |---|---|---|
 | `--ffmpeg PATH` | `ffmpeg` | ffmpeg's path. |
 | `--babble-model PATH`, `--babble-labels PATH`, `--babble-crop SCALE` | none, bundled labels, `1` | A Babble model for the mouth. |
-| `--visemes ovrlipsync\|classifier` | `ovrlipsync` | `classifier` uses FTRecorder's own rule-based classifier instead of OVRLipSync (less exact). |
+| `--visemes ovrlipsync\|classifier` | VRChat if running, else `ovrlipsync` | Uses that engine whether VRChat runs or not. `classifier` is FTRecorder's own rule-based classifier (less exact). |
 | `--ovrlipsync PATH` | VRChat's copy | The OVRLipSync library. |
+| `--cable NAME` | `CABLE Input` | The playback device VRChat hears, matched by name. |
 | `--fps N`, `--size N`, `--threads N` | `30`, `640`, half the cores | Frame rate, frame size and model threads. |
 
 ### replay
@@ -94,8 +101,8 @@ Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at
 
 - `{"t":..,"unified":[..],"eye":[..]}`: Unified Expressions and eyes (module recordings and processed videos).
 - `{"t":..,"osc":"<base64>"}`: one OSC packet VRCFaceTracking sent, unchanged.
-- `{"t":..,"param":"Viseme","i":n}` / `{"t":..,"param":"Voice","f":v}`: what VRChat sent.
-- `{"t":..,"viseme":n,"voice":v,"weights":[15]}`: a viseme made from audio, in VRChat's viseme order (sil, PP, FF, TH, DD, kk, CH, SS, nn, RR, aa, E, ih, oh, ou).
+- `{"t":..,"param":"Viseme","i":n}` / `{"t":..,"param":"Voice","f":v}`: what VRChat sent (`record` and `process` with VRChat running).
+- `{"t":..,"viseme":n,"voice":v,"weights":[15]}`: a viseme made by OVRLipSync or the classifier, in VRChat's viseme order (sil, PP, FF, TH, DD, kk, CH, SS, nn, RR, aa, E, ih, oh, ou).
 
 ## Licences
 
