@@ -115,6 +115,27 @@ python -m ftrecorder replay --in session.mkv --port 9000 --loop
 
 Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at their recorded times. Takes `.mkv` (read through ffmpeg, `--ffmpeg PATH`) and `.ftrec.jsonl` recordings. Expression frames are played by the module's `playback` source instead. VRChat ignores `Viseme` and `Voice` sent to it (it makes its own); FTEmulator in Unity takes them.
 
+## Recorder or module?
+
+Both write one `.mkv` with the recording attached, but they record different things, at different points:
+
+| | Recorder (companion app) | Module (`record` setting) |
+|---|---|---|
+| What it records | VRCFaceTracking's OSC output: the packets VRChat (or FTEmulator) receives, after VRCFaceTracking's calibration and settings, as the avatar's own parameters. | The Unified Expressions and eyes the module hands VRCFaceTracking, before VRCFaceTracking changes them, for no avatar in particular. |
+| Which tracker | Any: whatever module VRCFaceTracking is running (Quest Pro, Babble, this module...). | Only this module's own source (playback, video, webcam or babbleOsc). |
+| Visemes | Yes: VRChat's `Viseme` and `Voice` while VRChat runs; otherwise, on Windows, OVRLipSync on the microphone. | No. |
+| Audio | The microphone, with **Record audio**. | No. |
+| `.mkv` holds | Audio (when kept), the "Visemes" subtitle track and the recording. | The recording, with 20 ms of silence as its track. |
+| Recording entries | `osc` (and `param` or `viseme`). | `expressions`. |
+| Played back with | `replay`, to VRChat or FTEmulator (sends the packets and visemes as recorded, so it suits the avatar it was recorded with). | The module's `playback` source, through VRCFaceTracking again (so any avatar, with VRCFaceTracking's current settings). |
+| Setup | VRCFaceTracking's OSC output port set to `9010`, and the Recorder open (it relays to VRChat on `9000`). | None beyond the module: `record` in `module-config.json`. |
+| Started and stopped by | **Start recording** / **Stop and save**. | Setting `record` to `true` / `false` (or VRCFaceTracking closing). |
+| File name | `FTRecording-HHmm-ddMMyy.mkv` in **Output**. | `module_<date>_<time>.mkv` in `recordingsFolder`. |
+| Runs on | Windows and Linux. | Wherever VRCFaceTracking runs it (the release zip is for Windows). |
+| ffmpeg | Needed: a popup when missing, and nothing is recorded. | Needed: logged when missing, and nothing is recorded. |
+
+`process` records neither: it turns a video file into a recording with `expressions` (like the module, from MediaPipe and Babble) and visemes, in an `.mkv` with the video and its sound, played back with the module's `playback` source (face) and `replay` (visemes).
+
 ## Recordings
 
 The Recorder and `process` write `.mkv` (Matroska), one file with:
