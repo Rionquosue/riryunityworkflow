@@ -33,7 +33,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Blendshape Sync | `BlendshapeSync/` | `BlendshapeSync` |
 | Clean Animation Keys | `AnimatorTools/` | `CleanAnimationKeys` |
 | Controller Cleaner | `AnimatorTools/` | `ControllerCleaner` |
-| Constraint Tool (Train, Bezier, Insertable prop) | `VRChat/ConstraintTools/` | `ConstraintTool`, `ConstraintTrain`, `ConstraintBezier`, `InsertableProp` |
+| Constraint Tool (Train, Bezier, Insertable prop, Dual and Three axis detector) | `VRChat/ConstraintTools/` | `ConstraintTool`, `ConstraintTrain`, `ConstraintBezier`, `InsertableProp`, `TiltDetector` |
 | Find and Replace | `VRChat/AnimatorTools/` | `BehaviourFindReplace` |
 | Find Null references | `Debug/` | `FindNullReferences` |
 | FTEmulator | `com.riry.ftemulator/Editor/FTEmulator/` | `FTEmulator` |
@@ -259,10 +259,12 @@ com.riry.rirytools/
     │   │   │   ├── ConstraintTrainChains.cs
     │   │   │   ├── ConstraintTrainPlanner.cs
     │   │   │   └── ConstraintTrainPrefabs.cs
-    │   │   └── InsertableProp/
-    │   │       ├── InsertablePropAnimator.cs
-    │   │       ├── InsertablePropMath.cs
-    │   │       └── InsertablePropRig.cs
+    │   │   ├── InsertableProp/
+    │   │   │   ├── InsertablePropAnimator.cs
+    │   │   │   ├── InsertablePropMath.cs
+    │   │   │   └── InsertablePropRig.cs
+    │   │   └── TiltDetector/
+    │   │       └── TiltDetectorBuilder.cs
     │   ├── MenuTool/
     │   │   ├── GestureManager/
     │   │   │   ├── GestureManagerEntryState.cs
@@ -295,7 +297,8 @@ com.riry.rirytools/
     │   │   │   ├── ConstraintTrainWindow.cs
     │   │   │   ├── ConstraintTrainWindow.UI.cs
     │   │   │   ├── InsertablePropWindow.cs
-    │   │   │   └── InsertablePropWindow.UI.cs
+    │   │   │   ├── InsertablePropWindow.UI.cs
+    │   │   │   └── TiltDetectorWindow.cs
     │   │   ├── MenuTool/
     │   │   │   ├── MenuToolAddMenuDialog.cs
     │   │   │   ├── MenuToolBudgetTree.cs

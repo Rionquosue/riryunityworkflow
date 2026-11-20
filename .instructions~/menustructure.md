@@ -22,6 +22,8 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Train
         * Bezier
         * Insertable prop
+        * Dual axis detector
+        * Three axis detector
     * GUID Tools
     * Menu Tool
 
@@ -148,7 +150,7 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Constraint Tool] |  |  |  |  |  |
-| [Train] | Bezier | Insertable prop |  |  |  |
+| [Train] | Bezier | Insertable prop | Dual axis detector | Three axis detector |  |
 | Train UI here |  |  |  |  |  |
 
 ---
@@ -156,7 +158,7 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Constraint Tool] |  |  |  |  |  |
-| Train | [Bezier] | Insertable prop |  |  |  |
+| Train | [Bezier] | Insertable prop | Dual axis detector | Three axis detector |  |
 | Bezier UI here |  |  |  |  |  |
 
 ---
@@ -164,8 +166,36 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Constraint Tool] |  |  |  |  |  |
-| Train | Bezier | [Insertable prop] |  |  |  |
+| Train | Bezier | [Insertable prop] | Dual axis detector | Three axis detector |  |
 | Insertable prop UI here |  |  |  |  |  |
+
+---
+
+| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [Constraint Tool] |  |  |  |  |  |
+| Train | Bezier | Insertable prop | [Dual axis detector] | Three axis detector |  |
+| Source field |  |  |  |  |  |
+| Relative to field |  |  |  |  |  |
+| Flat plane ▾ (X, Y, Z) |  |  |  |  |  |
+| Space ▾ (Local, World) |  |  |  |  |  |
+| Offset |  |  |  |  |  |
+| Parameters: Right, Up |  |  |  |  |  |
+| Build dual axis detector |  |  |  |  |  |
+
+---
+
+| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [Constraint Tool] |  |  |  |  |  |
+| Train | Bezier | Insertable prop | Dual axis detector | [Three axis detector] |  |
+| Source field |  |  |  |  |  |
+| Relative to field |  |  |  |  |  |
+| Flat plane ▾ (X, Y, Z) |  |  |  |  |  |
+| Space ▾ (Local, World) |  |  |  |  |  |
+| Offset |  |  |  |  |  |
+| Parameters: Top, BottomLeft, BottomRight |  |  |  |  |  |
+| Build three axis detector |  |  |  |  |  |
 
 ---
 

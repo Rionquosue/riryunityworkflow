@@ -350,7 +350,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `ConstraintToolWindow` | Text shown through a variable (1, line 14), Tabs and toolbars (1, line 15) |
+| `ConstraintToolWindow` | Text shown through a variable (1, line 15), Tabs and toolbars (1, line 16) |
 
 ### `VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs`
 
@@ -427,6 +427,20 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `AvatarError` | Text shown through a variable (2, lines 330-334) |
+
+### `VRChat/UI/ConstraintTools/TiltDetectorWindow.cs`
+
+| Method | Text |
+|---|---|
+| `TiltDetectorWindow` | Text shown through a variable (2, lines 15-16: Flat plane and Space choices) |
+| `OnGUI` | Help boxes (1, line 42), Labels (3, lines 47-74), Field labels (5, lines 52-61, with tooltips), Buttons (1, line 82) |
+| `Build` | Text shown through a variable (2, lines 94-100) |
+
+### `VRChat/ConstraintTools/TiltDetector/TiltDetectorBuilder.cs`
+
+| Method | Text |
+|---|---|
+| `Problem` | Text shown through a variable (7, lines 61-68) |
 
 ## FTEmulator
 

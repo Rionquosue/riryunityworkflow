@@ -1,26 +1,31 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Constraint Tool: one window with a tab per subtool, Train (ConstraintTrainWindow),
-    /// Bezier (ConstraintBezierWindow) and Insertable prop (InsertablePropWindow). Each subtool is its own window, hosted unseen and drawn
+    /// Bezier (ConstraintBezierWindow), Insertable prop (InsertablePropWindow), and Dual axis detector and Three axis detector
+    /// (TiltDetectorWindow). Each subtool is its own window, hosted unseen and drawn
     /// by calling its OnGUI, as the Main Menu does. Opened from Tools > RiryTools > Constraint
     /// Tool and the Hierarchy's RiryTools > Constraint Tool > Train / Bezier (RiryToolsVRChatMenus.cs).
     /// </summary>
     internal sealed class ConstraintToolWindow : EditorWindow, IRiryHostedTool
     {
         internal const string Title = "Constraint Tool";
-        internal static readonly string[] Tabs = { "Train", "Bezier", "Insertable prop" };
+        internal static readonly string[] Tabs = { "Train", "Bezier", "Insertable prop", "Dual axis detector", "Three axis detector" };
         internal const int TrainTab = 0;
         internal const int BezierTab = 1;
         internal const int InsertableTab = 2;
+        internal const int DualAxisTab = 3;
+        internal const int ThreeAxisTab = 4;
 
         [SerializeField] private int tab;
         [SerializeField] private ConstraintTrainWindow train;
         [SerializeField] private ConstraintBezierWindow bezier;
         [SerializeField] private InsertablePropWindow insertable;
+        [SerializeField] private TiltDetectorWindow dualAxis;
+        [SerializeField] private TiltDetectorWindow threeAxis;
         // The Main Menu's copy (CreateHosted): never shown on its own.
         [SerializeField] private bool hosted;
         // The Main Menu while this window is hosted in its Constraint Tool tab (IRiryHostedTool); null on its own.
@@ -109,6 +114,28 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        private TiltDetectorWindow DualAxis
+        {
+            get
+            {
+                if (dualAxis == null) dualAxis = Hidden<TiltDetectorWindow>();
+                return dualAxis;
+            }
+        }
+
+        private TiltDetectorWindow ThreeAxis
+        {
+            get
+            {
+                if (threeAxis == null)
+                {
+                    threeAxis = Hidden<TiltDetectorWindow>();
+                    threeAxis.threeAxis = true;
+                }
+                return threeAxis;
+            }
+        }
+
         private static T Hidden<T>() where T : EditorWindow
         {
             var window = CreateInstance<T>();
@@ -118,7 +145,17 @@ namespace Riry.RiryTools.Editor
 
         private EditorWindow Current
         {
-            get { return tab == InsertableTab ? Insertable : tab == BezierTab ? (EditorWindow)Bezier : Train; }
+            get
+            {
+                switch (tab)
+                {
+                    case BezierTab: return Bezier;
+                    case InsertableTab: return Insertable;
+                    case DualAxisTab: return DualAxis;
+                    case ThreeAxisTab: return ThreeAxis;
+                    default: return Train;
+                }
+            }
         }
 
         private void OnGUI()
@@ -168,6 +205,8 @@ namespace Riry.RiryTools.Editor
             if (train != null) DestroyImmediate(train);
             if (bezier != null) DestroyImmediate(bezier);
             if (insertable != null) DestroyImmediate(insertable);
+            if (dualAxis != null) DestroyImmediate(dualAxis);
+            if (threeAxis != null) DestroyImmediate(threeAxis);
         }
     }
 }
