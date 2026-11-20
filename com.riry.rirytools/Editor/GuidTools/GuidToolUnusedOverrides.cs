@@ -16,6 +16,9 @@ namespace Riry.RiryTools.Editor
     /// </summary>
     internal static class GuidToolUnusedOverrides
     {
+        /// <summary>The tool's name: dialogs, the undo step, the popup and the menu entry.</summary>
+        internal const string Title = "Prefab Cleaner";
+
         /// <summary>The scenes (loaded) and prefabs among the files that hold an instance with unused overrides.</summary>
         internal static List<string> Find(IEnumerable<string> files)
         {
@@ -34,7 +37,7 @@ namespace Riry.RiryTools.Editor
         {
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName(GuidToolReferenceRepair.Title + ": scrub unused overrides");
+            Undo.SetCurrentGroupName(Title);
             int scrubbed = 0;
             foreach (string path in files)
             {
@@ -68,7 +71,7 @@ namespace Riry.RiryTools.Editor
             PropertyModification[] kept = all.Where(m => !Unused(m)).ToArray();
             if (kept.Length == all.Length) return;
             Object handle = PrefabUtility.GetPrefabInstanceHandle(instance);
-            if (handle != null) Undo.RegisterCompleteObjectUndo(handle, GuidToolReferenceRepair.Title + ": scrub unused overrides");
+            if (handle != null) Undo.RegisterCompleteObjectUndo(handle, Title);
             PrefabUtility.SetPropertyModifications(instance, kept);
         }
 

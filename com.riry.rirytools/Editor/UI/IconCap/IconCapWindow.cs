@@ -9,7 +9,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// IconCap: square PNG icons captured from the Scene View, run through an effect
     /// stack and saved to an export folder; captures can be saved as jobs and remade
-    /// with Run. Opened from Tools > RiryTools > IconCap and the Main Menu's General Tools > General sub-tab (in its own window).
+    /// with Run. Opened from Tools > RiryTools > IconCap and the Main Menu's General Tools > PopUp Tools sub-tab (in its own window).
     /// The live preview renders only while the window is shown: it is requested when the
     /// window draws and rendered on the next editor update (Watch).
     /// </summary>
@@ -80,7 +80,7 @@ namespace Riry.RiryTools.Editor
             window.Show();
         }
 
-        /// <summary>The Main Menu's General Tools > General sub-tab: IconCap in its own floating window.</summary>
+        /// <summary>The Main Menu's General Tools > PopUp Tools sub-tab: IconCap in its own floating window.</summary>
         internal static void OpenPopup()
         {
             IconCapWindow window = GetWindow<IconCapWindow>(true, "IconCap");
@@ -687,11 +687,11 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: IconCap window, state and actions
-// IconCapWindow is one partial class: IconCapWindow.cs (state, previews, actions) and IconCapWindow.UI.cs (drawing). The menu entry, Tools > RiryTools > IconCap, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's General Tools > General sub-tab opens it in its own window.
+// IconCapWindow is one partial class: IconCapWindow.cs (state, previews, actions) and IconCapWindow.UI.cs (drawing). The menu entry, Tools > RiryTools > IconCap, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's General Tools > PopUp Tools sub-tab opens it in its own window.
 // ============================================================================
 //
 // IconCapWindow (this part)
-//   Open() / OpenPopup() The Tools menu entry (dockable) / the Main Menu's General Tools > General sub-tab (a floating window).
+//   Open() / OpenPopup() The Tools menu entry (dockable) / the Main Menu's General Tools > PopUp Tools sub-tab (a floating window).
 //   SettingsUndo        "IconCap settings": OnGUI compares the settings' JSON before and after each draw (DrawWindow);
 //                       a change is put back, recorded and set again, so Ctrl+Z undoes Size, a loaded preset, the
 //                       effect stack, camera, background and options. Capture only selected, the object slots and

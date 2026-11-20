@@ -137,7 +137,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Stop Auto Game
-// The menu toggle is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's General Tools > General sub-tab has the same toggle.
+// The menu toggle is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's Debug Tools tab has the same toggle.
 // ============================================================================
 //
 // StopAutoGame (this file)

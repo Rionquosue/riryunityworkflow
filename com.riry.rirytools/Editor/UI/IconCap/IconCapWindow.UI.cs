@@ -540,7 +540,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: IconCap window, drawing
-// IconCapWindow is one partial class: IconCapWindow.cs (state, previews, actions) and IconCapWindow.UI.cs (drawing). The menu entry, Tools > RiryTools > IconCap, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's General Tools > General sub-tab opens it in its own window.
+// IconCapWindow is one partial class: IconCapWindow.cs (state, previews, actions) and IconCapWindow.UI.cs (drawing). The menu entry, Tools > RiryTools > IconCap, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's General Tools > PopUp Tools sub-tab opens it in its own window.
 // ============================================================================
 //
 // IconCapWindow (this part): OnGUI / DrawWindow and one Draw method per block
