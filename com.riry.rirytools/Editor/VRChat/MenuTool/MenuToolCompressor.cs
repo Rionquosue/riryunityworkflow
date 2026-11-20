@@ -223,7 +223,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool compressor
+// GLOSSARY: Menu Tools compressor
 // ============================================================================
 //
 // MenuToolCompressor (this file)        VRCFury's Parameter Compressor solver: SettingKey "com.vrcfury.parameterCompressor" (Compress 0,

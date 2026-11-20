@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool's Dual axis detector and Three axis detector tabs: the settings for TiltDetectorBuilder and its Build
+    /// Constraint Tools' Dual axis detector and Three axis detector tabs: the settings for TiltDetectorBuilder and its Build
     /// button. One window per tab (threeAxis tells them apart), hosted unseen by ConstraintToolWindow and drawn by calling
     /// OnGUI.
     /// </summary>

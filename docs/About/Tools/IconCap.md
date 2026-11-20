@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > IconCap | |
-| Main Menu | Tools | IconCap |
+| Main Menu | Tools > General | IconCap |
 
 ## 2. Brief description
 
@@ -20,7 +20,7 @@ Captures square PNG icons from the Scene View.
 - Captures a square image from the Scene View, runs it through an effect stack and saves it as a PNG to an export folder.
 - Captures can be saved as jobs and remade later: **Jobs** shows the **Current job** (this session's captures, with **Save job**) and **Saved jobs**.
 - Capture options are in the **Camera** menu. Alpha cutout uses each material's own alpha-test settings.
-- Opens in its own window from the Main Menu's Tools tab.
+- Opens in its own window from the Main Menu's Tools > General sub-tab.
 
 ## 5. Flow chart
 

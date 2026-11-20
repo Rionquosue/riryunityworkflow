@@ -18,7 +18,7 @@ don't.
    notifications:** text written in the UI call itself.
 3. **Text shown through a variable:** text written here and handed to a UI call
    elsewhere: `Title` and `DisplayName` constants, status and error messages,
-   validation messages, Menu Tool scan notes and plan errors, and exception
+   validation messages, Menu Tools scan notes and plan errors, and exception
    messages a window shows.
 
 Not listed: UI calls whose text is only a variable, a symbol (`x`, `▾`, `≡`,
@@ -37,10 +37,10 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `RiryToolsMainMenu` | Tabs and toolbars (2, lines 31-35) |
-| `Open` | Window titles (1, line 81) |
-| `OnGUI` | Buttons (1, line 124) |
-| `DrawTab` | Toggles (3, lines 139-211), Help boxes (4, lines 151-194), Buttons (3, lines 183-219) |
+| `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-35) |
+| `Open` | Window titles (1, line 77) |
+| `OnGUI` | Buttons (1, line 120) |
+| `DrawTab` | Toggles (3, lines 147-214), Help boxes (5, lines 149-197), Buttons (5, lines 191-222) |
 
 ### `UI/RiryToolsMenuBar.cs`
 
@@ -327,7 +327,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `SyncNow` | Text shown through a variable (3, lines 39-83) |
 | `RestoreOriginals` | Text shown through a variable (2, lines 176-182) |
 
-## Constraint Tool
+## Constraint Tools
 
 ### `VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs`
 
@@ -791,7 +791,7 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `MaterialCleaner` | Text shown through a variable (1, line 15) |
 
-## Menu Tool
+## Menu Tools
 
 ### `VRChat/UI/MenuTool/MenuToolAddMenuDialog.cs`
 

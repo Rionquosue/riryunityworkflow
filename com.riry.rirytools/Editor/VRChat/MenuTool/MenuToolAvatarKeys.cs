@@ -10,7 +10,7 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// A GUID stamped on each avatar the Menu Tool plans for, kept in UserSettings (never on the avatar): avatars.json maps
+    /// A GUID stamped on each avatar the Menu Tools plans for, kept in UserSettings (never on the avatar): avatars.json maps
     /// each avatar's GlobalObjectId to its key. An avatar in a scene not saved yet has no lasting id, so its key is kept
     /// for the session by instance id and moved into avatars.json when its scene is saved.
     /// </summary>
@@ -154,7 +154,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool avatar keys
+// GLOSSARY: Menu Tools avatar keys
 // ============================================================================
 //
 // MenuToolAvatarKeys         A GUID per avatar, in UserSettings/RiryTools/MenuTool/avatars.json (GlobalObjectId -> key); an avatar

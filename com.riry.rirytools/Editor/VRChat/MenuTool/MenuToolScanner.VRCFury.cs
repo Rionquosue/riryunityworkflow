@@ -15,7 +15,7 @@ using ValueType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Val
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>Menu Tool scan: VRCFury features that add menu items (Toggle, Puppet, Full Controller), read by type name.</summary>
+    /// <summary>Menu Tools scan: VRCFury features that add menu items (Toggle, Puppet, Full Controller), read by type name.</summary>
     internal static partial class MenuToolScanner
     {
         // ---- VRCFury -------------------------------------------------------------
@@ -431,7 +431,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool scanner: VRCFury
+// GLOSSARY: Menu Tools scanner: VRCFury
 // MenuToolScanner is one partial class: MenuToolScanner.cs (the scan, references, parameters and controllers) and MenuToolScanner.Native.cs, .ModularAvatar.cs and .VRCFury.cs. It builds a MenuToolScan (MenuToolModel.cs) and is read-only.
 // ============================================================================
 //

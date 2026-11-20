@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > GUID Tools | |
-| Main Menu | GUID Tools | Regenerate GUID, Repair Missing GUID References, Check for Broken References, Delete GUID Reference Cache |
+| Main Menu | Tools > GUID Tools | Regenerate GUID, Repair Missing GUID References, Check for Broken References, Delete GUID Reference Cache |
 | Right Click (project) | RiryTools > Regenerate GUID | |
 | Right Click (project) | RiryTools > Repair Missing GUID References | |
 | Right Click (project) | RiryTools > Scrub Unused Overrides | |

@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Animator Tools > Find and Replace, without its window (Editor/VRChat/UI/AnimatorTools/BehaviourFindReplaceWindow.cs): finds the
     /// strings of state behaviours (case-insensitive, FuzzyMatch "contains", or a regular expression) in an avatar's controllers (its playable
-    /// layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the Menu Tool's scan finds them) or one
+    /// layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the Menu Tools' scan finds them) or one
     /// animator controller, and shows a found state in the Animator window. Apply is BehaviourFindReplaceApply.
     /// </summary>
     internal static class BehaviourFindReplace

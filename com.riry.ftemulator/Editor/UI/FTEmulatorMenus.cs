@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class FTEmulatorMenus
     {
-        // The Main Menu's Tools tab hosts the FTEmulator window in its FTEmulator sub-tab.
+        // The Main Menu's FTEmulator tab hosts the FTEmulator window.
         static FTEmulatorMenus()
         {
             RiryToolsMainMenu.CreateFTEmulator = FTEmulatorWindow.CreateHosted;
@@ -31,8 +31,8 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // FTEmulatorMenus (this file)
-//   (static constructor)     RiryToolsMainMenu.CreateFTEmulator = FTEmulatorWindow.CreateHosted: the Main Menu's Tools
-//                            tab hosts FTEmulator in its FTEmulator sub-tab.
+//   (static constructor)     RiryToolsMainMenu.CreateFTEmulator = FTEmulatorWindow.CreateHosted: the Main Menu's
+//                            FTEmulator tab hosts FTEmulator.
 //   Tools/RiryTools/FTEmulator (2067)  FTEmulatorWindow.Open; greyed out while Stop all tool scripts is on. No
 //                            right-click entry. Without this package or the VRChat SDK, RiryToolsMenuBar has the same
 //                            path, saying why (RiryToolsMenuBar.FTEmulatorUnavailable).

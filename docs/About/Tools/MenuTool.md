@@ -1,11 +1,11 @@
-# Menu Tool
+# Menu Tools
 
 ## 1. Where to find it
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Menu Tool | |
-| Main Menu | Menu Tool | Parameter budget, Menu manager |
+| Menu bar | RiryTools > Menu Tools | |
+| Main Menu | Menu Tools | Parameter budget, Menu manager |
 
 ## 2. Brief description
 
@@ -44,7 +44,7 @@ flowchart TD
 
 ## 6. References
 
-- The owner's Menu Tool specification (`Menu-Tool.md`).
+- The owner's Menu Tools specification (`Menu-Tool.md`).
 - VRCFury (reference only): the Parameter Compressor (`Editor-Avatars/Service/Compressor/ParameterCompressorService.cs`), followed for the compressed budget; its menu path and Full Controller rewrite rules; Move / Reorder Menu Item and Set Icon behaviour.
 - Gesture Manager 3.9.9: its radial menu, called by reflection, for the preview.
 - Modular Avatar: menu installers and items, read by type name (currently off).

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Everything Constraint Tool's Train tab draws. It is shown in a tab of
+    /// Everything Constraint Tools' Train tab draws. It is shown in a tab of
     /// ConstraintToolWindow (and the Main Menu), whose menu entries are in
     /// RiryToolsVRChatMenus.cs. The state and the actions behind the buttons are in
     /// ConstraintTrainWindow.cs; both files are one class, so methods and fields
@@ -218,13 +218,13 @@ namespace Riry.RiryTools.Editor
 //   blendCurve      [S] AnimationCurve Influence of the next chain across a blend.
 //   clip            [S] AnimationClip  Output clip; empty saves a new one.
 //   status              string         Message shown at the bottom of the window. Act(action): the action buttons run
-//                                      through it, so each new status is also logged ([RiryTools/Constraint Tool] Train: ...).
+//                                      through it, so each new status is also logged ([RiryTools/Constraint Tools] Train: ...).
 //   scroll              Vector2        Scroll position of the window.
 //   UndoName            const string   Undo group name for every change.
 //
 // MENU ENTRIES (Editor/VRChat/UI/RiryToolsVRChatMenus.cs; the window is Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs)
-//   Tools/RiryTools/Constraint Tool              -> ConstraintToolWindow.OpenFromTools(): the tab used last
-//   GameObject/RiryTools/Constraint Tool/Train   -> ConstraintToolWindow.OpenTrainFromHierarchy(): this tab, UseSelection
+//   Tools/RiryTools/Constraint Tools              -> ConstraintToolWindow.OpenFromTools(): the tab used last
+//   GameObject/RiryTools/Constraint Tools/Train   -> ConstraintToolWindow.OpenTrainFromHierarchy(): this tab, UseSelection
 //
 // UI METHODS (ConstraintTrainWindow.UI.cs)
 //   OnGUI()                        Draws the sections in order; blocks them in Play Mode.

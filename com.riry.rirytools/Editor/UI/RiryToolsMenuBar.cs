@@ -5,7 +5,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Every menu bar entry of this package: the Tools dropdown and the Git menu.
     /// Right-click entries (Project window and Hierarchy) are in RiryToolsRightClickMenu.cs.
-    /// Constraint Tool's, Menu Tool's, Find and Replace's and FTEmulator's entries are in
+    /// Constraint Tools', Menu Tools', Find and Replace's and FTEmulator's entries are in
     /// Editor/VRChat/UI/RiryToolsVRChatMenus.cs, because they only compile with the VRChat SDK.
     /// Without the SDK, the same entries at the bottom of this file show a
     /// "VRCSDK not found" popup instead.
@@ -54,13 +54,13 @@ namespace Riry.RiryTools.Editor
         // ---- VRChat tools (also used by RiryToolsVRChatMenus.cs) ------------
         // "&T" makes T its menu key. The space before it is
         // U+00A0, because Unity reads "<space>&..." at the end of a path as an Alt shortcut.
-        internal const string ConstraintTool = "Tools/RiryTools/Constraint\u00A0&Tool";
+        internal const string ConstraintTool = "Tools/RiryTools/Constraint\u00A0&Tools";
         // "&e" makes E its menu key (M is Main Menu's and Menu Mockup's).
-        internal const string MenuTool = "Tools/RiryTools/M&enu Tool";
+        internal const string MenuTool = "Tools/RiryTools/M&enu Tools";
         // Find and Replace's place under RiryTools, the same in the Tools menu and the Project and Hierarchy right-click menus.
         internal const string FindReplaceLabel = "Animator Tools/Find and Replace";
         internal const string FindReplaceTools = "Tools/RiryTools/" + FindReplaceLabel;
-        // FTEmulator is in the Tools menu and the Main Menu's Tools tab only: it has no right-click entry.
+        // FTEmulator is in the Tools menu and the Main Menu's FTEmulator tab only: it has no right-click entry.
         internal const string FTEmulatorTools = "Tools/RiryTools/FTEmulator";
 
         // =====================================================================
@@ -125,7 +125,7 @@ namespace Riry.RiryTools.Editor
 
         private static bool ControllerCleanerValid() { return !StopAllToolScripts.Active; }
 
-        // Constraint Tool is 2030 (RiryToolsVRChatMenus.cs).
+        // Constraint Tools is 2030 (RiryToolsVRChatMenus.cs).
 
         [MenuItem(MaterialCleanerMenu, false, 2042)]
         private static void MaterialCleanerItem() { MaterialCleanerWindow.Open(); }
@@ -286,7 +286,7 @@ namespace Riry.RiryTools.Editor
         // =====================================================================
 
         [MenuItem(ConstraintTool, false, 2030)]
-        private static void ConstraintToolItem() { VrcSdkMissing("Constraint Tool"); }
+        private static void ConstraintToolItem() { VrcSdkMissing("Constraint Tools"); }
 
 
 
@@ -296,7 +296,7 @@ namespace Riry.RiryTools.Editor
         private static bool ConstraintToolValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(MenuTool, false, 2066)]
-        private static void MenuToolItem() { VrcSdkMissing("Menu Tool"); }
+        private static void MenuToolItem() { VrcSdkMissing("Menu Tools"); }
 
 
         [MenuItem(MenuTool, true)]
@@ -354,7 +354,7 @@ namespace Riry.RiryTools.Editor
 //                                                      (Editor/UI/AvatarMigrator/AvatarMigratorWindow.cs); without the VRChat SDK it still
 //                                                      opens, after the VRC SDK not detected popup
 //   Tools/RiryTools/Blendshape Sync (2010)          -> BlendshapeSyncJobs.Add: a new job in its popup (Editor/UI/BlendshapeSync/BlendshapeSyncJobWindow.cs)
-//   Tools/RiryTools/Constraint Tool (2030), menu key T -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs, entry in
+//   Tools/RiryTools/Constraint Tools (2030), menu key T -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs): Train and Bezier tabs, on the one used last;
 //                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Tools/RiryTools/GUID Tools (2040)               -> GuidToolsWindow.Open (Editor/UI/GuidTools/GuidToolsWindow.cs)
@@ -365,11 +365,11 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Import Presets/Open Import Preset Library (2053) -> ImportPresetActions.OpenLibrary
 //   Tools/RiryTools/Utilities/Material Cleaner (2042) -> MaterialCleanerWindow.Open
 //   Tools/RiryTools/Find Null references (2056)     -> FindNullReferencesWindow.Run (Editor/UI/Debug/FindNullReferencesWindow.cs)
-//   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Tools tab)
+//   Tools/RiryTools/Refresh Scripts (2058)          -> RefreshScripts.Run: refresh, reload, reopen RiryTools windows (also the Main Menu's Debug Tools tab)
 //   Tools/RiryTools/Stop Auto Game (2060)  [check mark] -> StopAutoGame.Enabled (Editor/Utilities/StopAutoGame.cs)
 //   Tools/RiryTools/Script Load Guard (2061)  [check mark] -> ScriptLoadGuard.Enabled (Editor/Debug/ScriptLoadGuard.cs)
 //   Tools/RiryTools/Menu Mockup (2065)              -> MenuMockup.Open (Editor/Debug/MenuMockup.cs) -> MenuMockupEditWindow and MenuMockupComponentsWindow (Editor/UI/Debug/)
-//   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs, entry in
+//   Tools/RiryTools/Menu Tools (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
 //                                                      found" popup (this file)
 //   Tools/RiryTools/FTEmulator (2067)               -> FTEmulatorWindow.Open (com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorWindow.cs, entry in
@@ -386,7 +386,7 @@ namespace Riry.RiryTools.Editor
 // OTHER UI OUTSIDE MENUS
 //   "Clean Keys" button in the Animation window    -> CleanAnimationKeysWindow.Open with that window's clip (Editor/UI/AnimatorTools/CleanAnimationKeysButton.cs)
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadGuardFailureWindow.cs
-//   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs,
+//   Constraint Tools window                          -> Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs,
 //                                                      its Bezier tab Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs
 //   FTEmulator Debug window                         -> com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorDebugWindow.cs, opened from the FTEmulator window
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.

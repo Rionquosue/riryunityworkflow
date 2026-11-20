@@ -8,7 +8,7 @@ using VRC.SDK3.Dynamics.Contact.Components;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool's axis detectors: VRC contacts that read how far an object (Source) has moved left/right and up/down
+    /// Constraint Tools' axis detectors: VRC contacts that read how far an object (Source) has moved left/right and up/down
     /// across a flat plane fixed to another object (Relative to). A new object under Relative to, TiltDetector_&lt;source&gt;,
     /// sits at Source's rest position, its axes those of Relative to (Local) or the world (World), and holds the Proximity
     /// receivers laid out in the plane: Dual axis two in an L (Right, Up), Three axis three in a triangle 120° apart (Top,

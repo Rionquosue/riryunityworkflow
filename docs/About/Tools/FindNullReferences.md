@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Find Null references | |
-| Main Menu | Tools | Find Null references |
+| Main Menu | Debug Tools | Find Null references |
 
 ## 2. Brief description
 

@@ -4,15 +4,15 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool: one window with a tab per subtool, Train (ConstraintTrainWindow),
+    /// Constraint Tools: one window with a tab per subtool, Train (ConstraintTrainWindow),
     /// Bezier (ConstraintBezierWindow), Insertable prop (InsertablePropWindow), and Dual axis detector and Three axis detector
     /// (TiltDetectorWindow). Each subtool is its own window, hosted unseen and drawn
     /// by calling its OnGUI, as the Main Menu does. Opened from Tools > RiryTools > Constraint
-    /// Tool and the Hierarchy's RiryTools > Constraint Tool > Train / Bezier (RiryToolsVRChatMenus.cs).
+    /// Tool and the Hierarchy's RiryTools > Constraint Tools > Train / Bezier (RiryToolsVRChatMenus.cs).
     /// </summary>
     internal sealed class ConstraintToolWindow : EditorWindow, IRiryHostedTool
     {
-        internal const string Title = "Constraint Tool";
+        internal const string Title = "Constraint Tools";
         internal static readonly string[] Tabs = { "Train", "Bezier", "Insertable prop", "Dual axis detector", "Three axis detector" };
         internal const int TrainTab = 0;
         internal const int BezierTab = 1;
@@ -28,7 +28,7 @@ namespace Riry.RiryTools.Editor
         [SerializeField] private TiltDetectorWindow threeAxis;
         // The Main Menu's copy (CreateHosted): never shown on its own.
         [SerializeField] private bool hosted;
-        // The Main Menu while this window is hosted in its Constraint Tool tab (IRiryHostedTool); null on its own.
+        // The Main Menu while this window is hosted in its Constraint Tools tab (IRiryHostedTool); null on its own.
         [System.NonSerialized] private EditorWindow surface;
 
         public EditorWindow Surface
@@ -73,7 +73,7 @@ namespace Riry.RiryTools.Editor
             return window;
         }
 
-        // Tools > RiryTools > Constraint Tool: the tab used last.
+        // Tools > RiryTools > Constraint Tools: the tab used last.
         internal static void OpenFromTools() { Open(-1); }
 
         // The active object becomes the chain start, a selected descendant the end.
@@ -229,11 +229,11 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool window
+// GLOSSARY: Constraint Tools window
 // ============================================================================
 //
-// ConstraintToolWindow        The "Constraint Tool" window (Title); minSize 420 x 500. Also hosted in the Main Menu's
-//                             Constraint Tool tab (CreateHosted; Surface is then the Main Menu, and the sub-tabs are drawn
+// ConstraintToolWindow        The "Constraint Tools" window (Title); minSize 420 x 500. Also hosted in the Main Menu's
+//                             Constraint Tools tab (CreateHosted; Surface is then the Main Menu, and the sub-tabs are drawn
 //                             under its tabs, SubTabGap below them). Tabs is the one list of the sub-tabs.
 //   hosted                    [SerializeField] The Main Menu's copy; Open never picks it (GetWindow could show it as a
 //                             second window drawing the same tool).
@@ -244,7 +244,7 @@ namespace Riry.RiryTools.Editor
 //   train / bezier / insertable  [SerializeField] The subtool windows, made on first use (Hidden) and never shown;
 //                             drawn by calling their OnGUI (RiryToolsMainMenu.Call). Destroyed with this window.
 //   Open(tab)                 Opens the window on that tab (below 0 keeps the last one). OpenFromTools: Tools > RiryTools >
-//                             Constraint Tool, on the tab used last. OpenTrainFromHierarchy / OpenBezierFromHierarchy:
+//                             Constraint Tools, on the tab used last. OpenTrainFromHierarchy / OpenBezierFromHierarchy:
 //                             the Hierarchy entries, which open that tab and pass the selection to its UseSelection.
 //                             OpenInsertableFromHierarchy / OpenDualAxisFromHierarchy / OpenThreeAxisFromHierarchy: the same,
 //                             for the Insertable prop, Dual axis detector and Three axis detector tabs.

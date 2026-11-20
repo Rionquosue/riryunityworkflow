@@ -2,7 +2,7 @@ using System;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>The status line of Constraint Tool's Train, Bezier and Insertable prop tabs, put in the Console too.</summary>
+    /// <summary>The status line of Constraint Tools' Train, Bezier and Insertable prop tabs, put in the Console too.</summary>
     internal static class ConstraintToolStatus
     {
         /// <summary>
@@ -22,7 +22,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool status
+// GLOSSARY: Constraint Tools status
 // ============================================================================
 //
 // ConstraintToolStatus (this file)

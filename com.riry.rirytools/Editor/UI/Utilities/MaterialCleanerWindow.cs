@@ -122,7 +122,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // MaterialCleanerWindow (this file)
-//   Open()                   The window (Main Menu's Tools tab).
+//   Open()                   The window (Main Menu's Tools > General sub-tab).
 //   OnGUI                    Material field + Scan, Scan scene materials, Scan all materials in project, Clean all, a row per
 //                            material (path, stale count, Clean).
 //   Scan(materials, where) / Clean(chosen)  MaterialCleaner on each; Clean is one undo group and logs the slots removed.
