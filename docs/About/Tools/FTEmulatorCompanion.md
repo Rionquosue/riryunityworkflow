@@ -65,7 +65,7 @@ Set VRCFaceTracking's OSC output port to `9010`. Whenever the Recorder is open i
 
 | Field | Default | Use |
 |---|---|---|
-| Recording (.mkv) | `Documents\RiryTools FTRecorder\recording-<time>.mkv` | Where the recording goes. A new name is filled in after each save. |
+| Output | `Documents\RiryTools FTRecorder` | The folder recordings go to (created when needed). Each is named `FTRecording-HHmm-ddMMyy.mkv` from when it starts, 24-hour time and day, month, year without separators: `FTRecording-1405-201126.mkv`. Another started in the same minute gets ` (2)`, then ` (3)`, and so on. |
 | VRCFaceTracking OSC output port | `9010` | Set VRCFaceTracking's OSC output port to this. Changing a port restarts the relay; both are locked while recording. |
 | Pass on to port | `9000` | Where the packets go on to: VRChat's OSC input port. |
 | Microphone | the first one ffmpeg lists | The microphones `ffmpeg -list_devices true -f dshow -i dummy` lists. |
