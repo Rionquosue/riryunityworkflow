@@ -11,7 +11,7 @@ Companion to RiryTools FTEmulator: a VRCFaceTracking module and a command-line a
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) to build.
 - [VRCFaceTracking](https://github.com/benaclejames/VRCFaceTracking) for the module.
-- [ffmpeg](https://ffmpeg.org/) on `PATH` (or its path set) for video files and webcams.
+- [ffmpeg](https://ffmpeg.org/) on `PATH` (or its path set) for recording, processing, `.mkv` recordings, video files and webcams. Every command and module source that needs it checks first and says how to install it when it is missing.
 - VRChat installed through Steam for OVRLipSync (VRChat's viseme engine), or the path to an `OVRLipSync.dll`.
 - To take visemes from a running VRChat when processing videos: a virtual audio cable (such as VB-Cable), with VRChat's microphone set to the cable's output.
 - Optional: a Babble face model (`.onnx`) you already have, for the mouth.
@@ -70,10 +70,10 @@ Records VRCFaceTracking's output, visemes and your microphone into one Matroska 
 ### process
 
 ```bash
-RiryTools.FTRecorder process --video clip.mp4 --out clip.ftrec.jsonl
+RiryTools.FTRecorder process --video clip.mp4 --out clip.mkv
 ```
 
-Runs a recorded video through the face models. Its visemes depend on whether VRChat is running:
+Runs a recorded video through the face models into one Matroska file, like `record`'s: the video's sound as audio (Opus, 96 kb/s), the visemes as a subtitle track, and the whole recording (face data and visemes) attached. Until the `.mkv` is written the data is kept in `clip.mkv.recording.ftrec.jsonl`; it is deleted once the `.mkv` is written, kept if not. Its visemes depend on whether VRChat is running:
 
 - **VRChat running:** the video's sound is played into VRChat through a virtual audio cable (`--cable NAME`, default `CABLE Input`), and the `Viseme` and `Voice` VRChat sends back over OSC are recorded. Turn OSC on in VRChat and set its microphone to the cable's output. This runs at the video's own speed, after a 5 second wait for VRChat to find the app.
 - **VRChat not running:** the sound goes through OVRLipSync, taken from `--ovrlipsync PATH`, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the app shows the error and asks for the path; an empty answer stops.
@@ -97,13 +97,13 @@ Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at
 
 ## Recordings
 
-`record` writes `.mkv` (Matroska), one file with:
+`record` and `process` write `.mkv` (Matroska), one file with:
 
-- **Audio:** your microphone, Opus at 48 kb/s, starting where the microphone started in the recording.
+- **Audio:** for `record`, your microphone (Opus at 48 kb/s, starting where the microphone started in the recording); for `process`, the video's sound (Opus at 96 kb/s). A recording with neither sound nor visemes gets 20 ms of silence, because a Matroska file needs a track.
 - **Subtitles ("Visemes"):** one caption per change, holding the viseme's index and name, Voice, and the 15 weights when OVRLipSync made them. Any player that shows subtitles (VLC, mpv) shows them with the audio.
 - **Attachment `recording.ftrec.jsonl`:** the whole recording, in the format below. `ffmpeg -dump_attachment:t:0 recording.ftrec.jsonl -i session.mkv -t 0 -f null -` copies it out.
 
-The module's `record` setting and `process` write `.ftrec.jsonl` directly.
+The module's `record` setting writes `.ftrec.jsonl` directly.
 
 `.ftrec.jsonl`: one JSON object per line. The first line is the header (`format`, `version`, `source`, `created`, and the `unified` and `eye` value names). Each following line is one entry with its time `t` in seconds:
 
