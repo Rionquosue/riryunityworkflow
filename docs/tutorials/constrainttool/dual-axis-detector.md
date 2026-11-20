@@ -1,4 +1,4 @@
-# Tutorial: Constraint Tools' Dual axis detector
+# Tutorial: Constraint Tool's Dual axis detector
 
 Read how far a bone tilts left/right and up/down relative to a flat plane, as two
 contact parameters, with two Proximity receivers laid out in an L.
@@ -8,10 +8,8 @@ show **VRCSDK not found**.
 
 ## 1. Open the tab
 
-Right-click the object that moves in the Hierarchy and choose **RiryTools > Constraint Tools > Dual axis detector**: it fills **Source**. To fill **Relative to** too, Ctrl/Cmd-click that object first so both are selected.
-
-You can also choose **Tools > RiryTools > Constraint Tools** and open the **Dual axis detector**
-tab, or open it from the Main Menu's General Tools > Constraint Tools sub-tab.
+Choose **Tools > RiryTools > Constraint Tool** and open the **Dual axis detector**
+tab, or open it from the Main Menu's Constraint Tool tab.
 
 ## 2. Pick the objects
 
