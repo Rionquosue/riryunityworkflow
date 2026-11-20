@@ -85,14 +85,15 @@ namespace Riry.RiryTools.Editor
             {
                 int tab = i;
                 bool on = i == active;
-                Color color = on ? (dark ? RiryToolsMainMenu.DarkActiveTab : RiryToolsMainMenu.LightActiveTab)
+                Color color = on ? RiryToolsMainMenu.ActiveTabs[RiryToolsMainMenu.SubTabs]
                     : (dark ? RiryToolsMainMenu.DarkTab : RiryToolsMainMenu.LightTab);
                 Color hover = dark ? color + new Color(RiryToolsMainMenu.HoverTint, RiryToolsMainMenu.HoverTint, RiryToolsMainMenu.HoverTint, 0f)
                     : color - new Color(RiryToolsMainMenu.HoverTint / 2f, RiryToolsMainMenu.HoverTint / 2f, RiryToolsMainMenu.HoverTint / 2f, 0f);
                 var cell = new Label(names[i]);
                 cell.style.flexGrow = 1;
                 cell.style.flexBasis = RiryToolsMainMenu.TabMinWidth;
-                cell.style.minHeight = RiryToolsMainMenu.TabMinHeight;
+                cell.style.minHeight = RiryToolsMainMenu.TabMinHeights[RiryToolsMainMenu.SubTabs];
+                if (on) cell.style.color = RiryToolsMainMenu.ActiveTabText;
                 cell.style.unityTextAlign = TextAnchor.MiddleCenter;
                 cell.style.whiteSpace = WhiteSpace.Normal;
                 cell.style.fontSize = 12;

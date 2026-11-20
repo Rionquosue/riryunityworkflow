@@ -547,7 +547,7 @@ namespace Riry.RiryTools.Editor
                 return;
             }
             EditorGUILayout.Space(4f);
-            int chosen = RiryToolsMainMenu.TabStrip(Shown, hosted ? 0 : tab, Tabs);
+            int chosen = RiryToolsMainMenu.TabStrip(Shown, hosted ? 0 : tab, Tabs, 0f, RiryToolsMainMenu.SubTabs);
             if (hosted)
             {
                 // In the Main Menu, the Menu manager opens in the Menu Tools window, on the same target.

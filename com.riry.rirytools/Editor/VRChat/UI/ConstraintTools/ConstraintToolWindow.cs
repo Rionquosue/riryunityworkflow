@@ -182,14 +182,14 @@ namespace Riry.RiryTools.Editor
             {
                 // Hosted: sub-tabs under the Main Menu's tabs, sized to the Main Menu and clear of its tab scroll view's scrollbar.
                 EditorGUILayout.Space(RiryToolsMainMenu.SubTabGap);
-                tab = RiryToolsMainMenu.TabStrip(surface, tab, Tabs, GUI.skin.verticalScrollbar.fixedWidth + 4f);
+                tab = RiryToolsMainMenu.TabStrip(surface, tab, Tabs, GUI.skin.verticalScrollbar.fixedWidth + 4f, RiryToolsMainMenu.ToolTabs);
             }
             else
             {
                 wantsMouseMove = true;
                 // As in the Main Menu, so the strip's top outline is not hidden under the window's own tab.
                 GUILayout.Space(RiryToolsMainMenu.TopMargin);
-                tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs);
+                tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs, 0f, RiryToolsMainMenu.ToolTabs);
             }
             EditorGUILayout.Space(4f);
             RiryToolsMainMenu.Call(Current, "OnGUI");
