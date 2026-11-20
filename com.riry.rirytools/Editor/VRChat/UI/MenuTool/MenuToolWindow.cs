@@ -34,6 +34,7 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
+        [SerializeField] private bool duplicatesOpen = true;
         // The Main Menu's copy (CreateHosted): never shown on its own, and its Menu manager tab opens the Menu Tools window.
         [SerializeField] private bool hosted;
         [SerializeField] private Vector2 budgetScroll;
@@ -383,7 +384,7 @@ namespace Riry.RiryTools.Editor
         {
             foreach (MenuToolEntry destination in MoveDestinations(parent, entry))
             {
-                string name = destination.Name.Replace("/", "∕");
+                string name = MenuToolRichText.Plain(destination.Name).Replace("/", "∕");
                 string to = destination.Path;
                 bool target = destination != entry.Parent;
                 if (!MoveDestinations(destination, entry).Any())
@@ -735,7 +736,34 @@ namespace Riry.RiryTools.Editor
         private void DrawMenuChecks()
         {
             if (scan.Duplicates.Count > 0)
-                EditorGUILayout.HelpBox("Controls with the same name in one submenu:\n" + string.Join("\n", scan.Duplicates), MessageType.Warning);
+            {
+                // A collapsible box: each submenu and name, with a link per menu or prefab asset it comes from.
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    var title = new GUIContent(" Controls with the same name in one submenu (" + scan.Duplicates.Count + ")",
+                        EditorGUIUtility.IconContent("console.warnicon.sml").image);
+                    duplicatesOpen = EditorGUILayout.Foldout(duplicatesOpen, title, true);
+                    if (duplicatesOpen)
+                    {
+                        foreach (MenuToolDuplicate duplicate in scan.Duplicates)
+                        {
+                            EditorGUILayout.LabelField(duplicate.Label, EditorStyles.wordWrappedLabel);
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                foreach (UnityEngine.Object asset in duplicate.Assets)
+                                {
+                                    using (new EditorGUILayout.HorizontalScope())
+                                    {
+                                        GUILayout.Space(EditorGUI.indentLevel * 15f);
+                                        if (EditorGUILayout.LinkButton(new GUIContent(asset.name, "Select " + AssetDatabase.GetAssetPath(asset) +
+                                                " in the Project window."))) SelectInProject(asset);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if (scan.LargeIcons.Count == 0) return;
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -776,6 +804,14 @@ namespace Riry.RiryTools.Editor
             showNotes = EditorGUILayout.Foldout(showNotes, "Notes (" + scan.Notes.Count + ")", true);
             if (!showNotes) return;
             foreach (string note in scan.Notes) EditorGUILayout.HelpBox(note, MessageType.None);
+        }
+
+        private static void SelectInProject(UnityEngine.Object asset)
+        {
+            if (asset == null) return;
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
         }
 
         private static void Select(UnityEngine.Object source)
@@ -834,7 +870,7 @@ namespace Riry.RiryTools.Editor
                 {
                     string status = check.Ok ? "✓" : "✕";
                     // A new menu reads "New menu  →  its path".
-                    EditorGUILayout.LabelField(new GUIContent(status + " " + (check.Before.Length == 0 ? "?" : check.Before) + "  →  " + (check.After.Length == 0 ? "?" : check.After),
+                    EditorGUILayout.LabelField(new GUIContent(status + " " + (check.Before.Length == 0 ? "?" : MenuToolRichText.Plain(check.Before)) + "  →  " + (check.After.Length == 0 ? "?" : MenuToolRichText.Plain(check.After)),
                         string.Join("\n", check.Affected.Where(a => a != null).Select(a => a.name))), GUILayout.MinWidth(0f));
                     if (check.Candidates.Count > 1)
                     {
@@ -858,8 +894,8 @@ namespace Riry.RiryTools.Editor
                     else EditorGUILayout.LabelField(MenuToolPlanner.Describe(check.Edit), EditorStyles.miniLabel, GUILayout.Width(200f));
                     if (GUILayout.Button(new GUIContent("✕", "Remove this move from the plan."), GUILayout.Width(24f))) remove = check.Move;
                 }
-                foreach (string error in check.Errors) EditorGUILayout.LabelField("    " + error, ErrorStyle);
-                foreach (string warning in check.Warnings) EditorGUILayout.LabelField("    " + warning, EditorStyles.wordWrappedMiniLabel);
+                foreach (string error in check.Errors) EditorGUILayout.LabelField("    " + MenuToolRichText.Plain(error), ErrorStyle);
+                foreach (string warning in check.Warnings) EditorGUILayout.LabelField("    " + MenuToolRichText.Plain(warning), EditorStyles.wordWrappedMiniLabel);
             }
             EditorGUILayout.EndScrollView();
             if (remove != null)
@@ -898,7 +934,7 @@ namespace Riry.RiryTools.Editor
                 for (int i = 0; i < chain.Count; i++)
                 {
                     if (i > 0) GUILayout.Label("›", GUILayout.Width(10f));
-                    string name = chain[i].Parent == null ? "Root" : chain[i].Name;
+                    string name = chain[i].Parent == null ? "Root" : MenuToolRichText.Plain(chain[i].Name);
                     if (GUILayout.Button(name, EditorStyles.miniButton, GUILayout.MinWidth(0f)))
                     {
                         Navigate(chain[i]);

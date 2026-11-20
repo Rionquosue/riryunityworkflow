@@ -193,8 +193,8 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 | IconCap |  |  |  |  |  |
 | Material Cleaner |  |  |  |  |  |
 | Prefab Cleaner (popup: Target Scene, Project or Prefab) |  |  |  |  |  |
-| GUID Regenerator |  |  |  |  |  |
-| GUID Repair |  |  |  |  |  |
+| GUID Regenerator (popup: assets and folders, filled from the Project selection) |  |  |  |  |  |
+| GUID Repair (popup: assets and folders, filled from the Project selection) |  |  |  |  |  |
 | GUID Broken Reference Checker |  |  |  |  |  |
 
 ---

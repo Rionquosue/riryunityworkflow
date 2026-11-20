@@ -40,8 +40,8 @@ settings keys, file contents and other strings the user never sees as UI.
 | `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-33) |
 | `Open` | Window titles (1, line 87) |
 | `OnGUI` | Buttons (1, line 131) |
-| `DrawTab` | Toggles (3, lines 158-235), Help boxes (5, lines 160-207), Buttons (12, lines 201-229: PopUp Tools' labels passed to `PopUpButton`) |
-| `DrawStopToggle` | Toggles (1, line 255) |
+| `DrawTab` | Toggles (3, lines 158-231), Help boxes (5, lines 160-207), Buttons (12, lines 201-225: PopUp Tools' labels passed to `PopUpButton`) |
+| `DrawStopToggle` | Toggles (1, line 251) |
 
 ### `UI/RiryToolsMenuBar.cs`
 
@@ -603,6 +603,14 @@ settings keys, file contents and other strings the user never sees as UI.
 | `Open` | Window titles (1, line 25, `GuidToolUnusedOverrides.Title`) |
 | `OnGUI` | Labels (2, lines 43-51), Field labels (2, lines 45-49, with tooltips), Buttons (1, line 55) |
 
+### `UI/GuidTools/GuidToolTargetsWindow.cs`
+
+| Method | Text |
+|---|---|
+| `RegeneratorTitle` / `RepairTitle` | Text shown through a variable (2, lines 17-18: window titles and the Main Menu's buttons) |
+| `Open` | Window titles (1, line 32) |
+| `OnGUI` | Labels (2, lines 49-53), Field labels (1, line 69), Buttons (2, lines 64-75) |
+
 ### `GuidTools/GuidToolUnusedOverrides.cs`
 
 | Method | Text |
@@ -819,25 +827,25 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `MenuToolWindow` | Text shown through a variable (1, line 21), Tabs and toolbars (1, line 22) |
-| `AddMoveItems` | Context menu items (6, lines 345-371) |
-| `OnRadialContext` | Context menu items (9, lines 412-444) |
-| `DrawWindow` | Help boxes (2, lines 525-546) |
-| `DrawHeader` | Buttons (2, lines 605-606) |
-| `DrawBudget` | Help boxes (1, line 620), Labels (1, line 625) |
-| `DrawSummary` | Labels (1, line 638), Help boxes (1, line 639), Buttons (1, line 653), Foldouts (1, line 666) |
-| `DrawShared` | Foldouts (1, line 693), Tooltips (1, line 698), Buttons (1, line 705) |
-| `DrawBlocks` | Foldouts (1, line 712), Labels (1, line 723), Buttons (1, line 727) |
-| `DrawMenuChecks` | Help boxes (2, lines 738-742), Buttons (1, line 744) |
-| `ApplyIconPreset` | Dialogs (1, line 753) |
-| `DrawNotes` | Foldouts (1, line 776) |
-| `DrawManager` | Help boxes (1, line 794), Buttons (3, lines 800-805), Labels (1, line 810) |
-| `DrawPlan` | Labels (1, line 826) |
-| `ChangePlan` | Buttons (1, line 859) |
-| `DrawRadial` | Help boxes (1, line 920), Labels (1, line 942) |
-| `DrawBits` | Labels (2, lines 969-980), Foldouts (1, line 982) |
-| `DrawEntryState` | Buttons (3, lines 998-1009) |
-| `Discard` | Dialogs (1, line 1084) |
-| `ApplyPlan` | Text shown through a variable (1, line 1097), Dialogs (2, lines 1102-1117) |
+| `AddMoveItems` | Context menu items (6, lines 346-372) |
+| `OnRadialContext` | Context menu items (9, lines 413-445) |
+| `DrawWindow` | Help boxes (2, lines 526-547) |
+| `DrawHeader` | Buttons (2, lines 606-607) |
+| `DrawBudget` | Help boxes (1, line 621), Labels (1, line 626) |
+| `DrawSummary` | Labels (1, line 639), Help boxes (1, line 640), Buttons (1, line 654), Foldouts (1, line 667) |
+| `DrawShared` | Foldouts (1, line 694), Tooltips (1, line 699), Buttons (1, line 706) |
+| `DrawBlocks` | Foldouts (1, line 713), Labels (1, line 724), Buttons (1, line 728) |
+| `DrawMenuChecks` | Foldouts (1, lines 743-745: the same-name box's title), Labels (1, line 750), Links (1, line 758: each asset's name, with a tooltip), Help boxes (1, line 770), Buttons (1, line 772) |
+| `ApplyIconPreset` | Dialogs (1, line 781) |
+| `DrawNotes` | Foldouts (1, line 804) |
+| `DrawManager` | Help boxes (1, line 830), Buttons (3, lines 836-841), Labels (1, line 846) |
+| `DrawPlan` | Labels (1, line 862) |
+| `ChangePlan` | Buttons (1, line 895) |
+| `DrawRadial` | Help boxes (1, line 956), Labels (1, line 978) |
+| `DrawBits` | Labels (2, lines 1005-1016), Foldouts (1, line 1018) |
+| `DrawEntryState` | Buttons (3, lines 1034-1045) |
+| `Discard` | Dialogs (1, line 1120) |
+| `ApplyPlan` | Text shown through a variable (1, line 1133), Dialogs (2, lines 1138-1153) |
 
 ### `VRChat/MenuTool/MenuToolApply.cs`
 

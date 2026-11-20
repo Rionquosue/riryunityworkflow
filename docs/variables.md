@@ -388,6 +388,9 @@ Moving or renaming a file must move its `.meta` with it.
 | `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19`: the target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolWindow.IconPicker` | `0x52694963`: control ID of the Assign Menu Icon object picker. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760`: Menu Tools' own window; the Menu manager asks for this width in the Main Menu too. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `MenuToolWindow.duplicatesOpen` | [SerializeField] Whether the Menu manager's "Controls with the same name in one submenu" box is open (default open). | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `MenuToolRichText.Tag` | `</?[A-Za-z#][^<>]*>`: a rich text tag in a menu control name, left out of the names Menu Tools shows (`MenuToolRichText.Plain`); renaming edits the name with its tags. | `VRChat/MenuTool/MenuToolRichText.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs`, `VRChat/UI/MenuTool/MenuToolManagerTree.cs`, `VRChat/UI/MenuTool/MenuToolBudgetTree.cs`, `VRChat/MenuTool/MenuToolScanner.cs` |
+| `MenuToolScan.Duplicates` / `MenuToolDuplicate` | Controls sharing a name in one submenu: a label (`path: "name" (count)`) and the assets they come from (the menu asset, or the prefab asset holding the VRCFury or Modular Avatar component; none for a scene object outside a prefab). | `VRChat/MenuTool/MenuToolModel.cs`, `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | Writes box height (`MenuToolWindow.DrawBits`) | `120` px: the Writes foldout's scroll box, with every parameter write since the window opened or Reset menu state, one row each. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 
 ### FTEmulator
@@ -442,7 +445,7 @@ One entry or submenu per tool.
 | `Tools/RiryTools/Import Presets/Open Import Preset Library` | (2053) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Save Import Preset` | (2051) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Import Presets/Set Folder Import Presets` | (2050) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window. Tabs (`RiryToolsMainMenu.Tabs`, all on one row): General Tools, Menu Tools, Animator Tools, Debug Tools, FTEmulator. General Tools' sub-tabs (`ToolsTabs`): Blendshape Sync, Import Presets, Constraint Tools, AutoSync, PopUp Tools (buttons opening Avatar Migration Assistant, IconCap, Material Cleaner and Prefab Cleaner in their own windows, GUID Regenerator and GUID Repair on the Project selection, GUID Broken Reference Checker on the open scenes). Debug Tools: Refresh Scripts, Find Null references, Menu Mockup, Delete GUID Reference Cache, and the Stop Auto Game, Script Load Guard and Stop all tool scripts toggles. Documentation link at the bottom right; no Menu Mockup tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
+| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window. Tabs (`RiryToolsMainMenu.Tabs`, all on one row): General Tools, Menu Tools, Animator Tools, Debug Tools, FTEmulator. General Tools' sub-tabs (`ToolsTabs`): Blendshape Sync, Import Presets, Constraint Tools, AutoSync, PopUp Tools (buttons opening Avatar Migration Assistant, IconCap, Material Cleaner and Prefab Cleaner in their own windows, GUID Regenerator and GUID Repair as popups listing assets and folders (filled from the Project selection when opened), GUID Broken Reference Checker on the open scenes). Debug Tools: Refresh Scripts, Find Null references, Menu Mockup, Delete GUID Reference Cache, and the Stop Auto Game, Script Load Guard and Stop all tool scripts toggles. Documentation link at the bottom right; no Menu Mockup tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
 | `Tools/RiryTools/Debug Tools/Menu Mockup` | (2065) Opens the Edit and Components windows. Also a button on the Main Menu's Debug Tools tab. | `UI/RiryToolsMenuBar.cs` |
 | `Tools/RiryTools/Menu Tools` | (2066) Written `M&enu Tools` so its menu key is E: the Menu Tools window (the Main Menu's Menu Tools tab shows its Parameter budget; its Menu manager opens this window). Without the VRChat SDK, the **VRCSDK not found** popup. Path is `RiryToolsMenuBar.MenuTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Tools/RiryTools/Debug Tools/Refresh Scripts` | (2058) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. Also a button on the Main Menu's Debug Tools tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs`, `Utilities/RefreshScripts.cs` |
@@ -460,6 +463,7 @@ One entry or submenu per tool.
 | `Assets/RiryTools/Material Cleaner` | (2007) The Material Cleaner window, with the selected material in its Material field. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Prefab Cleaner` | (2008) Prefab Cleaner: removes unused prefab overrides from the selected scenes and prefabs (and those in selected folders), after asking; the same as the Broken References window's Prefab Cleaner button. Path is `"Assets/RiryTools/" + GuidToolUnusedOverrides.Title`. | `UI/RiryToolsRightClickMenu.cs` |
 | `GuidToolUnusedOverrides.Title` | `Prefab Cleaner`: the tool's name, its dialogs' title, its undo step, its popup (`GuidToolPrefabCleanerWindow`) and its right-click entry. | `GuidTools/GuidToolUnusedOverrides.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.UI.cs`, `UI/GuidTools/GuidToolPrefabCleanerWindow.cs`, `UI/RiryToolsRightClickMenu.cs`, `UI/RiryToolsMainMenu.cs` |
+| `GuidToolTargetsWindow.RegeneratorTitle` / `RepairTitle` | `GUID Regenerator` / `GUID Repair`: the popups' titles and the Main Menu's PopUp Tools buttons. | `UI/GuidTools/GuidToolTargetsWindow.cs`, `UI/RiryToolsMainMenu.cs` |
 | `Assets/RiryTools/Animator Tools/Extract Animations` | (2003) The Extract Animation window with the selected model; enabled only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Regenerate GUID` | (2000) Regenerates the selected assets' GUIDs. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Repair Missing GUID References` | (2004) Repairs missing GUID references in the selection. | `UI/RiryToolsRightClickMenu.cs` |
@@ -493,12 +497,14 @@ Also in the GameObject menu.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `CHANNEL` | Step env: `stable` for `main`, `beta` for `beta`. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
-| `GH_TOKEN` | Step env: `secrets.VPM_DISPATCH_TOKEN`. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
+| `CHANNEL` | Step env: `stable` for `main`, `beta` for `beta`. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
+| `GH_TOKEN` | Step env: `secrets.VPM_DISPATCH_TOKEN`. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 | `notify-vpm-<branch>` | Concurrency group: one run at a time per branch, in push order. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
-| `SHA` | Step env: `github.sha`, the pushed commit. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
-| `package` (notify) | Build Package is started twice per push: once with the default package (`com.riry.rirytools`) and once with `com.riry.ftemulator`. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
-| `VPM_DISPATCH_TOKEN` | Secret: fine-grained token for `Rionquosue/rirytools_vpm` only, **Actions: Read and write**. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
+| `notify-vpm-ftemulator-<branch>` | Concurrency group of the FTEmulator notify: one run at a time per branch, in push order. | `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
+| `paths` (notify) | `notify-vpm.yml` runs only for pushes that change `com.riry.rirytools/**`, `notify-vpm-ftemulator.yml` only for `com.riry.ftemulator/**`, so an unchanged package is not built. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
+| `SHA` | Step env: `github.sha`, the pushed commit. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
+| `package` (notify) | `notify-vpm.yml` starts Build Package with the default package (`com.riry.rirytools`); `notify-vpm-ftemulator.yml` with `com.riry.ftemulator`. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
+| `VPM_DISPATCH_TOKEN` | Secret: fine-grained token for `Rionquosue/rirytools_vpm` only, **Actions: Read and write**. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 
 ### Destination workflows
 
