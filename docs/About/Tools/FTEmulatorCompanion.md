@@ -5,7 +5,7 @@ The README of [Rionquosue/VRCFT-FtEmuCompanion](https://github.com/Rionquosue/VR
 Companion to RiryTools FTEmulator: a VRCFaceTracking module, a Recorder app and a command-line app that record face tracking and visemes, and turn recorded videos into face tracking and visemes. The Unity side (FTEmulator) is the `com.riry.ftemulator` package in the [RiryTools VPM listing](https://rionquosue.github.io/rirytools_vpm/).
 
 - **Module** (`RiryTools FTRecorder`): feeds VRCFaceTracking from a recording, a video file, a webcam or the Babble app, and records everything it sends.
-- **Recorder** (`RiryTools.FTRecorder.Recorder`): a window that records VRCFaceTracking's output (what FTEmulator in Unity receives) together with the visemes and your microphone.
+- **Recorder** (`RiryTools.FTRecorder.Recorder`): a window that relays VRCFaceTracking's output to VRChat while it is open, and records it (what FTEmulator in Unity receives) together with the visemes and your microphone on demand. It can start with SteamVR.
 - **Companion app** (`RiryTools.FTRecorder`): processes videos and replays recordings, from the command line.
 
 ## Requirements
@@ -61,23 +61,26 @@ Video and webcam run MediaPipe's face models (bundled) for the whole face; a Bab
 
 ## Recorder
 
-Start `RiryTools.FTRecorder.Recorder`, set the fields, press **Start recording**, and **Stop and save** when done. It records VRCFaceTracking's output, visemes and your microphone into one Matroska file. While it runs, the parts are kept next to the output (`NAME.mkv.recording.ftrec.jsonl` and `NAME.mkv.microphone.s16le`), so a crash keeps them; on stop they are combined into the `.mkv` and deleted. If writing the `.mkv` fails, they are kept and the log says where. Closing the window while recording stops and saves first.
+Set VRCFaceTracking's OSC output port to `9010`. Whenever the Recorder is open it relays everything VRCFaceTracking sends there on to VRChat on `9000`, unchanged; the line next to the button counts the packets. It records only between **Start recording** and **Stop and save**. A recording puts VRCFaceTracking's output, visemes and your microphone into one Matroska file. While it runs, the parts are kept next to the output (`NAME.mkv.recording.ftrec.jsonl` and `NAME.mkv.microphone.s16le`), so a crash keeps them; on stop they are combined into the `.mkv` and deleted. If writing the `.mkv` fails, they are kept and the log says where. Closing the window while recording stops and saves first.
 
 | Field | Default | Use |
 |---|---|---|
 | Recording (.mkv) | `Documents\RiryTools FTRecorder\recording-<time>.mkv` | Where the recording goes. A new name is filled in after each save. |
-| VRCFaceTracking OSC output port | `9010` | Set VRCFaceTracking's OSC output port to this. Every packet is passed on and recorded. |
+| VRCFaceTracking OSC output port | `9010` | Set VRCFaceTracking's OSC output port to this. Changing a port restarts the relay; both are locked while recording. |
 | Pass on to port | `9000` | Where the packets go on to: VRChat's OSC input port. |
 | Microphone | the first one ffmpeg lists | The microphones `ffmpeg -list_devices true -f dshow -i dummy` lists. |
 | ffmpeg | `ffmpeg` | ffmpeg's path. |
 | OVRLipSync.dll | VRChat's copy | The OVRLipSync library, used while VRChat is not running. |
+| Start with SteamVR | off | SteamVR opens the Recorder when it starts (it relays from then on; recording still waits for Start recording). |
 
 Visemes depend on whether VRChat is running when the recording starts:
 
 - **VRChat running:** turn OSC on in VRChat. It finds the Recorder through OSCQuery and sends it `Viseme` and `Voice`, which are recorded.
 - **VRChat not running:** the microphone goes through OVRLipSync, from the field, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the log shows the error and a file picker asks for `OVRLipSync.dll`; cancelling it stops the start.
 
-The log shows what is happening and every error; the line next to the button counts packets, VRChat viseme values and seconds of microphone.
+The log shows what is happening and every error; while recording, the line next to the button counts the packets recorded, VRChat viseme values and seconds of microphone.
+
+**Start with SteamVR** registers the Recorder with SteamVR as an overlay application (`RiryTools.FTRecorder.Recorder.vrmanifest`, written next to the Recorder, so keep the Recorder where it is or tick the box again after moving it) and turns on its auto-launch; unticking turns auto-launch off and unregisters it. It uses Valve's `openvr_api.dll`, included. Ticking or unticking starts SteamVR's server if SteamVR is not running. The box shows SteamVR's own setting while SteamVR runs; otherwise it shows whether the manifest is there.
 
 ## Companion app
 
@@ -129,4 +132,4 @@ The module's `record` setting writes `.ftrec.jsonl` directly.
 
 ## Licences
 
-MIT for this repository's code. The bundled MediaPipe models are Apache-2.0, ONNX Runtime is MIT, and Avalonia (the Recorder's window) is MIT; see [NOTICE.md](https://github.com/Rionquosue/VRCFT-FtEmuCompanion/blob/main/NOTICE.md). Babble's model, OVRLipSync and ffmpeg are not included: they are loaded from your own copies, under their own licences.
+MIT for this repository's code. The bundled MediaPipe models are Apache-2.0, ONNX Runtime is MIT, Avalonia (the Recorder's window) is MIT, and Valve's OpenVR (`openvr_api.dll`) is BSD 3-Clause; see [NOTICE.md](https://github.com/Rionquosue/VRCFT-FtEmuCompanion/blob/main/NOTICE.md). Babble's model, OVRLipSync and ffmpeg are not included: they are loaded from your own copies, under their own licences.
