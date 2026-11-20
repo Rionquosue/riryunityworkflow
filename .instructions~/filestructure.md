@@ -233,6 +233,7 @@ com.riry.rirytools/
     │   │   ├── GuidToolClearReferenceCache.cs
     │   │   ├── GuidToolPrefabCleanerWindow.cs
     │   │   ├── GuidToolRegenerate.Prompts.cs
+    │   │   ├── GuidToolTargetsWindow.cs
     │   │   └── GuidToolsWindow.cs
     │   ├── IconCap/
     │   │   ├── IconCapEffectStackGUI.cs

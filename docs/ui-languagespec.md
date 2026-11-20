@@ -40,8 +40,8 @@ settings keys, file contents and other strings the user never sees as UI.
 | `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-33) |
 | `Open` | Window titles (1, line 87) |
 | `OnGUI` | Buttons (1, line 131) |
-| `DrawTab` | Toggles (3, lines 158-235), Help boxes (5, lines 160-207), Buttons (12, lines 201-229: PopUp Tools' labels passed to `PopUpButton`) |
-| `DrawStopToggle` | Toggles (1, line 255) |
+| `DrawTab` | Toggles (3, lines 158-231), Help boxes (5, lines 160-207), Buttons (12, lines 201-225: PopUp Tools' labels passed to `PopUpButton`) |
+| `DrawStopToggle` | Toggles (1, line 251) |
 
 ### `UI/RiryToolsMenuBar.cs`
 
@@ -602,6 +602,14 @@ settings keys, file contents and other strings the user never sees as UI.
 | `GuidToolPrefabCleanerWindow` | Text shown through a variable (3, line 15: Target choices) |
 | `Open` | Window titles (1, line 25, `GuidToolUnusedOverrides.Title`) |
 | `OnGUI` | Labels (2, lines 43-51), Field labels (2, lines 45-49, with tooltips), Buttons (1, line 55) |
+
+### `UI/GuidTools/GuidToolTargetsWindow.cs`
+
+| Method | Text |
+|---|---|
+| `RegeneratorTitle` / `RepairTitle` | Text shown through a variable (2, lines 17-18: window titles and the Main Menu's buttons) |
+| `Open` | Window titles (1, line 32) |
+| `OnGUI` | Labels (2, lines 49-53), Field labels (1, line 69), Buttons (2, lines 64-75) |
 
 ### `GuidTools/GuidToolUnusedOverrides.cs`
 

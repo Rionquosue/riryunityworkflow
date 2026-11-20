@@ -20,6 +20,12 @@ internal static partial class GuidToolRegenerate
 {
     internal static void RegenerateSelectedGuids()
     {
+        RegenerateGuids(Selection.objects);
+    }
+
+    // The assets and folders (expanded) given, such as the GUID Regenerator popup's targets.
+    internal static void RegenerateGuids(UnityEngine.Object[] items)
+    {
         GuidToolLog log = GuidToolLog.Open("Regenerate GUID");
         List<Target> targets = null;
         List<FileState> files = null;
@@ -47,7 +53,7 @@ internal static partial class GuidToolRegenerate
             }
 
             string projectRoot = RiryToolsPaths.ProjectRoot;
-            List<string> assetPaths = CollectSelectedAssetPaths();
+            List<string> assetPaths = CollectSelectedAssetPaths(items);
 
             log.Write("Selected target count after folder expansion: " + assetPaths.Count);
             foreach (string selectedPath in assetPaths)

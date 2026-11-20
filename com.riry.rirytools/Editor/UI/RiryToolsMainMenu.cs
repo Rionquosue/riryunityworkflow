@@ -213,12 +213,8 @@ namespace Riry.RiryTools.Editor
                     PopUpButton("IconCap", IconCapWindow.OpenPopup);
                     PopUpButton(MaterialCleaner.Title, MaterialCleanerWindow.Open);
                     PopUpButton(GuidToolUnusedOverrides.Title, GuidToolPrefabCleanerWindow.Open);
-                    // These two act on the Project window's selection.
-                    using (new EditorGUI.DisabledScope(!GuidToolRegenerate.HasValidSelection()))
-                    {
-                        PopUpButton("GUID Regenerator", GuidToolRegenerate.RegenerateSelectedGuids);
-                        PopUpButton("GUID Repair", GuidToolReferenceRepair.RepairSelected);
-                    }
+                    PopUpButton(GuidToolTargetsWindow.RegeneratorTitle, GuidToolTargetsWindow.OpenRegenerator);
+                    PopUpButton(GuidToolTargetsWindow.RepairTitle, GuidToolTargetsWindow.OpenRepair);
                     PopUpButton("GUID Broken Reference Checker", () => GuidToolBrokenReferenceWindow.OpenForOpenScenes("Checked from the Main Menu."));
                     break;
                 case "Debug Tools":
@@ -402,8 +398,6 @@ namespace Riry.RiryTools.Editor
         private void OnSelectionChange()
         {
             if (StopAllToolScripts.Active) return;
-            // PopUp Tools' GUID Regenerator and GUID Repair follow the Project selection.
-            if (Section == "PopUp Tools") Repaint();
             EditorWindow window = ActiveIfMade();
             if (window == null) return;
             Call(window, "OnSelectionChange");

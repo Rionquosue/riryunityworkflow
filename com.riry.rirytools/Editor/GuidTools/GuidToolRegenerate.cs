@@ -132,11 +132,11 @@ internal static partial class GuidToolRegenerate
         return false;
     }
 
-    private static List<string> CollectSelectedAssetPaths()
+    private static List<string> CollectSelectedAssetPaths(UnityEngine.Object[] items)
     {
         var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (UnityEngine.Object item in Selection.objects)
+        foreach (UnityEngine.Object item in items)
         {
             string path = NormalizeAssetPath(AssetDatabase.GetAssetPath(item));
             if (string.IsNullOrEmpty(path) ||

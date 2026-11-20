@@ -164,6 +164,12 @@ namespace Riry.RiryTools.Editor
             GuidToolBrokenReferenceWindow.Open(SelectedFiles(), "Selected in the Project window.", true);
         }
 
+        // The GUID Repair popup: its targets' files, folders expanded.
+        internal static void Repair(UnityEngine.Object[] items)
+        {
+            GuidToolBrokenReferenceWindow.Open(Files(items), "Chosen in GUID Repair.", true);
+        }
+
         /// <summary>
         /// Scans the files and what they use. <paramref name="intoControllers"/> (the Project window's Repair Missing GUID
         /// References) also opens animator controllers and what they use; otherwise the walk stops at a controller, which is
@@ -689,8 +695,14 @@ namespace Riry.RiryTools.Editor
         /// <summary>Selected text-serialized Unity files; folders are expanded recursively.</summary>
         internal static List<string> SelectedFiles()
         {
+            return Files(Selection.objects);
+        }
+
+        // The serialized files among the items, folders expanded.
+        internal static List<string> Files(UnityEngine.Object[] items)
+        {
             var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (UnityEngine.Object item in Selection.objects)
+            foreach (UnityEngine.Object item in items)
             {
                 string path = GuidToolRegenerate.NormalizeAssetPath(AssetDatabase.GetAssetPath(item));
                 if (string.IsNullOrEmpty(path) || !(path == "Assets" || path.StartsWith("Assets/", StringComparison.Ordinal)))
