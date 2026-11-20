@@ -25,7 +25,7 @@ Regenerates asset GUIDs without breaking references, and repairs references to a
 - **Check for Broken References** scans the open scenes and the files they use. The scan stops at animator controllers and shaders, which are only checked for being present; the Project window's **Repair Missing GUID References** also opens them.
 - Not listed: empty slots, prefab bookkeeping, references in a controller's unused sub-assets, material texture slots the shader doesn't have, references outside objects that hold a missing reference when loaded, and references from a file to its own missing parts.
 - Each missing GUID offers candidates (redirects, name matches, Git restores) or a manual pick. Each place it sits shows the object and field holding it; clicking selects the object.
-- A reference can be ignored (kept out of the list and the save check). **Scrub unused overrides** removes prefab overrides whose target or property no longer exists.
+- A reference can be ignored (kept out of the list and the save check). **Scrub unused overrides** removes prefab overrides whose target or property no longer exists. **Call material cleaner** opens Material Cleaner.
 - After Apply, Controller Cleaner is offered on controllers the repair touched.
 - When an opened scene or prefab points at missing assets, it offers Check for Broken References; saving such a file is guarded.
 

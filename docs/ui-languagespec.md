@@ -551,10 +551,10 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OnGUI` | Labels (4, lines 26-78), Buttons (4, lines 30-109), Help boxes (1, line 43), Foldouts (1, line 86) |
-| `Header` | Buttons (1, line 120) |
-| `DrawLocations` | Tooltips (1, line 140) |
-| `DrawCandidate` | Labels (1, line 173) |
+| `OnGUI` | Labels (4, lines 26-83), Buttons (5, lines 30-114, with tooltips), Help boxes (1, line 48), Foldouts (1, line 91) |
+| `Header` | Buttons (1, line 125) |
+| `DrawLocations` | Tooltips (1, line 145) |
+| `DrawCandidate` | Labels (1, line 178) |
 
 ### `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`
 
