@@ -52,7 +52,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool icons
+// GLOSSARY: Menu Tools icons
 // ============================================================================
 //
 // MenuToolIcons (this file)             Origin(entry): the contributing VRCFury or Modular Avatar component's own icon (the installed

@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// and sends commands to FTEmulator and its session; it opens no socket, reads no avatar and works out no value
     /// itself. Opening or closing it starts and stops nothing: a session a user started keeps running without it, and is
     /// shown again when the window is reopened. Settings can be changed in Edit Mode; Start needs Play Mode.
-    /// Tools > RiryTools > FTEmulator, and the Main Menu's Tools tab (FTEmulator sub-tab). The tables are in
+    /// Tools > RiryTools > FTEmulator, and the Main Menu's FTEmulator tab. The tables are in
     /// FTEmulatorDebugWindow.
     /// </summary>
     internal sealed class FTEmulatorWindow : EditorWindow
@@ -352,7 +352,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // FTEmulatorWindow (this file)
-//   CreateHosted()           The Main Menu's copy (hosted): drawn in the Tools tab's FTEmulator sub-tab, never shown.
+//   CreateHosted()           The Main Menu's copy (hosted): drawn in the Main Menu's FTEmulator tab, never shown.
 //   Open()                   Tools > RiryTools > FTEmulator: the window of its own (never the hosted copy), in a scroll view.
 //   OnInspectorUpdate()      Ten times a second: FTEmulatorSession.Snapshot (or FTEmulator.LastSnapshot), then Repaint.
 //   Draw()                   State; Gesture Manager (an object field the user fills; the message of

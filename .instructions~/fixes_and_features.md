@@ -46,7 +46,7 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-### Constraint Tool
+### Constraint Tools
 
 #### Bugs
 
@@ -88,7 +88,7 @@ Please reference "filestructure.md" for where each tool is located (Tool names t
 
 #### Features
 
-### Menu Tool
+### Menu Tools
 
 #### Bugs
 

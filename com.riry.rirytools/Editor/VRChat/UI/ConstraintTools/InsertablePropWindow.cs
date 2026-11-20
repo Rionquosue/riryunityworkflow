@@ -9,7 +9,7 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool's Insertable prop tab: generates a draw, drop and reinsert system for a prop
+    /// Constraint Tools' Insertable prop tab: generates a draw, drop and reinsert system for a prop
     /// and its socket (a dagger and sheath, for example) on a VRChat avatar. The prop is grabbed by a
     /// PhysBone, turned with the holder's hand from a contact receiver, slides back into the socket
     /// when released inside its capture radius, and otherwise drops: as a physics body on PC, or onto

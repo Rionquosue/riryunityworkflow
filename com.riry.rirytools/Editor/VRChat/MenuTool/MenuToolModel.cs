@@ -260,7 +260,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool model
+// GLOSSARY: Menu Tools model
 // ============================================================================
 //
 // MenuToolOrigin                 Native (the descriptor's menu and parameter assets), VRCFury or ModularAvatar.

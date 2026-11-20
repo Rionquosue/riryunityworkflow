@@ -40,7 +40,7 @@ namespace Riry.RiryTools.Editor
         {
             var menus = new MenuToolPreviewMenus { nextText = scan.NextText, nextIcon = scan.NextIcon };
             menus.Root = menus.Menu(root, scan.VrcfuryInstalled);
-            menus.Parameters = menus.Make<VRCExpressionParameters>("Menu Tool preview parameters");
+            menus.Parameters = menus.Make<VRCExpressionParameters>("Menu Tools preview parameters");
             menus.Parameters.parameters = scan.Params.Values.Select(p => new VRCExpressionParameters.Parameter
             {
                 name = p.Name,
@@ -156,7 +156,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool preview menus
+// GLOSSARY: Menu Tools preview menus
 // The radial it feeds is IMenuToolRadial.cs, implemented by the Gesture Manager bridge.
 // ============================================================================
 //

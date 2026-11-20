@@ -8,7 +8,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Everything the Bezier tab draws. The state and the actions behind the buttons are in
     /// ConstraintBezierWindow.cs; both files are one class. Drawn inside ConstraintToolWindow
-    /// and the Main Menu's Constraint Tool tab, never on its own. A glossary is at the bottom.
+    /// and the Main Menu's Tools > Constraint Tools sub-tab, never on its own. A glossary is at the bottom.
     /// </summary>
     internal sealed partial class ConstraintBezierWindow
     {
@@ -141,7 +141,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool's Bezier tab
+// GLOSSARY: Constraint Tools' Bezier tab
 // Both window files are one partial class. The curve math is in
 // Editor/VRChat/ConstraintTools/ConstraintBezier/ConstraintBezierCurve.cs.
 // ============================================================================

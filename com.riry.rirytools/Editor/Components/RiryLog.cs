@@ -22,12 +22,12 @@ namespace Riry.RiryTools.Editor
         internal const string FindNullReferences = "Find Null references";
         internal const string FindReplace = "Find and Replace";
         internal const string FTEmulator = "FTEmulator";
-        internal const string ConstraintTool = "Constraint Tool";
+        internal const string ConstraintTool = "Constraint Tools";
         internal const string GuidTools = "GUID Tools";
         internal const string IconCap = "IconCap";
         internal const string ImportPresets = "Import Presets";
         internal const string MenuMockup = "Menu Mockup";
-        internal const string MenuTool = "Menu Tool";
+        internal const string MenuTool = "Menu Tools";
         internal const string ScriptLoadGuard = "Script Load Guard";
         internal const string StopAutoGame = "Stop Auto Game";
 

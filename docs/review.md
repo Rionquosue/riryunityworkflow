@@ -24,8 +24,8 @@ Changes made on `betastaging` after `cf8c34c` to apply the file structure rules 
 | `aa6f5bb` | Utilities |
 | `267b5b2` | Shared UI components |
 | `70fb03e` | Find and Replace |
-| `9629628` | Constraint Tool |
-| `96fa63d` | Menu Tool and the Gesture Manager bridge |
+| `9629628` | Constraint Tools |
+| `96fa63d` | Menu Tools and the Gesture Manager bridge |
 | `bdd0795` | Folder check: `Editor/` and `UI/` |
 | `5ede152` | Folder check: `.instructions~/` |
 | `0171425` | Folder check: `docs/` and `README.md` |
@@ -35,7 +35,7 @@ Changes made on `betastaging` after `cf8c34c` to apply the file structure rules 
 - `filestructure.md` has the rules: assemblies, logic folders, category folders (`Debug/`, `Utilities/`, `AnimatorTools/`), `UI/<folder>/` for every window, `Components/` for shared code, one job per script, names, and moves. It also has the tool name table (display name, folder, code prefix), an entry point map and the script tree.
 - Main Menu, menu bar and right-click scripts sit directly in `UI/` (and `VRChat/UI/RiryToolsVRChatMenus.cs` in `VRChat/UI/`).
 - Exception to the prefix rule: `IconGenerator` keeps its name, because users' `.asset` files store it.
-- `important_information.md` follows the same rules. `menustructure.md` uses Refresh Scripts and the canonical spellings (AutoSync, Menu Tool, GUID Tools). `fixes_and_features.md` merges GUID Tool / GUID Tools, and Reload Domain into Refresh Scripts.
+- `important_information.md` follows the same rules. `menustructure.md` uses Refresh Scripts and the canonical spellings (AutoSync, Menu Tools, GUID Tools). `fixes_and_features.md` merges GUID Tool / GUID Tools, and Reload Domain into Refresh Scripts.
 
 ## Changes by tool
 
@@ -102,14 +102,14 @@ Changes made on `betastaging` after `cf8c34c` to apply the file structure rules 
 - Window in `VRChat/UI/AnimatorTools/`.
 - `RiryToolsMenuBar.FindReplaceLabel` builds the Tools, Project and Hierarchy paths, so all three read Animator Tools > Find and Replace.
 
-### Constraint Tool
+### Constraint Tools
 
 - `VRChat/Components/` holds what the subtools share: `ConstraintToolChains` (`TryCollectChain`, `CreateChain`, `EndpointSuffix`, `DeepestSelectedBelow`), `ConstraintToolSources` (`SourceWeightProperty`, `AddSources`, `ApplyDefaults`) and `ConstraintToolObjects` (`CreateEmpty`). `FreezeToWorld`, Undo grouping and prefab recording stay with each caller.
 - The Main Menu hosts `ConstraintToolWindow` through one hook (`CreateConstraintTool`), so `ConstraintToolWindow.Tabs` is the only tab list and the tool lives entirely in the VRChat assembly. Hosted, the window sizes its sub-tabs to the Main Menu; `Open` never picks the hosted copy.
 - `InsertablePropMath.Reach()`, which nothing called, is removed.
 - Windows in `VRChat/UI/ConstraintTools/`.
 
-### Menu Tool
+### Menu Tools
 
 - `MenuToolPlanner`: `CheckCapacity` is shared by moves and both adds; `CheckNewItem`, `CanAddNative` and `CanAddMa` are shared by Add menu and Add New Control. The VRCFury toggle rule stays in `CheckAddControl`. Messages are unchanged.
 - `MenuToolScanner` is split along its sections: `MenuToolScanner.cs`, `.Native.cs`, `.ModularAvatar.cs`, `.VRCFury.cs`. `MenuToolVrcfuryMenu` has its own file.
@@ -130,8 +130,8 @@ Changes made on `betastaging` after `cf8c34c` to apply the file structure rules 
 2. The Project and Hierarchy right-click entries read Animator Tools > Find and Replace.
 3. Avatar Migration Assistant settings and its "Do not show again" choice reset once (saved keys renamed; no migration was asked for).
 4. Windows whose class was renamed don't restore from a saved layout, and Refresh Scripts skips them, the first time.
-5. The Main Menu's Constraint Tool tab hosts the whole Constraint Tool window: check sub-tab width, hover, and that Tools > RiryTools > Constraint Tool opens its own window.
-6. Menu Tool: moves, Add menu, Add New Control and the radial preview, with and without Gesture Manager.
+5. The Main Menu's Constraint Tools tab hosts the whole Constraint Tools window: check sub-tab width, hover, and that Tools > RiryTools > Constraint Tools opens its own window.
+6. Menu Tools: moves, Add menu, Add New Control and the radial preview, with and without Gesture Manager.
 
 ## Not done or different from the findings
 
@@ -139,6 +139,6 @@ Changes made on `betastaging` after `cf8c34c` to apply the file structure rules 
 2. Logic still inside window files: Bezier rig generation, Train constraint setup and clip writing. `GuidToolReferenceRepair.cs` (about 840 lines) still holds scan, suggestions and apply. The scan and apply loops in GUID regeneration still show their own progress bars.
 3. About 35 scripts have no GLOSSARY block. They had none before; `for_agents.md` says glossaries are updated only when instructed.
 4. Data-model files hold several types each (`MenuToolModel.cs`, `MenuToolPlan.cs`, `IconCapData.cs`, `AvatarMigratorMatchObjects.cs` and similar), kept as one job each.
-5. `GestureManagerNotFoundException` stays in `Components/` although only Menu Tool uses it.
+5. `GestureManagerNotFoundException` stays in `Components/` although only Menu Tools uses it.
 6. Refresh Scripts is in `Utilities/` as asked, while the menu spec lists it under Debug Tools.
 7. The Main Menu's tab order doesn't match `menustructure.md`; it wasn't part of this work.

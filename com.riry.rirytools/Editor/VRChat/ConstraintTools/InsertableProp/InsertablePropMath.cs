@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// The numbers behind Constraint Tool's Insertable prop tab, with no Unity objects:
+    /// The numbers behind Constraint Tools' Insertable prop tab, with no Unity objects:
     /// the insert entry point, how long a smoothed slide takes, the joint's damping,
     /// the drop collider and the pose a prop lies in on Android.
     /// </summary>
@@ -92,7 +92,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Insertable prop math (Constraint Tool's Insertable prop tab)
+// GLOSSARY: Insertable prop math (Constraint Tools' Insertable prop tab)
 // ============================================================================
 //
 // InsertablePropMath            Static math, no Unity objects; used by Editor/VRChat/InsertableProp*.cs.

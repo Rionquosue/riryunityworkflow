@@ -13,7 +13,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// The Find and Replace window (logic in Editor/VRChat/AnimatorTools/BehaviourFindReplace.cs). Animator Tools > Find and Replace: finds the strings of state behaviours (case-insensitive, FuzzyMatch "contains")
     /// in an avatar's controllers (its playable layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the
-    /// Menu Tool's scan finds them) or one animator controller, and replaces whole strings on Apply, as one undo step.
+    /// Menu Tools' scan finds them) or one animator controller, and replaces whole strings on Apply, as one undo step.
     /// VRC Animator Play Audio paths can be repathed to a scene object (relative to the avatar, or to a VRCFury Full
     /// Controller's root object), and VRC Avatar Parameter Driver names mapped to one of the controller's parameters.
     /// </summary>

@@ -80,7 +80,7 @@ namespace Riry.RiryTools.Editor
 
 // ============================================================================
 // GLOSSARY: Refresh Scripts
-// The menu entry, Tools > RiryTools > Refresh Scripts, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's Tools tab
+// The menu entry, Tools > RiryTools > Refresh Scripts, is in Editor/UI/RiryToolsMenuBar.cs; the Main Menu's Debug Tools tab
 // has the same button. Both use DisplayName and call Run().
 // ============================================================================
 //

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// The numbers behind Constraint Tool's Bezier tab: one cubic Bezier segment
+    /// The numbers behind Constraint Tools' Bezier tab: one cubic Bezier segment
     /// B(t) = (1-t)^3 P0 + 3(1-t)^2 t P1 + 3(1-t) t^2 P2 + t^3 P3. Its four weights are
     /// never negative and add up to 1, so a VRC Position Constraint with P0..P3 as sources
     /// at these weights holds an object on the curve. The curve is fitted to a bone chain
@@ -176,7 +176,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Bezier curve math (Constraint Tool's Bezier tab)
+// GLOSSARY: Bezier curve math (Constraint Tools' Bezier tab)
 // ============================================================================
 //
 // ConstraintBezierCurve           Static math, no Unity objects; used by Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.cs.

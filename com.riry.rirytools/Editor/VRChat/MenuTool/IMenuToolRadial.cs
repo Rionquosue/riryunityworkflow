@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// A radial menu preview the Menu Tool draws: implemented by the Gesture Manager bridge
+    /// A radial menu preview the Menu Tools draws: implemented by the Gesture Manager bridge
     /// (Editor/VRChat/MenuTool/GestureManager), which only compiles when Gesture Manager is installed.
     /// </summary>
     internal interface IMenuToolRadial : IDisposable
@@ -52,7 +52,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool radial preview interface
+// GLOSSARY: Menu Tools radial preview interface
 // Implemented by GestureManager/GestureManagerRadial.cs (needs Gesture Manager).
 // ============================================================================
 //

@@ -151,9 +151,9 @@ namespace Riry.RiryTools.Editor
                     placed = (GameObject)PrefabUtility.InstantiatePrefab(source, SceneManager.GetActiveScene());
                     source = placed;
                 }
-                EditorUtility.DisplayProgressBar("Menu Tool", "Building " + avatar.name + " without the Parameter Compressor", 0.2f);
+                EditorUtility.DisplayProgressBar("Menu Tools", "Building " + avatar.name + " without the Parameter Compressor", 0.2f);
                 VRCExpressionParameters.Parameter[] off = Build(source, preprocess, false, out string offError);
-                EditorUtility.DisplayProgressBar("Menu Tool", "Building " + avatar.name + " with the Parameter Compressor", 0.6f);
+                EditorUtility.DisplayProgressBar("Menu Tools", "Building " + avatar.name + " with the Parameter Compressor", 0.6f);
                 VRCExpressionParameters.Parameter[] on = Build(source, preprocess, true, out string onError);
                 if (off == null || on == null)
                 {
@@ -268,7 +268,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool budget
+// GLOSSARY: Menu Tools budget
 // VRCFury's compressor solver is in MenuToolCompressor.cs.
 // ============================================================================
 //

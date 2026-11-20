@@ -5,7 +5,7 @@ using VRC.Dynamics;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// VRC constraint sources for Constraint Tool's Train, Bezier and Insertable prop tabs: adding sources, the settings
+    /// VRC constraint sources for Constraint Tools' Train, Bezier and Insertable prop tabs: adding sources, the settings
     /// every generated constraint shares, and the animated property of a source's weight. Each caller keeps its own
     /// extra settings (such as FreezeToWorld), Undo grouping and prefab recording.
     /// </summary>
@@ -50,7 +50,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool sources (shared by Train, Bezier and Insertable prop)
+// GLOSSARY: Constraint Tools sources (shared by Train, Bezier and Insertable prop)
 // ============================================================================
 //
 // ConstraintToolSources (this file)

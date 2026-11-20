@@ -8,7 +8,7 @@ using VRC.SDK3.Dynamics.Constraint.Components;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool's Bezier tab: rigs a bone chain to one cubic Bezier curve with VRC
+    /// Constraint Tools' Bezier tab: rigs a bone chain to one cubic Bezier curve with VRC
     /// constraints. Generate fits the curve to the chain at rest and creates, as a sibling
     /// of the chain start, BezierRig_&lt;start&gt;: Anchor Start (P0) and Anchor End (P3),
     /// Handle Start (P1) and Handle End (P2), one Sample per node held on the curve by a

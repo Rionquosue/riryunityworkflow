@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Menu Tool's icon size fix: the VRChat SDK only uploads expression menu icons up to 256 px, so an icon over that has
+    /// Menu Tools' icon size fix: the VRChat SDK only uploads expression menu icons up to 256 px, so an icon over that has
     /// its import settings changed by the menu_icon import preset (in the Import Presets folder), which sets the max size to
     /// 256. Only the max size settings of the preset are applied; the texture file itself is not changed.
     /// </summary>
@@ -76,7 +76,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool icon preset
+// GLOSSARY: Menu Tools icon preset
 // ============================================================================
 //
 // MenuToolIconPreset (this file)

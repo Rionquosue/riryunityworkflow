@@ -9,7 +9,7 @@ using VRC.SDK3.Dynamics.Constraint.Components;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Constraint Tool's Train tab: sets up VRC Parent Constraints on a real bone chain and
+    /// Constraint Tools' Train tab: sets up VRC Parent Constraints on a real bone chain and
     /// builds a Motion Time clip that moves the chain onto physics chains as a staggered train.
     /// This file holds the state and the actions; everything drawn in the tab is in
     /// ConstraintTrainWindow.UI.cs. The window and its Open methods are in

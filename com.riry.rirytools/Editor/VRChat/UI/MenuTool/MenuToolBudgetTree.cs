@@ -159,7 +159,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool budget tree
+// GLOSSARY: Menu Tools budget tree
 // ============================================================================
 //
 // MenuToolBudgetTree (this file)     Parameter budget tab. Main Menu: every submenu and control with its synced bits (each parameter

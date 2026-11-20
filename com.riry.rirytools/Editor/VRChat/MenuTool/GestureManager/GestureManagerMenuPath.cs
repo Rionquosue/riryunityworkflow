@@ -9,7 +9,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// The open submenus of a Gesture Manager radial (RadialMenu._menuPath and OpenMenu, internal to Gesture Manager 3.9),
-    /// shared by Menu Tool's radial preview (GestureManagerRadial.cs) and its Play Mode entry state (GestureManagerEntryState.cs).
+    /// shared by Menu Tools' radial preview (GestureManagerRadial.cs) and its Play Mode entry state (GestureManagerEntryState.cs).
     /// </summary>
     internal static class GestureManagerMenuPath
     {

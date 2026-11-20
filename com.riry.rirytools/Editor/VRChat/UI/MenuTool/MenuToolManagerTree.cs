@@ -239,7 +239,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool manager tree
+// GLOSSARY: Menu Tools manager tree
 // ============================================================================
 //
 // MenuToolManagerTree (this file)               Menu manager tab: the planned layout. Rows: drag handle (≡, only it starts a drag; none while

@@ -16,7 +16,7 @@ using ValueType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Val
 #if RIRYTOOLS_MENUTOOL_MA
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>Menu Tool scan: Modular Avatar menu installers, items and parameters, read by type name.</summary>
+    /// <summary>Menu Tools scan: Modular Avatar menu installers, items and parameters, read by type name.</summary>
     internal static partial class MenuToolScanner
     {
         // ---- Modular Avatar ------------------------------------------------------
@@ -209,7 +209,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool scanner: Modular Avatar
+// GLOSSARY: Menu Tools scanner: Modular Avatar
 // MenuToolScanner is one partial class: MenuToolScanner.cs (the scan, references, parameters and controllers) and MenuToolScanner.Native.cs, .ModularAvatar.cs and .VRCFury.cs. It builds a MenuToolScan (MenuToolModel.cs) and is read-only.
 // ============================================================================
 //
