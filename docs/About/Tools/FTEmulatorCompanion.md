@@ -5,15 +5,15 @@ The README of [Rionquosue/VRCFT-FtEmuCompanion](https://github.com/Rionquosue/VR
 Companion to RiryTools FTEmulator: a VRCFaceTracking module, a Recorder app and a command-line app that record face tracking and visemes, and turn recorded videos into face tracking and visemes. The Unity side (FTEmulator) is the `com.riry.ftemulator` package in the [RiryTools VPM listing](https://rionquosue.github.io/rirytools_vpm/).
 
 - **Module** (`RiryTools FTRecorder`): feeds VRCFaceTracking from a recording, a video file, a webcam or the Babble app, and records everything it sends.
-- **Recorder** (`RiryTools.FTRecorder.Recorder`): a window that records VRCFaceTracking's output (what FTEmulator in Unity receives) together with the visemes and your microphone.
-- **Companion app** (`RiryTools.FTRecorder`): processes videos and replays recordings, from the command line.
+- **Recorder** (`Recorder.pyw`, Python): a window that relays VRCFaceTracking's output to VRChat while it is open, and records it (what FTEmulator in Unity receives) together with the visemes and your microphone on demand. It can start with SteamVR.
+- **Companion app** (`python -m ftrecorder`, Python): processes videos and replays recordings, from the command line.
 
 ## Requirements
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) to build.
-- [VRCFaceTracking](https://github.com/benaclejames/VRCFaceTracking) for the module.
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) to build the module, and [VRCFaceTracking](https://github.com/benaclejames/VRCFaceTracking) to use it.
+- [Python](https://www.python.org/downloads/) 3.10 or newer, with tkinter (included in python.org's Windows installer; on Linux, your distribution's `python3-tk`), for the Recorder and the companion app. `process` also needs `pip install -r requirements.txt` (numpy, onnxruntime).
 - [ffmpeg](https://ffmpeg.org/) on `PATH` (or its path set) for recording, processing, `.mkv` recordings, video files and webcams. Every command and module source that needs it checks first and says how to install it when it is missing.
-- VRChat installed through Steam for OVRLipSync (VRChat's viseme engine), or the path to an `OVRLipSync.dll`.
+- On Windows, VRChat installed through Steam for OVRLipSync (VRChat's viseme engine), or the path to an `OVRLipSync.dll`. OVRLipSync is a Windows DLL: on Linux, visemes come only from a running VRChat (and `process --visemes classifier`).
 - To take visemes from a running VRChat when processing videos: a virtual audio cable (such as VB-Cable), with VRChat's microphone set to the cable's output.
 - Optional: a Babble face model (`.onnx`) you already have, for the mouth.
 
@@ -27,17 +27,7 @@ dotnet publish FTRecorder.Module -c Release -r win-x64 -p:VrcftDir="C:\path\to\f
 
 The zip is written to `FTRecorder.Module/bin/RiryTools.FTRecorder.Module-win-x64.zip`. Install it in VRCFaceTracking's Module Registry as a local .zip module.
 
-Recorder:
-
-```bash
-dotnet publish FTRecorder.Recorder -c Release -r win-x64
-```
-
-Companion app:
-
-```bash
-dotnet publish FTRecorder.Companion -c Release -r win-x64
-```
+The Recorder and the companion app are Python and need no build: run them from this folder (below).
 
 ## Module
 
@@ -61,42 +51,48 @@ Video and webcam run MediaPipe's face models (bundled) for the whole face; a Bab
 
 ## Recorder
 
-Start `RiryTools.FTRecorder.Recorder`, set the fields, press **Start recording**, and **Stop and save** when done. It records VRCFaceTracking's output, visemes and your microphone into one Matroska file. While it runs, the parts are kept next to the output (`NAME.mkv.recording.ftrec.jsonl` and `NAME.mkv.microphone.s16le`), so a crash keeps them; on stop they are combined into the `.mkv` and deleted. If writing the `.mkv` fails, they are kept and the log says where. Closing the window while recording stops and saves first.
+Open it by double-clicking `Recorder.pyw` (Windows), or with `python Recorder.pyw` or `python -m ftrecorder recorder` from this folder. Set VRCFaceTracking's OSC output port to `9010`. Whenever the Recorder is open it relays everything VRCFaceTracking sends there on to VRChat on `9000`, unchanged; the line next to the button counts the packets. It records only between **Start recording** and **Stop and save**. A recording puts VRCFaceTracking's output, visemes and (with **Record audio**) your microphone into one Matroska file. While it runs, the parts are kept next to the output (`NAME.mkv.recording.ftrec.jsonl`, and `NAME.mkv.microphone.s16le` with audio), so a crash keeps them; on stop they are combined into the `.mkv` and deleted. If writing the `.mkv` fails, they are kept and the log says where. Closing the window while recording stops and saves first. When ffmpeg is not found, **Start recording** shows an "FFmpeg not found" popup and does nothing else.
 
 | Field | Default | Use |
 |---|---|---|
-| Recording (.mkv) | `Documents\RiryTools FTRecorder\recording-<time>.mkv` | Where the recording goes. A new name is filled in after each save. |
-| VRCFaceTracking OSC output port | `9010` | Set VRCFaceTracking's OSC output port to this. Every packet is passed on and recorded. |
+| Output | `Documents\RiryTools FTRecorder` | The folder recordings go to (created when needed). Each is named `FTRecording-HHmm-ddMMyy.mkv` from when it starts, 24-hour time and day, month, year without separators: `FTRecording-1405-201126.mkv`. Another started in the same minute gets ` (2)`, then ` (3)`, and so on. |
+| VRCFaceTracking OSC output port | `9010` | Set VRCFaceTracking's OSC output port to this. Changing a port restarts the relay; both are locked while recording. |
 | Pass on to port | `9000` | Where the packets go on to: VRChat's OSC input port. |
-| Microphone | the first one ffmpeg lists | The microphones `ffmpeg -list_devices true -f dshow -i dummy` lists. |
+| Microphone | the first one ffmpeg lists | Windows: the DirectShow microphones (`ffmpeg -list_devices true -f dshow -i dummy`). Linux: PipeWire and PulseAudio sources (through ffmpeg's `pulse` input, which PipeWire serves; speaker monitors left out) and ALSA's `default` and `plughw:` cards (`ffmpeg -sources pulse`, `ffmpeg -sources alsa`). No others. With none found, "! Visemes will not be recorded without a mic" shows beside the box; recording still works, with face tracking only. |
+| Record audio | on | Keeps the microphone's audio in the recording. Off: on Windows with VRChat not running, the microphone still makes the OVRLipSync visemes, but its audio is not kept; otherwise the microphone is not opened. |
 | ffmpeg | `ffmpeg` | ffmpeg's path. |
-| OVRLipSync.dll | VRChat's copy | The OVRLipSync library, used while VRChat is not running. |
+| OVRLipSync.dll | VRChat's copy | The OVRLipSync library, used while VRChat is not running (Windows). On Linux the field is off, with "! Visemes are only available when VRChat is running." beside it. |
+| Start with SteamVR | off | SteamVR opens the Recorder when it starts (it relays from then on; recording still waits for Start recording). |
 
 Visemes depend on whether VRChat is running when the recording starts:
 
 - **VRChat running:** turn OSC on in VRChat. It finds the Recorder through OSCQuery and sends it `Viseme` and `Voice`, which are recorded.
-- **VRChat not running:** the microphone goes through OVRLipSync, from the field, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the log shows the error and a file picker asks for `OVRLipSync.dll`; cancelling it stops the start.
+- **VRChat not running, Windows:** the microphone goes through OVRLipSync, from the field, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the log shows the error and a file picker asks for `OVRLipSync.dll`; cancelling it records without visemes (said in the log). Without a microphone there are no visemes.
+- **VRChat not running, Linux:** no visemes (said in the log).
 
-The log shows what is happening and every error; the line next to the button counts packets, VRChat viseme values and seconds of microphone.
+The log shows what is happening and every error; while recording, the line next to the button counts the packets recorded, VRChat viseme values and seconds of microphone.
+
+**Start with SteamVR** (Windows) registers the Recorder with SteamVR as an overlay application (`%LocalAppData%\RiryTools\FTRecorder\RiryTools.FTRecorder.Recorder.vrmanifest`, which starts `Recorder.pyw` with the Python that ticked the box, so tick it again after moving this folder or changing Python) and turns on its auto-launch; unticking turns auto-launch off and unregisters it. It uses Valve's `openvr_api.dll`, included in `ThirdParty/OpenVR`. Ticking or unticking starts SteamVR's server if SteamVR is not running. The box shows SteamVR's own setting while SteamVR runs; otherwise it shows whether the manifest is there.
 
 ## Companion app
 
 ### process
 
 ```bash
-RiryTools.FTRecorder process --video clip.mp4 --out clip.mkv
+python -m ftrecorder process --video clip.mp4 --out clip.mkv
 ```
 
 Runs a recorded video through the face models into one Matroska file, like the Recorder's: the video itself (copied unchanged), its sound as audio (Opus, 96 kb/s), the visemes as a subtitle track, and the whole recording (face data and visemes) attached. Until the `.mkv` is written the data is kept in `clip.mkv.recording.ftrec.jsonl`; it is deleted once the `.mkv` is written, kept if not. Its visemes depend on whether VRChat is running:
 
-- **VRChat running:** the video's sound is played into VRChat through a virtual audio cable (`--cable NAME`, default `CABLE Input`), and the `Viseme` and `Voice` VRChat sends back over OSC are recorded. Turn OSC on in VRChat and set its microphone to the cable's output. This runs at the video's own speed, after a 5 second wait for VRChat to find the app.
-- **VRChat not running:** the sound goes through OVRLipSync, taken from `--ovrlipsync PATH`, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the app shows the error and asks for the path; an empty answer stops.
+- **VRChat running (Windows):** the video's sound is played into VRChat through a virtual audio cable (`--cable NAME`, default `CABLE Input`), and the `Viseme` and `Voice` VRChat sends back over OSC are recorded. Turn OSC on in VRChat and set its microphone to the cable's output. This runs at the video's own speed, after a 5 second wait for VRChat to find the app.
+- **VRChat not running (Windows):** the sound goes through OVRLipSync, taken from `--ovrlipsync PATH`, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the app shows the error and asks for the path; an empty answer stops.
+- **Linux:** no visemes unless `--visemes classifier` is given (it says so).
 
 | Option | Default | Use |
 |---|---|---|
 | `--ffmpeg PATH` | `ffmpeg` | ffmpeg's path. |
 | `--babble-model PATH`, `--babble-labels PATH`, `--babble-crop SCALE` | none, bundled labels, `1` | A Babble model for the mouth. |
-| `--visemes ovrlipsync\|classifier` | VRChat if running, else `ovrlipsync` | Uses that engine whether VRChat runs or not. `classifier` is FTRecorder's own rule-based classifier (less exact). |
+| `--visemes ovrlipsync\|classifier` | Windows: VRChat if running, else `ovrlipsync`. Linux: none | Uses that engine whether VRChat runs or not. `classifier` is FTRecorder's own rule-based classifier (less exact). |
 | `--ovrlipsync PATH` | VRChat's copy | The OVRLipSync library. |
 | `--cable NAME` | `CABLE Input` | The playback device VRChat hears, matched by name. |
 | `--fps N`, `--size N`, `--threads N` | `30`, `640`, half the cores | Frame rate, frame size and model threads. |
@@ -104,7 +100,7 @@ Runs a recorded video through the face models into one Matroska file, like the R
 ### replay
 
 ```bash
-RiryTools.FTRecorder replay --in session.mkv --port 9000 --loop
+python -m ftrecorder replay --in session.mkv --port 9000 --loop
 ```
 
 Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at their recorded times. Takes `.mkv` (read through ffmpeg, `--ffmpeg PATH`) and `.ftrec.jsonl` recordings. Expression frames are played by the module's `playback` source instead. VRChat ignores `Viseme` and `Voice` sent to it (it makes its own); FTEmulator in Unity takes them.
@@ -113,9 +109,9 @@ Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at
 
 The Recorder and `process` write `.mkv` (Matroska), one file with:
 
-- **Audio:** for the Recorder, your microphone (Opus at 48 kb/s, starting where the microphone started in the recording); for `process`, the video's sound (Opus at 96 kb/s). A recording with no picture, sound or visemes gets 20 ms of silence, because a Matroska file needs a track.
+- **Audio:** for the Recorder with **Record audio**, your microphone (Opus at 48 kb/s, starting where the microphone started in the recording); for `process`, the video's sound (Opus at 96 kb/s). A recording with no picture, sound or visemes gets 20 ms of silence, because a Matroska file needs a track.
 - **Video:** for `process`, the video's picture, copied unchanged.
-- **Subtitles ("Visemes"):** one caption per change, holding the viseme's index and name, Voice, and the 15 weights when OVRLipSync made them. Any player that shows subtitles (VLC, mpv) shows them with the audio.
+- **Subtitles ("Visemes"):** one caption per change, holding the viseme's index and name, Voice, and the 15 weights when OVRLipSync or the classifier made them. Any player that shows subtitles (VLC, mpv) shows them with the audio.
 - **Attachment `recording.ftrec.jsonl`:** the whole recording, in the format below. `ffmpeg -dump_attachment:t:0 recording.ftrec.jsonl -i session.mkv -t 0 -f null -` copies it out.
 
 The module's `record` setting writes `.ftrec.jsonl` directly.
@@ -129,4 +125,4 @@ The module's `record` setting writes `.ftrec.jsonl` directly.
 
 ## Licences
 
-MIT for this repository's code. The bundled MediaPipe models are Apache-2.0, ONNX Runtime is MIT, and Avalonia (the Recorder's window) is MIT; see [NOTICE.md](https://github.com/Rionquosue/VRCFT-FtEmuCompanion/blob/main/NOTICE.md). Babble's model, OVRLipSync and ffmpeg are not included: they are loaded from your own copies, under their own licences.
+MIT for this repository's code. The bundled MediaPipe models are Apache-2.0, ONNX Runtime is MIT, and Valve's OpenVR (`openvr_api.dll`) is BSD 3-Clause; see [NOTICE.md](https://github.com/Rionquosue/VRCFT-FtEmuCompanion/blob/main/NOTICE.md). Babble's model, OVRLipSync and ffmpeg are not included: they are loaded from your own copies, under their own licences. Python, numpy and onnxruntime are installed by you.
