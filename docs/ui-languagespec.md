@@ -835,7 +835,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `DrawSummary` | Labels (1, line 639), Help boxes (1, line 640), Buttons (1, line 654), Foldouts (1, line 667) |
 | `DrawShared` | Foldouts (1, line 694), Tooltips (1, line 699), Buttons (1, line 706) |
 | `DrawBlocks` | Foldouts (1, line 713), Labels (1, line 724), Buttons (1, line 728) |
-| `DrawMenuChecks` | Foldouts (1, lines 743-745: the same-name box's title), Labels (1, line 751), Links (1, line 758: each asset's name, with a tooltip), Help boxes (1, line 770), Buttons (1, line 772) |
+| `DrawMenuChecks` | Foldouts (1, lines 743-745: the same-name box's title), Labels (1, line 750), Links (1, line 758: each asset's name, with a tooltip), Help boxes (1, line 770), Buttons (1, line 772) |
 | `ApplyIconPreset` | Dialogs (1, line 781) |
 | `DrawNotes` | Foldouts (1, line 804) |
 | `DrawManager` | Help boxes (1, line 830), Buttons (3, lines 836-841), Labels (1, line 846) |
