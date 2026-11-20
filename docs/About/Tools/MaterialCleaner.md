@@ -6,6 +6,8 @@
 | --- | --- | --- |
 | Menu bar | Tools > RiryTools > Utilities | Material Cleaner |
 | Main Menu | Tools | Material Cleaner |
+| Right Click (project) | RiryTools > Material Cleaner | the selected material fills the Material field |
+| Broken References window | Call material cleaner | |
 
 ## 2. Brief description
 

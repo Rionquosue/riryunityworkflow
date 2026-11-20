@@ -29,6 +29,8 @@ namespace Riry.RiryTools.Editor
         private const string ExtractAnimations = "Assets/RiryTools/Animator Tools/Extract Animations";
         private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
         private const string CleanAnimationKeysAssets = "Assets/RiryTools/Animator Tools/Clean Animation Keys";
+        private const string MaterialCleanerAssets = "Assets/RiryTools/Material Cleaner";
+        private const string ScrubUnusedOverridesAssets = "Assets/RiryTools/Scrub Unused Overrides";
 
         // ---- Hierarchy right-click -------------------------------------------
         private const string AttachToHierarchy = "GameObject/RiryTools/Attach To";
@@ -92,6 +94,21 @@ namespace Riry.RiryTools.Editor
         private static bool CleanAnimationKeysAssetsValid() { return !StopAllToolScripts.Active && (Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0); }
 
         // Animator Tools/Find and Replace is 2006 (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
+
+        [MenuItem(MaterialCleanerAssets, false, 2007)]
+        private static void MaterialCleanerAssetsItem() { MaterialCleanerWindow.Open(Selection.activeObject as UnityEngine.Material); }
+
+        [MenuItem(MaterialCleanerAssets, true)]
+        private static bool MaterialCleanerAssetsValid() { return !StopAllToolScripts.Active; }
+
+        [MenuItem(ScrubUnusedOverridesAssets, false, 2008)]
+        private static void ScrubUnusedOverridesAssetsItem()
+        {
+            GuidToolBrokenReferenceWindow.ScrubUnusedOverrides(GuidToolReferenceRepair.SelectedFiles());
+        }
+
+        [MenuItem(ScrubUnusedOverridesAssets, true)]
+        private static bool ScrubUnusedOverridesAssetsValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
 
         // =====================================================================
         // Hierarchy right-click (also in the GameObject menu)
@@ -185,6 +202,9 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Animator Tools/Clean Animation Keys (2005) -> CleanAnimationKeysWindow.Open with the selected AnimationClips
 //   Assets/RiryTools/Animator Tools/Find and Replace (2006) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
+//   Assets/RiryTools/Material Cleaner (2007)    -> MaterialCleanerWindow.Open with the selected material in its Material field
+//   Assets/RiryTools/Scrub Unused Overrides (2008) -> GuidToolBrokenReferenceWindow.ScrubUnusedOverrides on the selected files
+//                                                      and folders' contents (GuidToolReferenceRepair.SelectedFiles); asks first
 //
 // HIERARCHY RIGHT-CLICK (also in the GameObject menu)
 //   GameObject/RiryTools/Attach To (19)         -> AttachToWindow.Open (Editor/UI/Utilities/AttachToWindow.cs): the Attach To popup;

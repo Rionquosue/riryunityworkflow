@@ -27,7 +27,7 @@ The VRCFaceTracking companion (a module, a Recorder app that relays VRCFaceTrack
 
 ## GUID Tools
 
-GUID Tools: regenerates GUIDs for selected assets and folders' contents while keeping every reference to them intact (folder GUIDs never change), and repairs missing GUID references, using a permanent ledger of replaced GUIDs kept in ProjectSettings and its Git history. Check for Broken References lists the missing references of the open scenes and the files they use, with the object and field holding each one (click to select it); the scan stops at animator controllers and shaders, which are only opened from the Project window's Repair Missing GUID References. Empty slots, prefab bookkeeping, unused controller sub-assets, material texture slots the shader doesn't have and references nothing reads are not listed. A reference can be ignored, and unused prefab overrides can be scrubbed; Call material cleaner opens Material Cleaner. After a repair, Controller Cleaner is offered on the controllers it touched. It also offers Check for Broken References when an opened scene or prefab points at missing assets.
+GUID Tools: regenerates GUIDs for selected assets and folders' contents while keeping every reference to them intact (folder GUIDs never change), and repairs missing GUID references, using a permanent ledger of replaced GUIDs kept in ProjectSettings and its Git history. Check for Broken References lists the missing references of the open scenes and the files they use, with the object and field holding each one (click to select it); the scan stops at animator controllers and shaders, which are only opened from the Project window's Repair Missing GUID References. Empty slots, prefab bookkeeping, unused controller sub-assets, material texture slots the shader doesn't have and references nothing reads are not listed. A reference can be ignored, and unused prefab overrides can be scrubbed; Call material cleaner opens Material Cleaner. Scrub Unused Overrides is also in the Project window's right-click menu. After a repair, Controller Cleaner is offered on the controllers it touched. It also offers Check for Broken References when an opened scene or prefab points at missing assets.
 
 ## Menu Tool
 
@@ -55,7 +55,7 @@ Import Presets: assigns import presets to folders by file type (images, models, 
 
 ## Material Cleaner
 
-Material Cleaner: scans one material, the materials the open scenes use, or every material in the project for texture slots, floats and colors its current shader doesn't have, and removes them, with the textures they reference, on Clean. A material whose shader is missing is skipped. Each Clean is one undo step and is logged.
+Material Cleaner: scans one material, the materials the open scenes use, or every material in the project for texture slots, floats and colors its current shader doesn't have, and removes them, with the textures they reference, on Clean. A material whose shader is missing is skipped. Also in the Project window's right-click menu (with the selected material) and the Broken References window. Each Clean is one undo step and is logged.
 
 ## Attach To
 

@@ -55,7 +55,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (14, lines 26-43) |
+| `attributes and constants` | Menu entries (16, lines 26-45) |
 
 ### `Components/StopAllToolScripts.cs`
 
@@ -562,9 +562,9 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `OpenForOpenScenes` | Dialogs (1, line 53) |
 | `Rescan` | Dialogs (1, line 96) |
-| `ScrubUnusedOverrides` | Dialogs (2, lines 201-206) |
-| `OfferControllerCleaner` | Dialogs (1, line 230) |
-| `ApplyRedirects` | Dialogs (5, lines 255-306) |
+| `ScrubUnusedOverrides` | Dialogs (2, lines 207-212) |
+| `OfferControllerCleaner` | Dialogs (1, line 236) |
+| `ApplyRedirects` | Dialogs (5, lines 261-312) |
 
 ### `UI/GuidTools/GuidToolBrokenSaveWindow.cs`
 
@@ -783,7 +783,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OnGUI` | Field labels (1, line 33), Buttons (5, lines 36-66), Labels (2, lines 48-63) |
+| `OnGUI` | Field labels (1, line 40), Buttons (5, lines 43-73), Labels (2, lines 55-70) |
 
 ### `Utilities/MaterialCleaner.cs`
 

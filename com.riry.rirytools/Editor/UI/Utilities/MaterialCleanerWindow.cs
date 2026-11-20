@@ -19,8 +19,15 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
+            Open(null);
+        }
+
+        // The Project window's Material Cleaner: a selected material fills the Material field.
+        internal static void Open(Material selected)
+        {
             var window = GetWindow<MaterialCleanerWindow>();
             window.titleContent = new GUIContent(MaterialCleaner.Title);
+            if (selected != null) window.material = selected;
             window.Show();
         }
 
