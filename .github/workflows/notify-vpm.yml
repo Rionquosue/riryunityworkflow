@@ -1,6 +1,7 @@
-# Starts Build Package in Rionquosue/rirytools_vpm on every push to main (stable) or
-# beta (beta), once for com.riry.rirytools and once for com.riry.ftemulator, both built
-# from this repository. rirytools_vpm builds, versions, releases and lists the packages.
+# Starts Build Package for com.riry.rirytools in Rionquosue/rirytools_vpm on every push to
+# main (stable) or beta (beta) that changes com.riry.rirytools/. FTEmulator has its own,
+# notify-vpm-ftemulator.yml, so a push that changes only one package builds only that one.
+# rirytools_vpm builds, versions, releases and lists the packages.
 #
 # VPM_DISPATCH_TOKEN is a fine-grained token for Rionquosue/rirytools_vpm only, with
 # only Actions: Read and write: it can start workflows there and nothing else.
@@ -11,6 +12,8 @@ on:
     branches:
       - main
       - beta
+    paths:
+      - com.riry.rirytools/**
 
 permissions:
   contents: read
@@ -33,9 +36,3 @@ jobs:
           SHA: ${{ github.sha }}
         run: gh workflow run build-package.yml --repo Rionquosue/rirytools_vpm --ref main -f channel="$CHANNEL" -f sha="$SHA"
 
-      - name: Start Build Package for FTEmulator in rirytools_vpm
-        env:
-          GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
-          CHANNEL: ${{ github.ref_name == 'main' && 'stable' || 'beta' }}
-          SHA: ${{ github.sha }}
-        run: gh workflow run build-package.yml --repo Rionquosue/rirytools_vpm --ref main -f package=com.riry.ftemulator -f channel="$CHANNEL" -f sha="$SHA"
