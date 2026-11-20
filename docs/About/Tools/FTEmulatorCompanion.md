@@ -119,10 +119,8 @@ Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at
 
 | | Records |
 |---|---|
-| **Module** (`record` setting) | Face tracking: Unified Expressions and eyes + <br> Only from the module's own source (playback, video, webcam, Babble app) + <br> As VRCFaceTracking receives it, before calibration, for any avatar + <br> One `.mkv` with the recording attached |
-| **Application** (Recorder) | Face tracking: VRCFaceTracking's OSC output, the avatar parameters VRChat or FTEmulator receive * <br> From any tracking module VRCFaceTracking runs * <br> After VRCFaceTracking's calibration, for the current avatar * <br> Visemes: VRChat's `Viseme` and `Voice`, or OVRLipSync on the microphone (Windows) * <br> Microphone audio (**Record audio**) * <br> One `.mkv` with the recording attached |
-
-`+` Module only. `*` Application only.
+| **Module** (`record` setting) | Face tracking: Unified Expressions and eyes <br> Only from the module's own source (playback, video, webcam, Babble app) <br> As VRCFaceTracking receives it, before calibration, for any avatar <br> One `.mkv` with the recording attached |
+| **Application** (Recorder) | Face tracking: VRCFaceTracking's OSC output, the avatar parameters VRChat or FTEmulator receive <br> From any tracking module VRCFaceTracking runs <br> After VRCFaceTracking's calibration, for the current avatar <br> Visemes: VRChat's `Viseme` and `Voice`, or OVRLipSync on the microphone (Windows) <br> Microphone audio (**Record audio**) <br> One `.mkv` with the recording attached |
 
 ## Recordings
 
