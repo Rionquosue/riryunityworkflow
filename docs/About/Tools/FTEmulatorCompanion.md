@@ -73,7 +73,7 @@ Records VRCFaceTracking's output, visemes and your microphone into one Matroska 
 RiryTools.FTRecorder process --video clip.mp4 --out clip.mkv
 ```
 
-Runs a recorded video through the face models into one Matroska file, like `record`'s: the video's sound as audio (Opus, 96 kb/s), the visemes as a subtitle track, and the whole recording (face data and visemes) attached. Until the `.mkv` is written the data is kept in `clip.mkv.recording.ftrec.jsonl`; it is deleted once the `.mkv` is written, kept if not. Its visemes depend on whether VRChat is running:
+Runs a recorded video through the face models into one Matroska file, like `record`'s: the video itself (copied unchanged), its sound as audio (Opus, 96 kb/s), the visemes as a subtitle track, and the whole recording (face data and visemes) attached. Until the `.mkv` is written the data is kept in `clip.mkv.recording.ftrec.jsonl`; it is deleted once the `.mkv` is written, kept if not. Its visemes depend on whether VRChat is running:
 
 - **VRChat running:** the video's sound is played into VRChat through a virtual audio cable (`--cable NAME`, default `CABLE Input`), and the `Viseme` and `Voice` VRChat sends back over OSC are recorded. Turn OSC on in VRChat and set its microphone to the cable's output. This runs at the video's own speed, after a 5 second wait for VRChat to find the app.
 - **VRChat not running:** the sound goes through OVRLipSync, taken from `--ovrlipsync PATH`, else from your VRChat install (found through Steam, in `VRChat_Data\Plugins`). When it cannot be found or loaded, the app shows the error and asks for the path; an empty answer stops.
@@ -99,7 +99,8 @@ Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at
 
 `record` and `process` write `.mkv` (Matroska), one file with:
 
-- **Audio:** for `record`, your microphone (Opus at 48 kb/s, starting where the microphone started in the recording); for `process`, the video's sound (Opus at 96 kb/s). A recording with neither sound nor visemes gets 20 ms of silence, because a Matroska file needs a track.
+- **Audio:** for `record`, your microphone (Opus at 48 kb/s, starting where the microphone started in the recording); for `process`, the video's sound (Opus at 96 kb/s). A recording with no picture, sound or visemes gets 20 ms of silence, because a Matroska file needs a track.
+- **Video:** for `process`, the video's picture, copied unchanged.
 - **Subtitles ("Visemes"):** one caption per change, holding the viseme's index and name, Voice, and the 15 weights when OVRLipSync made them. Any player that shows subtitles (VLC, mpv) shows them with the audio.
 - **Attachment `recording.ftrec.jsonl`:** the whole recording, in the format below. `ffmpeg -dump_attachment:t:0 recording.ftrec.jsonl -i session.mkv -t 0 -f null -` copies it out.
 
