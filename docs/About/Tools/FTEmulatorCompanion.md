@@ -61,7 +61,7 @@ Video and webcam run MediaPipe's face models (bundled) for the whole face; a Bab
 
 ## Recorder
 
-Set VRCFaceTracking's OSC output port to `9010`. Whenever the Recorder is open it relays everything VRCFaceTracking sends there on to VRChat on `9000`, unchanged; the line next to the button counts the packets. It records only between **Start recording** and **Stop and save**. A recording puts VRCFaceTracking's output, visemes and your microphone into one Matroska file. While it runs, the parts are kept next to the output (`NAME.mkv.recording.ftrec.jsonl` and `NAME.mkv.microphone.s16le`), so a crash keeps them; on stop they are combined into the `.mkv` and deleted. If writing the `.mkv` fails, they are kept and the log says where. Closing the window while recording stops and saves first.
+Set VRCFaceTracking's OSC output port to `9010`. Whenever the Recorder is open it relays everything VRCFaceTracking sends there on to VRChat on `9000`, unchanged; the line next to the button counts the packets. It records only between **Start recording** and **Stop and save**. A recording puts VRCFaceTracking's output, visemes and your microphone into one Matroska file. While it runs, the parts are kept next to the output (`NAME.mkv.recording.ftrec.jsonl` and `NAME.mkv.microphone.s16le`), so a crash keeps them; on stop they are combined into the `.mkv` and deleted. If writing the `.mkv` fails, they are kept and the log says where. Closing the window while recording stops and saves first. When ffmpeg is not found, **Start recording** shows an "FFmpeg not found" popup and does nothing else.
 
 | Field | Default | Use |
 |---|---|---|
