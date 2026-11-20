@@ -86,9 +86,9 @@ Structured in such a way that it can be presented as a table. Laid out as cells.
 
 #### Main tab
 
-Where [] contains the currently active tab. The primary tabs are Tools, Menu Tools, Animator Tools, Debug Tools and FTEmulator. Tools has the sub-tabs General, GUID Tools, Blendshape Sync, Import Presets, Constraint Tools and AutoSync; Import Presets and Constraint Tools have sub-tabs of their own. FTEmulator's debug tables need the width, so they open as a popup (Open debug window).
+Where [] contains the currently active tab. The primary tabs are General Tools, Menu Tools, Animator Tools, Debug Tools and FTEmulator, always on one row. General Tools has the sub-tabs General, GUID Tools, Blendshape Sync, Import Presets, Constraint Tools and AutoSync; Import Presets and Constraint Tools have sub-tabs of their own. FTEmulator's debug tables need the width, so they open as a popup (Open debug window).
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [General] | GUID Tools | Blendshape Sync | Import Presets | Constraint Tools | AutoSync |
 | Avatar Migration Assistant |  |  |  |  |  |
@@ -99,7 +99,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | [GUID Tools] | Blendshape Sync | Import Presets | Constraint Tools | AutoSync |
 | GUID Rebuild tool |  |  |  |  |  |
@@ -109,7 +109,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | [Blendshape Sync] | Import Presets | Constraint Tools | AutoSync |
 | Running sync job list |  |  |  |  |  |
@@ -117,7 +117,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync |
 | [Set Folder Import Presets] | Save Import Preset | Import Preset Library |  |  |  |
@@ -125,7 +125,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync |
 | Set Folder Import Presets | [Save Import Preset] | Import Preset Library |  |  |  |
@@ -138,7 +138,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync |
 | Set Folder Import Presets | Save Import Preset | [Import Preset Library] |  |  |  |
@@ -147,7 +147,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
 | [Train] | Bezier | Insertable prop | Dual axis detector | Three axis detector |  |
@@ -155,7 +155,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
 | Train | [Bezier] | Insertable prop | Dual axis detector | Three axis detector |  |
@@ -163,7 +163,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
 | Train | Bezier | [Insertable prop] | Dual axis detector | Three axis detector |  |
@@ -171,7 +171,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
 | Train | Bezier | Insertable prop | [Dual axis detector] | Three axis detector |  |
@@ -185,7 +185,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
 | Train | Bezier | Insertable prop | Dual axis detector | [Three axis detector] |  |
@@ -199,7 +199,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| [Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | General | GUID Tools | Blendshape Sync | Import Presets | Constraint Tools | [AutoSync] |
 | ☐ Sync |  |  |  |  |  |
@@ -207,21 +207,21 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| Tools | [Menu Tools] | Animator Tools | Debug Tools | FTEmulator |  |
+| General Tools | [Menu Tools] | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Parameter budget |  |  |  |  |  |
 | Menu manager (opens the Menu Tools window) |  |  |  |  |  |
 
 ---
 
-| Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Find and Replace] | Clean Animation Keys | Controller Cleaner | Extract Animations |  |  |
 | Find and Replace UI here |  |  |  |  |  |
 
 ---
 
-| Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Find and Replace | [Clean Animation Keys] | Controller Cleaner | Extract Animations |  |  |
 | [Select Clean Target(s) field] |  |  |  |  |  |
@@ -229,7 +229,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Find and Replace | Clean Animation Keys | [Controller Cleaner] | Extract Animations |  |  |
 | Controller field + Scan |  |  |  |  |  |
@@ -239,14 +239,14 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Find and Replace | Clean Animation Keys | Controller Cleaner | [Extract Animations] |  |  |
 | Extract Animations UI here |  |  |  |  |  |
 
 ---
 
-| Tools | Menu Tools | Animator Tools | [Debug Tools] | FTEmulator |  |
+| General Tools | Menu Tools | Animator Tools | [Debug Tools] | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Refresh Scripts |  |  |  |  |  |
 | Find Null references |  |  |  |  |  |
@@ -255,7 +255,7 @@ Where [] contains the currently active tab. The primary tabs are Tools, Menu Too
 
 ---
 
-| Tools | Menu Tools | Animator Tools | Debug Tools | [FTEmulator] |  |
+| General Tools | Menu Tools | Animator Tools | Debug Tools | [FTEmulator] |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | State, Gesture Manager, Avatar, Avatar backend |  |  |  |  |  |
 | Input, Hardware limits, Behavior, View allowed channels |  |  |  |  |  |

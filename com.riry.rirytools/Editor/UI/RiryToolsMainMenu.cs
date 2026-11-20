@@ -23,10 +23,10 @@ namespace Riry.RiryTools.Editor
         // The FTEmulator window, hosted in the FTEmulator tab.
         internal static Func<EditorWindow> CreateFTEmulator;
 
-        private static readonly string[] Tabs = { "Tools", "Menu Tools", "Animator Tools", "Debug Tools", "FTEmulator" };
-        // The Tools tab's sub-tabs: General (the buttons and toggles below), then a sub-tab per tool.
+        private static readonly string[] Tabs = { "General Tools", "Menu Tools", "Animator Tools", "Debug Tools", "FTEmulator" };
+        // The General Tools tab's sub-tabs: General (the buttons and toggles below), then a sub-tab per tool.
         private static readonly string[] ToolsTabs = { "General", "GUID Tools", "Blendshape Sync", "Import Presets", "Constraint Tools", "AutoSync" };
-        // Tools that need more room than a tab: the Tools tab's General sub-tab has a button for each, which opens it in its own window.
+        // Tools that need more room than a tab: the General Tools tab's General sub-tab has a button for each, which opens it in its own window.
         private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
         private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner", "Extract Animations" };
         private static readonly string[] ImportTabs =
@@ -66,8 +66,8 @@ namespace Riry.RiryTools.Editor
         internal static readonly Color TabSeparator = new Color(0f, 0f, 0f, 0.5f);
         // Outline around every tab, in whole pixels so it draws crisply.
         internal const float TabBorder = 2f;
-        // Space above the sub-tab strips (Constraint Tools, Import Presets), under the main tabs.
-        internal const float SubTabGap = 8f;
+        // Space between a tab strip and the sub-tab strip under it.
+        internal const float SubTabGap = 2f;
         // Space above the main tabs, so their top outline isn't hidden under the window's own tab.
         internal const float TopMargin = 2f;
         internal const float HoverTint = 0.1f;
@@ -106,7 +106,8 @@ namespace Riry.RiryTools.Editor
             int chosen = TabStrip(this, tab, Tabs);
             if (chosen != tab) tabScroll = Vector2.zero;
             tab = chosen;
-            EditorGUILayout.Space(4f);
+            // Tabs with sub-tabs put them right under the main tabs, SubTabGap apart; the others leave 4 px above their tool.
+            EditorGUILayout.Space(Current == "General Tools" || Current == "Animator Tools" ? SubTabGap : 4f);
             drawn = null;
             // Menu Tools scrolls its own parts: its radial preview is placed over the window and cannot follow a scroll view.
             if (Current == "Menu Tools")
@@ -139,19 +140,19 @@ namespace Riry.RiryTools.Editor
             get { return Tabs[Mathf.Clamp(tab, 0, Tabs.Length - 1)]; }
         }
 
-        // What is drawn below the tabs: the Tools tab's current sub-tab, or the current tab.
+        // What is drawn below the tabs: the General Tools tab's current sub-tab, or the current tab.
         private string Section
         {
-            get { return Current == "Tools" ? ToolsTabs[Mathf.Clamp(toolsTab, 0, ToolsTabs.Length - 1)] : Current; }
+            get { return Current == "General Tools" ? ToolsTabs[Mathf.Clamp(toolsTab, 0, ToolsTabs.Length - 1)] : Current; }
         }
 
         private void DrawTab()
         {
-            if (Current == "Tools")
+            if (Current == "General Tools")
             {
-                EditorGUILayout.Space(SubTabGap);
                 toolsTab = TabStrip(this, toolsTab, ToolsTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f, SubTabs);
-                EditorGUILayout.Space(4f);
+                // Import Presets and Constraint Tools draw their own sub-tabs right under these.
+                if (Section != "Import Presets" && Section != "Constraint Tools") EditorGUILayout.Space(4f);
             }
             switch (Section)
             {
@@ -162,7 +163,6 @@ namespace Riry.RiryTools.Editor
                     else Draw(Active());
                     break;
                 case "Animator Tools":
-                    EditorGUILayout.Space(SubTabGap);
                     animatorTab = TabStrip(this, animatorTab, AnimatorTabs, GUI.skin.verticalScrollbar.fixedWidth + 4f, SubTabs);
                     EditorGUILayout.Space(4f);
                     // Find and Replace needs the VRChat SDK; Controller Cleaner does not.
@@ -300,7 +300,8 @@ namespace Riry.RiryTools.Editor
             }
             // inset: room kept free on the right (the tab scroll view's scrollbar, for the sub-tabs).
             float available = owner.position.width - 8f - inset;
-            int perRow = Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
+            // The main tabs always stay on one row across the top; the other levels wrap.
+            int perRow = level == MainTabs ? names.Length : Mathf.Clamp(Mathf.FloorToInt(available / TabMinWidth), 1, names.Length);
             int rows = (names.Length + perRow - 1) / perRow;
             float width = available / perRow;
             // Measured at the narrowest a cell gets (TabMinWidth), not the current width: measured at the current
@@ -448,7 +449,7 @@ namespace Riry.RiryTools.Editor
 //
 // RiryToolsMainMenu (this file): the dockable "RiryTools" window
 //   Tabs                     Tools, Menu Tools, Animator Tools, Debug Tools, FTEmulator (not Menu Mockup or Documentation).
-//                            Current is the selected tab's name; Section is the Tools tab's sub-tab or the current tab;
+//                            Current is the selected tab's name; Section is the General Tools tab's sub-tab or the current tab;
 //                            tabs are handled by name.
 //   Menu Tools tab            CreateMenuTool (set by Editor/VRChat/UI/RiryToolsVRChatMenus.cs; null without the VRChat SDK) makes the
 //                            hosted MenuToolWindow (MenuToolWindow.CreateHosted). It shows the Parameter budget, drawn
@@ -456,7 +457,7 @@ namespace Riry.RiryTools.Editor
 //                            Tool window.
 //   IRiryHostedTool          A hosted tool told the window it is drawn in (Surface), set on every Draw, and NotDrawn() in a GUI
 //                            pass that drew another tab (drawn: the one drawn), so Menu Tools' radial leaves at once.
-//   Tools tab / ToolsTabs    Sub-tabs General, GUID Tools, Blendshape Sync, Import Presets, Constraint Tools, AutoSync
+//   General Tools tab / ToolsTabs Sub-tabs General, GUID Tools, Blendshape Sync, Import Presets, Constraint Tools, AutoSync
 //                            (toolsTab, [SerializeField]).
 //   General / PopupTools     A button per tool that needs more room (Avatar Migration Assistant, IconCap); each opens
 //                            the tool in its own floating window (OpenPopup), not inside this one; then Material Cleaner, Find
@@ -481,14 +482,14 @@ namespace Riry.RiryTools.Editor
 //                            DarkTab, LightTab, TabSeparator,
 //                            TabBorder, HoverTint: internal, so Menu Mockup's Tabs block draws the same strip.
 //   TabStrip(owner, selected, names, inset)  Static: the tool tabs, Constraint Tools', Import Presets', Animator Tools' and
-//                            Tools' sub-tabs, and FTEmulator Debug's tabs: flat cells of equal width (at least TabMinWidth,
+//                            General Tools' sub-tabs, and FTEmulator Debug's tabs: flat cells of equal width (at least TabMinWidth,
 //                            110), wrapping onto more rows, each as tall as its longest name needs at TabMinWidth (at least
 //                            TabMinHeights[level]: 48, 36 or 24), so the height doesn't change with the window's width; the active tab in ActiveTabs[level] with dark bold text, a hover tint
 //                            (HoverTint), like YGDR Animator Editor's tab strip. Every tab has a TabBorder (2 px) outline
 //                            in TabSeparator, on edges rounded to whole pixels. The rows come from the window width less
 //                            inset; the cells then fill the rect the layout gives, so the margins are equal and the sub-tabs
 //                            line up with the main tabs.
-//   TopMargin / SubTabGap    2 px above the main tabs (and Constraint Tools window's); 8 px between them and a tab's sub-tabs
+//   TopMargin / SubTabGap    2 px above the main tabs (and Constraint Tools window's); 2 px between a tab strip and the sub-tab strip under it
 //                            (Constraint Tools, Import Presets).
 //   AutoSync tab             Sync toggle (AutoSyncGitActions.ToggleSync) above Configuration.
 //   Blendshape Sync tab      BlendshapeSyncJobList (Editor/UI/BlendshapeSync/BlendshapeSyncJobList.cs): the running jobs, and Add Job.

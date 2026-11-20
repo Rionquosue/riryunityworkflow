@@ -39,7 +39,7 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-35) |
 | `Open` | Window titles (1, line 89) |
-| `OnGUI` | Buttons (1, line 132) |
+| `OnGUI` | Buttons (1, line 133) |
 | `DrawTab` | Toggles (3, lines 159-226), Help boxes (5, lines 161-209), Buttons (5, lines 203-234) |
 
 ### `UI/RiryToolsMenuBar.cs`

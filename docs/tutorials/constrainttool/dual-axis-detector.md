@@ -11,7 +11,7 @@ show **VRCSDK not found**.
 Right-click the object that moves in the Hierarchy and choose **RiryTools > Constraint Tools > Dual axis detector**: it fills **Source**. To fill **Relative to** too, Ctrl/Cmd-click that object first so both are selected.
 
 You can also choose **Tools > RiryTools > Constraint Tools** and open the **Dual axis detector**
-tab, or open it from the Main Menu's Tools > Constraint Tools sub-tab.
+tab, or open it from the Main Menu's General Tools > Constraint Tools sub-tab.
 
 ## 2. Pick the objects
 

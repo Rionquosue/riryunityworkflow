@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Script Load Guard (toggle) | |
-| Main Menu | Tools > General | Script Load Guard (toggle) |
+| Main Menu | General Tools > General | Script Load Guard (toggle) |
 
 ## 2. Brief description
 
@@ -20,7 +20,7 @@ Stops a scene or prefab that loaded with far fewer objects than its file holds f
 - Detects a scene or prefab that loaded with far fewer objects than its file holds.
 - Names the script that logged errors during the load.
 - Blocks saving it, so the good file is not overwritten, and holds the editor in a window until it is resolved.
-- Can be turned off from the menu or the Main Menu's Tools > General sub-tab.
+- Can be turned off from the menu or the Main Menu's General Tools > General sub-tab.
 
 ## 5. Flow chart
 
