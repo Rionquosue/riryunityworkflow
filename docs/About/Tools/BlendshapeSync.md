@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Blendshape Sync | |
-| Main Menu | Tools > Blendshape Sync | Add Job, job list |
+| Main Menu | General Tools > Blendshape Sync | Add Job, job list |
 
 ## 2. Brief description
 
@@ -23,7 +23,7 @@ Copies the blendshape weights of a master mesh to child meshes that have blendsh
 - **Manual link** maps a master blendshape to a differently named child blendshape.
 - Ctrl+Z undoes a sync and stops automatic syncing. **Set All to Original** puts every weight back as it was when its renderer was assigned.
 - Syncing pauses during Play Mode, animation preview or recording, and Animator graph editing.
-- Jobs keep running after their window closes, are listed in the Main Menu's Tools > Blendshape Sync sub-tab, and are saved per scene for this user.
+- Jobs keep running after their window closes, are listed in the Main Menu's General Tools > Blendshape Sync sub-tab, and are saved per scene for this user.
 - Only renderer weights change; meshes and animation clips are never changed.
 
 ## 5. Flow chart

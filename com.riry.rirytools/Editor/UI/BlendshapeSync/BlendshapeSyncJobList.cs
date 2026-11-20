@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>The Main Menu's Tools > Blendshape Sync sub-tab: the running jobs, and Add Job.</summary>
+    /// <summary>The Main Menu's General Tools > Blendshape Sync sub-tab: the running jobs, and Add Job.</summary>
     internal static class BlendshapeSyncJobList
     {
         // The window width a job's row fits on one line in: its fixed widths (495), spacing and padding, plus a buffer.
