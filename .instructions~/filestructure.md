@@ -18,7 +18,7 @@
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
 >>>>>>> 5490d61 (Add UI language spec listing where each UI element's text lives)
 - `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
-- `com.riry.ftemulator/`: FTEmulator, its own package (listed in the VPM as `com.riry.ftemulator`). It needs `com.riry.rirytools` and uses its internals (`InternalsVisibleTo`). Only Unity Editor code lives here; the VRCFaceTracking companion (module and app) is in `Rionquosue/VRCFT-FtEmuCompanion`.
+- `com.riry.ftemulator/`: FTEmulator, its own package (listed in the VPM as `com.riry.ftemulator`). It needs `com.riry.rirytools` and uses its internals (`InternalsVisibleTo`). Only Unity Editor code lives here; the VRCFaceTracking companion (module, Recorder app and command-line app) is in `Rionquosue/VRCFT-FtEmuCompanion`.
 
 ## Rules
 
