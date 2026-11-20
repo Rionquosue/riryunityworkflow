@@ -130,13 +130,13 @@ namespace Riry.RiryTools.Editor
             x += 18f;
             string tip = MenuToolIcons.TypeName(row.Entry.Type) + " from " + row.Entry.Origin + (row.Entry.Estimated ? " (estimated)" : "") +
                 (row.Entry.Parameters().Any() ? "\nParameters: " + string.Join(", ", row.Entry.Parameters()) : "");
-            string folder = row.Entry.Parent != null && row.Entry.Parent.Parent != null ? row.Entry.Parent.Path : "Root";
+            string folder = row.Entry.Parent != null && row.Entry.Parent.Parent != null ? MenuToolRichText.Plain(row.Entry.Parent.Path) : "Root";
             // The folder column gives way when the row is narrow or deeply nested, so the name never runs under it.
             float free = rect.xMax - x;
             float folderWidth = free > 260f ? Mathf.Min(220f, rect.width * 0.35f) : 0f;
             if (folderWidth == 0f) tip += "\nIn: " + folder;
             EditorGUI.LabelField(new Rect(x, rect.y, Mathf.Max(0f, free - folderWidth - 4f), rect.height),
-                new GUIContent(row.Entry.Name + (row.Entry.IsSubMenu ? "  ▸" : ""), tip), row.Entry.IsSubMenu ? EditorStyles.boldLabel : EditorStyles.label);
+                new GUIContent(MenuToolRichText.Plain(row.Entry.Name) + (row.Entry.IsSubMenu ? "  ▸" : ""), tip), row.Entry.IsSubMenu ? EditorStyles.boldLabel : EditorStyles.label);
             if (folderWidth > 0f) EditorGUI.LabelField(new Rect(rect.xMax - folderWidth, rect.y, folderWidth, rect.height), new GUIContent(folder, folder), EditorStyles.miniLabel);
         }
 
