@@ -34,6 +34,7 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
+        [SerializeField] private bool duplicatesOpen = true;
         // The Main Menu's copy (CreateHosted): never shown on its own, and its Menu manager tab opens the Menu Tools window.
         [SerializeField] private bool hosted;
         [SerializeField] private Vector2 budgetScroll;
@@ -735,7 +736,34 @@ namespace Riry.RiryTools.Editor
         private void DrawMenuChecks()
         {
             if (scan.Duplicates.Count > 0)
-                EditorGUILayout.HelpBox("Controls with the same name in one submenu:\n" + string.Join("\n", scan.Duplicates), MessageType.Warning);
+            {
+                // A collapsible box: each submenu and name, with a link per menu or prefab asset it comes from.
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    var title = new GUIContent(" Controls with the same name in one submenu (" + scan.Duplicates.Count + ")",
+                        EditorGUIUtility.IconContent("console.warnicon.sml").image);
+                    duplicatesOpen = EditorGUILayout.Foldout(duplicatesOpen, title, true);
+                    if (duplicatesOpen)
+                    {
+                        foreach (MenuToolDuplicate duplicate in scan.Duplicates)
+                        {
+                            EditorGUILayout.LabelField(duplicate.Label, EditorStyles.wordWrappedLabel);
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                foreach (UnityEngine.Object asset in duplicate.Assets)
+                                {
+                                    using (new EditorGUILayout.HorizontalScope())
+                                    {
+                                        GUILayout.Space(EditorGUI.indentLevel * 15f);
+                                        if (EditorGUILayout.LinkButton(new GUIContent(asset.name, "Select " + AssetDatabase.GetAssetPath(asset) +
+                                                " in the Project window."))) SelectInProject(asset);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if (scan.LargeIcons.Count == 0) return;
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -776,6 +804,14 @@ namespace Riry.RiryTools.Editor
             showNotes = EditorGUILayout.Foldout(showNotes, "Notes (" + scan.Notes.Count + ")", true);
             if (!showNotes) return;
             foreach (string note in scan.Notes) EditorGUILayout.HelpBox(note, MessageType.None);
+        }
+
+        private static void SelectInProject(UnityEngine.Object asset)
+        {
+            if (asset == null) return;
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
         }
 
         private static void Select(UnityEngine.Object source)

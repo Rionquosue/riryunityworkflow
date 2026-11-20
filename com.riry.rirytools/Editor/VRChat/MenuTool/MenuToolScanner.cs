@@ -359,11 +359,38 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // The asset a control comes from: its menu asset, or the prefab asset holding the component that adds it (VRCFury,
+        // Modular Avatar); null for a component on a scene object that is not part of a prefab.
+        private static UnityEngine.Object SourceAsset(MenuToolEntry entry)
+        {
+            if (entry.OwnerMenu != null) return entry.OwnerMenu;
+            Component component = entry.VrcfComponent;
+#if RIRYTOOLS_MENUTOOL_MA
+            if (component == null) component = entry.MaItem != null ? entry.MaItem : entry.MaInstaller;
+#endif
+            if (component == null) component = entry.Source as Component;
+            if (component == null) return entry.Source != null && EditorUtility.IsPersistent(entry.Source) ? entry.Source : null;
+            string path = EditorUtility.IsPersistent(component) ? AssetDatabase.GetAssetPath(component)
+                : PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(component.gameObject);
+            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadMainAssetAtPath(path);
+        }
+
         // Controls sharing a name in one submenu, and icons over the SDK's size limit, in the menu as it is assembled.
         private static void CheckNamesAndIcons(MenuToolScan scan, MenuToolEntry menu)
         {
             foreach (IGrouping<string, MenuToolEntry> same in menu.Children.GroupBy(c => c.Name).Where(g => g.Count() > 1))
-                scan.Duplicates.Add((menu.Parent == null ? "Root menu" : menu.Path) + ": \"" + same.Key + "\" (" + same.Count() + ")");
+            {
+                var duplicate = new MenuToolDuplicate
+                {
+                    Label = (menu.Parent == null ? "Root menu" : menu.Path) + ": \"" + same.Key + "\" (" + same.Count() + ")"
+                };
+                foreach (MenuToolEntry entry in same)
+                {
+                    UnityEngine.Object asset = SourceAsset(entry);
+                    if (asset != null && !duplicate.Assets.Contains(asset)) duplicate.Assets.Add(asset);
+                }
+                scan.Duplicates.Add(duplicate);
+            }
             foreach (MenuToolEntry child in menu.Children)
             {
                 if (MenuToolIconPreset.TooLarge(child.Icon) && !scan.LargeIcons.Contains(child.Icon)) scan.LargeIcons.Add(child.Icon);
