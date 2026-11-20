@@ -454,6 +454,8 @@ One entry or submenu per tool.
 |---|---|---|
 | `Assets/RiryTools/Animator Tools/Find and Replace` | (2006) The Find and Replace popup with the selected animator controller; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `Assets/RiryTools/Animator Tools/Clean Animation Keys` | (2005) Clean Animation Keys on the selected clips. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/Material Cleaner` | (2007) The Material Cleaner window, with the selected material in its Material field. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/Scrub Unused Overrides` | (2008) Removes unused prefab overrides from the selected scenes and prefabs (and those in selected folders), after asking; the same as the Broken References window's Scrub unused overrides. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Animator Tools/Extract Animations` | (2003) The Extract Animation window with the selected model; enabled only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Regenerate GUID` | (2000) Regenerates the selected assets' GUIDs. | `UI/RiryToolsRightClickMenu.cs` |
 | `Assets/RiryTools/Repair Missing GUID References` | (2004) Repairs missing GUID references in the selection. | `UI/RiryToolsRightClickMenu.cs` |

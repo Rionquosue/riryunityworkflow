@@ -35,6 +35,8 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Find And Replace
     * GUID Tools >
         * Regenerate GUID(s)
+        * Scrub Unused Overrides
+    * Material Cleaner
     * Import Presets
         * Set Folder Preset
         * Save Import Preset (only when clicking file, else grayed)
