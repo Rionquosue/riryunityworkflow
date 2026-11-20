@@ -105,7 +105,7 @@ namespace Riry.RiryTools.Editor
                 int floats = MenuToolBudget.SyncedFloats(scan, entry);
                 maxFloats = Math.Max(maxFloats, floats);
                 string note = entry.IsSubMenu ? "" : string.Join(", ", entry.Parameters());
-                items.Add(new Row { id = id++, depth = depth, displayName = entry.Name, Entry = entry, Source = entry.Source, Bits = MenuToolBudget.Bits(scan, entry), Floats = floats, Note = note });
+                items.Add(new Row { id = id++, depth = depth, displayName = MenuToolRichText.Plain(entry.Name), Entry = entry, Source = entry.Source, Bits = MenuToolBudget.Bits(scan, entry), Floats = floats, Note = note });
                 if (entry.IsSubMenu) AddEntries(items, entry, depth + 1, ref id);
             }
         }

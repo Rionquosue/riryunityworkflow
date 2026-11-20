@@ -382,7 +382,7 @@ namespace Riry.RiryTools.Editor
             {
                 var duplicate = new MenuToolDuplicate
                 {
-                    Label = (menu.Parent == null ? "Root menu" : menu.Path) + ": \"" + same.Key + "\" (" + same.Count() + ")"
+                    Label = (menu.Parent == null ? "Root menu" : MenuToolRichText.Plain(menu.Path)) + ": \"" + MenuToolRichText.Plain(same.Key) + "\" (" + same.Count() + ")"
                 };
                 foreach (MenuToolEntry entry in same)
                 {

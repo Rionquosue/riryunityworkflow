@@ -384,7 +384,7 @@ namespace Riry.RiryTools.Editor
         {
             foreach (MenuToolEntry destination in MoveDestinations(parent, entry))
             {
-                string name = destination.Name.Replace("/", "∕");
+                string name = MenuToolRichText.Plain(destination.Name).Replace("/", "∕");
                 string to = destination.Path;
                 bool target = destination != entry.Parent;
                 if (!MoveDestinations(destination, entry).Any())
@@ -870,7 +870,7 @@ namespace Riry.RiryTools.Editor
                 {
                     string status = check.Ok ? "✓" : "✕";
                     // A new menu reads "New menu  →  its path".
-                    EditorGUILayout.LabelField(new GUIContent(status + " " + (check.Before.Length == 0 ? "?" : check.Before) + "  →  " + (check.After.Length == 0 ? "?" : check.After),
+                    EditorGUILayout.LabelField(new GUIContent(status + " " + (check.Before.Length == 0 ? "?" : MenuToolRichText.Plain(check.Before)) + "  →  " + (check.After.Length == 0 ? "?" : MenuToolRichText.Plain(check.After)),
                         string.Join("\n", check.Affected.Where(a => a != null).Select(a => a.name))), GUILayout.MinWidth(0f));
                     if (check.Candidates.Count > 1)
                     {
@@ -894,8 +894,8 @@ namespace Riry.RiryTools.Editor
                     else EditorGUILayout.LabelField(MenuToolPlanner.Describe(check.Edit), EditorStyles.miniLabel, GUILayout.Width(200f));
                     if (GUILayout.Button(new GUIContent("✕", "Remove this move from the plan."), GUILayout.Width(24f))) remove = check.Move;
                 }
-                foreach (string error in check.Errors) EditorGUILayout.LabelField("    " + error, ErrorStyle);
-                foreach (string warning in check.Warnings) EditorGUILayout.LabelField("    " + warning, EditorStyles.wordWrappedMiniLabel);
+                foreach (string error in check.Errors) EditorGUILayout.LabelField("    " + MenuToolRichText.Plain(error), ErrorStyle);
+                foreach (string warning in check.Warnings) EditorGUILayout.LabelField("    " + MenuToolRichText.Plain(warning), EditorStyles.wordWrappedMiniLabel);
             }
             EditorGUILayout.EndScrollView();
             if (remove != null)
@@ -934,7 +934,7 @@ namespace Riry.RiryTools.Editor
                 for (int i = 0; i < chain.Count; i++)
                 {
                     if (i > 0) GUILayout.Label("›", GUILayout.Width(10f));
-                    string name = chain[i].Parent == null ? "Root" : chain[i].Name;
+                    string name = chain[i].Parent == null ? "Root" : MenuToolRichText.Plain(chain[i].Name);
                     if (GUILayout.Button(name, EditorStyles.miniButton, GUILayout.MinWidth(0f)))
                     {
                         Navigate(chain[i]);

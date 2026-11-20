@@ -303,6 +303,7 @@ com.riry.rirytools/
     │   │   ├── MenuToolPlan.cs
     │   │   ├── MenuToolPlanner.cs
     │   │   ├── MenuToolPreviewMenus.cs
+    │   │   ├── MenuToolRichText.cs
     │   │   ├── MenuToolScanner.cs
     │   │   ├── MenuToolScanner.ModularAvatar.cs
     │   │   ├── MenuToolScanner.Native.cs
