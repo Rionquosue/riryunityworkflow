@@ -28,7 +28,7 @@ namespace Riry.RiryTools.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Rescan")) { Rescan(); RiryToolGUI.ExitAfterModal(); }
-                if (GUILayout.Button(new GUIContent("Scrub unused overrides", "Removes prefab overrides left pointing at objects that no longer exist.")))
+                if (GUILayout.Button(new GUIContent(GuidToolUnusedOverrides.Title, "Removes prefab overrides left pointing at objects that no longer exist.")))
                 {
                     ScrubUnusedOverrides();
                     RiryToolGUI.ExitAfterModal();

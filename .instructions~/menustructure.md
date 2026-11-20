@@ -35,7 +35,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Find And Replace
     * GUID Tools >
         * Regenerate GUID(s)
-        * Scrub Unused Overrides
+        * Prefab Cleaner
     * Material Cleaner
     * Import Presets
         * Set Folder Preset
@@ -86,32 +86,11 @@ Structured in such a way that it can be presented as a table. Laid out as cells.
 
 #### Main tab
 
-Where [] contains the currently active tab. The primary tabs are General Tools, Menu Tools, Animator Tools, Debug Tools and FTEmulator, always on one row. General Tools has the sub-tabs General, GUID Tools, Blendshape Sync, Import Presets, Constraint Tools and AutoSync; Import Presets and Constraint Tools have sub-tabs of their own. FTEmulator's debug tables need the width, so they open as a popup (Open debug window).
+Where [] contains the currently active tab. The primary tabs are General Tools, Menu Tools, Animator Tools, Debug Tools and FTEmulator, always on one row. General Tools has the sub-tabs Blendshape Sync, Import Presets, Constraint Tools, AutoSync and PopUp Tools; Import Presets and Constraint Tools have sub-tabs of their own. PopUp Tools lists the tools that need their own window, as buttons. FTEmulator's debug tables need the width, so they open as a popup (Open debug window).
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [General] | GUID Tools | Blendshape Sync | Import Presets | Constraint Tools | AutoSync |
-| Avatar Migration Assistant |  |  |  |  |  |
-| IconCap |  |  |  |  |  |
-| Material Cleaner |  |  |  |  |  |
-| ☐ Stop Auto Game |  |  |  |  |  |
-| ☐ Script Load Guard |  |  |  |  |  |
-
----
-
-| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| General | [GUID Tools] | Blendshape Sync | Import Presets | Constraint Tools | AutoSync |
-| GUID Rebuild tool |  |  |  |  |  |
-| GUID repair tool |  |  |  |  |  |
-| Check for Broken References |  |  |  |  |  |
-| Delete GUID Reference Cache |  |  |  |  |  |
-
----
-
-| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | [Blendshape Sync] | Import Presets | Constraint Tools | AutoSync |
+| [Blendshape Sync] | Import Presets | Constraint Tools | AutoSync | PopUp Tools |  |
 | Running sync job list |  |  |  |  |  |
 | Add / edit job (opens popup) |  |  |  |  |  |
 
@@ -119,7 +98,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync |
+| Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync | PopUp Tools |  |
 | [Set Folder Import Presets] | Save Import Preset | Import Preset Library |  |  |  |
 | Set Folder Import Presets UI here |  |  |  |  |  |
 
@@ -127,7 +106,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync |
+| Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync | PopUp Tools |  |
 | Set Folder Import Presets | [Save Import Preset] | Import Preset Library |  |  |  |
 | Asset: the selected asset's path |  |  |  |  |  |
 | Importer: its importer type |  |  |  |  |  |
@@ -140,7 +119,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync |
+| Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync | PopUp Tools |  |
 | Set Folder Import Presets | Save Import Preset | [Import Preset Library] |  |  |  |
 | Display Import Preset Library here |  |  |  |  |  |
 | Click to open in explorer | File input box here | Save import preset (creates from selected in input box) |  |  |  |
@@ -149,7 +128,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
 | [Train] | Bezier | Insertable prop | Dual axis detector | Three axis detector |  |
 | Train UI here |  |  |  |  |  |
 
@@ -157,7 +136,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
 | Train | [Bezier] | Insertable prop | Dual axis detector | Three axis detector |  |
 | Bezier UI here |  |  |  |  |  |
 
@@ -165,7 +144,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
 | Train | Bezier | [Insertable prop] | Dual axis detector | Three axis detector |  |
 | Insertable prop UI here |  |  |  |  |  |
 
@@ -173,7 +152,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
 | Train | Bezier | Insertable prop | [Dual axis detector] | Three axis detector |  |
 | Source field |  |  |  |  |  |
 | Relative to field |  |  |  |  |  |
@@ -187,7 +166,7 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
 | Train | Bezier | Insertable prop | Dual axis detector | [Three axis detector] |  |
 | Source field |  |  |  |  |  |
 | Relative to field |  |  |  |  |  |
@@ -201,9 +180,22 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 
 | [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| General | GUID Tools | Blendshape Sync | Import Presets | Constraint Tools | [AutoSync] |
+| Blendshape Sync | Import Presets | Constraint Tools | [AutoSync] | PopUp Tools |  |
 | ☐ Sync |  |  |  |  |  |
 | Git Configuration block |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | Constraint Tools | AutoSync | [PopUp Tools] |  |
+| Avatar Migration Assistant |  |  |  |  |  |
+| IconCap |  |  |  |  |  |
+| Material Cleaner |  |  |  |  |  |
+| Prefab Cleaner (popup: Target Scene, Project or Prefab) |  |  |  |  |  |
+| GUID Regenerator |  |  |  |  |  |
+| GUID Repair |  |  |  |  |  |
+| GUID Broken Reference Checker |  |  |  |  |  |
 
 ---
 
@@ -251,6 +243,9 @@ Where [] contains the currently active tab. The primary tabs are General Tools, 
 | Refresh Scripts |  |  |  |  |  |
 | Find Null references |  |  |  |  |  |
 | Menu Mockup |  |  |  |  |  |
+| Delete GUID Reference Cache |  |  |  |  |  |
+| ☐ Stop Auto Game |  |  |  |  |  |
+| ☐ Script Load Guard |  |  |  |  |  |
 | ☐ Stop all tool scripts |  |  |  |  |  |
 
 ---

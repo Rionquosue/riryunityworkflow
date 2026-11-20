@@ -37,10 +37,11 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-35) |
-| `Open` | Window titles (1, line 89) |
-| `OnGUI` | Buttons (1, line 133) |
-| `DrawTab` | Toggles (3, lines 159-226), Help boxes (5, lines 161-209), Buttons (5, lines 203-234) |
+| `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-33) |
+| `Open` | Window titles (1, line 87) |
+| `OnGUI` | Buttons (1, line 131) |
+| `DrawTab` | Toggles (3, lines 158-235), Help boxes (5, lines 160-207), Buttons (12, lines 201-229: PopUp Tools' labels passed to `PopUpButton`) |
+| `DrawStopToggle` | Toggles (1, line 255) |
 
 ### `UI/RiryToolsMenuBar.cs`
 
@@ -593,6 +594,20 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `Open` | Window titles (1, line 12) |
 | `OnGUI` | Labels (3, lines 22-56), Help boxes (1, line 23), Buttons (4, lines 30-48) |
+
+### `UI/GuidTools/GuidToolPrefabCleanerWindow.cs`
+
+| Method | Text |
+|---|---|
+| `GuidToolPrefabCleanerWindow` | Text shown through a variable (3, line 15: Target choices) |
+| `Open` | Window titles (1, line 25, `GuidToolUnusedOverrides.Title`) |
+| `OnGUI` | Labels (2, lines 43-51), Field labels (2, lines 45-49, with tooltips), Buttons (1, line 55) |
+
+### `GuidTools/GuidToolUnusedOverrides.cs`
+
+| Method | Text |
+|---|---|
+| `Title` | Text shown through a variable (1, line 20: `Prefab Cleaner`, the dialog, popup and menu name) |
 
 ### `GuidTools/GuidToolBrokenReferenceMonitor.cs`
 
