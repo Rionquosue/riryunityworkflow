@@ -194,19 +194,25 @@ namespace Riry.RiryTools.Editor
         // Scrub unused overrides (GuidToolUnusedOverrides) in the scanned files: asks first, logs what changed, then rescans.
         private void ScrubUnusedOverrides()
         {
-            List<string> scanned = plan != null ? plan.Files : files;
+            if (ScrubUnusedOverrides(plan != null ? plan.Files : files)) Rescan();
+        }
+
+        // Also the Project window's Scrub Unused Overrides, on the selected files. Asks first; returns whether it asked
+        // and the user went ahead.
+        internal static bool ScrubUnusedOverrides(List<string> scanned)
+        {
             List<string> found = GuidToolUnusedOverrides.Find(scanned);
             if (found.Count == 0)
             {
                 EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "No unused overrides were found.", "OK");
-                return;
+                return false;
             }
             PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
             bool prefabFiles = found.Any(path => path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) && (stage == null || stage.assetPath != path));
             if (!EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Remove unused overrides in:\n\n" + string.Join("\n", found.Take(15)) +
                     (found.Count > 15 ? "\nand " + (found.Count - 15) + " more" : "") +
                     (prefabFiles ? "\n\nPrefab files are saved straight away; Ctrl+Z can't undo those." : ""), "Scrub", "Cancel"))
-                return;
+                return false;
             try
             {
                 int scrubbed = GuidToolUnusedOverrides.Scrub(found);
@@ -217,7 +223,7 @@ namespace Riry.RiryTools.Editor
             {
                 RiryLog.Exception(RiryLog.GuidTools, GuidToolReferenceRepair.Title + ": scrubbing unused overrides failed", exception);
             }
-            Rescan();
+            return true;
         }
 
         // After Apply: Controller Cleaner on the controllers that had broken references removes their unused sub-assets,

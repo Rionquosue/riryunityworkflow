@@ -19,8 +19,15 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
+            Open(null);
+        }
+
+        // The Project window's Material Cleaner: a selected material fills the Material field.
+        internal static void Open(Material selected)
+        {
             var window = GetWindow<MaterialCleanerWindow>();
             window.titleContent = new GUIContent(MaterialCleaner.Title);
+            if (selected != null) window.material = selected;
             window.Show();
         }
 
@@ -115,7 +122,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // MaterialCleanerWindow (this file)
-//   Open()                   The window (Main Menu's Tools tab).
+//   Open()                   The window (Main Menu's Tools > General sub-tab).
 //   OnGUI                    Material field + Scan, Scan scene materials, Scan all materials in project, Clean all, a row per
 //                            material (path, stale count, Clean).
 //   Scan(materials, where) / Clean(chosen)  MaterialCleaner on each; Clean is one undo group and logs the slots removed.

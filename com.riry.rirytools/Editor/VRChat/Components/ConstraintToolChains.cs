@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Bone chains for Constraint Tool's Train and Bezier tabs: collecting a chain from its start and end, picking the
+    /// Bone chains for Constraint Tools' Train and Bezier tabs: collecting a chain from its start and end, picking the
     /// end from a selection, and creating empty chains that match it.
     /// </summary>
     internal static class ConstraintToolChains
@@ -89,7 +89,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool chains (shared by Train and Bezier)
+// GLOSSARY: Constraint Tools chains (shared by Train and Bezier)
 // ============================================================================
 //
 // ConstraintToolChains (this file)

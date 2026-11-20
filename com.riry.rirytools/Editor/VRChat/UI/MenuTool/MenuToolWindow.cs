@@ -10,15 +10,15 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Menu Tool: traces expression menu controls to their sources (descriptor, Modular Avatar, VRCFury), compares the
+    /// Menu Tools: traces expression menu controls to their sources (descriptor, Modular Avatar, VRCFury), compares the
     /// parameter budget with and without VRCFury's Parameter Compressor (Parameter budget tab), previews the assembled
     /// radial menu in Edit Mode with Gesture Manager's radial, and plans moves that Apply makes through the system that
     /// owns each control (Menu manager tab). Planning only writes the plan JSON; Apply is one undo step.
-    /// Opened from Tools > RiryTools > Menu Tool (its own window) or as the Main Menu's Menu Tool tab.
+    /// Opened from Tools > RiryTools > Menu Tools (its own window) or as the Main Menu's Menu Tools tab.
     /// </summary>
     internal sealed class MenuToolWindow : RiryToolUndoWindow, IRiryHostedTool
     {
-        internal const string Title = "Menu Tool";
+        internal const string Title = "Menu Tools";
         private static readonly string[] Tabs = { "Parameter budget", "Menu manager" };
         internal const float MinWidth = 640f;
         private const float MinHeight = 760f;
@@ -34,7 +34,7 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
-        // The Main Menu's copy (CreateHosted): never shown on its own, and its Menu manager tab opens the Menu Tool window.
+        // The Main Menu's copy (CreateHosted): never shown on its own, and its Menu manager tab opens the Menu Tools window.
         [SerializeField] private bool hosted;
         [SerializeField] private Vector2 budgetScroll;
         [SerializeField] private Vector2 planScroll;
@@ -119,7 +119,7 @@ namespace Riry.RiryTools.Editor
             Open(null, -1);
         }
 
-        /// <summary>The Main Menu's copy: drawn in its Menu Tool tab, never shown on its own.</summary>
+        /// <summary>The Main Menu's copy: drawn in its Menu Tools tab, never shown on its own.</summary>
         internal static EditorWindow CreateHosted()
         {
             var window = CreateInstance<MenuToolWindow>();
@@ -192,7 +192,7 @@ namespace Riry.RiryTools.Editor
             if (!GlobalObjectId.TryParse(EditorUserSettings.GetConfigValue(LastAvatarKey) ?? "", out id)) return false;
             var avatar = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id) as GameObject;
             if (avatar == null) return false;
-            target = RiryToolGUI.Set(this, "Menu Tool target", target, avatar);
+            target = RiryToolGUI.Set(this, "Menu Tools target", target, avatar);
             MarkStale();
             return true;
         }
@@ -201,7 +201,7 @@ namespace Riry.RiryTools.Editor
         {
             GameObject selected = Selection.activeGameObject;
             if (selected == null) return;
-            target = RiryToolGUI.Set(this, "Menu Tool target", target, selected);
+            target = RiryToolGUI.Set(this, "Menu Tools target", target, selected);
             MarkStale();
         }
 
@@ -303,13 +303,13 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>
-        /// Every plan change: the plan file is read again first (another Menu Tool view may have changed it), the window is
+        /// Every plan change: the plan file is read again first (another Menu Tools view may have changed it), the window is
         /// recorded for Undo, the change made and the file written; the layout is rebuilt on the next Layout pass.
         /// </summary>
         private void ChangePlan(string undoName, Action<List<MenuToolPlannedMove>> change)
         {
             plan = MenuToolPlan.Load(PlanRoot);
-            Undo.RecordObject(this, "Menu Tool: " + undoName);
+            Undo.RecordObject(this, "Menu Tools: " + undoName);
             change(plan.Moves);
             plan.Save();
             savedPlan = plan.Json;
@@ -550,7 +550,7 @@ namespace Riry.RiryTools.Editor
             int chosen = RiryToolsMainMenu.TabStrip(Shown, hosted ? 0 : tab, Tabs);
             if (hosted)
             {
-                // In the Main Menu, the Menu manager opens in the Menu Tool window, on the same target.
+                // In the Main Menu, the Menu manager opens in the Menu Tools window, on the same target.
                 tab = 0;
                 if (chosen == 1)
                 {
@@ -558,7 +558,7 @@ namespace Riry.RiryTools.Editor
                     EditorApplication.delayCall += () => Open(on, 1);
                 }
             }
-            else if (chosen != tab) tab = RiryToolGUI.Set(this, "Menu Tool tab", tab, chosen);
+            else if (chosen != tab) tab = RiryToolGUI.Set(this, "Menu Tools tab", tab, chosen);
             EditorGUILayout.Space(4f);
             if (tab == 0)
             {
@@ -589,7 +589,7 @@ namespace Riry.RiryTools.Editor
                     var chosen = EditorGUIUtility.GetObjectPickerObject() as GameObject;
                     if (chosen != null && chosen != target)
                     {
-                        target = RiryToolGUI.Set(this, "Menu Tool target", target, chosen);
+                        target = RiryToolGUI.Set(this, "Menu Tools target", target, chosen);
                         MarkStale();
                     }
                 }
@@ -599,7 +599,7 @@ namespace Riry.RiryTools.Editor
                     target, typeof(GameObject), true);
                 if (picked != target)
                 {
-                    target = RiryToolGUI.Set(this, "Menu Tool target", target, picked);
+                    target = RiryToolGUI.Set(this, "Menu Tools target", target, picked);
                     MarkStale();
                 }
                 if (GUILayout.Button("Use selection", GUILayout.Width(100f))) UseSelection();
@@ -1121,8 +1121,8 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool window
-// The menu entry, Tools > RiryTools > Menu Tool, is in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; the Main Menu hosts it as a tab.
+// GLOSSARY: Menu Tools window
+// The menu entry, Tools > RiryTools > Menu Tools, is in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; the Main Menu hosts it as a tab.
 // ============================================================================
 //
 // MenuToolWindow (this file)

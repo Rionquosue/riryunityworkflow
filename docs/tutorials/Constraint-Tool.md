@@ -1,3 +1,3 @@
-# Tutorial: Constraint Tool
+# Tutorial: Constraint Tools
 
 Placeholder: to be written.

@@ -10,7 +10,7 @@ namespace Riry.RiryTools.Editor
     /// <summary>
     /// Everything the Insertable prop tab draws, in the tab and in the Scene view. The state and the
     /// actions are in InsertablePropWindow.cs; both files are one class. Drawn inside
-    /// ConstraintToolWindow and the Main Menu's Constraint Tool tab. A glossary is at the bottom.
+    /// ConstraintToolWindow and the Main Menu's Tools > Constraint Tools sub-tab. A glossary is at the bottom.
     /// </summary>
     internal sealed partial class InsertablePropWindow
     {
@@ -195,7 +195,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool's Insertable prop tab
+// GLOSSARY: Constraint Tools' Insertable prop tab
 // Both window files are one partial class. The scene rig is InsertablePropRig.cs, the animator
 // InsertablePropAnimator.cs, the math Editor/VRChat/ConstraintTools/InsertableProp/InsertablePropMath.cs.
 // ============================================================================

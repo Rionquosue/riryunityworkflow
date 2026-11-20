@@ -550,14 +550,14 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool apply
+// GLOSSARY: Menu Tools apply
 // ============================================================================
 //
 // MenuToolApply (this file)
 //   Apply(target, plan)      One undo group ("Apply menu layout", CollapseUndoOperations). For each planned move or new menu: a
 //                            fresh scan, the move checked alone (MenuToolPlanner), then its edit; afterwards a scan verifies each
 //                            moved entry's path, type, icon and parameters, and each new menu's path (Report.Problems). Logged
-//                            under Menu Tool, with copied (CopiedAssets) and new (CreatedAssets) menu assets.
+//                            under Menu Tools, with copied (CopiedAssets) and new (CreatedAssets) menu assets.
 //   Index                    The ReferenceIndex, built on first need once per Apply.
 //   MoveNative               Removes the control from its menu asset and inserts it in the destination's (RecordObject both).
 //   NewMenuAsset             Add menu: a new empty VRCExpressionsMenu at Assets/RiryTools/MenuTool/<avatar>/<name>.asset (unique

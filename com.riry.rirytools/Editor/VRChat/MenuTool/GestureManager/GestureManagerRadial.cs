@@ -17,7 +17,7 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// The Menu Tool's radial preview, drawn by Gesture Manager's own radial menu (RadialMenu) in Edit Mode. Gesture
+    /// The Menu Tools' radial preview, drawn by Gesture Manager's own radial menu (RadialMenu) in Edit Mode. Gesture
     /// Manager normally runs it on a ModuleVrc3 set up for Play Mode (InitForAvatar rewrites the avatar's Animator); here
     /// the module is never set up: it belongs to a hidden, inactive stand-in avatar that only carries the preview's
     /// in-memory menu and parameters, and its parameters are filled directly. No animation plays and the real avatar is
@@ -52,7 +52,7 @@ namespace Riry.RiryTools.Editor
             get
             {
                 if (!GestureManagerMenuPath.Available || PageMenu == null)
-                    return "This Gesture Manager version is not supported by the Menu Tool preview (built for 3.9.9).";
+                    return "This Gesture Manager version is not supported by the Menu Tools preview (built for 3.9.9).";
                 return null;
             }
         }
@@ -78,7 +78,7 @@ namespace Riry.RiryTools.Editor
             }
             if (avatar == null)
             {
-                avatar = EditorUtility.CreateGameObjectWithHideFlags("RiryTools Menu Tool preview", HideFlags.HideAndDontSave, typeof(Animator));
+                avatar = EditorUtility.CreateGameObjectWithHideFlags("RiryTools Menu Tools preview", HideFlags.HideAndDontSave, typeof(Animator));
                 avatar.SetActive(false);
                 descriptor = avatar.AddComponent<VRCAvatarDescriptor>();
             }
@@ -188,7 +188,7 @@ namespace Riry.RiryTools.Editor
             // Mouse handling works in the OnGUI's coordinates (Rect); the element is placed in the window's root element.
             // The window takes it off when it leaves view or another view is shown.
             radial.Rect = rect;
-            // A right-click opens the Menu Tool's context menu (on MouseDown) and never reaches Gesture Manager, which would
+            // A right-click opens the Menu Tools' context menu (on MouseDown) and never reaches Gesture Manager, which would
             // press the slice; ContextClick and the button's MouseUp are swallowed too.
             Event current = Event.current;
             bool right = current.type == EventType.ContextClick ||

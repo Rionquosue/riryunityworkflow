@@ -18,7 +18,7 @@ namespace Riry.RiryTools.Editor
     /// AvatarMigratorRetargetAnim.cs, AvatarMigratorRetargetAnim.VRCFuryMover.cs and AvatarMigratorMigratedFolder.cs. Without the VRChat
     /// SDK it still runs with the VRChat parts left out; opening it then shows the VRC SDK
     /// notice (AvatarMigratorSdkNoticeWindow.cs). Opened from Tools > RiryTools > Avatar Migration Assistant
-    /// and the Main Menu's Tools tab (in its own window).
+    /// and the Main Menu's Tools > General sub-tab (in its own window).
     /// </summary>
     internal sealed class AvatarMigratorWindow : EditorWindow
     {
@@ -56,7 +56,7 @@ namespace Riry.RiryTools.Editor
             EditorApplication.delayCall += AvatarMigratorSdkNoticeWindow.ShowIfNeeded;
         }
 
-        /// <summary>The Main Menu's Tools tab: the tool in its own floating window.</summary>
+        /// <summary>The Main Menu's Tools > General sub-tab: the tool in its own floating window.</summary>
         internal static void OpenPopup()
         {
             AvatarMigratorWindow window = GetWindow<AvatarMigratorWindow>(true, Title);
@@ -451,7 +451,7 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 // GLOSSARY: Avatar Migration Assistant window
 // The menu entry, Tools > RiryTools > Avatar Migration Assistant (menu key N), is in RiryToolsMenuBar.cs;
-// the Main Menu's Tools tab opens it in its own window (OpenPopup). Its parts are in Editor/AvatarMigrator/:
+// the Main Menu's Tools > General sub-tab opens it in its own window (OpenPopup). Its parts are in Editor/AvatarMigrator/:
 //   AvatarMigratorMatchObjects.cs (1, the object map), AvatarMigratorMatchWindow.cs (2), types.yml (3 and 14, the type list, read in this file),
 //   AvatarMigratorSettings.cs (EditorPrefs),
 //   AvatarMigratorPreFlightWindow.cs (everything up front), AvatarMigratorCopyRun.cs (the run, 4 and 15), AvatarMigratorCopyRun.TypeRules.cs, AvatarMigratorCopyRun.Prefabs.cs (11),
@@ -473,7 +473,7 @@ namespace Riry.RiryTools.Editor
 //   Animations               Migrated folder (Browse), Include child prefab per target child prefab, Retarget animations.
 //   Copy / Run()             Map (BuildMap: features 1 and 2), ignore list, up-front check, the run, the report popup.
 //   Retarget()               The last run's map for the same avatars, else BuildMap; the migrated folder; AvatarMigratorRetargetAnim.
-//   Open() / OpenPopup()     The Tools menu entry (dockable) / the Main Menu's Tools tab (a floating window); both show the
+//   Open() / OpenPopup()     The Tools menu entry (dockable) / the Main Menu's Tools > General sub-tab (a floating window); both show the
 //                            VRC SDK notice when the SDK is missing.
 //   [SerializeField]         source, target, lastRun, ignore, includedPrefabs, lastMap, the fold states, openTypes, scroll.
 //   DropLastMap()            Undo.undoRedoPerformed: forgets lastMap, so Retarget rebuilds the map after Undo or Redo.

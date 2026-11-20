@@ -9,7 +9,7 @@ using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Contro
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// The Menu Tool's Add menu dialog: the new submenu's name and the submenu it goes in (Root and every submenu of the
+    /// The Menu Tools' Add menu dialog: the new submenu's name and the submenu it goes in (Root and every submenu of the
     /// planned layout). Add hands both to the window, which plans the new menu; nothing changes until Apply. Opened with
     /// OpenControl it is the Add New Control dialog: also the control's type, parameter, value and icon.
     /// </summary>
@@ -157,7 +157,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool Add menu dialog
+// GLOSSARY: Menu Tools Add menu dialog
 // ============================================================================
 //
 // MenuToolAddMenuDialog (this file)

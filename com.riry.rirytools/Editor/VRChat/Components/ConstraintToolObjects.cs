@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Riry.RiryTools.Editor
 {
-    /// <summary>Empty objects the Constraint Tool's Train, Bezier and Insertable prop tabs generate.</summary>
+    /// <summary>Empty objects the Constraint Tools' Train, Bezier and Insertable prop tabs generate.</summary>
     internal static class ConstraintToolObjects
     {
         /// <summary>
@@ -22,7 +22,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Constraint Tool objects (shared by Train, Bezier and Insertable prop)
+// GLOSSARY: Constraint Tools objects (shared by Train, Bezier and Insertable prop)
 // ============================================================================
 //
 // ConstraintToolObjects (this file)

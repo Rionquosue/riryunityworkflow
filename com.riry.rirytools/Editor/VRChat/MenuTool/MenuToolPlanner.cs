@@ -634,7 +634,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool planner
+// GLOSSARY: Menu Tools planner
 // The plan it checks is in MenuToolPlan.cs.
 // ============================================================================
 //

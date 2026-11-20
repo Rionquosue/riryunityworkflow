@@ -12,7 +12,7 @@
 
 ## Rules
 
-1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager). FTEmulator's package has two more: `com.riry.ftemulator/Editor/` (`Riry.RiryTools.Editor.FTEmulator`, VRChat SDK) and `com.riry.ftemulator/Editor/FTEmulator/GestureManager/` (`Riry.RiryTools.Editor.FTEmulator.GestureManager`, Gesture Manager). Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tool lives entirely in `Editor/VRChat/`).
+1. **Assemblies.** Code is split into three assemblies by folder, so tools needing an optional SDK only compile with it: `Editor/` (Unity only), `Editor/VRChat/` (VRChat SDK) and `Editor/VRChat/MenuTool/GestureManager/` (Gesture Manager). FTEmulator's package has two more: `com.riry.ftemulator/Editor/` (`Riry.RiryTools.Editor.FTEmulator`, VRChat SDK) and `com.riry.ftemulator/Editor/FTEmulator/GestureManager/` (`Riry.RiryTools.Editor.FTEmulator.GestureManager`, Gesture Manager). Code that relies on a dependency goes in that dependency's folder. A tool that needs a dependency for any part of it keeps all of its code in that dependency's folder (Constraint Tools lives entirely in `Editor/VRChat/`).
 2. **Logic folders.** A tool's logic is in its own folder, named after the tool (`AutoSync/`, `AvatarMigrator/`, `BlendshapeSync/`, `GuidTools/`, `IconCap/`, `ImportPresets/`, `MenuTool/`, `ConstraintTools/`, `FTEmulator/`). A tool's data files are in folders inside it (`FTEmulator/HardwareProfiles/`, `AvatarProfiles/`, `MappingSchemas/`).
 3. **Category folders.** A small tool (a single script with a single job) does not get its own folder. It goes in a category folder: `Debug/` (debugging aids), `Utilities/` (general helpers) or `AnimatorTools/`. A tool the owner places in a category keeps all its files there, even when it has several (Menu Mockup in `Debug/`, Attach To in `Utilities/`).
 4. **UI and feature logic.** Give UI and feature logic separate scripts and types. Put windows, panels, controls, dialogs, and progress displays in the owning assembly’s `UI/<ToolOrCategory>/` folder. Keep Main Menu and menu registration scripts directly under `UI/`, and put reusable controls in their own scripts under `UI/Components/`. UI scripts gather input, call feature operations, and present their results. Put feature state, operation validation, planning, execution, and persistence in the tool’s logic folder. Feature types must run without opening or depending on a UI type. Use inputs, results, and progress or cancellation callbacks where needed. A partial type follows the same rule across all its files.
@@ -33,7 +33,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Blendshape Sync | `BlendshapeSync/` | `BlendshapeSync` |
 | Clean Animation Keys | `AnimatorTools/` | `CleanAnimationKeys` |
 | Controller Cleaner | `AnimatorTools/` | `ControllerCleaner` |
-| Constraint Tool (Train, Bezier, Insertable prop, Dual and Three axis detector) | `VRChat/ConstraintTools/` | `ConstraintTool`, `ConstraintTrain`, `ConstraintBezier`, `InsertableProp`, `TiltDetector` |
+| Constraint Tools (Train, Bezier, Insertable prop, Dual and Three axis detector) | `VRChat/ConstraintTools/` | `ConstraintTool`, `ConstraintTrain`, `ConstraintBezier`, `InsertableProp`, `TiltDetector` |
 | Find and Replace | `VRChat/AnimatorTools/` | `BehaviourFindReplace` |
 | Find Null references | `Debug/` | `FindNullReferences` |
 | FTEmulator | `com.riry.ftemulator/Editor/FTEmulator/` | `FTEmulator` |
@@ -42,7 +42,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Import Presets | `ImportPresets/` | `ImportPreset` |
 | Material Cleaner | `Utilities/` | `MaterialCleaner` |
 | Menu Mockup | `Debug/` | `MenuMockup` |
-| Menu Tool | `VRChat/MenuTool/` | `MenuTool` |
+| Menu Tools | `VRChat/MenuTool/` | `MenuTool` |
 | Refresh Scripts | `Utilities/` | `RefreshScripts` |
 | Script Load Guard | `Debug/` | `ScriptLoadGuard` |
 | Stop all tool scripts | `Components/` | `StopAllToolScripts` |
@@ -55,7 +55,7 @@ Paths are relative to `com.riry.rirytools/Editor/`.
 - **Main Menu:** `UI/RiryToolsMainMenu.cs`. Hosts each tool's window in a tab. VRChat tools are handed to it by `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Tools > RiryTools menu:** `UI/RiryToolsMenuBar.cs`; the VRChat entries are in `VRChat/UI/RiryToolsVRChatMenus.cs`.
 - **Right click menus (Hierarchy, Project):** `UI/RiryToolsRightClickMenu.cs`.
-- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, scene object ids, blendshape names, referenced assets, Controller Cleaner's scan and clean (also used by GUID Tools), Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `RiryToolUndoWindow`: the base of windows that refresh after Undo and Redo; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tool's chains, sources, generated objects and logged status, shared by Train, Bezier and Insertable prop).
+- **Shared code:** `Components/` (logging, paths, project folder, fuzzy search, type lookup, hierarchy paths, scene object ids, blendshape names, referenced assets, Controller Cleaner's scan and clean (also used by GUID Tools), Git runner and state, missing-SDK and missing-Git exceptions), `UI/Components/` (`RiryToolGUI`: shared drawing and Undo for window settings; `RiryToolUndoWindow`: the base of windows that refresh after Undo and Redo; `IRiryHostedTool`: tools hosted in a Main Menu tab), `VRChat/Components/` (Constraint Tools' chains, sources, generated objects and logged status, shared by Train, Bezier and Insertable prop).
 - **A tool:** its logic folder and its `UI/<folder>/` window, per the table above.
 - **FTEmulator:** `com.riry.ftemulator/Editor/FTEmulator/FTEmulator.cs` (lifecycle, one session), `FTEmulatorSession.cs` (the per-frame pipeline); its Gesture Manager output is `com.riry.ftemulator/Editor/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`. Its data is JSON, found by folder GUID (`FTEmulatorCatalog`). Its windows are in `com.riry.ftemulator/Editor/UI/FTEmulator/`, its menu entry and Main Menu hosting in `com.riry.ftemulator/Editor/UI/FTEmulatorMenus.cs`.
 

@@ -203,7 +203,7 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: Menu Tool plan
+// GLOSSARY: Menu Tools plan
 // The checks are in MenuToolPlanner.cs; avatar keys in MenuToolAvatarKeys.cs.
 // ============================================================================
 //
