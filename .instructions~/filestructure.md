@@ -226,6 +226,7 @@ com.riry.rirytools/
     │   │   ├── GuidToolBrokenReferenceWindow.UI.cs
     │   │   ├── GuidToolBrokenSaveWindow.cs
     │   │   ├── GuidToolClearReferenceCache.cs
+    │   │   ├── GuidToolPrefabCleanerWindow.cs
     │   │   ├── GuidToolRegenerate.Prompts.cs
     │   │   └── GuidToolsWindow.cs
     │   ├── IconCap/

@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Avatar Migration Assistant | |
-| Main Menu | General Tools > General | Avatar Migration Assistant |
+| Main Menu | General Tools > PopUp Tools | Avatar Migration Assistant |
 
 ## 2. Brief description
 

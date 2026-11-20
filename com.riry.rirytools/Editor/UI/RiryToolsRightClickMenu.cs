@@ -30,7 +30,7 @@ namespace Riry.RiryTools.Editor
         private const string RepairGuidReferences = "Assets/RiryTools/Repair Missing GUID References";
         private const string CleanAnimationKeysAssets = "Assets/RiryTools/Animator Tools/Clean Animation Keys";
         private const string MaterialCleanerAssets = "Assets/RiryTools/Material Cleaner";
-        private const string ScrubUnusedOverridesAssets = "Assets/RiryTools/Scrub Unused Overrides";
+        private const string PrefabCleanerAssets = "Assets/RiryTools/" + GuidToolUnusedOverrides.Title;
 
         // ---- Hierarchy right-click -------------------------------------------
         private const string AttachToHierarchy = "GameObject/RiryTools/Attach To";
@@ -101,14 +101,14 @@ namespace Riry.RiryTools.Editor
         [MenuItem(MaterialCleanerAssets, true)]
         private static bool MaterialCleanerAssetsValid() { return !StopAllToolScripts.Active; }
 
-        [MenuItem(ScrubUnusedOverridesAssets, false, 2008)]
-        private static void ScrubUnusedOverridesAssetsItem()
+        [MenuItem(PrefabCleanerAssets, false, 2008)]
+        private static void PrefabCleanerAssetsItem()
         {
             GuidToolBrokenReferenceWindow.ScrubUnusedOverrides(GuidToolReferenceRepair.SelectedFiles());
         }
 
-        [MenuItem(ScrubUnusedOverridesAssets, true)]
-        private static bool ScrubUnusedOverridesAssetsValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
+        [MenuItem(PrefabCleanerAssets, true)]
+        private static bool PrefabCleanerAssetsValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
 
         // =====================================================================
         // Hierarchy right-click (also in the GameObject menu)
@@ -203,7 +203,7 @@ namespace Riry.RiryTools.Editor
 //   Assets/RiryTools/Animator Tools/Find and Replace (2006) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
 //   Assets/RiryTools/Material Cleaner (2007)    -> MaterialCleanerWindow.Open with the selected material in its Material field
-//   Assets/RiryTools/Scrub Unused Overrides (2008) -> GuidToolBrokenReferenceWindow.ScrubUnusedOverrides on the selected files
+//   Assets/RiryTools/Prefab Cleaner (2008)      -> GuidToolBrokenReferenceWindow.ScrubUnusedOverrides on the selected files
 //                                                      and folders' contents (GuidToolReferenceRepair.SelectedFiles); asks first
 //
 // HIERARCHY RIGHT-CLICK (also in the GameObject menu)

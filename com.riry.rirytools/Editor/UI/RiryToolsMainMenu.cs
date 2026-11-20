@@ -24,10 +24,8 @@ namespace Riry.RiryTools.Editor
         internal static Func<EditorWindow> CreateFTEmulator;
 
         private static readonly string[] Tabs = { "General Tools", "Menu Tools", "Animator Tools", "Debug Tools", "FTEmulator" };
-        // The General Tools tab's sub-tabs: General (the buttons and toggles below), then a sub-tab per tool.
-        private static readonly string[] ToolsTabs = { "General", "GUID Tools", "Blendshape Sync", "Import Presets", "Constraint Tools", "AutoSync" };
-        // Tools that need more room than a tab: the General Tools tab's General sub-tab has a button for each, which opens it in its own window.
-        private static readonly string[] PopupTools = { "Avatar Migration Assistant", "IconCap" };
+        // The General Tools tab's sub-tabs: a sub-tab per tool, then PopUp Tools (buttons for the tools that open in their own window).
+        private static readonly string[] ToolsTabs = { "Blendshape Sync", "Import Presets", "Constraint Tools", "AutoSync", "PopUp Tools" };
         private static readonly string[] AnimatorTabs = { "Find and Replace", "Clean Animation Keys", "Controller Cleaner", "Extract Animations" };
         private static readonly string[] ImportTabs =
         {
@@ -209,36 +207,46 @@ namespace Riry.RiryTools.Editor
                     if (CreateFTEmulator == null) EditorGUILayout.HelpBox(RiryToolsMenuBar.FTEmulatorUnavailable(), MessageType.Info);
                     else Draw(Active());
                     break;
-                case "General":
-                    // General. Each opens in its own window, not in this one, which may be docked small.
-                    foreach (string tool in PopupTools)
+                case "PopUp Tools":
+                    // Each opens in its own window, not in this one, which may be docked small.
+                    PopUpButton("Avatar Migration Assistant", AvatarMigratorWindow.OpenPopup);
+                    PopUpButton("IconCap", IconCapWindow.OpenPopup);
+                    PopUpButton(MaterialCleaner.Title, MaterialCleanerWindow.Open);
+                    PopUpButton(GuidToolUnusedOverrides.Title, GuidToolPrefabCleanerWindow.Open);
+                    // These two act on the Project window's selection.
+                    using (new EditorGUI.DisabledScope(!GuidToolRegenerate.HasValidSelection()))
                     {
-                        if (!GUILayout.Button(tool, GUILayout.Height(28f))) continue;
-                        if (tool == "IconCap") EditorApplication.delayCall += IconCapWindow.OpenPopup;
-                        else EditorApplication.delayCall += AvatarMigratorWindow.OpenPopup;
+                        PopUpButton("GUID Regenerator", GuidToolRegenerate.RegenerateSelectedGuids);
+                        PopUpButton("GUID Repair", GuidToolReferenceRepair.RepairSelected);
                     }
-                    if (GUILayout.Button(MaterialCleaner.Title, GUILayout.Height(28f))) EditorApplication.delayCall += MaterialCleanerWindow.Open;
-                    EditorGUILayout.Space(4f);
-                    // Set only when clicked: the setter logs, so assigning it every draw spammed the Console.
-                    bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
-                        "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
-                    if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
-                    bool guard = EditorGUILayout.ToggleLeft(new GUIContent("Script Load Guard",
-                        "Block saving a scene or prefab that loaded with far fewer objects than its file holds."), ScriptLoadGuard.Enabled);
-                    if (guard != ScriptLoadGuard.Enabled) ScriptLoadGuard.Enabled = guard;
+                    PopUpButton("GUID Broken Reference Checker", () => GuidToolBrokenReferenceWindow.OpenForOpenScenes("Checked from the Main Menu."));
                     break;
                 case "Debug Tools":
                     // Reloads scripts on the next frame (Unity 2022.3 has no button for it).
                     if (GUILayout.Button(RefreshScripts.DisplayName, GUILayout.Height(28f))) RefreshScripts.Run();
                     if (GUILayout.Button("Find Null references", GUILayout.Height(28f))) EditorApplication.delayCall += FindNullReferencesWindow.Run;
                     if (GUILayout.Button("Menu Mockup", GUILayout.Height(28f))) EditorApplication.delayCall += MenuMockup.Open;
+                    if (GUILayout.Button("Delete GUID Reference Cache", GUILayout.Height(28f))) EditorApplication.delayCall += GuidToolClearReferenceCache.Run;
                     EditorGUILayout.Space(4f);
+                    // Set only when clicked: the setters log, so assigning them every draw spammed the Console.
+                    bool stop = EditorGUILayout.ToggleLeft(new GUIContent("Stop Auto Game",
+                        "Keep focus off the Game view when Play Mode starts."), StopAutoGame.Enabled);
+                    if (stop != StopAutoGame.Enabled) StopAutoGame.Enabled = stop;
+                    bool guard = EditorGUILayout.ToggleLeft(new GUIContent("Script Load Guard",
+                        "Block saving a scene or prefab that loaded with far fewer objects than its file holds."), ScriptLoadGuard.Enabled);
+                    if (guard != ScriptLoadGuard.Enabled) ScriptLoadGuard.Enabled = guard;
                     DrawStopToggle();
                     break;
                 default:
                     Draw(Active());
                     break;
             }
+        }
+
+        // A PopUp Tools button: runs the tool on the next editor update, outside this GUI pass, since it opens its own window or dialog.
+        private static void PopUpButton(string label, Action open)
+        {
+            if (GUILayout.Button(label, GUILayout.Height(28f))) EditorApplication.delayCall += () => open();
         }
 
         // Set only when clicked: turning it on or off reloads scripts.
@@ -263,7 +271,6 @@ namespace Riry.RiryTools.Editor
                             window => ((ImportPresetExtractAnimationWindow)window).ShowSelection());
                     return CreateFindReplace == null ? null : Host("Find and Replace", CreateFindReplace, null);
                 case "Constraint Tools": return CreateConstraintTool == null ? null : Host("Constraint Tools", CreateConstraintTool, null);
-                case "GUID Tools": return Host("GUID Tools", () => CreateInstance<GuidToolsWindow>(), null);
                 case "Menu Tools": return CreateMenuTool == null ? null : Host("Menu Tools", CreateMenuTool, null);
                 case "FTEmulator": return CreateFTEmulator == null ? null : Host("FTEmulator", CreateFTEmulator, null);
                 case "Import Presets":
@@ -395,6 +402,8 @@ namespace Riry.RiryTools.Editor
         private void OnSelectionChange()
         {
             if (StopAllToolScripts.Active) return;
+            // PopUp Tools' GUID Regenerator and GUID Repair follow the Project selection.
+            if (Section == "PopUp Tools") Repaint();
             EditorWindow window = ActiveIfMade();
             if (window == null) return;
             Call(window, "OnSelectionChange");
@@ -426,7 +435,7 @@ namespace Riry.RiryTools.Editor
             string key = name == "AutoSync" ? "Configuration"
                 : name == "Import Presets" ? (importTab < 2 ? ImportTabs[importTab] : null)
                 : name == "Animator Tools" ? AnimatorTabs[Mathf.Clamp(animatorTab, 0, AnimatorTabs.Length - 1)]
-                : name == "General" || name == "Blendshape Sync" || name == "Debug Tools" ? null : name;
+                : name == "PopUp Tools" || name == "Blendshape Sync" || name == "Debug Tools" ? null : name;
             Hosted entry = key == null ? null : hosted.Find(item => item.Key == key);
             return entry != null ? entry.Window : null;
         }
