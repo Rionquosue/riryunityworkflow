@@ -268,3 +268,4 @@ The Tools tab has two sub-tabs: General holds every tool the tab had, FTEmulator
 | ☐ Freeze output |  |  |  |  |  |
 | Open debug window (opens popup) | Reset overrides |  |  |  |  |
 | OSC connection or Manual input |  |  |  |  |  |
+| Record / Stop recording | Play recording / Stop playback |  |  |  |  |
