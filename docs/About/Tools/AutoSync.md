@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Menu bar | RiryTools > AutoSync > Sync / Configuration | |
 | Menu bar | Git > Sync / Configuration | |
-| Main Menu | Tools > AutoSync | Sync, Configuration |
+| Main Menu | General Tools > AutoSync | Sync, Configuration |
 
 ## 2. Brief description
 

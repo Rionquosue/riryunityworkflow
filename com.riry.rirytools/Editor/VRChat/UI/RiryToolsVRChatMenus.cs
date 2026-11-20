@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
     [InitializeOnLoad]
     internal static class RiryToolsVRChatMenus
     {
-        // The Main Menu's Tools > Constraint Tools sub-tab hosts the Constraint Tools window (with its Train, Bezier and Insertable prop
+        // The Main Menu's General Tools > Constraint Tools sub-tab hosts the Constraint Tools window (with its Train, Bezier and Insertable prop
         // sub-tabs), and its Menu Tools tab the Menu Tools' Parameter budget (its Menu manager opens the Menu Tools window).
         // FTEmulator's entries are in its own package (com.riry.ftemulator, Editor/UI/FTEmulatorMenus.cs).
         static RiryToolsVRChatMenus()

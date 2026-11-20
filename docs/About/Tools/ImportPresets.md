@@ -5,7 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Import Presets > Set Folder Import Presets / Save Import Preset / Open Import Preset Library | |
-| Main Menu | Tools > Import Presets | Set Folder Import Presets, Save Import Preset, Open Import Preset Library |
+| Main Menu | General Tools > Import Presets | Set Folder Import Presets, Save Import Preset, Open Import Preset Library |
 | Right Click (project) | RiryTools > Set Folder Import Presets | |
 | Right Click (project) | RiryTools > Save Import Preset | |
 
