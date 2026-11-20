@@ -1,5 +1,7 @@
-# Starts Build Package in Rionquosue/rirytools_vpm on every push to main (stable) or
-# beta (beta). rirytools_vpm builds, versions, releases and lists the package.
+# Starts Build Package for com.riry.rirytools in Rionquosue/rirytools_vpm on every push to
+# main (stable) or beta (beta) that changes com.riry.rirytools/. FTEmulator has its own,
+# notify-vpm-ftemulator.yml, so a push that changes only one package builds only that one.
+# rirytools_vpm builds, versions, releases and lists the packages.
 #
 # VPM_DISPATCH_TOKEN is a fine-grained token for Rionquosue/rirytools_vpm only, with
 # only Actions: Read and write: it can start workflows there and nothing else.
@@ -10,6 +12,8 @@ on:
     branches:
       - main
       - beta
+    paths:
+      - com.riry.rirytools/**
 
 permissions:
   contents: read

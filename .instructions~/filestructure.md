@@ -5,7 +5,8 @@
 `~` folders are hidden from Unity and the VPM build. `.meta` files are not listed.
 
 - `.instructions~/`: Working instructions for LLMs while maintaining this repo. Start with `for_agents.md`.
-- `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`.
+- `.github/workflows/notify-vpm.yml`: starts the VPM build of `com.riry.rirytools` in `rirytools_vpm` on pushes to `main` and `beta` that change `com.riry.rirytools/`.
+- `.github/workflows/notify-vpm-ftemulator.yml`: the same for `com.riry.ftemulator`, on pushes that change `com.riry.ftemulator/`.
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
 - `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
 
