@@ -110,7 +110,7 @@ namespace Riry.RiryTools.Editor
         {
             if (RiryToolGUI.Stopped()) return;
             GUILayout.Space(RiryToolsMainMenu.TopMargin);
-            tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs);
+            tab = RiryToolsMainMenu.TabStrip(this, tab, Tabs, 0f, RiryToolsMainMenu.SubTabs);
             EditorGUILayout.Space(4f);
             FTEmulatorSession session = FTEmulator.Session;
             if (snapshot == null) snapshot = session != null ? session.Snapshot() : FTEmulator.LastSnapshot;
