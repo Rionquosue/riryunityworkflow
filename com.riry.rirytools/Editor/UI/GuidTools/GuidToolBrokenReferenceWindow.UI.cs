@@ -33,6 +33,11 @@ namespace Riry.RiryTools.Editor
                     ScrubUnusedOverrides();
                     RiryToolGUI.ExitAfterModal();
                 }
+                if (GUILayout.Button(new GUIContent("Call material cleaner", "Opens Material Cleaner, which removes texture slots, floats and colors a material's shader doesn't have.")))
+                {
+                    MaterialCleanerWindow.Open();
+                    RiryToolGUI.ExitAfterModal();
+                }
             }
             if (plan == null) return;
             HashSet<string> ignored = GuidToolIgnoredReferences.All();
