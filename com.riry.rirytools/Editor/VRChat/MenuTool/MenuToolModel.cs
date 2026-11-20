@@ -21,6 +21,14 @@ namespace Riry.RiryTools.Editor
     /// built: the descriptor's menu, plus what Modular Avatar and VRCFury add, after VRCFury's own move, reorder and icon
     /// rules. Built by MenuToolScanner; nothing in it is saved.
     /// </summary>
+    /// <summary>Controls sharing a name in one submenu: a label ("path: \"name\" (count)") and the menu assets or prefab
+    /// assets they come from, for selecting in the Project window.</summary>
+    internal sealed class MenuToolDuplicate
+    {
+        internal string Label = "";
+        internal readonly List<Object> Assets = new List<Object>();
+    }
+
     internal sealed class MenuToolEntry
     {
         internal string Name = "";
@@ -224,8 +232,8 @@ namespace Riry.RiryTools.Editor
         internal readonly List<MenuToolControllerUsage> Controllers = new List<MenuToolControllerUsage>();
         // Unsupported generators, missing references and other things worth knowing, each once.
         internal readonly List<string> Notes = new List<string>();
-        // Submenus holding more than one control of the same name, as "path: \"name\" (count)".
-        internal readonly List<string> Duplicates = new List<string>();
+        // Submenus holding more than one control of the same name, with the assets the controls come from.
+        internal readonly List<MenuToolDuplicate> Duplicates = new List<MenuToolDuplicate>();
         // Icons bigger than the 256 px the SDK allows (MenuToolIconPreset.MaxSize), each once.
         internal readonly List<Texture2D> LargeIcons = new List<Texture2D>();
         internal bool VrcfuryInstalled;
