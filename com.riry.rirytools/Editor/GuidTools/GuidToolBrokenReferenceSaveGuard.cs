@@ -21,6 +21,7 @@ namespace Riry.RiryTools.Editor
     {
         private static string[] OnWillSaveAssets(string[] paths)
         {
+            if (StopAllToolScripts.Active) return paths;
             if (GuidToolBrokenReferenceMonitor.Loading) return paths;
             var allowed = new List<string>();
             foreach (string path in paths)

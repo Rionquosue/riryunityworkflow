@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -45,11 +45,19 @@ namespace Riry.RiryTools.Editor
             /// <summary>Committed on a detached HEAD, so not pushed.</summary>
             internal bool Detached;
             internal Held Held;
+            /// <summary>"fast-forwarded" or "rebased" when the branch took the remote's new commits first, else null.</summary>
+            internal string Updated;
+            /// <summary>The branch the commits were moved to when rebasing onto the remote hit a conflict, else null.</summary>
+            internal string ConflictBranch;
+            /// <summary>The branch the conflict branch was made from.</summary>
+            internal string ConflictFrom;
         }
 
         internal string ProjectRoot;
         internal List<Save> Saves;
         internal bool Push;
+        // The commit title: {time} is the save's time, {files} the saved files' names, {branch} the checked-out branch.
+        internal string TitleTemplate = "{time}";
         // The remote chosen in Configuration, or null without remotes.
         internal string Remote;
 
@@ -60,9 +68,11 @@ namespace Riry.RiryTools.Editor
         {
             Open();
             var outcome = new Outcome();
+            string branch = Run("symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
             foreach (Save save in Saves)
             {
-                if (Commit(save)) outcome.Committed.Add(save.Title);
+                string title = Title(save, branch.Length > 0 ? branch : "detached HEAD");
+                if (Commit(save, title)) outcome.Committed.Add(title);
             }
             if (Push && outcome.Committed.Count > 0 && Remote != null) PushBranch(outcome);
             return outcome;
@@ -86,8 +96,22 @@ namespace Riry.RiryTools.Editor
                 environment["GIT_AUTHOR_EMAIL"] = environment["GIT_COMMITTER_EMAIL"] = "autosync@localhost";
         }
 
-        /// <summary>Commits one save. Returns false when the saved files did not change.</summary>
-        private bool Commit(Save save)
+        /// <summary>The commit title from the template, on one line.</summary>
+        private string Title(Save save, string branch)
+        {
+            var names = new List<string>();
+            foreach (string path in save.Paths)
+            {
+                string name = Path.GetFileName(path);
+                if (!names.Contains(name)) names.Add(name);
+            }
+            string title = (TitleTemplate ?? "{time}").Replace("{time}", save.Title).Replace("{files}", string.Join(", ", names)).Replace("{branch}", branch)
+                .Replace("\r", " ").Replace("\n", " ").Trim();
+            return title.Length > 0 ? title : save.Title;
+        }
+
+        /// <summary>Commits one save with the title. Returns false when the saved files did not change.</summary>
+        private bool Commit(Save save, string title)
         {
             var paths = new List<string>();
             foreach (string path in save.Paths)
@@ -113,9 +137,9 @@ namespace Riry.RiryTools.Editor
             if (Run(diff.ToArray()).Succeeded) return false;
 
             // With paths, git commit takes only those paths, whatever else is staged.
-            var commit = new List<string> { "commit", "--quiet", "-m", save.Title, "--" };
+            var commit = new List<string> { "commit", "--quiet", "-m", title, "--" };
             commit.AddRange(files);
-            Run(commit.ToArray()).RequireSuccess("Committing " + save.Title);
+            Run(commit.ToArray()).RequireSuccess("Committing " + title);
             return true;
         }
 
@@ -143,12 +167,39 @@ namespace Riry.RiryTools.Editor
                     return;
                 }
             }
+            branch = TakeRemoteCommits(branch, outcome);
             var push = new List<string> { "push", "--quiet" };
             if (!Run("rev-parse", "-q", "--verify", "@{upstream}").Succeeded) push.Add("--set-upstream");
             push.Add(Remote);
             push.Add(branch);
             GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, push.ToArray()).RequireSuccess("Pushing " + branch + " to " + Remote);
             outcome.PushedTo = Remote + "/" + branch;
+        }
+
+        /// <summary>
+        /// When the remote branch has commits this one lacks: fast-forwards to them, or rebases the local commits onto them
+        /// (other changed files are stashed and put back). If the rebase conflicts it is aborted, so nothing is lost, and the
+        /// commits move to a new branch, autosync-conflict-&lt;time&gt;, which is checked out (the files stay as they are) and
+        /// pushed instead, for the user to merge by hand. Returns the branch to push.
+        /// </summary>
+        private string TakeRemoteCommits(string branch, Outcome outcome)
+        {
+            GitRunner.Run(ProjectRoot, environment, PushTimeoutMs, "fetch", "--quiet", Remote, branch);
+            string remoteRef = "refs/remotes/" + Remote + "/" + branch;
+            if (!Run("rev-parse", "-q", "--verify", remoteRef).Succeeded) return branch;
+            if (Run("merge-base", "--is-ancestor", remoteRef, "HEAD").Succeeded) return branch;
+            bool fastForward = Run("merge-base", "--is-ancestor", "HEAD", remoteRef).Succeeded;
+            if (Run("-c", "rebase.autoStash=true", "rebase", "--quiet", remoteRef).Succeeded)
+            {
+                outcome.Updated = fastForward ? "fast-forwarded" : "rebased";
+                return branch;
+            }
+            Run("rebase", "--abort");
+            string conflict = "autosync-conflict-" + DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            Run("checkout", "--quiet", "-b", conflict).RequireSuccess("Moving the commits to " + conflict + " after a conflict with " + Remote + "/" + branch);
+            outcome.ConflictBranch = conflict;
+            outcome.ConflictFrom = branch;
+            return conflict;
         }
 
         private GitRunner.Result Run(params string[] arguments)

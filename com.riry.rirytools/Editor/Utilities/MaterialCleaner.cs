@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// Material Cleaner's scan and clean: a material's texture slots (m_SavedProperties.m_TexEnvs) its current shader does
-    /// not have, left from a shader it used before, with the references they hold. A material whose shader is missing is
+    /// Material Cleaner's scan and clean: a material's texture, float and color entries (m_SavedProperties m_TexEnvs,
+    /// m_Floats, m_Colors) its current shader does not have, left from a shader it used before, with the references they hold. A material whose shader is missing is
     /// left alone. Clean is undone with Ctrl+Z.
     /// </summary>
     internal static class MaterialCleaner
@@ -17,9 +17,13 @@ namespace Riry.RiryTools.Editor
         internal sealed class Result
         {
             internal Material Material;
-            // The texture slots the shader does not have.
+            // The texture, float and color entries the shader does not have, as "name (kind)".
             internal readonly List<string> Stale = new List<string>();
         }
+
+        // The saved property lists cleaned, with the word shown after each name.
+        private static readonly string[] Lists = { "m_SavedProperties.m_TexEnvs", "m_SavedProperties.m_Floats", "m_SavedProperties.m_Colors" };
+        private static readonly string[] Kinds = { "texture", "float", "color" };
 
         internal static Result Scan(Material material)
         {
@@ -28,17 +32,20 @@ namespace Riry.RiryTools.Editor
             if (shader == null) return result;
             using (var serialized = new SerializedObject(material))
             {
-                SerializedProperty slots = serialized.FindProperty("m_SavedProperties.m_TexEnvs");
-                for (int i = 0; slots != null && i < slots.arraySize; i++)
+                for (int list = 0; list < Lists.Length; list++)
                 {
-                    string name = slots.GetArrayElementAtIndex(i).FindPropertyRelative("first")?.stringValue;
-                    if (!string.IsNullOrEmpty(name) && shader.FindPropertyIndex(name) < 0) result.Stale.Add(name);
+                    SerializedProperty slots = serialized.FindProperty(Lists[list]);
+                    for (int i = 0; slots != null && i < slots.arraySize; i++)
+                    {
+                        string name = slots.GetArrayElementAtIndex(i).FindPropertyRelative("first")?.stringValue;
+                        if (!string.IsNullOrEmpty(name) && shader.FindPropertyIndex(name) < 0) result.Stale.Add(name + " (" + Kinds[list] + ")");
+                    }
                 }
             }
             return result;
         }
 
-        /// <summary>Removes the stale texture slots (recorded for Undo); returns the names removed.</summary>
+        /// <summary>Removes the stale texture, float and color entries (recorded for Undo); returns them as "name (kind)".</summary>
         internal static List<string> Clean(Result result)
         {
             var removed = new List<string>();
@@ -46,19 +53,24 @@ namespace Riry.RiryTools.Editor
             if (shader == null) return removed;
             using (var serialized = new SerializedObject(result.Material))
             {
-                SerializedProperty slots = serialized.FindProperty("m_SavedProperties.m_TexEnvs");
-                for (int i = slots != null ? slots.arraySize - 1 : -1; i >= 0; i--)
+                for (int list = 0; list < Lists.Length; list++)
                 {
-                    string name = slots.GetArrayElementAtIndex(i).FindPropertyRelative("first")?.stringValue;
-                    if (string.IsNullOrEmpty(name) || shader.FindPropertyIndex(name) >= 0) continue;
-                    slots.DeleteArrayElementAtIndex(i);
-                    removed.Add(name);
+                    SerializedProperty slots = serialized.FindProperty(Lists[list]);
+                    var fromList = new List<string>();
+                    for (int i = slots != null ? slots.arraySize - 1 : -1; i >= 0; i--)
+                    {
+                        string name = slots.GetArrayElementAtIndex(i).FindPropertyRelative("first")?.stringValue;
+                        if (string.IsNullOrEmpty(name) || shader.FindPropertyIndex(name) >= 0) continue;
+                        slots.DeleteArrayElementAtIndex(i);
+                        fromList.Add(name + " (" + Kinds[list] + ")");
+                    }
+                    fromList.Reverse();
+                    removed.AddRange(fromList);
                 }
                 serialized.ApplyModifiedProperties();
             }
             result.Stale.Clear();
             if (removed.Count > 0) EditorUtility.SetDirty(result.Material);
-            removed.Reverse();
             return removed;
         }
 

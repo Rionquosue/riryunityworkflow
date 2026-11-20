@@ -8,7 +8,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Tools > Material Cleaner: scans one material, the materials the open scenes use, or every material in the project
-    /// for texture slots their shader does not have (MaterialCleaner), and removes them on Clean (one Ctrl+Z per click).
+    /// for texture, float and color entries their shader does not have (MaterialCleaner), and removes them on Clean (one Ctrl+Z per click).
     /// </summary>
     internal sealed class MaterialCleanerWindow : EditorWindow
     {
@@ -26,6 +26,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -44,7 +45,7 @@ namespace Riry.RiryTools.Editor
 
             List<MaterialCleaner.Result> dirty = results.Where(r => r.Material != null && r.Stale.Count > 0).ToList();
             EditorGUILayout.Space(6f);
-            EditorGUILayout.LabelField(results.Count + " material(s) in " + scanned + ", " + dirty.Count + " with texture slots their shader doesn't have",
+            EditorGUILayout.LabelField(results.Count + " material(s) in " + scanned + ", " + dirty.Count + " with entries their shader doesn't have",
                 EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(dirty.Count == 0))
             {
@@ -72,18 +73,8 @@ namespace Riry.RiryTools.Editor
         private void Scan(List<Material> materials, string where)
         {
             results = new List<MaterialCleaner.Result>();
-            try
-            {
-                for (int i = 0; i < materials.Count; i++)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar(MaterialCleaner.Title, "Scanning " + materials[i].name, (float)i / materials.Count)) break;
-                    results.Add(MaterialCleaner.Scan(materials[i]));
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            RiryToolGUI.ProgressEach(MaterialCleaner.Title, materials, material => "Scanning " + material.name,
+                material => results.Add(MaterialCleaner.Scan(material)));
             scanned = where;
             GUI.FocusControl(null);
         }
@@ -113,7 +104,7 @@ namespace Riry.RiryTools.Editor
             {
                 Undo.CollapseUndoOperations(group);
             }
-            RiryLog.Info(RiryLog.MaterialCleaner, "Removed " + count + " texture slot(s) their shader doesn't have from " + lines.Count + " material(s):\n" +
+            RiryLog.Info(RiryLog.MaterialCleaner, "Removed " + count + " texture, float and color entr(ies) their shader doesn't have from " + lines.Count + " material(s):\n" +
                 string.Join("\n", lines));
         }
     }

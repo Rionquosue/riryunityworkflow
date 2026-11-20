@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -16,7 +16,7 @@ namespace Riry.RiryTools.Editor
     /// owns each control (Menu manager tab). Planning only writes the plan JSON; Apply is one undo step.
     /// Opened from Tools > RiryTools > Menu Tool (its own window) or as the Main Menu's Menu Tool tab.
     /// </summary>
-    internal sealed class MenuToolWindow : EditorWindow, IRiryHostedTool
+    internal sealed class MenuToolWindow : RiryToolUndoWindow, IRiryHostedTool
     {
         internal const string Title = "Menu Tool";
         private static readonly string[] Tabs = { "Parameter budget", "Menu manager" };
@@ -150,19 +150,14 @@ namespace Riry.RiryTools.Editor
             window.Focus();
         }
 
-        private void OnEnable()
+        protected override void OnDisable()
         {
-            Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        private void OnDisable()
-        {
-            Undo.undoRedoPerformed -= OnUndoRedo;
+            base.OnDisable();
             DisposePreview();
         }
 
         // An undone or redone plan change (or Apply) is written back to its avatar's plan file.
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             if (plan != null && !string.IsNullOrEmpty(plan.Key) && plan.Json != savedPlan)
             {
@@ -178,9 +173,9 @@ namespace Riry.RiryTools.Editor
             if (radial != null) radial.Hide();
         }
 
-        private void OnHierarchyChange() { MarkStale(); }
+        private void OnHierarchyChange() { if (!StopAllToolScripts.Active) MarkStale(); }
 
-        private void OnProjectChange() { MarkStale(); }
+        private void OnProjectChange() { if (!StopAllToolScripts.Active) MarkStale(); }
 
         private void MarkStale()
         {
@@ -463,6 +458,7 @@ namespace Riry.RiryTools.Editor
         // The picker's close seen from Update: it was focused and no longer is.
         private void Update()
         {
+            if (StopAllToolScripts.Active) return;
             if (iconPickerId == 0) return;
             bool open = focusedWindow != null && focusedWindow.GetType().Name == "ObjectSelector";
             if (open)
@@ -509,6 +505,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             guiOrigin = GUIUtility.GUIToScreenPoint(Vector2.zero);
             PickedIcon();
             DrawWindow();
@@ -734,6 +731,46 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // Controls sharing a name in one submenu, and icons over the SDK's 256 px, with the menu_icon preset to fix them.
+        private void DrawMenuChecks()
+        {
+            if (scan.Duplicates.Count > 0)
+                EditorGUILayout.HelpBox("Controls with the same name in one submenu:\n" + string.Join("\n", scan.Duplicates), MessageType.Warning);
+            if (scan.LargeIcons.Count == 0) return;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.HelpBox("Icons over " + MenuToolIconPreset.MaxSize + " px, which the VRChat SDK won't upload:\n" +
+                    string.Join("\n", scan.LargeIcons.Select(t => t.name + " (" + t.width + "x" + t.height + ")")), MessageType.Warning);
+                if (GUILayout.Button(new GUIContent("Apply " + MenuToolIconPreset.PresetName, "Sets these icons' max size to " + MenuToolIconPreset.MaxSize +
+                        " with the " + MenuToolIconPreset.PresetName + " import preset in the Import Presets folder (made the first time)."),
+                        GUILayout.Width(130f), GUILayout.Height(38f)))
+                    ApplyIconPreset();
+            }
+        }
+
+        private void ApplyIconPreset()
+        {
+            if (!EditorUtility.DisplayDialog(Title, "Set the max size of " + scan.LargeIcons.Count + " icon(s) to " + MenuToolIconPreset.MaxSize + " with the " +
+                    MenuToolIconPreset.PresetName + " import preset and reimport them?\n\nThis changes their import settings; Ctrl+Z can't undo it.", "Apply", "Cancel"))
+            {
+                RiryToolGUI.ExitAfterModal();
+                return;
+            }
+            try
+            {
+                List<string> changed = MenuToolIconPreset.Apply(scan.LargeIcons);
+                RiryLog.Info(RiryLog.MenuTool, "Set the max size of " + changed.Count + " icon(s) to " + MenuToolIconPreset.MaxSize + " with " +
+                    MenuToolIconPreset.PresetPath + ":\n" + string.Join("\n", changed));
+            }
+            catch (Exception exception)
+            {
+                RiryLog.Exception(RiryLog.MenuTool, "Applying " + MenuToolIconPreset.PresetName + " failed", exception);
+            }
+            rebuild = true;
+            MarkStale();
+            RiryToolGUI.ExitAfterModal();
+        }
+
         private void DrawNotes()
         {
             showNotes = EditorGUILayout.Foldout(showNotes, "Notes (" + scan.Notes.Count + ")", true);
@@ -773,6 +810,7 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Drag a row by its ≡ handle, or right-click it for Move to….", EditorStyles.centeredGreyMiniLabel);
             // The rest scrolls, so a short window (the Main Menu) still reaches the radial and the last clicked control.
             managerScroll = EditorGUILayout.BeginScrollView(managerScroll);
+            DrawMenuChecks();
             DrawPlan();
             DrawBreadcrumbs();
             DrawRadial();

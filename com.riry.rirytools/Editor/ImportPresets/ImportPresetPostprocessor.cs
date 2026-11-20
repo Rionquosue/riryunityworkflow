@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -21,6 +21,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnPreprocessAsset()
         {
+            if (StopAllToolScripts.Active) return;
             // Only a first import (no .meta settings yet) is configured. Files
             // brought in with their .meta, such as from a .unitypackage, keep theirs.
             if (!assetImporter.importSettingsMissing) return;
@@ -33,6 +34,9 @@ namespace Riry.RiryTools.Editor
             // A Better FBX source is not configured itself; its exported FBX is.
             if (rules.BetterFbx.Contains(extension)) return;
             ImportPresetMarker.Target target = rules.For(assetImporter);
+            // A preset picked with the scroll wheel while the file was dragged onto this folder.
+            ImportPresetMarker.Target picked;
+            if (ImportPresetDropChoices.TryTake(path, out picked)) target = picked;
 
             if (assetImporter is ModelImporter && ImportPresetAnimations.ShouldExtract(path))
             {
@@ -50,6 +54,7 @@ namespace Riry.RiryTools.Editor
         private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved,
             string[] movedFrom)
         {
+            if (StopAllToolScripts.Active) return;
             if (appliedThisBatch.Count > 0)
             {
                 RiryLog.Info(RiryLog.ImportPresets, "Applied folder import presets to " + appliedThisBatch.Count + " new file(s):\n" +
@@ -88,6 +93,7 @@ namespace Riry.RiryTools.Editor
         [InitializeOnLoadMethod]
         private static void ResumeAfterReload()
         {
+            if (StopAllToolScripts.Active) return;
             // Pending extractions are stored on disk and survive a domain reload.
             foreach (string path in ImportPresetAnimations.PendingPaths()) Enqueue(extractQueue, path);
         }

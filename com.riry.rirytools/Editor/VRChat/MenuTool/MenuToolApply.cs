@@ -201,16 +201,7 @@ namespace Riry.RiryTools.Editor
             VRCExpressionsMenu from = Owned(scan, entry.Parent);
             VRCExpressionsMenu to = Owned(scan, destination);
             // Owning may have copied the source menu: find the control in the menu now used.
-            VRCExpressionsMenu.Control control = from.controls[entry.OwnerIndex];
-            Undo.RecordObject(from, UndoName);
-            if (to != from) Undo.RecordObject(to, UndoName);
-            from.controls.RemoveAt(entry.OwnerIndex);
-            if (at > to.controls.Count) at = -1;
-            if (to == from && at > entry.OwnerIndex) at--;
-            if (at < 0) to.controls.Add(control);
-            else to.controls.Insert(at, control);
-            EditorUtility.SetDirty(from);
-            EditorUtility.SetDirty(to);
+            MoveControl(from, to, entry.OwnerIndex, at);
         }
 
         // Destructive Move in a menu asset: the control moves between its own source's menu assets as they are, no copy.
@@ -219,12 +210,19 @@ namespace Riry.RiryTools.Editor
             VRCExpressionsMenu from = entry.OwnerMenu;
             MenuToolEntry root = MenuToolPlanner.MenuRoot(entry, out VRCExpressionsMenu rootAsset);
             VRCExpressionsMenu to = destination == root ? rootAsset : destination.SubMenuAsset;
-            VRCExpressionsMenu.Control control = from.controls[entry.OwnerIndex];
+            MoveControl(from, to, entry.OwnerIndex, at);
+        }
+
+        // Takes the control at index out of one menu asset and puts it in another (or the same one) at a place; -1, or a
+        // place past the end, is the end.
+        private static void MoveControl(VRCExpressionsMenu from, VRCExpressionsMenu to, int index, int at)
+        {
+            VRCExpressionsMenu.Control control = from.controls[index];
             Undo.RecordObject(from, UndoName);
             if (to != from) Undo.RecordObject(to, UndoName);
-            from.controls.RemoveAt(entry.OwnerIndex);
+            from.controls.RemoveAt(index);
             if (at > to.controls.Count) at = -1;
-            if (to == from && at > entry.OwnerIndex) at--;
+            if (to == from && at > index) at--;
             if (at < 0) to.controls.Add(control);
             else to.controls.Insert(at, control);
             EditorUtility.SetDirty(from);

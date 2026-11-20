@@ -36,6 +36,9 @@ namespace Riry.RiryTools.Editor
         // ---- VRChat tools (also used by RiryToolsVRChatMenus.cs) ------------
         internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Tool/Train";
         internal const string ConstraintBezierHierarchy = "GameObject/RiryTools/Constraint Tool/Bezier";
+        internal const string InsertablePropHierarchy = "GameObject/RiryTools/Constraint Tool/Insertable prop";
+        internal const string DualAxisHierarchy = "GameObject/RiryTools/Constraint Tool/Dual axis detector";
+        internal const string ThreeAxisHierarchy = "GameObject/RiryTools/Constraint Tool/Three axis detector";
         internal const string FindReplaceHierarchy = "GameObject/RiryTools/" + RiryToolsMenuBar.FindReplaceLabel;
         internal const string FindReplaceAssets = "Assets/RiryTools/" + RiryToolsMenuBar.FindReplaceLabel;
 
@@ -47,19 +50,19 @@ namespace Riry.RiryTools.Editor
         private static void RegenerateGuidItem() { GuidToolRegenerate.RegenerateSelectedGuids(); }
 
         [MenuItem(RegenerateGuidAssets, true)]
-        private static bool RegenerateGuidValid() { return GuidToolRegenerate.HasValidSelection(); }
+        private static bool RegenerateGuidValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
 
         [MenuItem(ImportPreset, false, 2001)]
         private static void ImportPresetItem() { ImportPresetActions.QuickFolderPreset(); }
 
         [MenuItem(ImportPreset, true)]
-        private static bool ImportPresetValid() { return ImportPresetActions.ValidateChooseFolderPreset(); }
+        private static bool ImportPresetValid() { return !StopAllToolScripts.Active && (ImportPresetActions.ValidateChooseFolderPreset()); }
 
         [MenuItem(SaveImportPreset, false, 2002)]
         private static void SaveImportPresetItem() { ImportPresetActions.SaveToLibrary(); }
 
         [MenuItem(SaveImportPreset, true)]
-        private static bool SaveImportPresetValid() { return ImportPresetActions.ValidateSaveToLibrary(); }
+        private static bool SaveImportPresetValid() { return !StopAllToolScripts.Active && (ImportPresetActions.ValidateSaveToLibrary()); }
 
         [MenuItem(ExtractAnimations, false, 2003)]
         private static void ExtractAnimationsItem() { ImportPresetExtractAnimationWindow.Open(); }
@@ -67,6 +70,7 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ExtractAnimations, true)]
         private static bool ExtractAnimationsValid()
         {
+            if (StopAllToolScripts.Active) return false;
             // Only a model with embedded animations.
             string model = ImportPresetAnimations.SelectedModel();
             return model != null && ImportPresetAnimations.HasClips(model);
@@ -76,7 +80,7 @@ namespace Riry.RiryTools.Editor
         private static void RepairGuidReferencesItem() { GuidToolReferenceRepair.RepairSelected(); }
 
         [MenuItem(RepairGuidReferences, true)]
-        private static bool RepairGuidReferencesValid() { return GuidToolRegenerate.HasValidSelection(); }
+        private static bool RepairGuidReferencesValid() { return !StopAllToolScripts.Active && (GuidToolRegenerate.HasValidSelection()); }
 
         [MenuItem(CleanAnimationKeysAssets, false, 2005)]
         private static void CleanAnimationKeysAssetsItem()
@@ -85,7 +89,7 @@ namespace Riry.RiryTools.Editor
         }
 
         [MenuItem(CleanAnimationKeysAssets, true)]
-        private static bool CleanAnimationKeysAssetsValid() { return Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0; }
+        private static bool CleanAnimationKeysAssetsValid() { return !StopAllToolScripts.Active && (Selection.GetFiltered<UnityEngine.AnimationClip>(SelectionMode.Assets).Length > 0); }
 
         // Animator Tools/Find and Replace is 2006 (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
 
@@ -97,9 +101,10 @@ namespace Riry.RiryTools.Editor
         private static void AttachToItem() { AttachToWindow.Open(); }
 
         [MenuItem(AttachToHierarchy, true)]
-        private static bool AttachToValid() { return AttachTo.Selected().Count > 0; }
+        private static bool AttachToValid() { return !StopAllToolScripts.Active && (AttachTo.Selected().Count > 0); }
 
-        // Constraint Tool/Train is 20, Constraint Tool/Bezier 21 and Animator Tools/Find and Replace 22
+        // Constraint Tool/Train is 20, Constraint Tool/Bezier 21, Animator Tools/Find and Replace 22, Constraint Tool/Insertable prop 23,
+        // Constraint Tool/Dual axis detector 24 and Constraint Tool/Three axis detector 25
         // (RiryToolsVRChatMenus.cs, or below without the VRChat SDK).
 
 #if !RIRYTOOLS_VRC_CONSTRAINTS
@@ -112,14 +117,54 @@ namespace Riry.RiryTools.Editor
         [MenuItem(ConstraintTrainHierarchy, false, 20)]
         private static void ConstraintTrainHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
 
+
+
+        [MenuItem(ConstraintTrainHierarchy, true)]
+
+
+        private static bool ConstraintTrainHierarchyValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(ConstraintBezierHierarchy, false, 21)]
         private static void ConstraintBezierHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
+
+
+        [MenuItem(ConstraintBezierHierarchy, true)]
+
+        private static bool ConstraintBezierHierarchyValid() { return !StopAllToolScripts.Active; }
+
+        [MenuItem(InsertablePropHierarchy, false, 23)]
+        private static void InsertablePropHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
+
+        [MenuItem(InsertablePropHierarchy, true)]
+        private static bool InsertablePropHierarchyValid() { return !StopAllToolScripts.Active; }
+
+        [MenuItem(DualAxisHierarchy, false, 24)]
+        private static void DualAxisHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
+
+        [MenuItem(DualAxisHierarchy, true)]
+        private static bool DualAxisHierarchyValid() { return !StopAllToolScripts.Active; }
+
+        [MenuItem(ThreeAxisHierarchy, false, 25)]
+        private static void ThreeAxisHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Constraint Tool"); }
+
+        [MenuItem(ThreeAxisHierarchy, true)]
+        private static bool ThreeAxisHierarchyValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(FindReplaceHierarchy, false, 22)]
         private static void FindReplaceHierarchyItem() { RiryToolsMenuBar.VrcSdkMissing("Find and Replace"); }
 
+
+        [MenuItem(FindReplaceHierarchy, true)]
+
+        private static bool FindReplaceHierarchyValid() { return !StopAllToolScripts.Active; }
+
         [MenuItem(FindReplaceAssets, false, 2006)]
         private static void FindReplaceAssetsItem() { RiryToolsMenuBar.VrcSdkMissing("Find and Replace"); }
+
+
+        [MenuItem(FindReplaceAssets, true)]
+
+        private static bool FindReplaceAssetsValid() { return !StopAllToolScripts.Active; }
 #endif
     }
 }
@@ -149,3 +194,7 @@ namespace Riry.RiryTools.Editor
 //                                                      as the chain; without the VRChat SDK -> "VRCSDK not found" popup (this file)
 //   GameObject/RiryTools/Animator Tools/Find and Replace (22) -> entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs; without the
 //                                                      VRChat SDK -> "VRCSDK not found" popup (this file)
+//   GameObject/RiryTools/Constraint Tool/Insertable prop (23), Dual axis detector (24), Three axis detector (25)
+//                                                   -> ConstraintToolWindow.OpenInsertableFromHierarchy / OpenDualAxisFromHierarchy /
+//                                                      OpenThreeAxisFromHierarchy (entries in Editor/VRChat/UI/RiryToolsVRChatMenus.cs);
+//                                                      without the VRChat SDK -> "VRCSDK not found" popup (this file)

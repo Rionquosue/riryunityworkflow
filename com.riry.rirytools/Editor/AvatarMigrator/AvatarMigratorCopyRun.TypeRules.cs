@@ -195,8 +195,8 @@ namespace Riry.RiryTools.Editor
         private void CopyBlendshapes(SkinnedMeshRenderer source, SkinnedMeshRenderer target)
         {
             if (source.sharedMesh == null || target.sharedMesh == null) return;
-            string[] sourceNames = BlendshapeNames(source.sharedMesh);
-            string[] targetNames = BlendshapeNames(target.sharedMesh);
+            string[] sourceNames = BlendshapeNames.Of(source.sharedMesh);
+            string[] targetNames = BlendshapeNames.Of(target.sharedMesh);
             var links = new List<BlendshapeSyncWindow.IndexLink>();
             string error;
             bool collision;
@@ -294,13 +294,6 @@ namespace Riry.RiryTools.Editor
             }
             var names = new string[renderer.sharedMaterials.Length];
             for (int i = 0; i < names.Length; i++) names[i] = i < materials.Length && materials[i] != null ? materials[i].name : null;
-            return names;
-        }
-
-        private static string[] BlendshapeNames(Mesh mesh)
-        {
-            var names = new string[mesh.blendShapeCount];
-            for (int i = 0; i < names.Length; i++) names[i] = mesh.GetBlendShapeName(i);
             return names;
         }
 

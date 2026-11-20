@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -125,7 +125,7 @@ namespace Riry.RiryTools.Editor
                     {
                         Controller = copy, Layer = place.Layer, Machines = place.Machines, Owner = place.Owner, Behaviour = place.Behaviour,
                         Property = hit.Property, Value = hit.Value, Kind = hit.Kind, Root = hit.Root, Source = hit.Source,
-                        Label = hit.Label + " (child prefab)"
+                        Label = hit.Label + " (child prefab)", Search = hit.Search, Match = hit.Match
                     });
                 }
             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -19,6 +19,9 @@ namespace Riry.RiryTools.Editor
         private const string EnabledKey = "RiryTools.AutoSync.Enabled";
         private const string PendingKey = "RiryTools.AutoSync.Pending";
         private const string TimeFormat = "yyyy-MM-dd'T'HH:mm:sszzz";
+        // The commit title, per user and project: {time}, {files} and {branch} are filled in for each commit.
+        private const string TitleTemplateKey = "RiryTools.AutoSync.TitleTemplate";
+        internal const string DefaultTitleTemplate = "{time}";
         // Remote URLs, one per line: the large-file notice was shown this session / turned off.
         private const string NoticeShownKey = "RiryTools.AutoSync.LargeFileNoticeShown";
         private const string NoticeOffKey = "RiryTools.AutoSync.LargeFileNoticeOff";
@@ -32,6 +35,7 @@ namespace Riry.RiryTools.Editor
 
         static AutoSync()
         {
+            if (StopAllToolScripts.Active) return;
             EditorSceneManager.sceneSaved += scene => Saved(scene.path);
             PrefabStage.prefabSaved += root =>
             {
@@ -154,6 +158,17 @@ namespace Riry.RiryTools.Editor
             return saves;
         }
 
+        /// <summary>The commit title template; {time} when none is set.</summary>
+        internal static string TitleTemplate
+        {
+            get
+            {
+                string stored = EditorUserSettings.GetConfigValue(TitleTemplateKey);
+                return string.IsNullOrWhiteSpace(stored) ? DefaultTitleTemplate : stored;
+            }
+            set { EditorUserSettings.SetConfigValue(TitleTemplateKey, string.IsNullOrWhiteSpace(value) ? null : value); }
+        }
+
         private static AutoSyncJob CreateJob(List<AutoSyncJob.Save> saves, bool push)
         {
             string project = RiryToolsPaths.ProjectRoot;
@@ -162,6 +177,7 @@ namespace Riry.RiryTools.Editor
                 ProjectRoot = project,
                 Saves = saves,
                 Push = push,
+                TitleTemplate = TitleTemplate,
                 Remote = AutoSyncGitRemotes.Selected(AutoSyncGitRemotes.Names(project))
             };
         }
@@ -173,6 +189,9 @@ namespace Riry.RiryTools.Editor
                 reported = null;
                 Describe(finished.Result);
                 if (finished.Result.Held != null) LargeFileNotice(finished.Result.Held);
+                // Files the remote's commits changed are imported.
+                if (finished.Result.Updated != null) AssetDatabase.Refresh();
+                if (finished.Result.ConflictBranch != null) AutoSyncConflictNotice.Show(finished.Result);
                 return;
             }
             Exception cause = finished.Exception.GetBaseException();

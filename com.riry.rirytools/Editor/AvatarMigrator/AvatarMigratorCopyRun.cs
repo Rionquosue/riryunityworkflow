@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -58,6 +58,29 @@ namespace Riry.RiryTools.Editor
             return run.report;
         }
 
+        /// <summary>
+        /// The same run, then every change undone (the run is only scene changes, all recorded for Undo), so the report says
+        /// what Copy would copy, repoint and drop while the target is left as it was.
+        /// </summary>
+        internal static AvatarMigratorRunReport DryRun(AvatarMigratorMatchObjects map, AvatarMigratorSettings settings, AvatarMigratorPreFlightAnswers answers,
+            HashSet<Transform> ignored)
+        {
+            Undo.IncrementCurrentGroup();
+            int before = Undo.GetCurrentGroup();
+            AvatarMigratorRunReport report;
+            try
+            {
+                report = Execute(map, settings, answers, ignored);
+            }
+            finally
+            {
+                Undo.RevertAllDownToGroup(before);
+            }
+            report.DryRun = true;
+            report.RepackedRoots.Clear();
+            return report;
+        }
+
         private void Run()
         {
             Undo.IncrementCurrentGroup();
@@ -96,17 +119,7 @@ namespace Riry.RiryTools.Editor
         // One step: logged and reported on failure, the run goes on.
         private void Step(string name, Action step)
         {
-            EditorUtility.DisplayProgressBar(AvatarMigratorWindow.Title, name, 0.5f);
-            try
-            {
-                step();
-            }
-            catch (Exception exception)
-            {
-                // Named by its step; the run report lists it too, so this is the one with the stack.
-                RiryLog.Exception(RiryLog.AvatarMigration, name + " failed", exception, targetRoot.gameObject);
-                report.Failures.Add(name + ": " + exception.Message);
-            }
+            AvatarMigratorStep.Run(name, step, report, targetRoot);
         }
 
         private void CopyStep(AvatarMigratorCopyType type, AvatarMigratorTypeSettings typeSettings)

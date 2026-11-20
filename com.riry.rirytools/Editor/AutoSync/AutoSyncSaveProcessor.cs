@@ -13,6 +13,7 @@ namespace Riry.RiryTools.Editor
         // Saves made through Unity's save pipeline, in addition to the scene and Prefab Mode events.
         private static string[] OnWillSaveAssets(string[] paths)
         {
+            if (StopAllToolScripts.Active) return paths;
             foreach (string path in paths) AutoSync.Saved(path);
             return paths;
         }

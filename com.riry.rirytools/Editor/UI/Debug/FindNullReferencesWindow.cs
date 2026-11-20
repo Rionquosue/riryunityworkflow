@@ -21,6 +21,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             scroll = EditorGUILayout.BeginScrollView(scroll);
             foreach (FindNullReferences.Report report in reports)
             {

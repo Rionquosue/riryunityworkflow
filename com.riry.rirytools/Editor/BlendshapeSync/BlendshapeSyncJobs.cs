@@ -28,6 +28,7 @@ namespace Riry.RiryTools.Editor
 
         static BlendshapeSyncJobs()
         {
+            if (StopAllToolScripts.Active) return;
             EditorSceneManager.sceneOpened += (scene, mode) => Load(scene);
             EditorSceneManager.sceneClosing += (scene, removing) => Close(scene);
             EditorSceneManager.sceneSaved += scene => Save(scene);
@@ -120,7 +121,7 @@ namespace Riry.RiryTools.Editor
             SavedJobs earlier = Read(file);
             if (earlier == null && File.Exists(file)) return;
             if (earlier != null && earlier.Jobs != null)
-                saved.Jobs.AddRange(earlier.Jobs.FindAll(job => job != null && BlendshapeSyncWindow.Find(job.Master) == null));
+                saved.Jobs.AddRange(earlier.Jobs.FindAll(job => job != null && SceneObjectId.Find<SkinnedMeshRenderer>(job.Master) == null));
             try
             {
                 if (saved.Jobs.Count == 0)
@@ -151,7 +152,7 @@ namespace Riry.RiryTools.Editor
             foreach (BlendshapeSyncWindow.SavedJob job in saved.Jobs)
             {
                 if (job == null) continue;
-                SkinnedMeshRenderer master = BlendshapeSyncWindow.Find(job.Master);
+                SkinnedMeshRenderer master = SceneObjectId.Find<SkinnedMeshRenderer>(job.Master);
                 if (master == null)
                 {
                     missingJobs++;

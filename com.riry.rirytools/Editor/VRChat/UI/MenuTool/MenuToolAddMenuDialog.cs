@@ -78,6 +78,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             // After a script reload the window it reports to is gone.
             if (add == null && addControl == null || parents == null || parents.Count == 0)
             {

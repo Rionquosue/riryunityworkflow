@@ -17,6 +17,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.HelpBox(AutoSyncGitConfigureWindow.CloudflareWarning, MessageType.Warning);
             EditorGUILayout.LabelField(files.Count + " tracked file(s) over 100 MiB. Click one to show it in the Project window.",
                 EditorStyles.wordWrappedLabel);

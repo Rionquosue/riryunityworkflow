@@ -275,18 +275,6 @@ namespace Riry.RiryTools.Editor
             string path = AssetDatabase.GUIDToAssetPath(guid);
             return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<T>(path);
         }
-
-        internal static string SceneId(UnityEngine.Object target)
-        {
-            return target == null ? "" : GlobalObjectId.GetGlobalObjectIdSlow(target).ToString();
-        }
-
-        internal static T Find<T>(string id) where T : UnityEngine.Object
-        {
-            GlobalObjectId parsed;
-            if (string.IsNullOrEmpty(id) || !GlobalObjectId.TryParse(id, out parsed)) return null;
-            return GlobalObjectId.GlobalObjectIdentifierToObjectSlow(parsed) as T;
-        }
     }
 }
 
@@ -305,4 +293,4 @@ namespace Riry.RiryTools.Editor
 // IconCapSettings         Size, Camera, Background, Options, Effects: what a capture is made with; a preset holds these.
 // IconCapEntry            One capture: FileName, SavedPath (empty until exported), Settings, Objects; Image this session.
 // IconCapJob / IconCapJobFile  A named list of entries / an export folder's .iconcap.json.
-// IconCapAssets           Copy (a deep copy), Guid / Load (assets), SceneId / Find (scene objects).
+// IconCapAssets           Copy (a deep copy), Guid / Load (assets). Scene objects are kept with SceneObjectId.

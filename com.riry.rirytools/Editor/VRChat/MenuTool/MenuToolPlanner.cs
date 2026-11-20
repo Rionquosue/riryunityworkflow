@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -144,17 +144,15 @@ namespace Riry.RiryTools.Editor
         {
             Texture2D texture = move.IconTexture;
             var check = new MenuToolMoveCheck { Move = move, Before = move.From, After = move.From + " (icon " + (texture != null ? texture.name : "?") + ")" };
-            check.Entry = root.Find(move.From ?? "");
-            if (check.Entry == null || check.Entry.Parent == null)
-            {
-                check.Errors.Add(move.From + " is no longer in the menu.");
-                return check;
-            }
+            if (!FindEntry(root, move, check)) return check;
             if (texture == null)
             {
                 check.Errors.Add("The icon texture is no longer in the project.");
                 return check;
             }
+            if (MenuToolIconPreset.TooLarge(texture))
+                check.Warnings.Add(texture.name + " is " + texture.width + "x" + texture.height + "; the VRChat SDK only uploads icons up to " +
+                    MenuToolIconPreset.MaxSize + " px. Apply the " + MenuToolIconPreset.PresetName + " preset in the Menu manager after Apply.");
             if (check.Entry.Generated)
             {
                 check.Errors.Add(check.Entry.Name + " is made by VRCFury's pagination and cannot take an icon.");
@@ -187,17 +185,21 @@ namespace Riry.RiryTools.Editor
             return check;
         }
 
+        // Sets the check's entry from the planned move; false, with the error added, when it is no longer in the menu.
+        private static bool FindEntry(MenuToolEntry root, MenuToolPlannedMove move, MenuToolMoveCheck check)
+        {
+            check.Entry = root.Find(move.From ?? "");
+            if (check.Entry != null && check.Entry.Parent != null) return true;
+            check.Errors.Add(move.From + " is no longer in the menu.");
+            return false;
+        }
+
         // Delete Menu Entry: the entry must exist and be a control in a menu asset, which it is deleted from. Move to… > <NULL>:
         // any entry, through a VRCFury Move Menu Item rule with a blank destination.
         private static MenuToolMoveCheck CheckRemove(MenuToolScan scan, MenuToolEntry root, MenuToolPlannedMove move)
         {
             var check = new MenuToolMoveCheck { Move = move, Before = move.From, After = move.ToNull ? "<NULL>" : move.From + " (deleted)" };
-            check.Entry = root.Find(move.From ?? "");
-            if (check.Entry == null || check.Entry.Parent == null)
-            {
-                check.Errors.Add(move.From + " is no longer in the menu.");
-                return check;
-            }
+            if (!FindEntry(root, move, check)) return check;
             MenuToolEntry entry = check.Entry;
             if (entry.Generated)
             {
@@ -225,12 +227,7 @@ namespace Riry.RiryTools.Editor
         {
             string name = move.Rename.Trim();
             var check = new MenuToolMoveCheck { Move = move, Before = move.From };
-            check.Entry = root.Find(move.From ?? "");
-            if (check.Entry == null || check.Entry.Parent == null)
-            {
-                check.Errors.Add(move.From + " is no longer in the menu.");
-                return check;
-            }
+            if (!FindEntry(root, move, check)) return check;
             MenuToolEntry entry = check.Entry;
             check.After = (entry.Parent.Path.Length == 0 ? "" : entry.Parent.Path + "/") + MenuToolVrcfuryMenu.Escape(name);
             if (entry.Generated)

@@ -76,16 +76,7 @@ namespace Riry.RiryTools.Editor
 
         private void Step(string name, Action step)
         {
-            EditorUtility.DisplayProgressBar(AvatarMigratorWindow.Title, name, 0.5f);
-            try
-            {
-                step();
-            }
-            catch (Exception exception)
-            {
-                RiryLog.Exception(RiryLog.AvatarMigration, name + " failed", exception, map.TargetRoot.gameObject);
-                report.Failures.Add(name + ": " + exception.Message);
-            }
+            AvatarMigratorStep.Run(name, step, report, map.TargetRoot);
         }
 
         // ---- Controllers in use -----------------------------------------------------
@@ -343,18 +334,17 @@ namespace Riry.RiryTools.Editor
             return copy;
         }
 
-        private const string BlendshapePrefix = "blendShape.";
         // Clip, path and blendshape already reported.
         private readonly HashSet<string> reportedCurves = new HashSet<string>(StringComparer.Ordinal);
 
         // A blendshape curve whose name the mesh at its new path doesn't have animates nothing: reported once each.
         private void CheckBlendshapeCurve(AnimationClip clip, EditorCurveBinding binding, string path, Transform targetRoot)
         {
-            if (binding.type != typeof(SkinnedMeshRenderer) || !binding.propertyName.StartsWith(BlendshapePrefix, StringComparison.Ordinal)) return;
+            if (binding.type != typeof(SkinnedMeshRenderer) || !binding.propertyName.StartsWith(BlendshapeNames.CurvePrefix, StringComparison.Ordinal)) return;
             Transform at = path.Length == 0 ? targetRoot : targetRoot.Find(path);
             var renderer = at != null ? at.GetComponent<SkinnedMeshRenderer>() : null;
             if (renderer == null || renderer.sharedMesh == null) return;
-            string shape = binding.propertyName.Substring(BlendshapePrefix.Length);
+            string shape = binding.propertyName.Substring(BlendshapeNames.CurvePrefix.Length);
             if (renderer.sharedMesh.GetBlendShapeIndex(shape) >= 0 || !reportedCurves.Add(clip.name + "|" + path + "|" + shape)) return;
             report.PossibleIssues.Add("Animation " + clip.name + " animates blendshape " + shape + " on " + path + ", which the new mesh (" +
                 renderer.sharedMesh.name + ") doesn't have.");

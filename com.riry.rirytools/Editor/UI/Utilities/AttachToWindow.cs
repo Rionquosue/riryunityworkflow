@@ -32,12 +32,14 @@ namespace Riry.RiryTools.Editor
 
         private void OnHierarchyChange()
         {
+            if (StopAllToolScripts.Active) return;
             bones = null;
             Repaint();
         }
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             GameObject picked = (GameObject)EditorGUILayout.ObjectField("Target avatar", avatar, typeof(GameObject), true);
             if (picked == null || !EditorUtility.IsPersistent(picked)) avatar = picked;
 

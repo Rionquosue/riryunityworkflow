@@ -27,6 +27,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             MenuMockupBlock block = owner != null ? owner.Block(blockId) : null;
             if (block == null)
             {

@@ -17,7 +17,7 @@ namespace Riry.RiryTools.Editor
     /// The scene side is InsertablePropRig.cs, the animator side InsertablePropAnimator.cs, the
     /// drawing and scene handles InsertablePropWindow.UI.cs. Needs VRChat SDK 3.10.6 or newer.
     /// </summary>
-    internal sealed partial class InsertablePropWindow : EditorWindow
+    internal sealed partial class InsertablePropWindow : RiryToolUndoWindow
     {
         internal enum Platform { PC, Android }
 
@@ -56,33 +56,42 @@ namespace Riry.RiryTools.Editor
         // closes, so this traces what the tool did. (A status set again, even to the same text, is a new string.)
         private void Act(Action action)
         {
-            string before = status;
-            action();
-            if (!string.IsNullOrEmpty(status) && !ReferenceEquals(status, before))
-                RiryLog.Info(RiryLog.ConstraintTool, "Insertable prop: " + status);
+            ConstraintToolStatus.Act(action, () => status, "Insertable prop");
+        }
+
+        // The Hierarchy entry: the right-clicked object becomes the Socket and the avatar it is in the Avatar root.
+        // On the avatar root itself, only the Avatar root is filled.
+        internal void UseSelection(Transform active)
+        {
+            if (active == null) return;
+            Undo.RecordObject(this, SettingsUndo);
+            VRCAvatarDescriptor found = active.GetComponentInParent<VRCAvatarDescriptor>(true);
+            if (found != null) avatar = found;
+            if (found == null || found.transform != active) socket = active;
+            status = null;
+            Repaint();
         }
         [NonSerialized] private double lastDrawn;
         private Vector2 scroll;
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
             if (settings == null) settings = new Settings();
             // Until chosen, the platform follows the build target.
             if (!platformChosen)
                 settings.platform = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android ? Platform.Android : Platform.PC;
-            Undo.undoRedoPerformed -= OnUndoRedo;
-            Undo.undoRedoPerformed += OnUndoRedo;
+            base.OnEnable();
             SceneView.duringSceneGui -= OnSceneGUI;
             SceneView.duringSceneGui += OnSceneGUI;
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
-            Undo.undoRedoPerformed -= OnUndoRedo;
+            base.OnDisable();
             SceneView.duringSceneGui -= OnSceneGUI;
         }
 
-        private void OnUndoRedo()
+        protected override void OnUndoRedo()
         {
             Repaint();
             SceneView.RepaintAll();

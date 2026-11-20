@@ -21,6 +21,7 @@ Copies components and settings from an old avatar (source) to a new one (target)
 - Objects are matched between the two avatars (the object map). Anything left unmatched, or everything when **Manual matching** is on, is shown in the Manual matching window first.
 - A pre-flight check lists what the run will do.
 - The run copies the chosen component types in a fixed order, repoints references to the target's objects, corrects rotation and scale, and drops duplicates of components the target already had. Each step is guarded, so one failure is logged and the rest continues. The whole run is one undo group, and a report window lists the results.
+- **Dry run** does the same run, lists what it copied, repointed and left out in the report, then undoes all of it, so the target is left as it was.
 - **Retarget animations** duplicates the target's controllers and the clips they use into a migrated folder, rewrites the clips' paths for the new hierarchy through the object map, points the duplicated controllers at the duplicated clips, and points the target at the duplicates.
 - The source avatar and the original files are never changed.
 - Without the VRChat SDK it still runs, with the VRChat parts left out.
@@ -35,6 +36,7 @@ flowchart TD
     C -- No --> E[Pre-flight check]
     D --> E
     E --> F[Copy chosen component types in run order]
+    E -. Dry run .-> DR[Same run, report, then undo it all]
     F --> G[Repoint references to the target]
     G --> H[Correct rotation and scale]
     H --> I[Drop duplicate components]

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
@@ -224,6 +224,10 @@ namespace Riry.RiryTools.Editor
         internal readonly List<MenuToolControllerUsage> Controllers = new List<MenuToolControllerUsage>();
         // Unsupported generators, missing references and other things worth knowing, each once.
         internal readonly List<string> Notes = new List<string>();
+        // Submenus holding more than one control of the same name, as "path: \"name\" (count)".
+        internal readonly List<string> Duplicates = new List<string>();
+        // Icons bigger than the 256 px the SDK allows (MenuToolIconPreset.MaxSize), each once.
+        internal readonly List<Texture2D> LargeIcons = new List<Texture2D>();
         internal bool VrcfuryInstalled;
 #if RIRYTOOLS_MENUTOOL_MA
         internal bool ModularAvatarInstalled;

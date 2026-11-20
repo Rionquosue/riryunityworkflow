@@ -19,6 +19,7 @@ namespace Riry.RiryTools.Editor
 
         static AttachToAvatarTracker()
         {
+            if (StopAllToolScripts.Active) return;
             Selection.selectionChanged += SelectionChanged;
         }
 

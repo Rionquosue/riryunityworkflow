@@ -17,6 +17,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             GUILayout.Space(10f);
             EditorGUILayout.LabelField("GUID Tools", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
@@ -57,6 +58,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnSelectionChange()
         {
+            if (StopAllToolScripts.Active) return;
             Repaint();
         }
     }

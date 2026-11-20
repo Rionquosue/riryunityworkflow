@@ -21,8 +21,9 @@ Commits every scene or prefab save to the checked-out Git branch and pushes it t
 
 - Off until turned on, per user and per project (**Tools > RiryTools > AutoSync > Sync**).
 - Without a repository, one is created in the project folder with the Unity `.gitignore` and `.gitattributes`, and Git LFS is enabled.
-- On each scene or prefab save, only the saved files and their `.meta` files are committed, titled with the time of the save.
+- On each scene or prefab save, only the saved files and their `.meta` files are committed, titled with the time of the save by default. Configuration's **Commit title** template can use `{time}`, `{files}` (the saved files' names) and `{branch}`.
 - When a remote is set, every commit is pushed to it. Git's credential manager handles sign-in.
+- Before pushing, if the remote branch has new commits, the branch is fast-forwarded to them, or its commits are rebased onto them (other changed files are stashed and put back). If the rebase conflicts, it is aborted, the commits move to a new branch `autosync-conflict-<time>`, which is checked out and pushed, and a dialog says to merge it by hand. Sync stays on.
 - **Configuration** sets the branch, remote, `.gitignore` and `.gitattributes`, shows whether the server has Git LFS, and lists tracked files over 100 MiB so they can be ignored; a save that would push such a file over HTTP(S) holds the push and offers **Fix Now**.
 - Without Git installed, it links to the download.
 
@@ -36,12 +37,16 @@ flowchart TD
     C -- No --> D[Create repository, .gitignore, .gitattributes, Git LFS]
     C -- Yes --> E[Stage saved files and their .meta files]
     D --> E
-    E --> F[Commit titled with the save time]
+    E --> F[Commit titled from the template, the save time by default]
     F --> G{Remote set?}
     G -- No --> Z2[Done]
     G -- Yes --> H{File over 100 MiB over HTTP S?}
     H -- Yes --> I[Hold the push, offer Fix Now]
-    H -- No --> J[Push to the remote]
+    H -- No --> R{Remote has new commits?}
+    R -- No --> J[Push to the remote]
+    R -- Yes --> S{Fast-forward or rebase works?}
+    S -- Yes --> J
+    S -- No --> T[Abort, move commits to autosync-conflict branch, push it, tell the user]
 ```
 
 ## 6. References

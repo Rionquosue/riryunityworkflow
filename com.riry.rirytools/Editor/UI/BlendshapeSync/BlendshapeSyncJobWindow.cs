@@ -30,6 +30,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             if (job == null)
             {
                 Close();
@@ -41,6 +42,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnInspectorUpdate()
         {
+            if (StopAllToolScripts.Active) return;
             Repaint();
         }
 

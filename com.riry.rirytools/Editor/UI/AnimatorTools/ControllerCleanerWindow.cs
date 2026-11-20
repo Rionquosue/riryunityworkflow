@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -29,6 +29,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(4f);
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -73,30 +74,23 @@ namespace Riry.RiryTools.Editor
         private void Scan(List<AnimatorController> controllers, string where)
         {
             results = new List<ControllerCleanerScan.Result>();
-            try
-            {
-                for (int i = 0; i < controllers.Count; i++)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar(Title, "Scanning " + controllers[i].name, (float)i / controllers.Count)) break;
-                    results.Add(ControllerCleanerScan.Scan(controllers[i]));
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            RiryToolGUI.ProgressEach(Title, controllers, controller => "Scanning " + controller.name,
+                controller => results.Add(ControllerCleanerScan.Scan(controller)));
             scanned = where;
             GUI.FocusControl(null);
         }
 
-        // Removing sub-assets can't be undone with Ctrl+Z: asks first, and the log lists everything removed.
+        // One undo group per click, so one Ctrl+Z restores everything it removed; the log lists everything removed.
         private void Clean(List<ControllerCleanerScan.Result> chosen)
         {
             int count = chosen.Sum(r => r.Unused.Count);
-            if (!EditorUtility.DisplayDialog(Title, "Remove " + count + " unused sub-asset(s) from " + chosen.Count + " controller(s)?\n\nCtrl+Z can't undo this.",
+            if (!EditorUtility.DisplayDialog(Title, "Remove " + count + " unused sub-asset(s) from " + chosen.Count + " controller(s)?",
                     "Clean", "Cancel"))
                 return;
             var lines = new List<string>();
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName(Title);
             try
             {
                 foreach (ControllerCleanerScan.Result result in chosen)
@@ -109,7 +103,8 @@ namespace Riry.RiryTools.Editor
             {
                 RiryLog.Exception(RiryLog.ControllerCleaner, "Cleaning failed after " + lines.Count + " controller(s)", exception);
             }
-            RiryLog.Info(RiryLog.ControllerCleaner, "Removed " + count + " unused sub-asset(s) from " + lines.Count + " controller(s) (Ctrl+Z can't undo this):\n" +
+            Undo.CollapseUndoOperations(group);
+            RiryLog.Info(RiryLog.ControllerCleaner, "Removed " + count + " unused sub-asset(s) from " + lines.Count + " controller(s):\n" +
                 string.Join("\n", lines));
         }
     }

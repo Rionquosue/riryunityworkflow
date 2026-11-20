@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -221,16 +221,19 @@ namespace Riry.RiryTools.Editor
         }
 
         // After Apply: Controller Cleaner on the controllers that had broken references removes their unused sub-assets,
-        // and the broken references left in them. Asks first; Ctrl+Z can't undo it.
+        // and the broken references left in them. Asks first; one Ctrl+Z undoes the clean.
         private static void OfferControllerCleaner(List<string> controllers)
         {
             var found = controllers.Select(AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>).Where(c => c != null)
                 .Select(ControllerCleanerScan.Scan).Where(r => r.Unused.Count > 0).ToList();
             if (found.Count == 0) return;
             if (!EditorUtility.DisplayDialog(GuidToolReferenceRepair.Title, "Run Controller Cleaner on " + found.Count + " affected controller(s)? It removes " +
-                    found.Sum(r => r.Unused.Count) + " unused sub-asset(s) and the broken references in them.\n\nCtrl+Z can't undo this.", "Clean", "Not now"))
+                    found.Sum(r => r.Unused.Count) + " unused sub-asset(s) and the broken references in them.", "Clean", "Not now"))
                 return;
             var lines = new List<string>();
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Controller Cleaner");
             try
             {
                 foreach (ControllerCleanerScan.Result result in found)
@@ -240,7 +243,8 @@ namespace Riry.RiryTools.Editor
             {
                 RiryLog.Exception(RiryLog.ControllerCleaner, "Cleaning failed after " + lines.Count + " controller(s)", exception);
             }
-            RiryLog.Info(RiryLog.ControllerCleaner, "Removed unused sub-assets from " + lines.Count + " controller(s) after the GUID repair (Ctrl+Z can't undo this):\n" +
+            Undo.CollapseUndoOperations(group);
+            RiryLog.Info(RiryLog.ControllerCleaner, "Removed unused sub-assets from " + lines.Count + " controller(s) after the GUID repair:\n" +
                 string.Join("\n", lines));
         }
 

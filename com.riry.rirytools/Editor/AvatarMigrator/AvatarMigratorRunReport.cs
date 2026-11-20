@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -24,12 +24,14 @@ namespace Riry.RiryTools.Editor
         internal readonly List<GameObject> RepackedRoots = new List<GameObject>();
         // Feature 15: files written to disk, which Undo does not cover.
         internal readonly List<string> FilesCreated = new List<string>();
+        // A dry run: everything was undone straight after, so the report says what Copy would do.
+        internal bool DryRun;
 
         internal string Summary
         {
             get
             {
-                return Copied + " component" + (Copied == 1 ? "" : "s") + " copied, " + CopiedPrefabs + " prefab" + (CopiedPrefabs == 1 ? "" : "s") +
+                return (DryRun ? "Dry run, nothing was changed. Copy would do: " : "") + Copied + " component" + (Copied == 1 ? "" : "s") + " copied, " + CopiedPrefabs + " prefab" + (CopiedPrefabs == 1 ? "" : "s") +
                     " copied (" + PrefabsAlreadyThere + " already on the target), " + CreatedObjects + " object" + (CreatedObjects == 1 ? "" : "s") +
                     " created, " + SkippedIdentical + " identical component" + (SkippedIdentical == 1 ? "" : "s") + " skipped, " +
                     FilesCreated.Count + " file" + (FilesCreated.Count == 1 ? "" : "s") + " created.";

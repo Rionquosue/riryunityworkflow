@@ -30,6 +30,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.Space(6);
             string typed = EditorGUILayout.TextField(new GUIContent("Folder", "Type part of a folder's name or path."), search);
             if (typed != search)

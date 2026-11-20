@@ -38,7 +38,7 @@ namespace Riry.RiryTools.Editor
             planDirty = false;
             plannedMasterMesh = master != null ? master.sharedMesh : null;
             plannedMasterCount = plannedMasterMesh != null ? plannedMasterMesh.blendShapeCount : 0;
-            plannedMasterNames = plannedMasterMesh != null ? GetNames(plannedMasterMesh) : null;
+            plannedMasterNames = plannedMasterMesh != null ? BlendshapeNames.Of(plannedMasterMesh) : null;
             string error = RendererError(master);
             if (error != null)
             {
@@ -57,7 +57,7 @@ namespace Riry.RiryTools.Editor
                 {
                     Entry = child, Renderer = child.Renderer, Mesh = mesh,
                     ShapeCount = mesh != null ? mesh.blendShapeCount : 0,
-                    Names = mesh != null ? GetNames(mesh) : null
+                    Names = mesh != null ? BlendshapeNames.Of(mesh) : null
                 });
             }
             foreach (ChildPlan plan in plans)
@@ -182,13 +182,6 @@ namespace Riry.RiryTools.Editor
             return string.IsNullOrEmpty(link.Source) && string.IsNullOrEmpty(link.Destination);
         }
 
-        private static string[] GetNames(Mesh mesh)
-        {
-            string[] names = new string[mesh.blendShapeCount];
-            for (int i = 0; i < names.Length; i++) names[i] = mesh.GetBlendShapeName(i);
-            return names;
-        }
-
         private static bool NamesAreCurrent(Mesh mesh, string[] names)
         {
             if (names == null || mesh.blendShapeCount != names.Length) return false;
@@ -208,4 +201,4 @@ namespace Riry.RiryTools.Editor
 //   PlanIsCurrent()            The plan still matches the master and children (meshes, names, counts).
 //   BuildPlan() / TryBuildLinks(...)  Match blendshape names to indices (manual links first, then names; FindUnique).
 //   IsBlank(link)              A manual link row with neither name set.
-//   GetNames(mesh) / NamesAreCurrent(mesh, names)  A mesh's blendshape names, and whether they are unchanged.
+//   NamesAreCurrent(mesh, names)  Whether a mesh's blendshape names (BlendshapeNames.Of) are unchanged.

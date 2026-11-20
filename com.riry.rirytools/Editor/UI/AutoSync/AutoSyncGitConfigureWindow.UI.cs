@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,6 +23,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             scroll = EditorGUILayout.BeginScrollView(scroll);
             EditorGUILayout.LabelField("Repository", GitState.RepositoryExists
                 ? RiryToolsPaths.ProjectRoot
@@ -37,6 +38,10 @@ namespace Riry.RiryTools.Editor
                     EditorApplication.delayCall += () => AutoSyncGitActions.Guard(() => SwitchBranch(branch));
                 }
             }
+            string template = EditorGUILayout.DelayedTextField(new GUIContent("Commit title",
+                "The title of each Sync commit. {time} is the time of the save, {files} the saved files' names, {branch} the checked-out " +
+                "branch. Empty means " + AutoSync.DefaultTitleTemplate + "."), AutoSync.TitleTemplate);
+            if (template != AutoSync.TitleTemplate) AutoSync.TitleTemplate = template;
 
             GUILayout.Space(6f);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))

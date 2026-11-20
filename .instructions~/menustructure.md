@@ -22,6 +22,8 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Train
         * Bezier
         * Insertable prop
+        * Dual axis detector
+        * Three axis detector
     * GUID Tools
     * Menu Tool
 
@@ -62,6 +64,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * GUID Rebuild tool
         * GUID Repair tool
         * IconCap
+        * Material Cleaner
     * Import Presets >
         * Set Folder Presets
         * Save Import Preset
@@ -73,7 +76,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * FTEmulator
     * Documentation
 
-FTEmulator has no right-click entry.
+FTEmulator has no right-click entry. The entry and the Tools tab's FTEmulator sub-tab come from FTEmulator's own package, `com.riry.ftemulator`; without it (or without the VRChat SDK) RiryTools keeps the entry and the sub-tab, saying why FTEmulator is not available.
 
 ### Main menu
 
@@ -147,7 +150,7 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Constraint Tool] |  |  |  |  |  |
-| [Train] | Bezier | Insertable prop |  |  |  |
+| [Train] | Bezier | Insertable prop | Dual axis detector | Three axis detector |  |
 | Train UI here |  |  |  |  |  |
 
 ---
@@ -155,7 +158,7 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Constraint Tool] |  |  |  |  |  |
-| Train | [Bezier] | Insertable prop |  |  |  |
+| Train | [Bezier] | Insertable prop | Dual axis detector | Three axis detector |  |
 | Bezier UI here |  |  |  |  |  |
 
 ---
@@ -163,8 +166,36 @@ Where [] contains the currently active tab.
 | Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Constraint Tool] |  |  |  |  |  |
-| Train | Bezier | [Insertable prop] |  |  |  |
+| Train | Bezier | [Insertable prop] | Dual axis detector | Three axis detector |  |
 | Insertable prop UI here |  |  |  |  |  |
+
+---
+
+| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [Constraint Tool] |  |  |  |  |  |
+| Train | Bezier | Insertable prop | [Dual axis detector] | Three axis detector |  |
+| Source field |  |  |  |  |  |
+| Relative to field |  |  |  |  |  |
+| Flat plane ▾ (X, Y, Z) |  |  |  |  |  |
+| Space ▾ (Local, World) |  |  |  |  |  |
+| Offset |  |  |  |  |  |
+| Parameters: Right, Up |  |  |  |  |  |
+| Build dual axis detector |  |  |  |  |  |
+
+---
+
+| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [Constraint Tool] |  |  |  |  |  |
+| Train | Bezier | Insertable prop | Dual axis detector | [Three axis detector] |  |
+| Source field |  |  |  |  |  |
+| Relative to field |  |  |  |  |  |
+| Flat plane ▾ (X, Y, Z) |  |  |  |  |  |
+| Space ▾ (Local, World) |  |  |  |  |  |
+| Offset |  |  |  |  |  |
+| Parameters: Top, BottomLeft, BottomRight |  |  |  |  |  |
+| Build three axis detector |  |  |  |  |  |
 
 ---
 
@@ -178,14 +209,26 @@ Where [] contains the currently active tab.
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [Set Folder Import Presets] | Import Preset Library |  |  |  |  |
+| [Set Folder Import Presets] | Save Import Preset | Import Preset Library |  |  |  |
 | Set Folder Import Presets UI here |  |  |  |  |  |
 
 ---
 
 | Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Set Folder Import Presets | [Import Preset Library] |  |  |  |  |
+| Set Folder Import Presets | [Save Import Preset] | Import Preset Library |  |  |  |
+| Asset: the selected asset's path |  |  |  |  |  |
+| Importer: its importer type |  |  |  |  |  |
+| Configuration ▾ (New configuration, or an existing one) |  |  |  |  |  |
+| New name (with New configuration) |  |  |  |  |  |
+| Preset name |  |  |  |  |  |
+| Open Library | Save | Close |  |  |  |
+
+---
+
+| Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Set Folder Import Presets | Save Import Preset | [Import Preset Library] |  |  |  |
 | Display Import Preset Library here |  |  |  |  |  |
 | Click to open in explorer | File input box here | Save import preset (creates from selected in input box) |  |  |  |
 
@@ -225,3 +268,4 @@ The Tools tab has two sub-tabs: General holds every tool the tab had, FTEmulator
 | ☐ Freeze output |  |  |  |  |  |
 | Open debug window (opens popup) | Reset overrides |  |  |  |  |
 | OSC connection or Manual input |  |  |  |  |  |
+| Record / Stop recording | Play recording / Stop playback |  |  |  |  |

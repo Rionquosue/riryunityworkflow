@@ -18,14 +18,20 @@ avatar's Animator.
 
 ## 2. Make the target chains
 
-1. Set **Physics chains** to how many chains the bones should travel through (1
+1. Assign **Start position**: the object every bone is held at until the train
+   reaches it. It must be inside the avatar root and not part of the real bone
+   chain.
+2. Set **Physics chains** to how many chains the bones should travel through (1
    to 5).
-2. Leave **Add endpoints** on so each physics chain gets an end bone for the
+3. Leave **Add endpoints** on so each physics chain gets an end bone for the
    physics component.
-3. Click **Generate all missing chains**. This creates `Rest_` (the still pose)
-   and `Phys1_`, `Phys2_` ... copies of the chain beside it. You can also use
-   **Generate** on a single row, or drag in chains you made yourself.
-4. Add your physics components (for example VRC PhysBones) to the `Phys` chains.
+4. Click **Generate all missing chains**. This creates `Phys1_`, `Phys2_` ...
+   copies of the chain beside it. You can also use **Generate** on a single row,
+   or drag in chains you made yourself.
+5. Add your physics components (for example VRC PhysBones) to the `Phys` chains.
+
+The real chain's **End** bone is where the train stops: it isn't constrained, and
+each bone stops one physics chain bone further along than its own position.
 
 ## 3. Tune the timing
 
@@ -38,11 +44,13 @@ avatar's Animator.
 
 ## 4. Build it
 
-1. Click **Set up constraints**. Each bone gets a VRC Parent Constraint.
+1. Click **Set up constraints**. Each bone gets a VRC Parent Constraint,
+   switched off with every source at 0, and the bones stay at rest, so the
+   avatar looks the same until the clip plays.
 2. Click **Build animation** and save the clip. It is offered in
    `Assets/RiryTools` by default.
 3. In your Animator, put the clip in a state, turn on **Motion Time**, and drive
-   it with your float parameter.
+   it with your float parameter. The clip switches the constraints on.
 
 ## 5. Check it
 

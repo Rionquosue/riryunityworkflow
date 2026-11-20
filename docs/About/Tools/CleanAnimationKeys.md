@@ -22,6 +22,7 @@ Removes blank blendshape curves and static bone transform curves from animation 
 - Opened from the Project window's right-click **RiryTools > Animator Tools > Clean Animation Keys** with clips selected, from **Tools > RiryTools > Animator Tools**, from the Main Menu's Animator Tools tab, or with **Clean Keys** in the Animation window.
 - The window opens against the left edge of Unity's main window.
 - A name **Whitelist** and four **Keep** rules decide what stays; the per-animation **Whitelist** lists only keys that would be removed.
+- **Preview** (a foldout) lists, per animation, the shapekeys and bones Clean would remove with their curve counts, and the animations it would skip. It changes nothing.
 - **Clean** removes the rest and shows how many curves were removed. One undo step restores every animation.
 - Extract Animations uses the same cleaning, with its own options.
 
@@ -30,7 +31,8 @@ Removes blank blendshape curves and static bone transform curves from animation 
 ```mermaid
 flowchart TD
     A[Add clips] --> B[Set whitelist and Keep rules]
-    B --> C[Clean]
+    B --> P[Preview: what would be removed]
+    P --> C[Clean]
     C --> D[For each curve: blank or static?]
     D -- No --> E[Keep]
     D -- Yes --> F{Whitelisted or kept by a rule?}

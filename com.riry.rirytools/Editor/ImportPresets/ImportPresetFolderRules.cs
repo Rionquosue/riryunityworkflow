@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -56,7 +56,12 @@ namespace Riry.RiryTools.Editor
 
         internal static string Label(AssetImporter importer)
         {
-            Type type = importer.GetType();
+            return LabelOf(importer.GetType());
+        }
+
+        /// <summary>The file type label for an importer type, such as "Image files".</summary>
+        internal static string LabelOf(Type type)
+        {
             string label;
             if (Labels.TryGetValue(type, out label)) return label;
             string name = type.Name.EndsWith("Importer", StringComparison.Ordinal) ? type.Name.Substring(0, type.Name.Length - 8) : type.Name;

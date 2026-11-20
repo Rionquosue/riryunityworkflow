@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,7 +12,7 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// Animator Tools > Find and Replace, without its window (Editor/VRChat/UI/AnimatorTools/BehaviourFindReplaceWindow.cs): finds the
-    /// strings of state behaviours (case-insensitive, FuzzyMatch "contains") in an avatar's controllers (its playable
+    /// strings of state behaviours (case-insensitive, FuzzyMatch "contains", or a regular expression) in an avatar's controllers (its playable
     /// layers, VRCFury Full Controllers and Modular Avatar Merge Animators, as the Menu Tool's scan finds them) or one
     /// animator controller, and shows a found state in the Animator window. Apply is BehaviourFindReplaceApply.
     /// </summary>
@@ -24,6 +24,20 @@ namespace Riry.RiryTools.Editor
             PlayAudio,
             Driver
         }
+
+        /// <summary>How Search finds strings and Apply replaces them.</summary>
+        internal enum Match
+        {
+            // Finds strings containing the search (FuzzyMatch "contains"); Apply replaces the whole string.
+            Whole,
+            // Finds the same strings; Apply replaces only each occurrence of the search (case-insensitive).
+            Partial,
+            // Finds strings the regular expression matches (case-insensitive); Apply replaces each match ($1 and so on work).
+            Regex
+        }
+
+        // Longest a regular expression may run on one string.
+        private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(200);
 
         internal sealed class Hit
         {
@@ -42,6 +56,9 @@ namespace Riry.RiryTools.Editor
             // The component that uses the controller (descriptor, VRCFury, Modular Avatar); null for a controller asset.
             internal Component Source;
             internal string Label = "";
+            // The search and match mode that found it, which Apply's Partial and Regex replace use.
+            internal string Search = "";
+            internal Match Match;
         }
 
         internal sealed class Change
@@ -70,7 +87,7 @@ namespace Riry.RiryTools.Editor
 
         // ---- Search -------------------------------------------------------------------------------
 
-        internal static List<Hit> Find(Object from, string text)
+        internal static List<Hit> Find(Object from, string text, Match match = Match.Whole)
         {
             var found = new List<Hit>();
             foreach (KeyValuePair<AnimatorController, Usage> usage in Controllers(from))
@@ -89,7 +106,7 @@ namespace Riry.RiryTools.Editor
                         {
                             if (property.propertyType != SerializedPropertyType.String || property.name == "m_Name" || property.name == "m_EditorClassIdentifier") continue;
                             string value = property.stringValue ?? "";
-                            if (FuzzyMatch.Score(value, text) < 2) continue;
+                            if (!Matches(value, text, match)) continue;
                             Kind kind = behaviour is VRCAnimatorPlayAudio && property.propertyPath == "SourcePath" ? Kind.PlayAudio
                                 : behaviour is VRCAvatarParameterDriver && property.propertyPath.StartsWith("parameters.Array.data[", StringComparison.Ordinal) ? Kind.Driver
                                 : Kind.Other;
@@ -98,13 +115,57 @@ namespace Riry.RiryTools.Editor
                                 Controller = controller, Layer = i, Machines = machines, Owner = owner, Behaviour = behaviour,
                                 Property = property.propertyPath, Value = value, Kind = kind, Root = usage.Value.Root, Source = usage.Value.Source,
                                 Label = usage.Value.Label + " > " + layers[i].name + " > " + owner.name + " > " +
-                                    ObjectNames.NicifyVariableName(behaviour.GetType().Name) + " > " + property.displayName
+                                    ObjectNames.NicifyVariableName(behaviour.GetType().Name) + " > " + property.displayName,
+                                Search = text, Match = match
                             });
                         }
                     }, new HashSet<AnimatorStateMachine>());
                 }
             }
             return found;
+        }
+
+        /// <summary>Null when the pattern is a valid regular expression, otherwise why it is not.</summary>
+        internal static string PatternError(string pattern)
+        {
+            try
+            {
+                new System.Text.RegularExpressions.Regex(pattern ?? "", System.Text.RegularExpressions.RegexOptions.IgnoreCase, RegexTimeout);
+                return null;
+            }
+            catch (ArgumentException exception)
+            {
+                return exception.Message;
+            }
+        }
+
+        private static bool Matches(string value, string text, Match match)
+        {
+            switch (match)
+            {
+                case Match.Regex:
+                    if (string.IsNullOrEmpty(text)) return false;
+                    try { return System.Text.RegularExpressions.Regex.IsMatch(value, text, System.Text.RegularExpressions.RegexOptions.IgnoreCase, RegexTimeout); }
+                    catch (System.Text.RegularExpressions.RegexMatchTimeoutException) { return false; }
+                default:
+                    return FuzzyMatch.Score(value, text) >= 2;
+            }
+        }
+
+        /// <summary>The string after Apply's replace: the whole string, each occurrence of the search, or each regex match.</summary>
+        internal static string Replaced(Hit hit, string value, string replace)
+        {
+            switch (hit.Match)
+            {
+                case Match.Partial:
+                    if (string.IsNullOrEmpty(hit.Search)) return value;
+                    return System.Text.RegularExpressions.Regex.Replace(value, System.Text.RegularExpressions.Regex.Escape(hit.Search),
+                        replace.Replace("$", "$$"), System.Text.RegularExpressions.RegexOptions.IgnoreCase, RegexTimeout);
+                case Match.Regex:
+                    return System.Text.RegularExpressions.Regex.Replace(value, hit.Search, replace, System.Text.RegularExpressions.RegexOptions.IgnoreCase, RegexTimeout);
+                default:
+                    return replace;
+            }
         }
 
         private static void Walk(AnimatorStateMachine machine, List<AnimatorStateMachine> machines, Action<Object, List<AnimatorStateMachine>, StateMachineBehaviour> visit,

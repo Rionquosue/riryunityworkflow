@@ -19,6 +19,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             EditorGUILayout.LabelField(reason, EditorStyles.wordWrappedLabel);
             // Capped, so a selected folder of thousands of files cannot push Apply off the window.
             const int ShownFiles = 10;

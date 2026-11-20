@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -83,12 +83,14 @@ namespace Riry.RiryTools.Editor
 
         private void OnHierarchyChange()
         {
+            if (StopAllToolScripts.Active) return;
             targetPrefabs = null;
             Repaint();
         }
 
         private void OnFocus()
         {
+            if (StopAllToolScripts.Active) return;
             targetPrefabs = null;
         }
 
@@ -113,6 +115,7 @@ namespace Riry.RiryTools.Editor
 
         private void OnGUI()
         {
+            if (RiryToolGUI.Stopped()) return;
             scroll = EditorGUILayout.BeginScrollView(scroll);
             GameObject before = target;
             source = SceneObject("Source (old avatar)", source);
@@ -131,7 +134,13 @@ namespace Riry.RiryTools.Editor
             if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Info);
             using (new EditorGUI.DisabledScope(problem != null))
             {
-                if (GUILayout.Button("Copy", GUILayout.Height(28f))) EditorApplication.delayCall += Run;
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Copy", GUILayout.Height(28f))) EditorApplication.delayCall += () => Run(false);
+                    if (GUILayout.Button(new GUIContent("Dry run", "Runs Copy, lists what it copied, repointed and left out, then undoes it all. " +
+                            "The target is left as it was."), GUILayout.Height(28f), GUILayout.Width(90f)))
+                        EditorApplication.delayCall += () => Run(true);
+                }
             }
             if (lastRun.Length > 0) EditorGUILayout.HelpBox(lastRun, MessageType.None);
         }
@@ -362,7 +371,7 @@ namespace Riry.RiryTools.Editor
             return map;
         }
 
-        private void Run()
+        private void Run(bool dryRun)
         {
             if (Problem() != null) return;
             AvatarMigratorMatchObjects map = BuildMap();
@@ -377,6 +386,13 @@ namespace Riry.RiryTools.Editor
             if (!AvatarMigratorPreFlightWindow.Run(map, Settings, ignored, out answers))
             {
                 Finish("Aborted. Nothing was changed.");
+                return;
+            }
+            if (dryRun)
+            {
+                AvatarMigratorRunReport dry = AvatarMigratorCopyRun.DryRun(map, Settings, answers, ignored);
+                Finish(dry.Summary);
+                AvatarMigratorRunReportWindow.Open(dry);
                 return;
             }
             AvatarMigratorRunReport report = AvatarMigratorCopyRun.Execute(map, Settings, answers, ignored);
