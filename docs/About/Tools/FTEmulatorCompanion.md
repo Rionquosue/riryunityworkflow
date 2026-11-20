@@ -41,7 +41,7 @@ Settings are in `%LocalAppData%\RiryTools\FTRecorder\module-config.json`, writte
 | `source` | `webcam` | `playback`, `video`, `webcam` or `babbleOsc`. |
 | `record` | `false` | While `true`, everything the module sends is written to a recording. |
 | `recordingsFolder` | `Documents\RiryTools FTRecorder` | Where recordings go. |
-| `playbackFile`, `loop` | `""`, `true` | The recording `playback` plays; `loop` also restarts a video file. |
+| `playbackFile`, `loop` | `""`, `true` | The recording `playback` plays (`.ftrec.jsonl`, or `.mkv` through ffmpeg); `loop` also restarts a video file. |
 | `videoFile` | `""` | The video `video` plays at its own speed. |
 | `webcamFormat`, `webcamDevice` | `dshow`, `""` | ffmpeg's input format and the camera's name. List cameras with `ffmpeg -list_devices true -f dshow -i dummy`. |
 | `ffmpegPath` | `ffmpeg` | ffmpeg's path. |
@@ -57,15 +57,15 @@ Video and webcam run MediaPipe's face models (bundled) for the whole face; a Bab
 ### record
 
 ```bash
-RiryTools.FTRecorder record --out session.ftrec.jsonl
+RiryTools.FTRecorder record --out session.mkv
 ```
 
-Records both VRCFaceTracking's output and visemes, into one file, until Ctrl+C.
+Records VRCFaceTracking's output, visemes and your microphone into one Matroska file, until Ctrl+C. While it runs, the parts are kept next to the output (`session.mkv.recording.ftrec.jsonl` and `session.mkv.microphone.s16le`), so a crash keeps them; on Ctrl+C they are combined into `session.mkv` and deleted. If writing the `.mkv` fails, they are kept. `--mic NAME` picks the microphone (default: the first one `ffmpeg -list_devices true -f dshow -i dummy` lists).
 
 1. In VRCFaceTracking, set the OSC output port to `9010`. The app passes every packet on to VRChat on `9000` and records it. `--proxy IN:OUT` changes the ports.
 2. Visemes depend on whether VRChat is running when the recording starts:
    - **VRChat running:** turn OSC on in VRChat. It finds the app through OSCQuery and sends it `Viseme` and `Voice`, which are recorded.
-   - **VRChat not running:** your microphone goes through OVRLipSync, found as for `process`, and its visemes are recorded. `--mic NAME` picks the microphone (default: the first one `ffmpeg -list_devices true -f dshow -i dummy` lists); `--ffmpeg PATH` and `--ovrlipsync PATH` as for `process`.
+   - **VRChat not running:** the microphone goes through OVRLipSync, found as for `process`, and its visemes are recorded. `--ffmpeg PATH` and `--ovrlipsync PATH` as for `process`.
 
 ### process
 
@@ -90,12 +90,20 @@ Runs a recorded video through the face models. Its visemes depend on whether VRC
 ### replay
 
 ```bash
-RiryTools.FTRecorder replay --in session.ftrec.jsonl --port 9000 --loop
+RiryTools.FTRecorder replay --in session.mkv --port 9000 --loop
 ```
 
-Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at their recorded times. Expression frames are played by the module's `playback` source instead. VRChat ignores `Viseme` and `Voice` sent to it (it makes its own); FTEmulator in Unity takes them.
+Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at their recorded times. Takes `.mkv` (read through ffmpeg, `--ffmpeg PATH`) and `.ftrec.jsonl` recordings. Expression frames are played by the module's `playback` source instead. VRChat ignores `Viseme` and `Voice` sent to it (it makes its own); FTEmulator in Unity takes them.
 
 ## Recordings
+
+`record` writes `.mkv` (Matroska), one file with:
+
+- **Audio:** your microphone, Opus at 48 kb/s, starting where the microphone started in the recording.
+- **Subtitles ("Visemes"):** one caption per change, holding the viseme's index and name, Voice, and the 15 weights when OVRLipSync made them. Any player that shows subtitles (VLC, mpv) shows them with the audio.
+- **Attachment `recording.ftrec.jsonl`:** the whole recording, in the format below. `ffmpeg -dump_attachment:t:0 recording.ftrec.jsonl -i session.mkv -t 0 -f null -` copies it out.
+
+The module's `record` setting and `process` write `.ftrec.jsonl` directly.
 
 `.ftrec.jsonl`: one JSON object per line. The first line is the header (`format`, `version`, `source`, `created`, and the `unified` and `eye` value names). Each following line is one entry with its time `t` in seconds:
 
