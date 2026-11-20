@@ -32,7 +32,7 @@ Menu Tool: traces expression menu controls to their sources (avatar descriptor, 
 
 ## AutoSync
 
-AutoSync: while on, every scene or prefab save is committed to the checked-out Git branch, titled with the time of the save, and pushed to the chosen remote. When the remote has new commits, the branch is fast-forwarded or rebased onto them first; a conflicting rebase is aborted and the commits are moved to a new autosync-conflict branch, pushed there, and the user is told to merge it by hand, with Sync left on. Only the saved files and their .meta files are committed. Configuration sets the branch, remote, .gitignore and .gitattributes. Off until turned on, per user and per project.
+AutoSync: while on, every scene or prefab save is committed to the checked-out Git branch, titled with the time of the save (or an editable template using {time}, {files} and {branch}), and pushed to the chosen remote. When the remote has new commits, the branch is fast-forwarded or rebased onto them first; a conflicting rebase is aborted and the commits are moved to a new autosync-conflict branch, pushed there, and the user is told to merge it by hand, with Sync left on. Only the saved files and their .meta files are committed. Configuration sets the branch, remote, .gitignore and .gitattributes. Off until turned on, per user and per project.
 
 ## Clean Animation Keys
 
