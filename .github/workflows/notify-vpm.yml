@@ -1,5 +1,5 @@
-# Starts Build Package in Rionquosue/rirytools_vpm on every push to main (stable) or
-# beta (beta), once for com.riry.rirytools and once for com.riry.ftemulator, both built
+# Starts Build Package in Rionquosue/rirytools_vpm on every push to main (stable),
+# beta (beta) or beta-unity6 (beta-unity6: X.Y.Z-beta.N-unity6 releases for Unity 6), once for com.riry.rirytools and once for com.riry.ftemulator, both built
 # from this repository. rirytools_vpm builds, versions, releases and lists the packages.
 #
 # VPM_DISPATCH_TOKEN is a fine-grained token for Rionquosue/rirytools_vpm only, with
@@ -11,6 +11,7 @@ on:
     branches:
       - main
       - beta
+      - beta-unity6
 
 permissions:
   contents: read
@@ -29,13 +30,13 @@ jobs:
       - name: Start Build Package in rirytools_vpm
         env:
           GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
-          CHANNEL: ${{ github.ref_name == 'main' && 'stable' || 'beta' }}
+          CHANNEL: ${{ github.ref_name == 'main' && 'stable' || github.ref_name }}
           SHA: ${{ github.sha }}
         run: gh workflow run build-package.yml --repo Rionquosue/rirytools_vpm --ref main -f channel="$CHANNEL" -f sha="$SHA"
 
       - name: Start Build Package for FTEmulator in rirytools_vpm
         env:
           GH_TOKEN: ${{ secrets.VPM_DISPATCH_TOKEN }}
-          CHANNEL: ${{ github.ref_name == 'main' && 'stable' || 'beta' }}
+          CHANNEL: ${{ github.ref_name == 'main' && 'stable' || github.ref_name }}
           SHA: ${{ github.sha }}
         run: gh workflow run build-package.yml --repo Rionquosue/rirytools_vpm --ref main -f package=com.riry.ftemulator -f channel="$CHANNEL" -f sha="$SHA"

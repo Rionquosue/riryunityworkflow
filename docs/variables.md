@@ -479,7 +479,7 @@ Also in the GameObject menu.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `CHANNEL` | Step env: `stable` for `main`, `beta` for `beta`. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
+| `CHANNEL` | Step env: `stable` for `main`, otherwise the branch name: `beta` for `beta`, `beta-unity6` for `beta-unity6` (on `betastaging-unity6` and `beta-unity6`). | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 | `GH_TOKEN` | Step env: `secrets.VPM_DISPATCH_TOKEN`. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 | `notify-vpm-<branch>` | Concurrency group: one run at a time per branch, in push order. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 | `SHA` | Step env: `github.sha`, the pushed commit. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
@@ -491,7 +491,7 @@ Also in the GameObject menu.
 | Name | Use | Scripts |
 |---|---|---|
 | `build-package` | Concurrency group; never cancelled. | `rirytools_vpm/.github/workflows/build-package.yml` |
-| `channel` | Input, required: `stable` or `beta`. | `rirytools_vpm/.github/workflows/build-package.yml` |
+| `channel` | Input, required: `stable` (source `main`), `beta` (`beta`) or `beta-unity6` (`beta-unity6`; prerelease, as `beta` is). | `rirytools_vpm/.github/workflows/build-package.yml` |
 | `package` | Input, required: `com.riry.rirytools` (source `Rionquosue/riryunityworkflow`), `com.riry.animatortemplates` (`Rionquosue/riryanimatortemplates`) or `com.riry.ftemulator` (`Rionquosue/riryunityworkflow`). | `rirytools_vpm/.github/workflows/build-package.yml` |
 | `CHANNEL`, `SHA`, `VERSION` | Step env: the inputs, passed only through the environment. | `rirytools_vpm/.github/workflows/build-package.yml` |
 | `GH_TOKEN` | Step env: `github.token`. | `rirytools_vpm/.github/workflows/build-package.yml` |
@@ -508,7 +508,7 @@ Also in the GameObject menu.
 | `steps.inputs.outputs.ref` | Step output: `sha`, or the channel's branch. | `rirytools_vpm/.github/workflows/build-package.yml` |
 | `steps.version.outputs.previous` / `version` | Step output from `build_vpm.py plan`. | `rirytools_vpm/.github/workflows/build-package.yml` |
 | `TRIPWIRE_HASHES` | Repository variable: comma-separated canary hashes. | `rirytools_vpm/.github/workflows/issue-check.yml` |
-| `version` | Input: `X.Y.Z` (stable) or `X.Y.Z-beta.N` (beta), no leading zeros, `Z` at most 99; empty for automatic. | `rirytools_vpm/.github/workflows/build-package.yml` |
+| `version` | Input: `X.Y.Z` (stable), `X.Y.Z-beta.N` (beta) or `X.Y.Z-beta.N-unity6` (beta-unity6), no leading zeros, `Z` at most 99; empty for automatic. | `rirytools_vpm/.github/workflows/build-package.yml` |
 
 ### Destination scripts
 
@@ -521,7 +521,9 @@ Also in the GameObject menu.
 | Label names | The issue labels the check applies. | `rirytools_vpm/scripts/issue_check.py` |
 | `LFS_POINTER` | Refuses LFS pointer files. | `rirytools_vpm/scripts/build_vpm.py` |
 | `MAX_PATCH` | `99`: the highest patch; the next version is the next minor at patch 0. | `rirytools_vpm/scripts/build_vpm.py` |
-| `NUMBER`, `STABLE`, `BETA` | Version patterns; `NUMBER` has no leading zeros. | `rirytools_vpm/scripts/build_vpm.py` |
+| `NUMBER`, `STABLE`, `BETA`, `UNITY6` | Version patterns; `NUMBER` has no leading zeros. `UNITY6` is `X.Y.Z-beta.N-unity6`; `beta` and `beta-unity6` share `N` (the next is one more than the highest of either for the next stable version). | `rirytools_vpm/scripts/build_vpm.py` |
+| `UNITY6_SUFFIX` / `UNITY6_EDITOR` | `-unity6` / `6000.0`: a version ending in the suffix gets `"unity": "6000.0"` in its release `package.json`, so VCC offers it only to Unity 6 projects. | `rirytools_vpm/scripts/build_vpm.py` |
+| `CHANNELS` | `stable`, `beta`, `beta-unity6`: the plan step's channels and how each version is written. | `rirytools_vpm/scripts/build_vpm.py` |
 | `PACKAGE_NAME` | `com.riry.rirytools`: the source folder that is zipped, the package name, and the zip name `com.riry.rirytools-<version>.zip`. | `rirytools_vpm/scripts/build_vpm.py` |
 | `PACKAGES` | `com.riry.rirytools` (tags `v`), `com.riry.animatortemplates` (`animatortemplates-v`) and `com.riry.ftemulator` (`ftemulator-v`): packages the listing must contain, each with its tag prefix. | `rirytools_vpm/scripts/verify_listing.py`, `rirytools_vpm/scripts/build_vpm.py` |
 | `ftemulator.package.json` | The fields of `com.riry.ftemulator`'s release `package.json`; `vpmDependencies` needs `com.riry.rirytools` 0.7.1-beta.1 or newer (the first version without FTEmulator, which gives it access to RiryTools' internals). | `rirytools_vpm/scripts/build_vpm.py` |

@@ -44,7 +44,7 @@ Keep messages to the owner minimal: clear, concise, only the important details. 
 
 ## Code conventions
 
-- Unity 2022.3 LTS, C# 9. Assemblies `Riry.RiryTools.Editor`, `Riry.RiryTools.Editor.VRChat` (needs `RIRYTOOLS_VRC_CONSTRAINTS`, VRChat SDK 3.7.0+) and `Riry.RiryTools.Editor.GestureManager` (`RIRYTOOLS_GESTURE_MANAGER`, Gesture Manager 3.9+). `RIRYTOOLS_VRC_BIT_WIDTH` for `com.vrchat.avatars` 3.10.6+.
+- Unity 2022.3 LTS, C# 9. On `betastaging-unity6` and `beta-unity6`: Unity 6000.0 and VRChat SDK 3.11.0-beta.1; the compile check uses Unity 6000.0.64f1's managed assemblies and SDK 3.11.0-beta.1's DLLs (netstandard2.1). Pushes to `beta-unity6` release `X.Y.Z-beta.N-unity6`. Assemblies `Riry.RiryTools.Editor`, `Riry.RiryTools.Editor.VRChat` (needs `RIRYTOOLS_VRC_CONSTRAINTS`, VRChat SDK 3.7.0+) and `Riry.RiryTools.Editor.GestureManager` (`RIRYTOOLS_GESTURE_MANAGER`, Gesture Manager 3.9+). `RIRYTOOLS_VRC_BIT_WIDTH` for `com.vrchat.avatars` 3.10.6+.
 - Every code file ends with a GLOSSARY block of its members; update it only when instructed.
 - `docs/variables.md` lists every stored key, path, GUID, symbol, constant, menu path and workflow variable; keep it current.
 - `docs/ui-languagespec.md` lists where the text of every UI element lives (file, method, kind of text and lines); keep it current.

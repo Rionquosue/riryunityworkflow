@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -20,7 +20,7 @@ namespace Riry.RiryTools.Editor
         // Session state survives the script reload that entering Play Mode usually causes.
         private const string GameViewWasOpenKey = "RiryTools.StopAutoGame.GameViewWasOpen";
         private const string FocusedWindowsKey = "RiryTools.StopAutoGame.FocusedWindows";
-        private const string GameViewTypeName = "UnityEditor.GameView, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+        private const string GameViewTypeName = "UnityEditor.GameView";
         // Unity focuses the Game view shortly after Play Mode starts.
         private const int HandleDelayMs = 100;
 
@@ -32,7 +32,8 @@ namespace Riry.RiryTools.Editor
 
         private static Type GameViewType
         {
-            get { return gameViewType ?? (gameViewType = Type.GetType(GameViewTypeName)); }
+            // Unity 6 keeps the editor's types in UnityEditor.CoreModule (UnityEditor only forwards them), so ask EditorWindow's own assembly.
+            get { return gameViewType ?? (gameViewType = typeof(EditorWindow).Assembly.GetType(GameViewTypeName)); }
         }
 
         /// <summary>On by default; per user, shared by every project (EditorPrefs).</summary>

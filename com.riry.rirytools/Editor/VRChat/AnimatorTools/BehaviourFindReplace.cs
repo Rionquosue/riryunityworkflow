@@ -266,12 +266,19 @@ namespace Riry.RiryTools.Editor
                 const BindingFlags members = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
                 PropertyInfo controller = toolType.GetProperty("animatorController", members);
                 PropertyInfo layer = toolType.GetProperty("selectedLayerIndex", members);
-                MethodInfo crumb = toolType.GetMethod("AddBreadCrumb", members, null, new[] { typeof(Object) }, null);
+                // Unity 6 adds a second parameter, updateViewPosition; with true it updates the graph like the old one-argument call.
+                MethodInfo crumb = toolType.GetMethods(members).FirstOrDefault(m => m.Name == "AddBreadCrumb" && m.GetParameters().Length >= 1 &&
+                    m.GetParameters()[0].ParameterType == typeof(Object) && m.GetParameters().Skip(1).All(p => p.ParameterType == typeof(bool)));
                 try
                 {
                     if (controller != null && controller.CanWrite) controller.SetValue(tool, hit.Controller);
                     if (layer != null && layer.CanWrite) layer.SetValue(tool, hit.Layer);
-                    if (crumb != null) foreach (AnimatorStateMachine machine in hit.Machines.Skip(1)) crumb.Invoke(tool, new object[] { machine });
+                    if (crumb != null)
+                    {
+                        int extra = crumb.GetParameters().Length - 1;
+                        foreach (AnimatorStateMachine machine in hit.Machines.Skip(1))
+                            crumb.Invoke(tool, new object[] { machine }.Concat(Enumerable.Repeat((object)true, extra)).ToArray());
+                    }
                 }
                 catch (Exception exception)
                 {
