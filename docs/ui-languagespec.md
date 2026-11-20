@@ -1,7 +1,8 @@
 # UI language spec
 
 Where the text of every UI element is written, for translating the UI. Source
-paths are relative to `com.riry.rirytools/Editor/`. Each file lists only the
+paths are relative to `com.riry.rirytools/Editor/`, except those starting with
+`com.riry.ftemulator/` (FTEmulator's own package). Each file lists only the
 lines that write UI text, grouped by method, with the kind of text and its line
 numbers on `betastaging`. Line numbers drift as files change; method names
 don't.
@@ -47,6 +48,8 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `attributes and constants` | Menu entries (28, lines 23-64) |
 | `VrcSdkMissing` | Dialogs (1, line 278) |
+| `FTEmulatorUnavailable` | Text shown through a variable (1, line 320) |
+| `FTEmulatorToolsItem` | Dialogs (1, line 330) |
 
 ### `UI/RiryToolsRightClickMenu.cs`
 
@@ -427,7 +430,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 ## FTEmulator
 
-### `VRChat/UI/FTEmulator/FTEmulatorDebugWindow.cs`
+### `com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorDebugWindow.cs`
 
 | Method | Text |
 |---|---|
@@ -439,7 +442,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `OverrideMapping` | Text shown through a variable (1, line 341) |
 | `DrawDiagnostics` | Buttons (1, line 354) |
 
-### `VRChat/UI/FTEmulator/FTEmulatorWindow.cs`
+### `com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorWindow.cs`
 
 | Method | Text |
 |---|---|
@@ -452,14 +455,14 @@ settings keys, file contents and other strings the user never sees as UI.
 | `DrawRecording` | Labels (3, lines 282-284), Buttons (5, lines 291-310) |
 | `DrawManual` | Labels (2, lines 338-345), Toggles (1, line 339) |
 
-### `VRChat/FTEmulator/FTEmulator.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulator.cs`
 
 | Method | Text |
 |---|---|
 | `FTEmulator` | Text shown through a variable (1, line 24) |
 | `Start` | Text shown through a variable (1, line 141) |
 
-### `VRChat/FTEmulator/FTEmulatorCatalog.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorCatalog.cs`
 
 | Method | Text |
 |---|---|
@@ -472,7 +475,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `ReadHardware` | Text shown through a variable (6, lines 316-362) |
 | `ReadAvatar` | Text shown through a variable (10, lines 397-462) |
 
-### `VRChat/FTEmulator/FTEmulatorExpression.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorExpression.cs`
 
 | Method | Text |
 |---|---|
@@ -480,7 +483,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `Next` | Text shown through a variable (2, lines 150-179) |
 | `Primary` | Text shown through a variable (8, lines 231-283) |
 
-### `VRChat/FTEmulator/FTEmulatorJson.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorJson.cs`
 
 | Method | Text |
 |---|---|
@@ -492,7 +495,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `Flag` | Text shown through a variable (1, line 258) |
 | `Texts` | Text shown through a variable (1, line 266) |
 
-### `VRChat/FTEmulator/FTEmulatorOscCodec.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorOscCodec.cs`
 
 | Method | Text |
 |---|---|
@@ -501,28 +504,28 @@ settings keys, file contents and other strings the user never sees as UI.
 | `Message` | Text shown through a variable (12, lines 81-127) |
 | `TryDecodeNativeFace` | Text shown through a variable (1, line 166) |
 
-### `VRChat/FTEmulator/FTEmulatorOscQuery.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorOscQuery.cs`
 
 | Method | Text |
 |---|---|
 | `Start` | Text shown through a variable (1, line 188) |
 | `StartHttp` | Text shown through a variable (1, line 229) |
 
-### `VRChat/FTEmulator/FTEmulatorOscReceiver.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorOscReceiver.cs`
 
 | Method | Text |
 |---|---|
 | `FTEmulatorPortInUseException` | Text shown through a variable (1, line 15) |
 | `Start` | Text shown through a variable (1, line 101) |
 
-### `VRChat/FTEmulator/FTEmulatorSession.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorSession.cs`
 
 | Method | Text |
 |---|---|
 | `Start` | Text shown through a variable (3, lines 224-226) |
 | `Snapshot` | Text shown through a variable (3, lines 862-889) |
 
-### `VRChat/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`
+### `com.riry.ftemulator/Editor/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`
 
 | Method | Text |
 |---|---|

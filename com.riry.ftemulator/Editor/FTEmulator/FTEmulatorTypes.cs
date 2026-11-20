@@ -214,6 +214,6 @@ namespace Riry.RiryTools.Editor
 // FTEmulatorSessionContext     Generation, Active (Play Mode and still the current session), Cancel.
 // IFTEmulatorSource            Start(context), TryRead(out expressions, out parameters), Clear(), Stop(), Dispose().
 // IFTEmulatorOutput            Bind(manager), Valid, Avatar, Parameters, Write(name, value), TryRead(name), Release().
-//                              Implemented by FTEmulatorGestureManager (Editor/VRChat/FTEmulator/GestureManager/).
+//                              Implemented by FTEmulatorGestureManager (com.riry.ftemulator/Editor/FTEmulator/GestureManager/).
 // IFTEmulatorMeshOutput        Bind(blendshapes), Apply(weights, owned), Restore(). Implemented by FTEmulatorBlendshapeWriter.
 // FTEmulatorClock.Now          Seconds on a Stopwatch shared by sources and the session.

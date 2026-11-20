@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// The FTEmulator window (logic in Editor/VRChat/FTEmulator/): the avatar, backend, input and hardware choices, the
+    /// The FTEmulator window (logic in com.riry.ftemulator/Editor/FTEmulator/): the avatar, backend, input and hardware choices, the
     /// Start, Active listening, Freeze output and Stop controls, and the OSC connection. It shows the session's snapshot
     /// and sends commands to FTEmulator and its session; it opens no socket, reads no avatar and works out no value
     /// itself. Opening or closing it starts and stops nothing: a session a user started keeps running without it, and is

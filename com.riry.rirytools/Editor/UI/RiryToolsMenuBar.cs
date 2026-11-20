@@ -311,8 +311,23 @@ namespace Riry.RiryTools.Editor
 
         private static bool FindReplaceToolsValid() { return !StopAllToolScripts.Active; }
 
+#endif
+
+        /// <summary>Why FTEmulator cannot open: the VRChat SDK is missing, or its package (com.riry.ftemulator) is.</summary>
+        internal static string FTEmulatorUnavailable()
+        {
+#if RIRYTOOLS_VRC_CONSTRAINTS
+            return "FTEmulator is its own package, com.riry.ftemulator, which is not in this project. Add it from the RiryTools listing in the VRChat Creator Companion.";
+#else
+            return new VrcSdkNotFoundException("FTEmulator").Message;
+#endif
+        }
+
+#if !(RIRYTOOLS_VRC_CONSTRAINTS && RIRYTOOLS_FTEMULATOR)
+        // Without the VRChat SDK or the FTEmulator package. With both, the path belongs to com.riry.ftemulator's
+        // FTEmulatorMenus.cs instead; keep the priority in step.
         [MenuItem(FTEmulatorTools, false, 2067)]
-        private static void FTEmulatorToolsItem() { VrcSdkMissing("FTEmulator"); }
+        private static void FTEmulatorToolsItem() { EditorUtility.DisplayDialog("FTEmulator not available", FTEmulatorUnavailable(), "OK"); }
 
 
         [MenuItem(FTEmulatorTools, true)]
@@ -357,7 +372,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Menu Tool (2066), menu key E   -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
 //                                                      found" popup (this file)
-//   Tools/RiryTools/FTEmulator (2067)               -> FTEmulatorWindow.Open (Editor/VRChat/UI/FTEmulator/FTEmulatorWindow.cs, entry in
+//   Tools/RiryTools/FTEmulator (2067)               -> FTEmulatorWindow.Open (com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorWindow.cs, entry in
 //                                                      Editor/VRChat/UI/RiryToolsVRChatMenus.cs); without the VRChat SDK -> "VRCSDK not
 //                                                      found" popup (this file). No right-click entry.
 //   Tools/RiryTools/Documentation (2070)            -> opens DocumentationLink (this file) in the browser
@@ -373,5 +388,5 @@ namespace Riry.RiryTools.Editor
 //   SCRIPT CAUSING FAILED LOAD window               -> Editor/UI/Debug/ScriptLoadGuardFailureWindow.cs
 //   Constraint Tool window                          -> Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs; its Train tab Editor/VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs,
 //                                                      its Bezier tab Editor/VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs
-//   FTEmulator Debug window                         -> Editor/VRChat/UI/FTEmulator/FTEmulatorDebugWindow.cs, opened from the FTEmulator window
+//   FTEmulator Debug window                         -> com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorDebugWindow.cs, opened from the FTEmulator window
 //   Confirmation dialogs (DisplayDialog) stay beside the action they confirm.
