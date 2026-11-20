@@ -164,8 +164,8 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Open` | Text shown through a variable (1, line 18) |
-| `OnGUI` | Labels (3, lines 28-49), Field labels (6, lines 33-77), Buttons (2, lines 59-103), Help boxes (1, line 98) |
-| `SaveButton` | Buttons (1, line 111), Dialogs (1, line 115) |
+| `OnGUI` | Labels (3, lines 28-53), Field labels (7, lines 33-81), Buttons (2, lines 63-107), Help boxes (1, line 102) |
+| `SaveButton` | Buttons (1, line 115), Dialogs (1, line 119) |
 
 ### `UI/AutoSync/AutoSyncGitLargeFilesWindow.UI.cs`
 
@@ -177,8 +177,8 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `CommitNow` | Text shown through a variable (1, line 129) |
-| `LargeFileNotice` | Dialogs (1, line 212) |
+| `CommitNow` | Text shown through a variable (1, line 132) |
+| `LargeFileNotice` | Dialogs (1, line 227) |
 
 ### `AutoSync/AutoSyncGitActions.cs`
 
@@ -210,7 +210,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `Open` | Text shown through a variable (2, lines 81-84) |
+| `Open` | Text shown through a variable (2, lines 85-88) |
 
 ## Avatar Migration Assistant
 

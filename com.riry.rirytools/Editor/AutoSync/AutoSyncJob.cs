@@ -56,6 +56,8 @@ namespace Riry.RiryTools.Editor
         internal string ProjectRoot;
         internal List<Save> Saves;
         internal bool Push;
+        // The commit title: {time} is the save's time, {files} the saved files' names, {branch} the checked-out branch.
+        internal string TitleTemplate = "{time}";
         // The remote chosen in Configuration, or null without remotes.
         internal string Remote;
 
@@ -66,9 +68,11 @@ namespace Riry.RiryTools.Editor
         {
             Open();
             var outcome = new Outcome();
+            string branch = Run("symbolic-ref", "-q", "--short", "HEAD").Output.Trim();
             foreach (Save save in Saves)
             {
-                if (Commit(save)) outcome.Committed.Add(save.Title);
+                string title = Title(save, branch.Length > 0 ? branch : "detached HEAD");
+                if (Commit(save, title)) outcome.Committed.Add(title);
             }
             if (Push && outcome.Committed.Count > 0 && Remote != null) PushBranch(outcome);
             return outcome;
@@ -92,8 +96,22 @@ namespace Riry.RiryTools.Editor
                 environment["GIT_AUTHOR_EMAIL"] = environment["GIT_COMMITTER_EMAIL"] = "autosync@localhost";
         }
 
-        /// <summary>Commits one save. Returns false when the saved files did not change.</summary>
-        private bool Commit(Save save)
+        /// <summary>The commit title from the template, on one line.</summary>
+        private string Title(Save save, string branch)
+        {
+            var names = new List<string>();
+            foreach (string path in save.Paths)
+            {
+                string name = Path.GetFileName(path);
+                if (!names.Contains(name)) names.Add(name);
+            }
+            string title = (TitleTemplate ?? "{time}").Replace("{time}", save.Title).Replace("{files}", string.Join(", ", names)).Replace("{branch}", branch)
+                .Replace("\r", " ").Replace("\n", " ").Trim();
+            return title.Length > 0 ? title : save.Title;
+        }
+
+        /// <summary>Commits one save with the title. Returns false when the saved files did not change.</summary>
+        private bool Commit(Save save, string title)
         {
             var paths = new List<string>();
             foreach (string path in save.Paths)
@@ -119,9 +137,9 @@ namespace Riry.RiryTools.Editor
             if (Run(diff.ToArray()).Succeeded) return false;
 
             // With paths, git commit takes only those paths, whatever else is staged.
-            var commit = new List<string> { "commit", "--quiet", "-m", save.Title, "--" };
+            var commit = new List<string> { "commit", "--quiet", "-m", title, "--" };
             commit.AddRange(files);
-            Run(commit.ToArray()).RequireSuccess("Committing " + save.Title);
+            Run(commit.ToArray()).RequireSuccess("Committing " + title);
             return true;
         }
 
