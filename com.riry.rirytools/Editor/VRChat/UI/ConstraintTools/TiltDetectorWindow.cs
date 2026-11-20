@@ -24,6 +24,21 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private string status;
         private Vector2 scroll;
 
+        // The Hierarchy entry: the right-clicked object becomes Source, another selected object (Ctrl/Cmd-click it first)
+        // Relative to. Relative to is cleared when it would be the same object as Source.
+        internal void UseSelection(Transform active, Transform[] selected)
+        {
+            if (active == null) return;
+            Undo.RecordObject(this, SettingsUndo);
+            source = active;
+            if (selected != null)
+                foreach (Transform other in selected)
+                    if (other != null && other != active) { relativeTo = other; break; }
+            if (relativeTo == source) relativeTo = null;
+            status = null;
+            Repaint();
+        }
+
         private TiltDetectorBuilder.Settings Settings
         {
             get

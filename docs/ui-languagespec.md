@@ -55,7 +55,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (11, lines 26-40) |
+| `attributes and constants` | Menu entries (14, lines 26-43) |
 
 ### `Components/StopAllToolScripts.cs`
 
@@ -391,11 +391,11 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `GenerateError` | Text shown through a variable (9, lines 101-114) |
-| `Generate` | Text shown through a variable (4, lines 130-162), Dialogs (1, line 136) |
-| `RemovePair` | Text shown through a variable (2, lines 175-195), Dialogs (1, line 181) |
-| `NewController` | Text shown through a variable (1, line 216) |
-| `NewParameters` | Text shown through a variable (1, line 229) |
+| `GenerateError` | Text shown through a variable (9, lines 114-127) |
+| `Generate` | Text shown through a variable (4, lines 143-175), Dialogs (1, line 149) |
+| `RemovePair` | Text shown through a variable (2, lines 188-208), Dialogs (1, line 194) |
+| `NewController` | Text shown through a variable (1, line 229) |
+| `NewParameters` | Text shown through a variable (1, line 242) |
 
 ### `VRChat/Components/ConstraintToolChains.cs`
 
@@ -433,8 +433,8 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `TiltDetectorWindow` | Text shown through a variable (2, lines 15-16: Flat plane and Space choices) |
-| `OnGUI` | Help boxes (1, line 42), Labels (3, lines 47-74), Field labels (5, lines 52-61, with tooltips), Buttons (1, line 82) |
-| `Build` | Text shown through a variable (2, lines 94-100) |
+| `OnGUI` | Help boxes (1, line 57), Labels (3, lines 61-89), Field labels (5, lines 67-76, with tooltips), Buttons (1, line 97) |
+| `Build` | Text shown through a variable (2, lines 109-115) |
 
 ### `VRChat/ConstraintTools/TiltDetector/TiltDetectorBuilder.cs`
 

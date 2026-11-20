@@ -87,6 +87,23 @@ namespace Riry.RiryTools.Editor
             Open(BezierTab).Bezier.UseSelection(Selection.activeTransform, Selection.transforms);
         }
 
+        // The active object becomes the Socket, the avatar it is in the Avatar root.
+        internal static void OpenInsertableFromHierarchy()
+        {
+            Open(InsertableTab).Insertable.UseSelection(Selection.activeTransform);
+        }
+
+        // The active object becomes Source, another selected object Relative to.
+        internal static void OpenDualAxisFromHierarchy()
+        {
+            Open(DualAxisTab).DualAxis.UseSelection(Selection.activeTransform, Selection.transforms);
+        }
+
+        internal static void OpenThreeAxisFromHierarchy()
+        {
+            Open(ThreeAxisTab).ThreeAxis.UseSelection(Selection.activeTransform, Selection.transforms);
+        }
+
         private ConstraintTrainWindow Train
         {
             get
@@ -229,4 +246,6 @@ namespace Riry.RiryTools.Editor
 //   Open(tab)                 Opens the window on that tab (below 0 keeps the last one). OpenFromTools: Tools > RiryTools >
 //                             Constraint Tool, on the tab used last. OpenTrainFromHierarchy / OpenBezierFromHierarchy:
 //                             the Hierarchy entries, which open that tab and pass the selection to its UseSelection.
+//                             OpenInsertableFromHierarchy / OpenDualAxisFromHierarchy / OpenThreeAxisFromHierarchy: the same,
+//                             for the Insertable prop, Dual axis detector and Three axis detector tabs.
 //   OnInspectorUpdate / OnSelectionChange / OnHierarchyChange  Passed on to the open subtool, then repaint.

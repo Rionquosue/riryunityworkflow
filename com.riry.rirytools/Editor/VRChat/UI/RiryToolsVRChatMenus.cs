@@ -74,6 +74,24 @@ namespace Riry.RiryTools.Editor
         [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, true)]
         private static bool ConstraintBezierHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
+        [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, false, 23)]
+        private static void InsertablePropHierarchyItem() { ConstraintToolWindow.OpenInsertableFromHierarchy(); }
+
+        [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, true)]
+        private static bool InsertablePropHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
+
+        [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, false, 24)]
+        private static void DualAxisHierarchyItem() { ConstraintToolWindow.OpenDualAxisFromHierarchy(); }
+
+        [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, true)]
+        private static bool DualAxisHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
+
+        [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, false, 25)]
+        private static void ThreeAxisHierarchyItem() { ConstraintToolWindow.OpenThreeAxisFromHierarchy(); }
+
+        [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, true)]
+        private static bool ThreeAxisHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
+
         // Scene and Prefab Mode objects only, not prefab assets.
         private static bool SceneObjectSelected()
         {
@@ -97,5 +115,10 @@ namespace Riry.RiryTools.Editor
 //   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy: the Train tab; the active
 //                                                      object becomes the chain start, a selected descendant the end.
 //   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy: the Bezier tab, the same way.
+//   GameObject/RiryTools/Constraint Tool/Insertable prop (23) -> ConstraintToolWindow.OpenInsertableFromHierarchy: the Insertable
+//                                                      prop tab; the active object becomes the Socket, its avatar the Avatar root.
+//   GameObject/RiryTools/Constraint Tool/Dual axis detector (24) / Three axis detector (25) -> ConstraintToolWindow.
+//                                                      OpenDualAxisFromHierarchy / OpenThreeAxisFromHierarchy: that tab; the active
+//                                                      object becomes Source, another selected object Relative to.
 //   SceneObjectSelected      Validator of the Hierarchy entries: a scene or Prefab Mode object is active.
 // ============================================================================

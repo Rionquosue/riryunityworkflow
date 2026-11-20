@@ -58,6 +58,19 @@ namespace Riry.RiryTools.Editor
         {
             ConstraintToolStatus.Act(action, () => status, "Insertable prop");
         }
+
+        // The Hierarchy entry: the right-clicked object becomes the Socket and the avatar it is in the Avatar root.
+        // On the avatar root itself, only the Avatar root is filled.
+        internal void UseSelection(Transform active)
+        {
+            if (active == null) return;
+            Undo.RecordObject(this, SettingsUndo);
+            VRCAvatarDescriptor found = active.GetComponentInParent<VRCAvatarDescriptor>(true);
+            if (found != null) avatar = found;
+            if (found == null || found.transform != active) socket = active;
+            status = null;
+            Repaint();
+        }
         [NonSerialized] private double lastDrawn;
         private Vector2 scroll;
 
