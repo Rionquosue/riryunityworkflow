@@ -470,6 +470,9 @@ Also in the GameObject menu.
 | `GameObject/RiryTools/Attach To` | (19) The Attach To popup; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs` |
 | `GameObject/RiryTools/Constraint Tool/Bezier` | (21) The Bezier tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintBezierHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Constraint Tool/Train` | (20) The Train tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintTrainHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/Constraint Tool/Insertable prop` | (23) The Insertable prop tab; the selected object becomes the Socket and the avatar it is in the Avatar root (on the avatar root itself, only the Avatar root). Path is `RiryToolsRightClickMenu.InsertablePropHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/Constraint Tool/Dual axis detector` | (24) The Dual axis detector tab; the selected object becomes Source, another selected object Relative to. Path is `RiryToolsRightClickMenu.DualAxisHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/Constraint Tool/Three axis detector` | (25) The Three axis detector tab, filled the same way. Path is `RiryToolsRightClickMenu.ThreeAxisHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 
 ### Git menu
 
