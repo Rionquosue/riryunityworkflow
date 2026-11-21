@@ -544,7 +544,9 @@ Also in the GameObject menu.
 | `NUMBER`, `STABLE`, `BETA` | Version patterns; `NUMBER` has no leading zeros. | `rirytools_vpm/scripts/build_vpm.py` |
 | `PACKAGE_NAME` | `com.riry.rirytools`: the source folder that is zipped, the package name, and the zip name `com.riry.rirytools-<version>.zip`. | `rirytools_vpm/scripts/build_vpm.py` |
 | `PACKAGES` | `com.riry.rirytools` (tags `v`), `com.riry.animatortemplates` (`animatortemplates-v`) and `com.riry.ftemulator` (`ftemulator-v`): packages the listing must contain, each with its tag prefix. | `rirytools_vpm/scripts/verify_listing.py`, `rirytools_vpm/scripts/build_vpm.py` |
-| `ftemulator.package.json` | The fields of `com.riry.ftemulator`'s release `package.json`; `vpmDependencies` needs `com.riry.rirytools` 0.7.1-beta.1 or newer (the first version without FTEmulator, which gives it access to RiryTools' internals). | `rirytools_vpm/scripts/build_vpm.py` |
+| `ftemulator.package.json` | The fields of `com.riry.ftemulator`'s release `package.json`, without `vpmDependencies` (set at build time from `DEPENDENCIES`). | `rirytools_vpm/scripts/build_vpm.py` |
+| `DEPENDENCIES` | `com.riry.ftemulator` needs `com.riry.rirytools`: its release `package.json` gets `vpmDependencies` `com.riry.rirytools` `>=` RiryTools' current release on the same channel (stable, beta or beta-unity6); the build stops when there is none. | `rirytools_vpm/scripts/build_vpm.py` |
+| `--tags` | `build_vpm.py build`: file of the listing's release tags, one per line (`$RUNNER_TEMP/tags`); needed for a package in `DEPENDENCIES`. | `rirytools_vpm/scripts/build_vpm.py`, `rirytools_vpm/.github/workflows/build-package.yml` |
 | `REPOSITORY` | `Rionquosue/rirytools_vpm`. | `rirytools_vpm/scripts/verify_listing.py`, `rirytools_vpm/scripts/triage_read.py` |
 | `REVIEW_SCORE` | `0.45`: issue score that asks for review. | `rirytools_vpm/scripts/issue_check.py` |
 | `WEBSITE`, `SOURCE_JSON`, `TEMPLATED` | What the listing is checked against. | `rirytools_vpm/scripts/verify_listing.py` |
