@@ -14,9 +14,13 @@
 - `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`.
 =======
 - `.github/workflows/notify-vpm.yml`: starts the VPM build in `rirytools_vpm` on pushes to `main` and `beta`, for both packages.
+<<<<<<< HEAD
 >>>>>>> 4e9dc36 (FTEmulator moved into its own package, com.riry.ftemulator, for the VPM listing)
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
 >>>>>>> 5490d61 (Add UI language spec listing where each UI element's text lives)
+=======
+- `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`, and a page per tool in `About/Tools/`), `tutorials/` (a page per tool, and a folder per tool with a page per subtool, such as `tutorials/constrainttool/` with `train-rig.md`, `bezier-rig.md`, `Insertable-prop.md`, `dual-axis-detector.md` and `three-axis-detector.md`).
+>>>>>>> 9d9b681 (Docs: Dual axis detector and Three axis detector tutorials, docs layout in the file structure)
 - `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
 - `com.riry.ftemulator/`: FTEmulator, its own package (listed in the VPM as `com.riry.ftemulator`). It needs `com.riry.rirytools` and uses its internals (`InternalsVisibleTo`). Only Unity Editor code lives here; the VRCFaceTracking companion (C# module; Python Recorder app and command-line app) is in `Rionquosue/VRCFT-FtEmuCompanion`.
 
