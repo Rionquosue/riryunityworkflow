@@ -20,7 +20,7 @@ Shows an avatar's assembled expression menu and parameters, traced to their sour
 ## 4. How the tool behaves
 
 - Traces expression menu controls and parameters to their sources: the avatar descriptor and VRCFury (Modular Avatar is not read for now). VRCFury's menu rules (Move, Reorder, Set Icon, SPS, Security Lock, Override Menu Settings) are applied as VRCFury applies them.
-- **Parameter budget** compares synced parameter cost with and without VRCFury's Parameter Compressor, estimated or exact (two isolated test builds).
+- **Parameter budget** compares synced parameter cost with and without VRCFury's Parameter Compressor, estimated; for exact numbers, build a VRCFury test copy.
 - **Menu manager** previews the assembled radial menu in Edit Mode with Gesture Manager's radial, and a list of every entry.
 - Planned changes: moves (drag, or **Move to…**), Destructive Move, new menus and controls, **Assign Menu Icon**, **Rename Menu Entry** (radial right-click or triple-click in the list), **Delete Menu Entry** (radial right-click or Delete key) and **Move to… > <NULL>** (a VRCFury Move Menu Item to a blank path). Nothing changes until Apply; the plan is saved per avatar.
 - **Apply** makes each change through the system owning the control, as one undo step: menu assets are edited in place, VRCFury items get VRCFury rules, and VRCFury paths inside a moved or renamed submenu follow it.

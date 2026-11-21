@@ -64,7 +64,7 @@ Per user, shared by every project.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `com.vrcfury.parameterCompressor` | VRCFury's own Parameter Compressor setting (int: 0 Compress, 1 Ask, 2 Fail; unset means Compress). Menu Tools reads it; **Compare exactly** sets it to 2 and then 0 for its two test builds and puts it back (deleted again if it was unset). | `VRChat/MenuTool/MenuToolCompressor.cs` |
+| `com.vrcfury.parameterCompressor` | VRCFury's own Parameter Compressor setting (int: 0 Compress, 1 Ask, 2 Fail; unset means Compress). Menu Tools reads it (never writes it). | `VRChat/MenuTool/MenuToolCompressor.cs` |
 | `RiryTools.AttachTo.AddedBones` | Bones added with **Add bone** (string of HumanBodyBones names, comma separated; default `""`), listed after `AttachTo.CommonBones`. **Remove** takes one off. Read through `AttachTo.AddedBonesKey`. | `Utilities/AttachTo.cs` |
 | `RiryTools.AvatarMigrator.Settings` | Avatar Migration Assistant settings as JSON: per-entry options, sub-options, ignore children and migrated folder. Unset means `StructureTolerance` 0.001, `ManualMatching` off, each entry as its `enabled` in types.yml, `MigratedFolder` empty. | `AvatarMigrator/AvatarMigratorSettings.cs` |
 | `RiryTools.BetterFbx.BlenderPath` | Path to the Blender executable for Better FBX (string; `""` means detect). Read through `ImportPresetBetterFBX.BlenderPath`. | `ImportPresets/ImportPresetBetterFBX.cs`, `UI/ImportPresets/ImportPresetFolderWindow.UI.cs` |
