@@ -34,6 +34,7 @@ namespace Riry.RiryTools.Editor
 
         // ---- Hierarchy right-click -------------------------------------------
         private const string AttachToHierarchy = "GameObject/RiryTools/Attach To";
+        private const string InvertGlobalPositionHierarchy = "GameObject/RiryTools/" + InvertGlobalPosition.UndoName;
 
         // ---- VRChat tools (also used by RiryToolsVRChatMenus.cs) ------------
         internal const string ConstraintTrainHierarchy = "GameObject/RiryTools/Constraint Tools/Train";
@@ -119,6 +120,12 @@ namespace Riry.RiryTools.Editor
 
         [MenuItem(AttachToHierarchy, true)]
         private static bool AttachToValid() { return !StopAllToolScripts.Active && (AttachTo.Selected().Count > 0); }
+
+        [MenuItem(InvertGlobalPositionHierarchy, false, 26)]
+        private static void InvertGlobalPositionItem() { InvertGlobalPositionPrompts.Run(); }
+
+        [MenuItem(InvertGlobalPositionHierarchy, true)]
+        private static bool InvertGlobalPositionValid() { return !StopAllToolScripts.Active && (AttachTo.Selected().Count > 0); }
 
         // Constraint Tools/Train is 20, Constraint Tools/Bezier 21, Animator Tools/Find and Replace 22, Constraint Tools/Insertable prop 23,
         // Constraint Tools/Dual axis detector 24 and Constraint Tools/Three axis detector 25
@@ -209,6 +216,8 @@ namespace Riry.RiryTools.Editor
 // HIERARCHY RIGHT-CLICK (also in the GameObject menu)
 //   GameObject/RiryTools/Attach To (19)         -> AttachToWindow.Open (Editor/UI/Utilities/AttachToWindow.cs): the Attach To popup;
 //                                                      enabled when scene objects are selected (AttachTo.Selected, Editor/Utilities/AttachTo.cs)
+//   GameObject/RiryTools/Invert Global Position (26) -> InvertGlobalPositionPrompts.Run (Editor/UI/Utilities/InvertGlobalPositionPrompts.cs):
+//                                                      mirrors the selection to the avatar's other side, then asks about the mirrored bone
 //   GameObject/RiryTools/Constraint Tools/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy (entry in Editor/VRChat/UI/RiryToolsVRChatMenus.cs)
 //   GameObject/RiryTools/Constraint Tools/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy (same file); both use the selection
 //                                                      as the chain; without the VRChat SDK -> "VRCSDK not found" popup (this file)

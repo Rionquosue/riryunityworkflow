@@ -56,7 +56,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (16, lines 26-45) |
+| `attributes and constants` | Menu entries (17, lines 26-46) |
 
 ### `Components/StopAllToolScripts.cs`
 
@@ -154,6 +154,20 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Attach` | Dialogs (3, lines 100-123) |
+
+## Invert Global Position
+
+### `UI/Utilities/InvertGlobalPositionPrompts.cs`
+
+| Method | Text |
+|---|---|
+| `Run` | Dialogs (3, lines 24-42) |
+
+### `Utilities/InvertGlobalPosition.cs`
+
+| Method | Text |
+|---|---|
+| `UndoName` | Text shown through a variable (1, line 16: the dialogs' title and the menu entry) |
 
 ## AutoSync
 

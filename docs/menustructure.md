@@ -26,6 +26,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Three axis detector
     * GUID Tools
     * Menu Tools
+    * Invert Global Position
 
 **Project folder**
 
