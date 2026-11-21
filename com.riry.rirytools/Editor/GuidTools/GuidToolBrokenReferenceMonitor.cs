@@ -25,6 +25,12 @@ namespace Riry.RiryTools.Editor
         private static readonly Regex Pattern = new Regex(
             @"Missing Prefab|Broken text PPtr|Could not extract GUID|missing Prefab Asset|Prefab instance problem",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        // Left out: a reference inside an animator controller or animation clip to an object of the same file that doesn't
+        // exist ("Broken text PPtr in file(<path>.controller). Local file identifier (<id>) doesn't exist!"), such as a
+        // state whose Motion lost its clip's GUID. It names no missing asset, so Broken References has nothing to repair.
+        private static readonly Regex AnimationLocal = new Regex(
+            @"Broken text PPtr in file\([^)]*\.(controller|overrideController|anim)\)\.\s*Local file identifier",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private static readonly Queue<double> recent = new Queue<double>();
         private static readonly HashSet<string> prompted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static bool loading;
@@ -62,7 +68,7 @@ namespace Riry.RiryTools.Editor
 
         private static void OnLog(string message, string stackTrace, LogType type)
         {
-            if (type == LogType.Log || !Pattern.IsMatch(message)) return;
+            if (type == LogType.Log || !Pattern.IsMatch(message) || AnimationLocal.IsMatch(message)) return;
             recent.Enqueue(EditorApplication.timeSinceStartup);
             while (recent.Count > 0 && EditorApplication.timeSinceStartup - recent.Peek() > WindowSeconds) recent.Dequeue();
             if (recent.Count < Threshold) return;

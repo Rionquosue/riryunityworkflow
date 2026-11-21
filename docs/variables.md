@@ -247,6 +247,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `GitRunner.TimedOut` | `-1`: exit code reported for a timed-out or cancelled command. | `Components/GitRunner.cs` |
 | `GitState.CacheSeconds` | `5.0`: how long Git and repository state is cached. | `Components/GitState.cs` |
 | `GuidToolBrokenReferenceMonitor.Threshold` / `WindowSeconds` | `3` in `30.0` s: missing-reference log lines that trigger the prompt. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
+| `GuidToolBrokenReferenceMonitor.AnimationLocal` | `Broken text PPtr in file(<…>.controller / .overrideController / .anim). Local file identifier`: log lines left out of the prompt's count, since they name an object missing inside the same controller or clip (such as a state's Motion that lost its clip's GUID), not a missing asset. | `GuidTools/GuidToolBrokenReferenceMonitor.cs` |
 | `ScriptLoadGuard.CaptureSeconds` | `5.0`: errors this long before a prefab opens count as suspects. | `Debug/ScriptLoadGuard.cs` |
 | `ScriptLoadGuard.RecentLimit` | `50`: logged errors kept. | `Debug/ScriptLoadGuard.cs` |
 
