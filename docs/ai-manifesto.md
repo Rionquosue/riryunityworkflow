@@ -100,8 +100,6 @@ Everything in here is done with strict rules based on what I think is morally ac
 
 I think the clanker should do our dishes, not eat our lunch.
 
-Also yes, in future, I will maintain this repo by hand rather than with a clanker. I have been buying coding books to facilitate this.
-
 Thank you for reading,
 Sincerely,
 
