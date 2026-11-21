@@ -74,7 +74,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * FTEmulator
     * Documentation
 
-FTEmulator has no right-click entry.
+FTEmulator has no right-click entry. The entry and the Tools tab's FTEmulator sub-tab come from FTEmulator's own package, `com.riry.ftemulator`; without it (or without the VRChat SDK) RiryTools keeps the entry and the sub-tab, saying why FTEmulator is not available.
 
 ### Main menu
 

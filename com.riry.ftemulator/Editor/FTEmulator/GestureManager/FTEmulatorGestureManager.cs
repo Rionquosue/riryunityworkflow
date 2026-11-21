@@ -113,7 +113,7 @@ namespace Riry.RiryTools.Editor
 // GLOSSARY: FTEmulator Gesture Manager output (compiled only with Gesture Manager 3.9+, RIRYTOOLS_GESTURE_MANAGER)
 // ============================================================================
 //
-// FTEmulatorGestureManager (this file): IFTEmulatorOutput (Editor/VRChat/FTEmulator/FTEmulatorTypes.cs)
+// FTEmulatorGestureManager (this file): IFTEmulatorOutput (com.riry.ftemulator/Editor/FTEmulator/FTEmulatorTypes.cs)
 //   static constructor       [InitializeOnLoad]: sets FTEmulator.CreateOutput, FindManagers and ManagerType.
 //   Bind(target, out problem)  A GestureManager component, or the object that has one; its Module must be a valid ModuleVrc3
 //                            (an avatar is running).

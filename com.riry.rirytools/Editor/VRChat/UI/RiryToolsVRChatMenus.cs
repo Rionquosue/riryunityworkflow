@@ -13,14 +13,13 @@ namespace Riry.RiryTools.Editor
     internal static class RiryToolsVRChatMenus
     {
         // The Main Menu's Constraint Tool tab hosts the Constraint Tool window (with its Train, Bezier and Insertable prop
-        // sub-tabs), its Menu Tool tab the Menu Tool's Parameter budget (its Menu manager opens the Menu Tool window), and
-        // its Tools tab's FTEmulator sub-tab the FTEmulator window.
+        // sub-tabs), and its Menu Tool tab the Menu Tool's Parameter budget (its Menu manager opens the Menu Tool window).
+        // FTEmulator's entries are in its own package (com.riry.ftemulator, Editor/UI/FTEmulatorMenus.cs).
         static RiryToolsVRChatMenus()
         {
             RiryToolsMainMenu.CreateMenuTool = MenuToolWindow.CreateHosted;
             RiryToolsMainMenu.CreateFindReplace = BehaviourFindReplaceWindow.CreateHosted;
             RiryToolsMainMenu.CreateConstraintTool = ConstraintToolWindow.CreateHosted;
-            RiryToolsMainMenu.CreateFTEmulator = FTEmulatorWindow.CreateHosted;
         }
 
         [MenuItem(RiryToolsMenuBar.ConstraintTool, false, 2030)]
@@ -48,14 +47,6 @@ namespace Riry.RiryTools.Editor
         [MenuItem(RiryToolsMenuBar.FindReplaceTools, true)]
 
         private static bool FindReplaceToolsValid() { return !StopAllToolScripts.Active; }
-
-        [MenuItem(RiryToolsMenuBar.FTEmulatorTools, false, 2067)]
-        private static void FTEmulatorToolsItem() { FTEmulatorWindow.Open(); }
-
-
-        [MenuItem(RiryToolsMenuBar.FTEmulatorTools, true)]
-
-        private static bool FTEmulatorToolsValid() { return !StopAllToolScripts.Active; }
 
         [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, false, 22)]
         private static void FindReplaceHierarchyItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeGameObject); }
@@ -102,9 +93,7 @@ namespace Riry.RiryTools.Editor
 //   Tools/RiryTools/Animator Tools/Find and Replace (1995) -> BehaviourFindReplaceWindow.OpenPopup (Editor/VRChat/UI/AnimatorTools/
 //                                                      BehaviourFindReplaceWindow.cs); also in the Hierarchy (22) and Project (2006)
 //                                                      right-click menus, for a scene object and an animator controller
-//   Tools/RiryTools/FTEmulator (2067)            -> FTEmulatorWindow.Open (Editor/VRChat/UI/FTEmulator/FTEmulatorWindow.cs): its own
-//                                                      window; the Main Menu's Tools tab hosts it in its FTEmulator sub-tab
-//                                                      (CreateFTEmulator = FTEmulatorWindow.CreateHosted). No right-click entry.
+//   Tools/RiryTools/FTEmulator (2067)            -> in com.riry.ftemulator (Editor/UI/FTEmulatorMenus.cs), not here.
 //   GameObject/RiryTools/Constraint Tool/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy: the Train tab; the active
 //                                                      object becomes the chain start, a selected descendant the end.
 //   GameObject/RiryTools/Constraint Tool/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy: the Bezier tab, the same way.

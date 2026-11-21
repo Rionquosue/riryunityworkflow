@@ -1,0 +1,34 @@
+{
+  "name": "Riry.RiryTools.Editor.FTEmulator",
+  "rootNamespace": "Riry.RiryTools.Editor",
+  "references": [
+    "Riry.RiryTools.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "VRCSDK3A.dll",
+    "VRCSDKBase.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "RIRYTOOLS_VRC_CONSTRAINTS"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.7.0",
+      "define": "RIRYTOOLS_VRC_CONSTRAINTS"
+    },
+    {
+      "name": "com.vrchat.avatars",
+      "expression": "3.10.6",
+      "define": "RIRYTOOLS_VRC_BIT_WIDTH"
+    }
+  ],
+  "noEngineReferences": false
+}
