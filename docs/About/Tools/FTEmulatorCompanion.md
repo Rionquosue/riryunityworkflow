@@ -8,10 +8,20 @@ Companion to RiryTools FTEmulator: a VRCFaceTracking module, a Recorder app and 
 - **Recorder** (`Recorder.pyw`, Python): a window that relays VRCFaceTracking's output to VRChat while it is open, and records it (what FTEmulator in Unity receives) together with the visemes and your microphone on demand. It can start with SteamVR.
 - **Companion app** (`python -m ftrecorder`, Python): processes videos and replays recordings, from the command line.
 
+## Downloads
+
+Every push to `main` builds the Recorder and the companion command line into one program, attached to the [latest](https://github.com/Rionquosue/VRCFT-FtEmuCompanion/releases/tag/latest) pre-release (replaced each time):
+
+- `RiryTools-FTRecorder.exe` (Windows) and `RiryTools-FTRecorder-x86_64.AppImage` (Linux; `chmod +x` it first). Opened with no arguments, they show the Recorder; with arguments, they are the companion command line (`RiryTools-FTRecorder.exe process --video clip.mp4 --out clip.mkv`).
+- They include Python, numpy, onnxruntime and the face models, so nothing else is installed for them except ffmpeg (below). They are not code-signed, so Windows SmartScreen may ask before the first start.
+- `VRCFT_Module.zip`: the module, built as below. Install it in VRCFaceTracking's Module Registry as a local .zip module.
+
+`.github/workflows/build.yml` and `packaging/build.py` make the downloads; the module is compiled against VRCFaceTracking.Core and .SDK built from VRCFaceTracking's source at a pinned commit.
+
 ## Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) to build the module, and [VRCFaceTracking](https://github.com/benaclejames/VRCFaceTracking) to use it.
-- [Python](https://www.python.org/downloads/) 3.10 or newer, with tkinter (included in python.org's Windows installer; on Linux, your distribution's `python3-tk`), for the Recorder and the companion app. `process` also needs `pip install -r requirements.txt` (numpy, onnxruntime).
+- To run the Recorder and the companion app from source instead of the downloads: [Python](https://www.python.org/downloads/) 3.10 or newer, with tkinter (included in python.org's Windows installer; on Linux, your distribution's `python3-tk`), for the Recorder and the companion app. `process` also needs `pip install -r requirements.txt` (numpy, onnxruntime).
 - [ffmpeg](https://ffmpeg.org/) on `PATH` (or its path set) for recording, processing, `.mkv` recordings, video files and webcams. Every command and module source that needs it checks first and says how to install it when it is missing.
 - On Windows, VRChat installed through Steam for OVRLipSync (VRChat's viseme engine), or the path to an `OVRLipSync.dll`. OVRLipSync is a Windows DLL: on Linux, visemes come only from a running VRChat (and `process --visemes classifier`).
 - To take visemes from a running VRChat when processing videos: a virtual audio cable (such as VB-Cable), with VRChat's microphone set to the cable's output.
@@ -27,7 +37,7 @@ dotnet publish FTRecorder.Module -c Release -r win-x64 -p:VrcftDir="C:\path\to\f
 
 The zip is written to `FTRecorder.Module/bin/RiryTools.FTRecorder.Module-win-x64.zip`. Install it in VRCFaceTracking's Module Registry as a local .zip module.
 
-The Recorder and the companion app are Python and need no build: run them from this folder (below).
+The Recorder and the companion app are Python: use the downloads, or run them from this folder (below). To build the downloads yourself: `pip install pyinstaller numpy onnxruntime`, then `python packaging/build.py` (Windows), or `python packaging/build.py --appimagetool PATH` with [appimagetool](https://github.com/AppImage/appimagetool) (Linux).
 
 ## Module
 
@@ -36,7 +46,7 @@ Settings are in `%LocalAppData%\RiryTools\FTRecorder\module-config.json`, writte
 | Setting | Default | Use |
 |---|---|---|
 | `source` | `webcam` | `playback`, `video`, `webcam` or `babbleOsc`. |
-| `record` | `false` | While `true`, everything the module sends is written to a recording. |
+| `record` | `false` | While `true`, everything the module sends is recorded into `recordingsFolder/module_<date>_<time>.mkv` (the recording attached, with 20 ms of silence as its track). Until recording stops it is kept in `NAME.mkv.recording.ftrec.jsonl`, which is deleted once the `.mkv` is written and kept (named in the log) if not. Needs ffmpeg: checked when recording starts; when it is missing, the log says so and nothing is recorded. |
 | `recordingsFolder` | `Documents\RiryTools FTRecorder` | Where recordings go. |
 | `playbackFile`, `loop` | `""`, `true` | The recording `playback` plays (`.ftrec.jsonl`, or `.mkv` through ffmpeg); `loop` also restarts a video file. |
 | `videoFile` | `""` | The video `video` plays at its own speed. |
@@ -105,6 +115,13 @@ python -m ftrecorder replay --in session.mkv --port 9000 --loop
 
 Sends recorded OSC packets, VRChat parameters and visemes to `127.0.0.1:PORT` at their recorded times. Takes `.mkv` (read through ffmpeg, `--ffmpeg PATH`) and `.ftrec.jsonl` recordings. Expression frames are played by the module's `playback` source instead. VRChat ignores `Viseme` and `Voice` sent to it (it makes its own); FTEmulator in Unity takes them.
 
+## What the module and the application record
+
+| | Records |
+|---|---|
+| **Module** (`record` setting) | Face tracking: Unified Expressions and eyes <br> Only from the module's own source (playback, video, webcam, Babble app) <br> As VRCFaceTracking receives it, before calibration, for any avatar <br> One `.mkv` with the recording attached |
+| **Application** (Recorder) | Face tracking: VRCFaceTracking's OSC output, the avatar parameters VRChat or FTEmulator receive <br> From any tracking module VRCFaceTracking runs <br> After VRCFaceTracking's calibration, for the current avatar <br> Visemes: VRChat's `Viseme` and `Voice`, or OVRLipSync on the microphone (Windows) <br> Microphone audio (**Record audio**) <br> One `.mkv` with the recording attached |
+
 ## Recordings
 
 The Recorder and `process` write `.mkv` (Matroska), one file with:
@@ -114,7 +131,7 @@ The Recorder and `process` write `.mkv` (Matroska), one file with:
 - **Subtitles ("Visemes"):** one caption per change, holding the viseme's index and name, Voice, and the 15 weights when OVRLipSync or the classifier made them. Any player that shows subtitles (VLC, mpv) shows them with the audio.
 - **Attachment `recording.ftrec.jsonl`:** the whole recording, in the format below. `ffmpeg -dump_attachment:t:0 recording.ftrec.jsonl -i session.mkv -t 0 -f null -` copies it out.
 
-The module's `record` setting writes `.ftrec.jsonl` directly.
+The module's `record` setting writes `.mkv` too, holding only the attached recording (and 20 ms of silence, the track a Matroska file needs).
 
 `.ftrec.jsonl`: one JSON object per line. The first line is the header (`format`, `version`, `source`, `created`, and the `unified` and `eye` value names). Each following line is one entry with its time `t` in seconds:
 

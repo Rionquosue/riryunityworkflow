@@ -18,7 +18,7 @@ don't.
    notifications:** text written in the UI call itself.
 3. **Text shown through a variable:** text written here and handed to a UI call
    elsewhere: `Title` and `DisplayName` constants, status and error messages,
-   validation messages, Menu Tool scan notes and plan errors, and exception
+   validation messages, Menu Tools scan notes and plan errors, and exception
    messages a window shows.
 
 Not listed: UI calls whose text is only a variable, a symbol (`x`, `▾`, `≡`,
@@ -37,10 +37,11 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `RiryToolsMainMenu` | Tabs and toolbars (2, lines 31-35) |
-| `Open` | Window titles (1, line 81) |
-| `OnGUI` | Buttons (1, line 124) |
-| `DrawTab` | Toggles (3, lines 139-211), Help boxes (4, lines 151-194), Buttons (3, lines 183-219) |
+| `RiryToolsMainMenu` | Tabs and toolbars (4, lines 26-33) |
+| `Open` | Window titles (1, line 87) |
+| `OnGUI` | Buttons (1, line 131) |
+| `DrawTab` | Toggles (3, lines 158-231), Help boxes (5, lines 160-207), Buttons (12, lines 201-225: PopUp Tools' labels passed to `PopUpButton`) |
+| `DrawStopToggle` | Toggles (1, line 251) |
 
 ### `UI/RiryToolsMenuBar.cs`
 
@@ -55,7 +56,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (11, lines 26-40) |
+| `attributes and constants` | Menu entries (16, lines 26-45) |
 
 ### `Components/StopAllToolScripts.cs`
 
@@ -167,8 +168,8 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Open` | Text shown through a variable (1, line 18) |
-| `OnGUI` | Labels (3, lines 28-49), Field labels (6, lines 33-77), Buttons (2, lines 59-103), Help boxes (1, line 98) |
-| `SaveButton` | Buttons (1, line 111), Dialogs (1, line 115) |
+| `OnGUI` | Labels (3, lines 28-53), Field labels (7, lines 33-81), Buttons (2, lines 63-107), Help boxes (1, line 102) |
+| `SaveButton` | Buttons (1, line 115), Dialogs (1, line 119) |
 
 ### `UI/AutoSync/AutoSyncGitLargeFilesWindow.UI.cs`
 
@@ -180,8 +181,8 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `CommitNow` | Text shown through a variable (1, line 129) |
-| `LargeFileNotice` | Dialogs (1, line 212) |
+| `CommitNow` | Text shown through a variable (1, line 132) |
+| `LargeFileNotice` | Dialogs (1, line 227) |
 
 ### `AutoSync/AutoSyncGitActions.cs`
 
@@ -213,7 +214,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `Open` | Text shown through a variable (2, lines 81-84) |
+| `Open` | Text shown through a variable (2, lines 85-88) |
 
 ## Avatar Migration Assistant
 
@@ -327,7 +328,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `SyncNow` | Text shown through a variable (3, lines 39-83) |
 | `RestoreOriginals` | Text shown through a variable (2, lines 176-182) |
 
-## Constraint Tool
+## Constraint Tools
 
 ### `VRChat/UI/ConstraintTools/ConstraintBezierWindow.UI.cs`
 
@@ -350,7 +351,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `ConstraintToolWindow` | Text shown through a variable (1, line 14), Tabs and toolbars (1, line 15) |
+| `ConstraintToolWindow` | Text shown through a variable (1, line 15), Tabs and toolbars (1, line 16) |
 
 ### `VRChat/UI/ConstraintTools/ConstraintTrainWindow.UI.cs`
 
@@ -391,11 +392,11 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `GenerateError` | Text shown through a variable (9, lines 101-114) |
-| `Generate` | Text shown through a variable (4, lines 130-162), Dialogs (1, line 136) |
-| `RemovePair` | Text shown through a variable (2, lines 175-195), Dialogs (1, line 181) |
-| `NewController` | Text shown through a variable (1, line 216) |
-| `NewParameters` | Text shown through a variable (1, line 229) |
+| `GenerateError` | Text shown through a variable (9, lines 114-127) |
+| `Generate` | Text shown through a variable (4, lines 143-175), Dialogs (1, line 149) |
+| `RemovePair` | Text shown through a variable (2, lines 188-208), Dialogs (1, line 194) |
+| `NewController` | Text shown through a variable (1, line 229) |
+| `NewParameters` | Text shown through a variable (1, line 242) |
 
 ### `VRChat/Components/ConstraintToolChains.cs`
 
@@ -427,6 +428,20 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `AvatarError` | Text shown through a variable (2, lines 330-334) |
+
+### `VRChat/UI/ConstraintTools/TiltDetectorWindow.cs`
+
+| Method | Text |
+|---|---|
+| `TiltDetectorWindow` | Text shown through a variable (2, lines 15-16: Flat plane and Space choices) |
+| `OnGUI` | Help boxes (1, line 57), Labels (3, lines 61-89), Field labels (5, lines 67-76, with tooltips), Buttons (1, line 97) |
+| `Build` | Text shown through a variable (2, lines 109-115) |
+
+### `VRChat/ConstraintTools/TiltDetector/TiltDetectorBuilder.cs`
+
+| Method | Text |
+|---|---|
+| `Problem` | Text shown through a variable (7, lines 61-68) |
 
 ## FTEmulator
 
@@ -537,10 +552,10 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OnGUI` | Labels (4, lines 26-78), Buttons (4, lines 30-109), Help boxes (1, line 43), Foldouts (1, line 86) |
-| `Header` | Buttons (1, line 120) |
-| `DrawLocations` | Tooltips (1, line 140) |
-| `DrawCandidate` | Labels (1, line 173) |
+| `OnGUI` | Labels (4, lines 26-83), Buttons (5, lines 30-114, with tooltips), Help boxes (1, line 48), Foldouts (1, line 91) |
+| `Header` | Buttons (1, line 125) |
+| `DrawLocations` | Tooltips (1, line 145) |
+| `DrawCandidate` | Labels (1, line 178) |
 
 ### `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`
 
@@ -548,9 +563,9 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `OpenForOpenScenes` | Dialogs (1, line 53) |
 | `Rescan` | Dialogs (1, line 96) |
-| `ScrubUnusedOverrides` | Dialogs (2, lines 201-206) |
-| `OfferControllerCleaner` | Dialogs (1, line 230) |
-| `ApplyRedirects` | Dialogs (5, lines 255-306) |
+| `ScrubUnusedOverrides` | Dialogs (2, lines 207-212) |
+| `OfferControllerCleaner` | Dialogs (1, line 236) |
+| `ApplyRedirects` | Dialogs (5, lines 261-312) |
 
 ### `UI/GuidTools/GuidToolBrokenSaveWindow.cs`
 
@@ -579,6 +594,28 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `Open` | Window titles (1, line 12) |
 | `OnGUI` | Labels (3, lines 22-56), Help boxes (1, line 23), Buttons (4, lines 30-48) |
+
+### `UI/GuidTools/GuidToolPrefabCleanerWindow.cs`
+
+| Method | Text |
+|---|---|
+| `GuidToolPrefabCleanerWindow` | Text shown through a variable (3, line 15: Target choices) |
+| `Open` | Window titles (1, line 25, `GuidToolUnusedOverrides.Title`) |
+| `OnGUI` | Labels (2, lines 43-51), Field labels (2, lines 45-49, with tooltips), Buttons (1, line 55) |
+
+### `UI/GuidTools/GuidToolTargetsWindow.cs`
+
+| Method | Text |
+|---|---|
+| `RegeneratorTitle` / `RepairTitle` | Text shown through a variable (2, lines 17-18: window titles and the Main Menu's buttons) |
+| `Open` | Window titles (1, line 32) |
+| `OnGUI` | Labels (2, lines 49-53), Field labels (1, line 69), Buttons (2, lines 64-75) |
+
+### `GuidTools/GuidToolUnusedOverrides.cs`
+
+| Method | Text |
+|---|---|
+| `Title` | Text shown through a variable (1, line 20: `Prefab Cleaner`, the dialog, popup and menu name) |
 
 ### `GuidTools/GuidToolBrokenReferenceMonitor.cs`
 
@@ -769,7 +806,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OnGUI` | Field labels (1, line 33), Buttons (5, lines 36-66), Labels (2, lines 48-63) |
+| `OnGUI` | Field labels (1, line 40), Buttons (5, lines 43-73), Labels (2, lines 55-70) |
 
 ### `Utilities/MaterialCleaner.cs`
 
@@ -777,7 +814,7 @@ settings keys, file contents and other strings the user never sees as UI.
 |---|---|
 | `MaterialCleaner` | Text shown through a variable (1, line 15) |
 
-## Menu Tool
+## Menu Tools
 
 ### `VRChat/UI/MenuTool/MenuToolAddMenuDialog.cs`
 
@@ -790,25 +827,25 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `MenuToolWindow` | Text shown through a variable (1, line 21), Tabs and toolbars (1, line 22) |
-| `AddMoveItems` | Context menu items (6, lines 345-371) |
-| `OnRadialContext` | Context menu items (9, lines 412-444) |
-| `DrawWindow` | Help boxes (2, lines 525-546) |
-| `DrawHeader` | Buttons (2, lines 605-606) |
-| `DrawBudget` | Help boxes (1, line 620), Labels (1, line 625) |
-| `DrawSummary` | Labels (1, line 638), Help boxes (1, line 639), Buttons (1, line 653), Foldouts (1, line 666) |
-| `DrawShared` | Foldouts (1, line 693), Tooltips (1, line 698), Buttons (1, line 705) |
-| `DrawBlocks` | Foldouts (1, line 712), Labels (1, line 723), Buttons (1, line 727) |
-| `DrawMenuChecks` | Help boxes (2, lines 738-742), Buttons (1, line 744) |
-| `ApplyIconPreset` | Dialogs (1, line 753) |
-| `DrawNotes` | Foldouts (1, line 776) |
-| `DrawManager` | Help boxes (1, line 794), Buttons (3, lines 800-805), Labels (1, line 810) |
-| `DrawPlan` | Labels (1, line 826) |
-| `ChangePlan` | Buttons (1, line 859) |
-| `DrawRadial` | Help boxes (1, line 920), Labels (1, line 942) |
-| `DrawBits` | Labels (2, lines 969-980), Foldouts (1, line 982) |
-| `DrawEntryState` | Buttons (3, lines 998-1009) |
-| `Discard` | Dialogs (1, line 1084) |
-| `ApplyPlan` | Text shown through a variable (1, line 1097), Dialogs (2, lines 1102-1117) |
+| `AddMoveItems` | Context menu items (6, lines 341-367) |
+| `OnRadialContext` | Context menu items (9, lines 408-440) |
+| `DrawWindow` | Help boxes (2, lines 521-542) |
+| `DrawHeader` | Buttons (2, lines 601-602) |
+| `DrawBudget` | Help boxes (1, line 616), Labels (1, line 621) |
+| `DrawSummary` | Labels (2, lines 631-641), Help boxes (1, line 632), Foldouts (1, line 644) |
+| `DrawShared` | Foldouts (1, line 671), Tooltips (1, line 676), Buttons (1, line 683) |
+| `DrawBlocks` | Foldouts (1, line 690), Labels (1, line 701), Buttons (1, line 705) |
+| `DrawMenuChecks` | Foldouts (1, lines 720-722: the same-name box's title), Labels (1, line 727), Links (1, line 735: each asset's name, with a tooltip), Help boxes (1, line 747), Buttons (1, line 749) |
+| `ApplyIconPreset` | Dialogs (1, line 758) |
+| `DrawNotes` | Foldouts (1, line 781) |
+| `DrawManager` | Help boxes (1, line 807), Buttons (3, lines 813-818), Labels (1, line 823) |
+| `DrawPlan` | Labels (1, line 839) |
+| `ChangePlan` | Buttons (1, line 872) |
+| `DrawRadial` | Help boxes (1, line 933), Labels (1, line 955) |
+| `DrawBits` | Labels (2, lines 982-993), Foldouts (1, line 995) |
+| `DrawEntryState` | Buttons (3, lines 1011-1022) |
+| `Discard` | Dialogs (1, line 1097) |
+| `ApplyPlan` | Text shown through a variable (1, line 1110), Dialogs (2, lines 1115-1130) |
 
 ### `VRChat/MenuTool/MenuToolApply.cs`
 
@@ -822,9 +859,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `Estimate` | Text shown through a variable (1, line 99) |
-| `Exact` | Progress bars (2, lines 154-156) |
-| `Build` | Text shown through a variable (1, line 224) |
+| `Estimate` | Text shown through a variable (1, line 77) |
 
 ### `VRChat/MenuTool/MenuToolPlanner.cs`
 
