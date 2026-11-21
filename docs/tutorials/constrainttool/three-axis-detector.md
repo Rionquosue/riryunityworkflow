@@ -1,4 +1,4 @@
-# Tutorial: Constraint Tool's Three axis detector
+# Tutorial: Constraint Tools' Three axis detector
 
 Read how far a bone tilts left/right and up/down relative to a flat plane, as
 three contact parameters, with three Proximity receivers in a triangle 120° apart.
@@ -8,8 +8,10 @@ show **VRCSDK not found**.
 
 ## 1. Open the tab
 
-Choose **Tools > RiryTools > Constraint Tool** and open the **Three axis
-detector** tab, or open it from the Main Menu's Constraint Tool tab.
+Right-click the object that moves in the Hierarchy and choose **RiryTools > Constraint Tools > Three axis detector**: it fills **Source**. To fill **Relative to** too, Ctrl/Cmd-click that object first so both are selected.
+
+You can also choose **Tools > RiryTools > Constraint Tools** and open the **Three axis
+detector** tab, or open it from the Main Menu's General Tools > Constraint Tools sub-tab.
 
 ## 2. Pick the objects
 

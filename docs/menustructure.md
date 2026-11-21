@@ -18,12 +18,14 @@ If an item requires fixed height or width to be usable, it should not be docked 
 
     * Avatar Migration Assistant
     * Blendshape Sync
-    * Constraint Tool >
+    * Constraint Tools >
         * Train
         * Bezier
         * Insertable prop
+        * Dual axis detector
+        * Three axis detector
     * GUID Tools
-    * Menu Tool
+    * Menu Tools
 
 **Project folder**
 
@@ -33,6 +35,8 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Find And Replace
     * GUID Tools >
         * Regenerate GUID(s)
+        * Prefab Cleaner
+    * Material Cleaner
     * Import Presets
         * Set Folder Preset
         * Save Import Preset (only when clicking file, else grayed)
@@ -48,7 +52,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
         * Configure
         * [ ] Sync now
     * [ ] Stop Auto Game
-    * Constraint Tool
+    * Constraint Tools
     * Animator Tools >
         * Clean Animation Keys
         * Find and Replace
@@ -57,7 +61,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * Avatar Tools >
         * Avatar Migration Assistant
         * Blendshape Sync
-        * Menu Tool
+        * Menu Tools
     * Utilities >
         * GUID Rebuild tool
         * GUID Repair tool
@@ -74,7 +78,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * FTEmulator
     * Documentation
 
-FTEmulator has no right-click entry. The entry and the Tools tab's FTEmulator sub-tab come from FTEmulator's own package, `com.riry.ftemulator`; without it (or without the VRChat SDK) RiryTools keeps the entry and the sub-tab, saying why FTEmulator is not available.
+FTEmulator has no right-click entry. The entry and the Main Menu's FTEmulator tab come from FTEmulator's own package, `com.riry.ftemulator`; without it (or without the VRChat SDK) RiryTools keeps the entry and the tab, saying why FTEmulator is not available.
 
 ### Main menu
 
@@ -82,110 +86,27 @@ Structured in such a way that it can be presented as a table. Laid out as cells.
 
 #### Main tab
 
-Where [] contains the currently active tab.
+Where [] contains the currently active tab. The primary tabs are General Tools, Menu Tools, Animator Tools, Debug Tools and FTEmulator, always on one row. General Tools has the sub-tabs Blendshape Sync, Import Presets, Constraint Tools, AutoSync and PopUp Tools; Import Presets and Constraint Tools have sub-tabs of their own. PopUp Tools lists the tools that need their own window, as buttons. FTEmulator's debug tables need the width, so they open as a popup (Open debug window).
 
-| [Utilities] | Animator Tools | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [General tools] | AutoSync |  |  |  |  |
-| ☐ Stop Auto Game |  |  |  |  |  |
-| GUID Rebuild tool |  |  |  |  |  |
-| GUID repair tool |  |  |  |  |  |
-| Check for Broken References |  |  |  |  |  |
-| Delete GUID Reference Cache |  |  |  |  |  |
-| IconCap |  |  |  |  |  |
-| Material Cleaner |  |  |  |  |  |
-
----
-
-| [Utilities] | Animator Tools | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| General tools | [AutoSync] |  |  |  |  |
-| ☐ Sync |  |  |  |  |  |
-| Git Configuration block |  |  |  |  |  |
-
----
-
-| Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [Find and Replace] | Clean Animation Keys | Controller Cleaner | Extract Animations |  |  |
-| Find and Replace UI here |  |  |  |  |  |
-
----
-
-| Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| Find and Replace | [Clean Animation Keys] | Controller Cleaner | Extract Animations |  |  |
-| [Select Clean Target(s) field] |  |  |  |  |  |
-| Clean animation keys UI here |  |  |  |  |  |
-
----
-
-| Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| Find and Replace | Clean Animation Keys | [Controller Cleaner] | Extract Animations |  |  |
-| Controller field + Scan |  |  |  |  |  |
-| Scan scene controllers | Scan all controllers in project |  |  |  |  |
-| Clean all |  |  |  |  |  |
-| Results: controller, unused count, Clean |  |  |  |  |  |
-
----
-
-| Utilities | [Animator Tools] | Avatar Tools | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| Find and Replace | Clean Animation Keys | Controller Cleaner | [Extract Animations] |  |  |
-| Extract Animations UI here |  |  |  |  |  |
-
----
-
-| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| Avatar Migration Assistant |  |  |  |  |  |
-| Menu Tool |  |  |  |  |  |
-| Blendshape Sync |  |  |  |  |  |
-
----
-
-| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [Constraint Tool] |  |  |  |  |  |
-| [Train] | Bezier | Insertable prop |  |  |  |
-| Train UI here |  |  |  |  |  |
-
----
-
-| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [Constraint Tool] |  |  |  |  |  |
-| Train | [Bezier] | Insertable prop |  |  |  |
-| Bezier UI here |  |  |  |  |  |
-
----
-
-| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [Constraint Tool] |  |  |  |  |  |
-| Train | Bezier | [Insertable prop] |  |  |  |
-| Insertable prop UI here |  |  |  |  |  |
-
----
-
-| Utilities | Animator Tools | [Avatar Tools] | Constraint Tool | Import Presets | Debug Tools |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [Blendshape Sync] |  |  |  |  |  |
+| [Blendshape Sync] | Import Presets | Constraint Tools | AutoSync | PopUp Tools |  |
 | Running sync job list |  |  |  |  |  |
 | Add / edit job (opens popup) |  |  |  |  |  |
 
 ---
 
-| Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync | PopUp Tools |  |
 | [Set Folder Import Presets] | Save Import Preset | Import Preset Library |  |  |  |
 | Set Folder Import Presets UI here |  |  |  |  |  |
 
 ---
 
-| Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync | PopUp Tools |  |
 | Set Folder Import Presets | [Save Import Preset] | Import Preset Library |  |  |  |
 | Asset: the selected asset's path |  |  |  |  |  |
 | Importer: its importer type |  |  |  |  |  |
@@ -196,41 +117,141 @@ Where [] contains the currently active tab.
 
 ---
 
-| Utilities | Animator Tools | Avatar Tools | Constraint Tool | [Import Presets] | Debug Tools |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | [Import Presets] | Constraint Tools | AutoSync | PopUp Tools |  |
 | Set Folder Import Presets | Save Import Preset | [Import Preset Library] |  |  |  |
 | Display Import Preset Library here |  |  |  |  |  |
 | Click to open in explorer | File input box here | Save import preset (creates from selected in input box) |  |  |  |
 
 ---
 
-| Utilities | Animator Tools | Avatar Tools | Constraint Tool | Import Presets | [Debug Tools] |
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
+| [Train] | Bezier | Insertable prop | Dual axis detector | Three axis detector |  |
+| Train UI here |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
+| Train | [Bezier] | Insertable prop | Dual axis detector | Three axis detector |  |
+| Bezier UI here |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
+| Train | Bezier | [Insertable prop] | Dual axis detector | Three axis detector |  |
+| Insertable prop UI here |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
+| Train | Bezier | Insertable prop | [Dual axis detector] | Three axis detector |  |
+| Source field |  |  |  |  |  |
+| Relative to field |  |  |  |  |  |
+| Flat plane ▾ (X, Y, Z) |  |  |  |  |  |
+| Space ▾ (Local, World) |  |  |  |  |  |
+| Offset |  |  |  |  |  |
+| Parameters: Right, Up |  |  |  |  |  |
+| Build dual axis detector |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | [Constraint Tools] | AutoSync | PopUp Tools |  |
+| Train | Bezier | Insertable prop | Dual axis detector | [Three axis detector] |  |
+| Source field |  |  |  |  |  |
+| Relative to field |  |  |  |  |  |
+| Flat plane ▾ (X, Y, Z) |  |  |  |  |  |
+| Space ▾ (Local, World) |  |  |  |  |  |
+| Offset |  |  |  |  |  |
+| Parameters: Top, BottomLeft, BottomRight |  |  |  |  |  |
+| Build three axis detector |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | Constraint Tools | [AutoSync] | PopUp Tools |  |
+| ☐ Sync |  |  |  |  |  |
+| Git Configuration block |  |  |  |  |  |
+
+---
+
+| [General Tools] | Menu Tools | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Blendshape Sync | Import Presets | Constraint Tools | AutoSync | [PopUp Tools] |  |
+| Avatar Migration Assistant |  |  |  |  |  |
+| IconCap |  |  |  |  |  |
+| Material Cleaner |  |  |  |  |  |
+| Prefab Cleaner (popup: Target Scene, Project or Prefab) |  |  |  |  |  |
+| GUID Regenerator (popup: assets and folders, filled from the Project selection) |  |  |  |  |  |
+| GUID Repair (popup: assets and folders, filled from the Project selection) |  |  |  |  |  |
+| GUID Broken Reference Checker |  |  |  |  |  |
+
+---
+
+| General Tools | [Menu Tools] | Animator Tools | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Parameter budget |  |  |  |  |  |
+| Menu manager (opens the Menu Tools window) |  |  |  |  |  |
+
+---
+
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [Find and Replace] | Clean Animation Keys | Controller Cleaner | Extract Animations |  |  |
+| Find and Replace UI here |  |  |  |  |  |
+
+---
+
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Find and Replace | [Clean Animation Keys] | Controller Cleaner | Extract Animations |  |  |
+| [Select Clean Target(s) field] |  |  |  |  |  |
+| Clean animation keys UI here |  |  |  |  |  |
+
+---
+
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Find and Replace | Clean Animation Keys | [Controller Cleaner] | Extract Animations |  |  |
+| Controller field + Scan |  |  |  |  |  |
+| Scan scene controllers | Scan all controllers in project |  |  |  |  |
+| Clean all |  |  |  |  |  |
+| Results: controller, unused count, Clean |  |  |  |  |  |
+
+---
+
+| General Tools | Menu Tools | [Animator Tools] | Debug Tools | FTEmulator |  |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Find and Replace | Clean Animation Keys | Controller Cleaner | [Extract Animations] |  |  |
+| Extract Animations UI here |  |  |  |  |  |
+
+---
+
+| General Tools | Menu Tools | Animator Tools | [Debug Tools] | FTEmulator |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Refresh Scripts |  |  |  |  |  |
 | Find Null references |  |  |  |  |  |
 | Menu Mockup |  |  |  |  |  |
+| Delete GUID Reference Cache |  |  |  |  |  |
+| ☐ Stop Auto Game |  |  |  |  |  |
+| ☐ Script Load Guard |  |  |  |  |  |
 | ☐ Stop all tool scripts |  |  |  |  |  |
 
 ---
 
-The Tools tab has two sub-tabs: General holds every tool the tab had, FTEmulator hosts the FTEmulator window. Its debug tables need the width, so they open as a popup (Open debug window).
-
-| [Tools] |  |  |  |  |  |
+| General Tools | Menu Tools | Animator Tools | Debug Tools | [FTEmulator] |  |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| [General] | FTEmulator |  |  |  |  |
-| Avatar Migration Assistant |  |  |  |  |  |
-| IconCap |  |  |  |  |  |
-| Material Cleaner |  |  |  |  |  |
-| Find Null references |  |  |  |  |  |
-| Refresh Scripts |  |  |  |  |  |
-| ☐ Stop Auto Game |  |  |  |  |  |
-| ☐ Script Load Guard |  |  |  |  |  |
-
----
-
-| [Tools] |  |  |  |  |  |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| General | [FTEmulator] |  |  |  |  |
 | State, Gesture Manager, Avatar, Avatar backend |  |  |  |  |  |
 | Input, Hardware limits, Behavior, View allowed channels |  |  |  |  |  |
 | Start | Stop |  |  |  |  |
@@ -238,3 +259,4 @@ The Tools tab has two sub-tabs: General holds every tool the tab had, FTEmulator
 | ☐ Freeze output |  |  |  |  |  |
 | Open debug window (opens popup) | Reset overrides |  |  |  |  |
 | OSC connection or Manual input |  |  |  |  |  |
+| Record / Stop recording | Play recording / Stop playback |  |  |  |  |
