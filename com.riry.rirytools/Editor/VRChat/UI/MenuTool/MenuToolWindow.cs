@@ -54,16 +54,12 @@ namespace Riry.RiryTools.Editor
         [NonSerialized] private string savedPlan = "";
         [NonSerialized] private MenuToolEntry planned;
         [NonSerialized] private List<MenuToolMoveCheck> checks = new List<MenuToolMoveCheck>();
-        [NonSerialized] private MenuToolBudget.Result exact;
         [NonSerialized] private bool stale = true;
         // A plan change waiting for the next Layout pass (changes mid-event would unbalance the layout).
         [NonSerialized] private bool replan;
         // Rescan: the next Refresh also drops the preview menus and the radial.
         [NonSerialized] private bool rebuild;
         [NonSerialized] private readonly List<KeyValuePair<string, float>> pendingWrites = new List<KeyValuePair<string, float>>();
-        // When and for what the exact comparison ran (kept across rescans, which its own test builds trigger).
-        [NonSerialized] private GameObject exactFor;
-        [NonSerialized] private string exactTime = "";
         [NonSerialized] private MenuToolBudgetTree budgetTree;
         // The target the budget tree was last built for: rescans of the same target keep its rows' collapsed state.
         [NonSerialized] private GameObject budgetTreeFor;
@@ -220,7 +216,6 @@ namespace Riry.RiryTools.Editor
         {
             stale = false;
             replan = false;
-            if (exactFor != target) exact = null;
             if (budgetTree == null) budgetTree = new MenuToolBudgetTree(budgetState);
             if (managerTree == null)
             {
@@ -632,11 +627,8 @@ namespace Riry.RiryTools.Editor
 
         private void DrawSummary()
         {
-            MenuToolBudget.Result estimate = MenuToolBudget.Estimate(scan);
-            MenuToolBudget.Result shown = exact != null && exact.Exact ? exact : estimate;
-            string label = exact == null ? "Estimated" : exact.Exact ? "Exact (two isolated test builds, " + exactTime + "; Compare exactly again after changes)"
-                : "Unavailable: " + exact.Unavailable + " Showing the estimate.";
-            EditorGUILayout.LabelField("Compression comparison: " + label, EditorStyles.boldLabel);
+            MenuToolBudget.Result shown = MenuToolBudget.Estimate(scan);
+            EditorGUILayout.LabelField("Compression comparison: Estimated", EditorStyles.boldLabel);
             if (!scan.VrcfuryInstalled) EditorGUILayout.HelpBox("VRCFury is not installed, so the compressor column is an estimate of what VRCFury's Parameter Compressor would do.", MessageType.None);
             Row("", "Compression off", "Compression on", "Change", true);
             Row("Custom parameters", shown.Off.Total, shown.On.Total, "of " + MenuToolBudgetCount.MaxParameters);
@@ -645,26 +637,11 @@ namespace Riry.RiryTools.Editor
             Row("Synced bits", shown.Off.Bits, shown.On.Bits, "of " + MenuToolBudgetCount.MaxBits);
             Row("Bits left", shown.Off.BitsLeft, shown.On.BitsLeft, "");
             Row("Parameters left", shown.Off.ParametersLeft, shown.On.ParametersLeft, "");
-            if (estimate.Note.Length > 0) EditorGUILayout.HelpBox(estimate.Note, MessageType.Warning);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                GUILayout.FlexibleSpace();
-                using (new EditorGUI.DisabledScope(scan.Avatar == null || !scan.VrcfuryInstalled || EditorApplication.isPlayingOrWillChangePlaymode))
-                {
-                    if (GUILayout.Button(new GUIContent("Compare exactly", "Builds two isolated copies of the avatar through the VRChat SDK's build callbacks, " +
-                        "with VRCFury's Parameter Compressor setting at Fail and then at Compress (restored afterwards), compares their parameters, then " +
-                        "deletes both. The avatar is not changed. Over the limit, VRCFury shows its own \"would have failed to upload\" message for the first build."), GUILayout.Width(130f)))
-                    {
-                        exact = MenuToolBudget.Exact(scan.Avatar);
-                        exactFor = target;
-                        exactTime = DateTime.Now.ToString("HH:mm", CultureInfo.InvariantCulture);
-                        RiryToolGUI.ExitAfterModal();
-                    }
-                }
-            }
+            if (shown.Note.Length > 0) EditorGUILayout.HelpBox(shown.Note, MessageType.Warning);
+            EditorGUILayout.LabelField("Target VRCFury test copy for exact numbers", EditorStyles.miniLabel);
             if (shown.Compressed.Count > 0)
             {
-                showCompressed = EditorGUILayout.Foldout(showCompressed, (shown.Exact ? "Compressed" : "Would be compressed") + " (" + shown.Compressed.Count + ")", true);
+                showCompressed = EditorGUILayout.Foldout(showCompressed, "Would be compressed" + " (" + shown.Compressed.Count + ")", true);
                 if (showCompressed) EditorGUILayout.LabelField(string.Join(", ", shown.Compressed), EditorStyles.wordWrappedMiniLabel);
             }
         }
@@ -1182,8 +1159,8 @@ namespace Riry.RiryTools.Editor
 //                            hosted copy), staying in the submenu shown before. Preview menus that show the same (Adopt) are
 //                            kept and the radial is left as it is.
 //   Parameter budget tab     DrawSummary: compression off / on / change (custom parameters, synced, local, synced bits, bits
-//                            and parameters left), Estimated / Exact / Unavailable; the estimate's Note (VRCFury cannot fit
-//                            the avatar, or is set to Fail); Compare exactly (MenuToolBudget.Exact). MenuToolBudgetTree; Shared
+//                            and parameters left), estimated; the estimate's Note (VRCFury cannot fit the avatar, or is set
+//                            to Fail); a line pointing to a VRCFury test copy for exact numbers. MenuToolBudgetTree; Shared
 //                            parameters (types differ in red); Content blocks (each control's path, bindings, Select);
 //                            Notes.
 //   Menu manager tab         Search, Discard plan, Add menu, Apply (disabled until every move checks out); MenuToolManagerTree; then, in

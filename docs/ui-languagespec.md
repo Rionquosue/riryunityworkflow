@@ -827,25 +827,25 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `MenuToolWindow` | Text shown through a variable (1, line 21), Tabs and toolbars (1, line 22) |
-| `AddMoveItems` | Context menu items (6, lines 346-372) |
-| `OnRadialContext` | Context menu items (9, lines 413-445) |
-| `DrawWindow` | Help boxes (2, lines 526-547) |
-| `DrawHeader` | Buttons (2, lines 606-607) |
-| `DrawBudget` | Help boxes (1, line 621), Labels (1, line 626) |
-| `DrawSummary` | Labels (1, line 639), Help boxes (1, line 640), Buttons (1, line 654), Foldouts (1, line 667) |
-| `DrawShared` | Foldouts (1, line 694), Tooltips (1, line 699), Buttons (1, line 706) |
-| `DrawBlocks` | Foldouts (1, line 713), Labels (1, line 724), Buttons (1, line 728) |
-| `DrawMenuChecks` | Foldouts (1, lines 743-745: the same-name box's title), Labels (1, line 750), Links (1, line 758: each asset's name, with a tooltip), Help boxes (1, line 770), Buttons (1, line 772) |
-| `ApplyIconPreset` | Dialogs (1, line 781) |
-| `DrawNotes` | Foldouts (1, line 804) |
-| `DrawManager` | Help boxes (1, line 830), Buttons (3, lines 836-841), Labels (1, line 846) |
-| `DrawPlan` | Labels (1, line 862) |
-| `ChangePlan` | Buttons (1, line 895) |
-| `DrawRadial` | Help boxes (1, line 956), Labels (1, line 978) |
-| `DrawBits` | Labels (2, lines 1005-1016), Foldouts (1, line 1018) |
-| `DrawEntryState` | Buttons (3, lines 1034-1045) |
-| `Discard` | Dialogs (1, line 1120) |
-| `ApplyPlan` | Text shown through a variable (1, line 1133), Dialogs (2, lines 1138-1153) |
+| `AddMoveItems` | Context menu items (6, lines 341-367) |
+| `OnRadialContext` | Context menu items (9, lines 408-440) |
+| `DrawWindow` | Help boxes (2, lines 521-542) |
+| `DrawHeader` | Buttons (2, lines 601-602) |
+| `DrawBudget` | Help boxes (1, line 616), Labels (1, line 621) |
+| `DrawSummary` | Labels (2, lines 631-641), Help boxes (1, line 632), Foldouts (1, line 644) |
+| `DrawShared` | Foldouts (1, line 671), Tooltips (1, line 676), Buttons (1, line 683) |
+| `DrawBlocks` | Foldouts (1, line 690), Labels (1, line 701), Buttons (1, line 705) |
+| `DrawMenuChecks` | Foldouts (1, lines 720-722: the same-name box's title), Labels (1, line 727), Links (1, line 735: each asset's name, with a tooltip), Help boxes (1, line 747), Buttons (1, line 749) |
+| `ApplyIconPreset` | Dialogs (1, line 758) |
+| `DrawNotes` | Foldouts (1, line 781) |
+| `DrawManager` | Help boxes (1, line 807), Buttons (3, lines 813-818), Labels (1, line 823) |
+| `DrawPlan` | Labels (1, line 839) |
+| `ChangePlan` | Buttons (1, line 872) |
+| `DrawRadial` | Help boxes (1, line 933), Labels (1, line 955) |
+| `DrawBits` | Labels (2, lines 982-993), Foldouts (1, line 995) |
+| `DrawEntryState` | Buttons (3, lines 1011-1022) |
+| `Discard` | Dialogs (1, line 1097) |
+| `ApplyPlan` | Text shown through a variable (1, line 1110), Dialogs (2, lines 1115-1130) |
 
 ### `VRChat/MenuTool/MenuToolApply.cs`
 
@@ -859,9 +859,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `Estimate` | Text shown through a variable (1, line 99) |
-| `Exact` | Progress bars (2, lines 154-156) |
-| `Build` | Text shown through a variable (1, line 224) |
+| `Estimate` | Text shown through a variable (1, line 77) |
 
 ### `VRChat/MenuTool/MenuToolPlanner.cs`
 
