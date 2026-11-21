@@ -61,6 +61,10 @@ Material Cleaner: scans one material, the materials the open scenes use, or ever
 
 Attach To (Hierarchy right-click): moves the selected objects to the global position of one of an avatar's bones, then asks whether to move them in the hierarchy; Yes reparents them to the bone, keeping their position, rotation and scale. A prefab instance is only unpacked after a warning. One undo step.
 
+## Invert Global Position
+
+Invert Global Position (Hierarchy right-click): moves the selected objects to the other side of their avatar, mirrored across the avatar root's left/right axis, with their rotation mirrored to match, so a pen in the right hand ends up in the same place relative to the left hand. On a humanoid avatar it then asks whether to move each one under the bone on the other side; prefabs are only unpacked after a warning. One undo step.
+
 ## Refresh Scripts
 
 Refresh Scripts: imports changed files, closes the open RiryTools windows, reloads all scripts, then reopens those windows at their old positions with fresh state, so UI changes show without restarting Unity.

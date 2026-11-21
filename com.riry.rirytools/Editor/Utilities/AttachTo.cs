@@ -150,14 +150,14 @@ namespace Riry.RiryTools.Editor
         }
 
         /// <summary>True when the object is inside a prefab instance and is not its outermost root, so it can't be reparented.</summary>
-        private static bool NeedsUnpack(Transform target)
+        internal static bool NeedsUnpack(Transform target)
         {
             GameObject gameObject = target.gameObject;
             return PrefabUtility.IsPartOfPrefabInstance(gameObject) && PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject) != gameObject;
         }
 
         /// <summary>Unpacks the outermost prefab instance around the object, one level at a time, until it can be reparented.</summary>
-        private static void Unpack(Transform target)
+        internal static void Unpack(Transform target)
         {
             GameObject last = null;
             while (target != null && NeedsUnpack(target))

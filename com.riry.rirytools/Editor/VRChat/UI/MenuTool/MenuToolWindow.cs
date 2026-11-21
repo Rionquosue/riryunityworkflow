@@ -34,7 +34,9 @@ namespace Riry.RiryTools.Editor
 
         [SerializeField] private GameObject target;
         [SerializeField] private int tab;
-        [SerializeField] private bool duplicatesOpen = true;
+        // The warning boxes under the radial, collapsed until opened.
+        [SerializeField] private bool duplicatesOpen;
+        [SerializeField] private bool largeIconsOpen;
         // The Main Menu's copy (CreateHosted): never shown on its own, and its Menu manager tab opens the Menu Tools window.
         [SerializeField] private bool hosted;
         [SerializeField] private Vector2 budgetScroll;
@@ -742,14 +744,21 @@ namespace Riry.RiryTools.Editor
                 }
             }
             if (scan.LargeIcons.Count == 0) return;
-            using (new EditorGUILayout.HorizontalScope())
+            // The same kind of collapsible box: the icons, and the button that fixes them.
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.HelpBox("Icons over " + MenuToolIconPreset.MaxSize + " px, which the VRChat SDK won't upload:\n" +
-                    string.Join("\n", scan.LargeIcons.Select(t => t.name + " (" + t.width + "x" + t.height + ")")), MessageType.Warning);
-                if (GUILayout.Button(new GUIContent("Apply " + MenuToolIconPreset.PresetName, "Sets these icons' max size to " + MenuToolIconPreset.MaxSize +
-                        " with the " + MenuToolIconPreset.PresetName + " import preset in the Import Presets folder (made the first time)."),
-                        GUILayout.Width(130f), GUILayout.Height(38f)))
-                    ApplyIconPreset();
+                var title = new GUIContent(" Icons over " + MenuToolIconPreset.MaxSize + " px, which the VRChat SDK won't upload (" + scan.LargeIcons.Count + ")",
+                    EditorGUIUtility.IconContent("console.warnicon.sml").image);
+                largeIconsOpen = EditorGUILayout.Foldout(largeIconsOpen, title, true);
+                if (largeIconsOpen)
+                {
+                    EditorGUILayout.LabelField(string.Join("\n", scan.LargeIcons.Select(t => t.name + " (" + t.width + "x" + t.height + ")")),
+                        EditorStyles.wordWrappedLabel);
+                    if (GUILayout.Button(new GUIContent("Apply " + MenuToolIconPreset.PresetName, "Sets these icons' max size to " + MenuToolIconPreset.MaxSize +
+                            " with the " + MenuToolIconPreset.PresetName + " import preset in the Import Presets folder (made the first time)."),
+                            GUILayout.Width(130f)))
+                        ApplyIconPreset();
+                }
             }
         }
 
@@ -823,10 +832,10 @@ namespace Riry.RiryTools.Editor
             EditorGUILayout.LabelField("Drag a row by its ≡ handle, or right-click it for Move to….", EditorStyles.centeredGreyMiniLabel);
             // The rest scrolls, so a short window (the Main Menu) still reaches the radial and the last clicked control.
             managerScroll = EditorGUILayout.BeginScrollView(managerScroll);
-            DrawMenuChecks();
             DrawPlan();
             DrawBreadcrumbs();
             DrawRadial();
+            DrawMenuChecks();
             DrawEntryState();
             DrawBits();
             EditorGUILayout.EndScrollView();

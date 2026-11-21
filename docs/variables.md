@@ -38,6 +38,7 @@ Example:
   `RiryTools` the product.
 - **Tool names:**
   - Attach To
+  - Invert Global Position
   - AutoSync
   - Avatar Migration Assistant
   - Blendshape Sync
@@ -306,6 +307,14 @@ Moving or renaming a file must move its `.meta` with it.
 | `AttachToBones.CentreNames` / `SidedNames` | e.g. `chest`, `head`, `hips`/`pelvis`; `hand`/`wrist`, `upperleg`/`thigh`, `foot`: name matching from a name without its side (`L`, `R`, `Left`, `Right`) to its bone. | `Utilities/AttachToBones.cs` |
 | `AttachToBones.IgnoredParts` | `j`, `bip`, `c`, `def`, `mixamorig`, `bone`: name parts dropped before name matching. | `Utilities/AttachToBones.cs` |
 
+### Invert Global Position
+
+| Name | Use | Scripts |
+|---|---|---|
+| `InvertGlobalPosition.UndoName` | `Invert Global Position`: the undo step, the dialogs' title and the menu entry's name. | `Utilities/InvertGlobalPosition.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs`, `UI/RiryToolsRightClickMenu.cs` |
+| `InvertGlobalPosition.DescriptorType` | `VRC.SDK3.Avatars.Components.VRCAvatarDescriptor`: found by name to pick the avatar root (else the nearest Animator). | `Utilities/InvertGlobalPosition.cs` |
+| `RiryLog.InvertGlobalPosition` | `Invert Global Position`: its Console lines' tool name. | `Components/RiryLog.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs` |
+
 ### Avatar Migration Assistant
 
 | Name | Use | Scripts |
@@ -389,7 +398,7 @@ Moving or renaming a file must move its `.meta` with it.
 | `MenuToolWindow.AvatarFilter` / `PickerButton` | `t:VRCAvatarDescriptor` / `19`: the target field's object picker search (Hierarchy objects with a VRC Avatar Descriptor) and the width of the picker button it replaces. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolWindow.IconPicker` | `0x52694963`: control ID of the Assign Menu Icon object picker. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolWindow.MinWidth` / `MinHeight` | `640` / `760`: Menu Tools' own window; the Menu manager asks for this width in the Main Menu too. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
-| `MenuToolWindow.duplicatesOpen` | [SerializeField] Whether the Menu manager's "Controls with the same name in one submenu" box is open (default open). | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
+| `MenuToolWindow.duplicatesOpen` / `largeIconsOpen` | [SerializeField] Whether the Menu manager's "Controls with the same name in one submenu" and "Icons over 256 px" boxes, under the radial, are open (both collapsed by default). | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | `MenuToolRichText.Tag` | `</?[A-Za-z#][^<>]*>`: a rich text tag in a menu control name, left out of the names Menu Tools shows (`MenuToolRichText.Plain`); renaming edits the name with its tags. | `VRChat/MenuTool/MenuToolRichText.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs`, `VRChat/UI/MenuTool/MenuToolManagerTree.cs`, `VRChat/UI/MenuTool/MenuToolBudgetTree.cs`, `VRChat/MenuTool/MenuToolScanner.cs` |
 | `MenuToolScan.Duplicates` / `MenuToolDuplicate` | Controls sharing a name in one submenu: a label (`path: "name" (count)`) and the assets they come from (the menu asset, or the prefab asset holding the VRCFury or Modular Avatar component; none for a scene object outside a prefab). | `VRChat/MenuTool/MenuToolModel.cs`, `VRChat/MenuTool/MenuToolScanner.cs`, `VRChat/UI/MenuTool/MenuToolWindow.cs` |
 | Writes box height (`MenuToolWindow.DrawBits`) | `120` px: the Writes foldout's scroll box, with every parameter write since the window opened or Reset menu state, one row each. | `VRChat/UI/MenuTool/MenuToolWindow.cs` |
@@ -479,6 +488,7 @@ Also in the GameObject menu.
 |---|---|---|
 | `GameObject/RiryTools/Animator Tools/Find and Replace` | (22) The Find and Replace popup with the selected scene object; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Attach To` | (19) The Attach To popup; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs` |
+| `GameObject/RiryTools/Invert Global Position` | (26) Mirrors the selected objects to the other side of their avatar, then asks whether to move them under the mirrored bone; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs` |
 | `GameObject/RiryTools/Constraint Tools/Bezier` | (21) The Bezier tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintBezierHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Constraint Tools/Train` | (20) The Train tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintTrainHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Constraint Tools/Insertable prop` | (23) The Insertable prop tab; the selected object becomes the Socket and the avatar it is in the Avatar root (on the avatar root itself, only the Avatar root). Path is `RiryToolsRightClickMenu.InsertablePropHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |

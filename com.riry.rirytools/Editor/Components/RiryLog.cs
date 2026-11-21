@@ -26,6 +26,7 @@ namespace Riry.RiryTools.Editor
         internal const string GuidTools = "GUID Tools";
         internal const string IconCap = "IconCap";
         internal const string ImportPresets = "Import Presets";
+        internal const string InvertGlobalPosition = "Invert Global Position";
         internal const string MenuMockup = "Menu Mockup";
         internal const string MenuTool = "Menu Tools";
         internal const string ScriptLoadGuard = "Script Load Guard";

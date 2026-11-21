@@ -29,6 +29,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | Display name | Folder | Code prefix |
 | --- | --- | --- |
 | Attach To | `Utilities/` | `AttachTo` |
+| Invert Global Position | `Utilities/` | `InvertGlobalPosition` |
 | AutoSync | `AutoSync/` | `AutoSync` |
 | Avatar Migration Assistant | `AvatarMigrator/` | `AvatarMigrator` |
 | Blendshape Sync | `BlendshapeSync/` | `BlendshapeSync` |
@@ -232,6 +233,7 @@ com.riry.rirytools/
     │   │   └── ImportPresetSaveWindow.UI.cs
     │   ├── Utilities/
     │   │   ├── AttachToWindow.cs
+    │   │   ├── InvertGlobalPositionPrompts.cs
     │   │   └── MaterialCleanerWindow.cs
     │   ├── RiryToolsMainMenu.cs
     │   ├── RiryToolsMenuBar.cs
@@ -240,6 +242,7 @@ com.riry.rirytools/
     │   ├── AttachTo.cs
     │   ├── AttachToAvatarTracker.cs
     │   ├── AttachToBones.cs
+    │   ├── InvertGlobalPosition.cs
     │   ├── MaterialCleaner.cs
     │   ├── MaterialCleanerSources.cs
     │   ├── RefreshScripts.cs
