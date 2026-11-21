@@ -497,16 +497,22 @@ Also in the GameObject menu.
 | `GH_TOKEN` | Step env: `secrets.VPM_DISPATCH_TOKEN`. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 | `notify-vpm-<branch>` | Concurrency group: one run at a time per branch, in push order. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2c2a932 (Notify VPM: FTEmulator gets its own workflow; each package's build starts only when its folder changed)
 | `notify-vpm-ftemulator-<branch>` | Concurrency group of the FTEmulator notify: one run at a time per branch, in push order. | `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 | `paths` (notify) | `notify-vpm.yml` runs only for pushes that change `com.riry.rirytools/**`, `notify-vpm-ftemulator.yml` only for `com.riry.ftemulator/**`, so an unchanged package is not built. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 | `SHA` | Step env: `github.sha`, the pushed commit. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 | `package` (notify) | `notify-vpm.yml` starts Build Package with the default package (`com.riry.rirytools`); `notify-vpm-ftemulator.yml` with `com.riry.ftemulator`. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
 | `VPM_DISPATCH_TOKEN` | Secret: fine-grained token for `Rionquosue/rirytools_vpm` only, **Actions: Read and write**. | `riryunityworkflow/.github/workflows/notify-vpm.yml`, `riryunityworkflow/.github/workflows/notify-vpm-ftemulator.yml` |
+<<<<<<< HEAD
 =======
 | `SHA` | Step env: `github.sha`, the pushed commit. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 | `package` (notify) | Build Package is started twice per push: once with the default package (`com.riry.rirytools`) and once with `com.riry.ftemulator`. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 | `VPM_DISPATCH_TOKEN` | Secret: fine-grained token for `Rionquosue/rirytools_vpm` only, **Actions: Read and write**. | `riryunityworkflow/.github/workflows/notify-vpm.yml` |
 >>>>>>> 4e9dc36 (FTEmulator moved into its own package, com.riry.ftemulator, for the VPM listing)
+=======
+>>>>>>> 2c2a932 (Notify VPM: FTEmulator gets its own workflow; each package's build starts only when its folder changed)
 
 ### Destination workflows
 

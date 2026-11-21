@@ -7,6 +7,7 @@
 - `.instructions~/`: Working instructions for LLMs while maintaining this repo. Start with `for_agents.md`.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 - `.github/workflows/notify-vpm.yml`: starts the VPM build of `com.riry.rirytools` in `rirytools_vpm` on pushes to `main` and `beta` that change `com.riry.rirytools/`.
 - `.github/workflows/notify-vpm-ftemulator.yml`: the same for `com.riry.ftemulator`, on pushes that change `com.riry.ftemulator/`.
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
@@ -19,6 +20,10 @@
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`), `tutorials/`.
 >>>>>>> 5490d61 (Add UI language spec listing where each UI element's text lives)
 =======
+=======
+- `.github/workflows/notify-vpm.yml`: starts the VPM build of `com.riry.rirytools` in `rirytools_vpm` on pushes to `main` and `beta` that change `com.riry.rirytools/`.
+- `.github/workflows/notify-vpm-ftemulator.yml`: the same for `com.riry.ftemulator`, on pushes that change `com.riry.ftemulator/`.
+>>>>>>> 2c2a932 (Notify VPM: FTEmulator gets its own workflow; each package's build starts only when its folder changed)
 - `docs/`: not shipped. `variables.md` (every key, path, GUID, symbol, menu path), `ui-languagespec.md` (where each UI element's text lives), `About/` (`Tools.md`, `CHANGELOG.md`, and a page per tool in `About/Tools/`), `tutorials/` (a page per tool, and a folder per tool with a page per subtool, such as `tutorials/constrainttool/` with `train-rig.md`, `bezier-rig.md`, `Insertable-prop.md`, `dual-axis-detector.md` and `three-axis-detector.md`).
 >>>>>>> 9d9b681 (Docs: Dual axis detector and Three axis detector tutorials, docs layout in the file structure)
 - `com.riry.rirytools/`: Is the extension package. Nothing from it is copied into the user's project.
