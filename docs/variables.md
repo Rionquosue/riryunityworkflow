@@ -442,51 +442,57 @@ step.
 
 ### Tools menu
 
-One entry or submenu per tool.
+Laid out like the Main Menu's tabs.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `Tools/RiryTools/Animator Tools/Clean Animation Keys` | (1994) The Clean Animation Keys window; also the Main Menu's Animator Tools tab, sub-tab Clean Animation Keys (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Animator Tools/Controller Cleaner` | (1996) The Controller Cleaner window; also the Main Menu's Animator Tools tab, sub-tab Controller Cleaner. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Animator Tools/Find and Replace` | (1995) The Find and Replace popup (`BehaviourFindReplaceWindow`), no source; also the Main Menu's Animator Tools tab, sub-tab Find and Replace (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Tools/RiryTools/AutoSync/Configuration` | (2001) The AutoSync Configuration window. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/AutoSync/Sync` | (2000) Turns AutoSync on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Avatar Migration Assistant` | (2005) Written `Avatar Migratio&n Assistant` so its menu key is N. Without the VRChat SDK it still runs, and opening it shows the VRC SDK not detected popup. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Blendshape Sync` | (2010) Add Job: a new job in its popup. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Constraint Tools` | (2030) Written `Constraint\u00A0&Tools` (a no-break space) so its menu key is T: the Constraint Tools window on the tab used last. Path is `RiryToolsMenuBar.ConstraintTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Tools/RiryTools/Documentation` | (2070) Opens `RiryToolsMenuBar.DocumentationLink`. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Find Null references` | (2056) Reads the Console's NullReferenceException entries (internal `UnityEditor.LogEntries`) once and lists empty or missing references in a popup, the whole open scenes when the log gives nothing. Also a button on the Main Menu's Debug Tools tab. | `UI/RiryToolsMenuBar.cs`, `Debug/FindNullReferences.cs` |
-| `Tools/RiryTools/FTEmulator` | (2067) The FTEmulator window (`FTEmulatorWindow.Open`); also the Main Menu's FTEmulator tab (hosted through `RiryToolsMainMenu.CreateFTEmulator`). No right-click entry. Path is `RiryToolsMenuBar.FTEmulatorTools`. Without the VRChat SDK or the `com.riry.ftemulator` package: a popup saying which is missing. | `com.riry.ftemulator/Editor/UI/FTEmulatorMenus.cs`, `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
-| `Tools/RiryTools/GUID Tools` | (2040) The window, with Regenerate GUID, Repair Missing GUID References, Check for Broken References and Delete GUID Reference Cache. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/IconCap` | (2045) Written `Ic&onCap` so its menu key is O: the IconCap window (also from the Main Menu's General Tools > PopUp Tools sub-tab, in its own window). | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Animator Tools/Extract Animations` | (1997) The Extract Animation window. Also the Main Menu's Animator Tools tab, sub-tab Extract Animations (`AnimatorTabs`). | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Import Presets/Open Import Preset Library` | (2053) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Import Presets/Save Import Preset` | (2051) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Import Presets/Set Folder Import Presets` | (2050) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window. Tabs (`RiryToolsMainMenu.Tabs`, all on one row): General Tools, Menu Tools, Animator Tools, Debug Tools, FTEmulator. General Tools' sub-tabs (`ToolsTabs`): Blendshape Sync, Import Presets, Constraint Tools, AutoSync, PopUp Tools (buttons opening Avatar Migration Assistant, IconCap, Material Cleaner and Prefab Cleaner in their own windows, GUID Regenerator and GUID Repair as popups listing assets and folders (filled from the Project selection when opened), GUID Broken Reference Checker on the open scenes). Debug Tools: Refresh Scripts, Find Null references, Menu Mockup, Delete GUID Reference Cache, and the Stop Auto Game, Script Load Guard and Stop all tool scripts toggles. Documentation link at the bottom right; no Menu Mockup tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
-| `Tools/RiryTools/Debug Tools/Menu Mockup` | (2065) Opens the Edit and Components windows. Also a button on the Main Menu's Debug Tools tab. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Menu Tools` | (2066) Written `M&enu Tools` so its menu key is E: the Menu Tools window (the Main Menu's Menu Tools tab shows its Parameter budget; its Menu manager opens this window). Without the VRChat SDK, the **VRCSDK not found** popup. Path is `RiryToolsMenuBar.MenuTool`. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Tools/RiryTools/Debug Tools/Refresh Scripts` | (2058) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. Also a button on the Main Menu's Debug Tools tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs`, `Utilities/RefreshScripts.cs` |
-| `Tools/RiryTools/Debug Tools/Stop all tool scripts` | (2068) [check mark] `StopAllToolScripts.Set`: the emergency stop; works while stopped. Also the toggle on the Main Menu's Debug Tools tab, and the only control the Main Menu shows while stopped. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs`, `Components/StopAllToolScripts.cs` |
-| `Tools/RiryTools/Script Load Guard` | (2061) Turns Script Load Guard on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Stop Auto Game` | (2060) Turns Stop Auto Game on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
-| `Tools/RiryTools/Utilities/Material Cleaner` | (2042) The Material Cleaner window; also the Main Menu's General Tools > PopUp Tools sub-tab. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Main Menu` | (1990) The dockable RiryTools window. Tabs (`RiryToolsMainMenu.Tabs`, all on one row): General Tools, Menu Tools, Animator Tools, Debug Tools, FTEmulator. General Tools' sub-tabs (`ToolsTabs`): Blendshape Sync, Import Presets, Constraint Tools, AutoSync, PopUp Tools. Documentation link at the bottom right; no Menu Mockup tab. | `UI/RiryToolsMenuBar.cs`, `UI/RiryToolsMainMenu.cs` |
+| `Tools/RiryTools/General Tools/Blendshape Sync` | (2000) Add Job: a new job in its popup. Path prefix is `RiryToolsMenuBar.GeneralTools`. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/Import Presets/Set Folder Import Presets` | (2010) The Set Folder Import Presets window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/Import Presets/Save Import Preset` | (2011) The Save Import Preset window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/Import Presets/Open Import Preset Library` | (2012) Opens the Import Preset library folder. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/Constraint Tools/Train` | (2020) The Constraint Tools window on its Train tab. The folder is written `Constraint\u00A0&Tools` (a no-break space) so its menu key is T. Paths `RiryToolsMenuBar.ConstraintTrainTools` and so on. Without the VRChat SDK: the VRCSDK not found popup. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/General Tools/Constraint Tools/Bezier` | (2021) The Bezier tab. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/General Tools/Constraint Tools/Insertable prop` | (2022) The Insertable prop tab. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/General Tools/Constraint Tools/Dual axis detector` | (2023) The Dual axis detector tab. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/General Tools/Constraint Tools/Three axis detector` | (2024) The Three axis detector tab. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/General Tools/AutoSync/Sync` | (2030) Turns AutoSync on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/AutoSync/Configuration` | (2031) The AutoSync Configuration window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/Avatar Migration Assistant` | (2040) Written `Avatar Migratio&n Assistant` so its menu key is N: the Avatar Migration Assistant window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/IconCap` | (2041) Written `Ic&onCap` so its menu key is O: the IconCap window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/Material Cleaner` | (2042) The Material Cleaner window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/Prefab Cleaner` | (2043) The Prefab Cleaner popup (`GuidToolPrefabCleanerWindow`). | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/GUID Regenerator` | (2044) The GUID Regenerator popup, filled from the Project selection. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/GUID Repair` | (2045) The GUID Repair popup, filled from the Project selection. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/General Tools/PopUp Tools/GUID Broken Reference Checker` | (2046) Broken References for the open scenes. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Menu Tools` | (2060) Written `M&enu Tools` so its menu key is E: the Menu Tools window. Without the VRChat SDK: the VRCSDK not found popup. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/Animator Tools/Find and Replace` | (2070) The Find and Replace popup (`BehaviourFindReplaceWindow`), no source. | `UI/RiryToolsMenuBar.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Tools/RiryTools/Animator Tools/Clean Animation Keys` | (2071) The Clean Animation Keys window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Animator Tools/Controller Cleaner` | (2072) The Controller Cleaner window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Animator Tools/Extract Animations` | (2073) The Extract Animation window. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Refresh Scripts` | (2080) `RefreshScripts.Run`: `AssetDatabase.Refresh`, closes open RiryTools windows, `EditorUtility.RequestScriptReload`, reopens them at their old positions. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Find Null references` | (2081) Reads the Console's NullReferenceException entries once and lists the references involved. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Menu Mockup` | (2082) Opens the Edit and Components windows. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Delete GUID Reference Cache` | (2083) `GuidToolClearReferenceCache.Run`. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Stop Auto Game` | (2084) Turns Stop Auto Game on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Script Load Guard` | (2085) Turns Script Load Guard on or off; check mark. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Debug Tools/Stop all tool scripts` | (2086) [check mark] `StopAllToolScripts.Set`: the emergency stop; works while stopped. | `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/FTEmulator` | (2090) The FTEmulator window (`FTEmulatorWindow.Open`). No right-click entry. Path is `RiryToolsMenuBar.FTEmulatorTools`. Without the VRChat SDK or the `com.riry.ftemulator` package: a popup saying which is missing. | `com.riry.ftemulator/Editor/UI/FTEmulatorMenus.cs`, `UI/RiryToolsMenuBar.cs` |
+| `Tools/RiryTools/Documentation` | (2100) Opens `RiryToolsMenuBar.DocumentationLink`. | `UI/RiryToolsMenuBar.cs` |
 
 ### Project window right-click
 
 | Name | Use | Scripts |
 |---|---|---|
-| `Assets/RiryTools/Animator Tools/Find and Replace` | (2006) The Find and Replace popup with the selected animator controller; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `Assets/RiryTools/Animator Tools/Clean Animation Keys` | (2005) Clean Animation Keys on the selected clips. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Material Cleaner` | (2007) The Material Cleaner window, with the selected material in its Material field. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Prefab Cleaner` | (2008) Prefab Cleaner: removes unused prefab overrides from the selected scenes and prefabs (and those in selected folders), after asking; the same as the Broken References window's Prefab Cleaner button. Path is `"Assets/RiryTools/" + GuidToolUnusedOverrides.Title`. | `UI/RiryToolsRightClickMenu.cs` |
-| `GuidToolUnusedOverrides.Title` | `Prefab Cleaner`: the tool's name, its dialogs' title, its undo step, its popup (`GuidToolPrefabCleanerWindow`) and its right-click entry. | `GuidTools/GuidToolUnusedOverrides.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.cs`, `UI/GuidTools/GuidToolBrokenReferenceWindow.UI.cs`, `UI/GuidTools/GuidToolPrefabCleanerWindow.cs`, `UI/RiryToolsRightClickMenu.cs`, `UI/RiryToolsMainMenu.cs` |
-| `GuidToolTargetsWindow.RegeneratorTitle` / `RepairTitle` | `GUID Regenerator` / `GUID Repair`: the popups' titles and the Main Menu's PopUp Tools buttons. | `UI/GuidTools/GuidToolTargetsWindow.cs`, `UI/RiryToolsMainMenu.cs` |
-| `Assets/RiryTools/Animator Tools/Extract Animations` | (2003) The Extract Animation window with the selected model; enabled only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Regenerate GUID` | (2000) Regenerates the selected assets' GUIDs. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Repair Missing GUID References` | (2004) Repairs missing GUID references in the selection. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Save Import Preset` | (2002) The Save Import Preset window for the selected asset. | `UI/RiryToolsRightClickMenu.cs` |
-| `Assets/RiryTools/Set Folder Import Presets` | (2001) The small popup: one preset per folder, or for all. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/General Tools/Import Presets/Set Folder Import Presets` | (2000) The small popup: one preset per folder, or for all. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/General Tools/Import Presets/Save Import Preset` | (2001) The Save Import Preset window for the selected asset. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/General Tools/PopUp Tools/Material Cleaner` | (2002) The Material Cleaner window, with the selected material in its Material field. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/General Tools/PopUp Tools/Prefab Cleaner` | (2003) Removes unused prefab overrides from the selected scenes and prefabs (and those in selected folders), after asking. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/General Tools/PopUp Tools/GUID Regenerator` | (2004) Regenerates the selected assets' GUIDs. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/General Tools/PopUp Tools/GUID Repair` | (2005) Repairs missing GUID references in the selection. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/Animator Tools/Find and Replace` | (2010) The Find and Replace popup with the selected animator controller. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `Assets/RiryTools/Animator Tools/Clean Animation Keys` | (2011) Clean Animation Keys on the selected clips. | `UI/RiryToolsRightClickMenu.cs` |
+| `Assets/RiryTools/Animator Tools/Extract Animations` | (2012) The Extract Animation window with the selected model; only for a model with embedded animations. | `UI/RiryToolsRightClickMenu.cs` |
 
 ### Hierarchy right-click
 
@@ -494,15 +500,19 @@ Also in the GameObject menu.
 
 | Name | Use | Scripts |
 |---|---|---|
-| `GameObject/RiryTools/Animator Tools/Find and Replace` | (22) The Find and Replace popup with the selected scene object; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `GameObject/RiryTools/Attach To` | (19) The Attach To popup; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs` |
-| `GameObject/RiryTools/Invert Global Position` | (26) Mirrors the selected objects to the other side of their avatar, then asks whether to move them under the mirrored bone; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs` |
-| `GameObject/RiryTools/Find scripts that reference this` | (27) A popup of links to the components in the selected objects' avatar that reference them; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/FindReferencingScriptsWindow.cs` |
-| `GameObject/RiryTools/Constraint Tools/Bezier` | (21) The Bezier tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintBezierHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `GameObject/RiryTools/Constraint Tools/Train` | (20) The Train tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintTrainHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `GameObject/RiryTools/Constraint Tools/Insertable prop` | (23) The Insertable prop tab; the selected object becomes the Socket and the avatar it is in the Avatar root (on the avatar root itself, only the Avatar root). Path is `RiryToolsRightClickMenu.InsertablePropHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `GameObject/RiryTools/Constraint Tools/Dual axis detector` | (24) The Dual axis detector tab; the selected object becomes Source, another selected object Relative to. Path is `RiryToolsRightClickMenu.DualAxisHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
-| `GameObject/RiryTools/Constraint Tools/Three axis detector` | (25) The Three axis detector tab, filled the same way. Path is `RiryToolsRightClickMenu.ThreeAxisHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/General Tools/Blendshape Sync` | (10) A new Blendshape Sync job with the selected Skinned Mesh Renderer as its master; enabled when the active object has one. | `UI/RiryToolsRightClickMenu.cs` |
+| `GameObject/RiryTools/General Tools/Constraint Tools/Train` | (11) The Train tab, with the selection as the chain. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/General Tools/Constraint Tools/Bezier` | (12) The Bezier tab, with the selection as the chain. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/General Tools/Constraint Tools/Insertable prop` | (13) The Insertable prop tab; the selected object becomes the Socket and its avatar the Avatar root. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/General Tools/Constraint Tools/Dual axis detector` | (14) The Dual axis detector tab; the selected object becomes Source, another selected object Relative to. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/General Tools/Constraint Tools/Three axis detector` | (15) The Three axis detector tab, filled the same way. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/General Tools/PopUp Tools/Avatar Migration Assistant` | (16) The Avatar Migration Assistant popup with the selected object's avatar as Source. | `UI/RiryToolsRightClickMenu.cs` |
+| `GameObject/RiryTools/Menu Tools` | (17) The Menu Tools window with the selected object's avatar as its target. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/Animator Tools/Find and Replace` | (18) The Find and Replace popup with the selected scene object. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
+| `GameObject/RiryTools/Animator Tools/Controller Cleaner` | (19) The Controller Cleaner window with the controller of the Animator on the selected object or its nearest parent with one; enabled when there is one. | `UI/RiryToolsRightClickMenu.cs` |
+| `GameObject/RiryTools/Attach To` | (30) The Attach To popup. | `UI/RiryToolsRightClickMenu.cs` |
+| `GameObject/RiryTools/Invert Global Position` | (31) Mirrors the selected objects to the other side of their avatar, then asks whether to move them under the mirrored bone. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs` |
+| `GameObject/RiryTools/Find scripts that reference this` | (32) A popup of links to the components in the selected objects' avatar that reference them. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/FindReferencingScriptsWindow.cs` |
 
 ### Git menu
 

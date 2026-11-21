@@ -4,7 +4,7 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > AutoSync > Sync / Configuration | |
+| Menu bar | RiryTools > General Tools > AutoSync > Sync / Configuration | |
 | Menu bar | Git > Sync / Configuration | |
 | Main Menu | General Tools > AutoSync | Sync, Configuration |
 
@@ -19,7 +19,7 @@ Commits every scene or prefab save to the checked-out Git branch and pushes it t
 
 ## 4. How the tool behaves
 
-- Off until turned on, per user and per project (**Tools > RiryTools > AutoSync > Sync**).
+- Off until turned on, per user and per project (**Tools > RiryTools > General Tools > AutoSync > Sync**).
 - Without a repository, one is created in the project folder with the Unity `.gitignore` and `.gitattributes`, and Git LFS is enabled.
 - On each scene or prefab save, only the saved files and their `.meta` files are committed, titled with the time of the save by default. Configuration's **Commit title** template can use `{time}`, `{files}` (the saved files' names) and `{branch}`.
 - When a remote is set, every commit is pushed to it. Git's credential manager handles sign-in.

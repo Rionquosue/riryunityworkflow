@@ -4,7 +4,7 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Stop Auto Game (toggle) | |
+| Menu bar | RiryTools > Debug Tools > Stop Auto Game (toggle) | |
 | Main Menu | Debug Tools | Stop Auto Game (toggle) |
 
 ## 2. Brief description

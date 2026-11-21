@@ -6,7 +6,7 @@ settings you want, without touching files you already set up by hand.
 ## 1. Save your settings to the library
 
 1. Select an asset whose import settings you like (for example a texture).
-2. Right-click it and choose **RiryTools > Save Import Preset**.
+2. Right-click it and choose **RiryTools > General Tools > Import Presets > Save Import Preset**.
 3. Pick a **Configuration** (a group of presets, for example `Avatar`) or type a
    **New name**, name the preset, and click **Save**.
 
@@ -16,7 +16,7 @@ the computer can use it. **Open Library** shows it.
 ## 2. Set a folder's presets
 
 1. Open the folder in the Project window and choose
-   **Tools > RiryTools > Import Presets > Set Folder Import Presets**, or type
+   **Tools > RiryTools > General Tools > Import Presets > Set Folder Import Presets**, or type
    part of another folder's name in **Folder** and pick it.
 2. Each file type in the folder (**Image files**, **Model files**, ...) has a
    dropdown: choose a preset for it, or **None**. A tag from the **Tags** list
@@ -30,7 +30,7 @@ the computer can use it. **Open Library** shows it.
    type whose preset changed are set to it now.
 
 For several folders at once, select them (or right-click empty space inside one),
-right-click, choose **RiryTools > Set Folder Import Presets**, pick a configuration
+right-click, choose **RiryTools > General Tools > Import Presets > Set Folder Import Presets**, pick a configuration
 (turn off **Apply to all** for one per folder; open **File types** for a preset per
 type), and click **Apply**.
 

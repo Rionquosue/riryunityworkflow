@@ -17,7 +17,7 @@
 - **Animator Tools > Find and Replace** (VRChat Avatars SDK): finds and replaces strings in animator state behaviours across an avatar's controllers or one controller, as one undo step: the whole string, only the searched text (Partial), or regular expression matches (Regex). Play Audio paths can be repathed to a scene object and Parameter Driver names mapped to a controller parameter; results open their state in the Animator window. Changes can be applied to the main prefab or to a child prefab.
 - **Find Null references**: shows where each NullReferenceException in the Console was thrown and lists the empty or missing references involved, or scans the open scenes when the log gives nothing.
 - **Animator Tools > Controller Cleaner**: finds animator controller sub-assets no layer reaches (states, state machines, transitions, blend trees, behaviours) in one controller, the open scenes' controllers or the whole project, and removes them after asking, one undo step per Clean.
-- **Material Cleaner** (Tools > RiryTools > Utilities and the Main Menu's General Tools > PopUp Tools sub-tab): removes texture slots, floats and colors a material's current shader doesn't have, for one material, the open scenes' materials or the whole project, one undo step per Clean.
+- **Material Cleaner** (Tools > RiryTools > General Tools > PopUp Tools and the Main Menu's General Tools > PopUp Tools sub-tab): removes texture slots, floats and colors a material's current shader doesn't have, for one material, the open scenes' materials or the whole project, one undo step per Clean.
 - **Refresh Scripts**: imports changed files, reloads all scripts, and reopens the open RiryTools windows with fresh state, from the Tools menu or the Main Menu's Debug Tools tab.
 
 ### Changed

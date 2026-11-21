@@ -47,16 +47,17 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (28, lines 23-64) |
-| `VrcSdkMissing` | Dialogs (1, line 278) |
-| `FTEmulatorUnavailable` | Text shown through a variable (1, line 320) |
+| `attributes and constants` | Menu entries (41, lines 25-76: paths built from `GeneralTools`, `PopUpTools` and `ConstraintTool`) |
+| `VrcSdkMissing` | Dialogs (1, line 283) |
+| `FTEmulatorUnavailable` | Text shown through a variable (1, line 325) |
+| `FTEmulatorToolsItem` | Dialogs (1, line 335) |
 | `FTEmulatorToolsItem` | Dialogs (1, line 330) |
 
 ### `UI/RiryToolsRightClickMenu.cs`
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (18, lines 26-47) |
+| `attributes and constants` | Menu entries (22, lines 28-55: paths built from `GeneralToolsAssets` and `GeneralToolsHierarchy`) |
 
 ### `Components/StopAllToolScripts.cs`
 

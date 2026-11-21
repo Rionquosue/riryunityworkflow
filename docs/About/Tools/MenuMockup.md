@@ -4,7 +4,7 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Menu Mockup | |
+| Menu bar | RiryTools > Debug Tools > Menu Mockup | |
 
 ## 2. Brief description
 

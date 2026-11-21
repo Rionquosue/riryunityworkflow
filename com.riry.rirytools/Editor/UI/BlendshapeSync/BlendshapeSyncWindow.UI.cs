@@ -11,6 +11,14 @@ namespace Riry.RiryTools.Editor
     /// </summary>
     internal sealed partial class BlendshapeSyncWindow
     {
+        // A new job's master from the Hierarchy entry; refused the same way as picking it in the field.
+        internal void UseMaster(SkinnedMeshRenderer renderer)
+        {
+            if (renderer == null || renderer == master || !CanAssign(renderer, -1)) return;
+            master = renderer;
+            CaptureOriginal(master);
+        }
+
         internal static void Open()
         {
             GetWindow<BlendshapeSyncWindow>("Blendshape Sync");

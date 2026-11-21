@@ -5,6 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Animator Tools > Controller Cleaner | |
+| Right Click (hierarchy) | RiryTools > Animator Tools > Controller Cleaner | the selected Animator's controller |
 | Main Menu | Animator Tools | Controller Cleaner |
 | GUID Tools | Offered after Apply in the broken-reference window | |
 

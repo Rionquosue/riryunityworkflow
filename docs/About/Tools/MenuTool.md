@@ -5,6 +5,7 @@
 | Access | Location | Item |
 | --- | --- | --- |
 | Menu bar | RiryTools > Menu Tools | |
+| Right Click (hierarchy) | RiryTools > Menu Tools | the selected avatar as target |
 | Main Menu | Menu Tools | Parameter budget, Menu manager |
 
 ## 2. Brief description

@@ -4,7 +4,7 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > IconCap | |
+| Menu bar | RiryTools > General Tools > PopUp Tools > IconCap | |
 | Main Menu | General Tools > PopUp Tools | IconCap |
 
 ## 2. Brief description

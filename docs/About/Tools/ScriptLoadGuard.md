@@ -4,7 +4,7 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Script Load Guard (toggle) | |
+| Menu bar | RiryTools > Debug Tools > Script Load Guard (toggle) | |
 | Main Menu | Debug Tools | Script Load Guard (toggle) |
 
 ## 2. Brief description

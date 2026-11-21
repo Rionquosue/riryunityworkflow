@@ -118,6 +118,13 @@ namespace Riry.RiryTools.Editor
             Open(null, -1);
         }
 
+        // The Hierarchy entry: its own window with the selected object's avatar (or the object) as the target.
+        internal static void OpenFromHierarchy(GameObject selected)
+        {
+            Transform root = selected != null ? InvertGlobalPosition.AvatarRoot(selected.transform) : null;
+            Open(root != null ? root.gameObject : selected, -1);
+        }
+
         /// <summary>The Main Menu's copy: drawn in its Menu Tools tab, never shown on its own.</summary>
         internal static EditorWindow CreateHosted()
         {

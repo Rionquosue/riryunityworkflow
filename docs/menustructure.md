@@ -14,68 +14,88 @@ If an item requires fixed height or width to be usable, it should not be docked 
 
 ### Right click menu
 
+Laid out like the Main Menu's tabs (General Tools, Menu Tools, Animator Tools), with only the tools that take the selection as context. The Hierarchy-only tools come last, after a separator.
+
 **Hierarchy**
 
-    * Avatar Migration Assistant
-    * Blendshape Sync
-    * Constraint Tools >
-        * Train
-        * Bezier
-        * Insertable prop
-        * Dual axis detector
-        * Three axis detector
-    * GUID Tools
-    * Menu Tools
+    * General Tools >
+        * Blendshape Sync (the selected Skinned Mesh Renderer as master)
+        * Constraint Tools >
+            * Train
+            * Bezier
+            * Insertable prop
+            * Dual axis detector
+            * Three axis detector
+        * PopUp Tools >
+            * Avatar Migration Assistant (the selected avatar as Source)
+    * Menu Tools (the selected avatar as target)
+    * Animator Tools >
+        * Find and Replace
+        * Controller Cleaner (the selected Animator's controller)
+    ---
+    * Attach To
     * Invert Global Position
     * Find scripts that reference this
 
 **Project folder**
 
+    * General Tools >
+        * Import Presets >
+            * Set Folder Import Presets
+            * Save Import Preset (only when clicking file, else grayed)
+        * PopUp Tools >
+            * Material Cleaner
+            * Prefab Cleaner
+            * GUID Regenerator
+            * GUID Repair
     * Animator Tools >
+        * Find and Replace
         * Clean Animation Keys
         * Extract Animations
-        * Find And Replace
-    * GUID Tools >
-        * Regenerate GUID(s)
-        * Prefab Cleaner
-    * Material Cleaner
-    * Import Presets
-        * Set Folder Preset
-        * Save Import Preset (only when clicking file, else grayed)
-        
+
 ### Toolbar menu
 
-    Formatted as breadcrumbs where > expands into a submenu.
+    Formatted as breadcrumbs where > expands into a submenu. Laid out like the Main Menu's tabs.
 
 **Tools > RiryTools**
 
     * Main Menu
-    * AutoSync >
-        * Configure
-        * [ ] Sync now
-    * [ ] Stop Auto Game
-    * Constraint Tools
+    * General Tools >
+        * Blendshape Sync
+        * Import Presets >
+            * Set Folder Import Presets
+            * Save Import Preset
+            * Open Import Preset Library
+        * Constraint Tools >
+            * Train
+            * Bezier
+            * Insertable prop
+            * Dual axis detector
+            * Three axis detector
+        * AutoSync >
+            * [ ] Sync
+            * Configuration
+        * PopUp Tools >
+            * Avatar Migration Assistant
+            * IconCap
+            * Material Cleaner
+            * Prefab Cleaner
+            * GUID Regenerator
+            * GUID Repair
+            * GUID Broken Reference Checker
+    * Menu Tools
     * Animator Tools >
-        * Clean Animation Keys
         * Find and Replace
+        * Clean Animation Keys
         * Controller Cleaner
         * Extract Animations
-    * Avatar Tools >
-        * Avatar Migration Assistant
-        * Blendshape Sync
-        * Menu Tools
-    * Utilities >
-        * GUID Rebuild tool
-        * GUID Repair tool
-        * IconCap
-        * Material Cleaner
-    * Import Presets >
-        * Set Folder Presets
-        * Save Import Preset
-        * Import Preset Library
     * Debug Tools >
         * Refresh Scripts
+        * Find Null references
         * Menu Mockup
+        * Delete GUID Reference Cache
+        * [ ] Stop Auto Game
+        * [ ] Script Load Guard
         * [ ] Stop all tool scripts
     * FTEmulator
     * Documentation

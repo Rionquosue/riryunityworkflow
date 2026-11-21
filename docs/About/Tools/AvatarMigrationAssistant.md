@@ -4,7 +4,8 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Avatar Migration Assistant | |
+| Menu bar | RiryTools > General Tools > PopUp Tools > Avatar Migration Assistant | |
+| Right Click (hierarchy) | RiryTools > General Tools > PopUp Tools > Avatar Migration Assistant | the selected avatar as Source |
 | Main Menu | General Tools > PopUp Tools | Avatar Migration Assistant |
 
 ## 2. Brief description

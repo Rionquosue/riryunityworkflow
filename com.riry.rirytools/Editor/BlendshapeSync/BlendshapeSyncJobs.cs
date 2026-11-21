@@ -60,6 +60,14 @@ namespace Riry.RiryTools.Editor
             BlendshapeSyncJobWindow.Open(Create());
         }
 
+        // The Hierarchy entry: a new job with the selected renderer as its master (when it can be one).
+        internal static void Add(SkinnedMeshRenderer master)
+        {
+            BlendshapeSyncWindow created = Create();
+            created.UseMaster(master);
+            BlendshapeSyncJobWindow.Open(created);
+        }
+
         private static BlendshapeSyncWindow Create()
         {
             int number = 0;

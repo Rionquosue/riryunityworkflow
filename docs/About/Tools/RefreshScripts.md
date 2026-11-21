@@ -4,7 +4,7 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Refresh Scripts | |
+| Menu bar | RiryTools > Debug Tools > Refresh Scripts | |
 | Main Menu | Debug Tools | Refresh Scripts |
 
 ## 2. Brief description

@@ -4,7 +4,8 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > Blendshape Sync | |
+| Menu bar | RiryTools > General Tools > Blendshape Sync | |
+| Right Click (hierarchy) | RiryTools > General Tools > Blendshape Sync | a new job with the selected Skinned Mesh Renderer as master |
 | Main Menu | General Tools > Blendshape Sync | Add Job, job list |
 
 ## 2. Brief description

@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 
 namespace Riry.RiryTools.Editor
 {
@@ -22,39 +22,49 @@ namespace Riry.RiryTools.Editor
             RiryToolsMainMenu.CreateConstraintTool = ConstraintToolWindow.CreateHosted;
         }
 
-        [MenuItem(RiryToolsMenuBar.ConstraintTool, false, 2030)]
-        private static void ConstraintToolItem() { ConstraintToolWindow.OpenFromTools(); }
+        [MenuItem(RiryToolsMenuBar.ConstraintTrainTools, false, 2020)]
+        private static void ConstraintTrainToolsItem() { ConstraintToolWindow.Open(ConstraintToolWindow.TrainTab); }
 
+        [MenuItem(RiryToolsMenuBar.ConstraintTrainTools, true)]
+        private static bool ConstraintTrainToolsValid() { return !StopAllToolScripts.Active; }
 
+        [MenuItem(RiryToolsMenuBar.ConstraintBezierTools, false, 2021)]
+        private static void ConstraintBezierToolsItem() { ConstraintToolWindow.Open(ConstraintToolWindow.BezierTab); }
 
-        [MenuItem(RiryToolsMenuBar.ConstraintTool, true)]
+        [MenuItem(RiryToolsMenuBar.ConstraintBezierTools, true)]
+        private static bool ConstraintBezierToolsValid() { return !StopAllToolScripts.Active; }
 
+        [MenuItem(RiryToolsMenuBar.InsertablePropTools, false, 2022)]
+        private static void InsertablePropToolsItem() { ConstraintToolWindow.Open(ConstraintToolWindow.InsertableTab); }
 
-        private static bool ConstraintToolValid() { return !StopAllToolScripts.Active; }
+        [MenuItem(RiryToolsMenuBar.InsertablePropTools, true)]
+        private static bool InsertablePropToolsValid() { return !StopAllToolScripts.Active; }
 
-        [MenuItem(RiryToolsMenuBar.MenuTool, false, 2066)]
+        [MenuItem(RiryToolsMenuBar.DualAxisTools, false, 2023)]
+        private static void DualAxisToolsItem() { ConstraintToolWindow.Open(ConstraintToolWindow.DualAxisTab); }
+
+        [MenuItem(RiryToolsMenuBar.DualAxisTools, true)]
+        private static bool DualAxisToolsValid() { return !StopAllToolScripts.Active; }
+
+        [MenuItem(RiryToolsMenuBar.ThreeAxisTools, false, 2024)]
+        private static void ThreeAxisToolsItem() { ConstraintToolWindow.Open(ConstraintToolWindow.ThreeAxisTab); }
+
+        [MenuItem(RiryToolsMenuBar.ThreeAxisTools, true)]
+        private static bool ThreeAxisToolsValid() { return !StopAllToolScripts.Active; }
+
+        [MenuItem(RiryToolsMenuBar.MenuTool, false, 2060)]
         private static void MenuToolItem() { MenuToolWindow.Open(); }
 
-
         [MenuItem(RiryToolsMenuBar.MenuTool, true)]
-
         private static bool MenuToolValid() { return !StopAllToolScripts.Active; }
 
-        [MenuItem(RiryToolsMenuBar.FindReplaceTools, false, 1995)]
+        [MenuItem(RiryToolsMenuBar.FindReplaceTools, false, 2070)]
         private static void FindReplaceToolsItem() { BehaviourFindReplaceWindow.OpenPopup(null); }
 
-
         [MenuItem(RiryToolsMenuBar.FindReplaceTools, true)]
-
         private static bool FindReplaceToolsValid() { return !StopAllToolScripts.Active; }
 
-        [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, false, 22)]
-        private static void FindReplaceHierarchyItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeGameObject); }
-
-        [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, true)]
-        private static bool FindReplaceHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
-
-        [MenuItem(RiryToolsRightClickMenu.FindReplaceAssets, false, 2006)]
+        [MenuItem(RiryToolsRightClickMenu.FindReplaceAssets, false, 2010)]
         private static void FindReplaceAssetsItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeObject); }
 
         [MenuItem(RiryToolsRightClickMenu.FindReplaceAssets, true)]
@@ -62,35 +72,48 @@ namespace Riry.RiryTools.Editor
 
         // No MenuCommand parameter, so a multi-selection opens the window once.
         // "GameObject/" entries with a priority below 50 also appear in the Hierarchy's right-click menu.
-        [MenuItem(RiryToolsRightClickMenu.ConstraintTrainHierarchy, false, 20)]
+
+        [MenuItem(RiryToolsRightClickMenu.ConstraintTrainHierarchy, false, 11)]
         private static void ConstraintTrainHierarchyItem() { ConstraintToolWindow.OpenTrainFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.ConstraintTrainHierarchy, true)]
         private static bool ConstraintTrainHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
-        [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, false, 21)]
+        [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, false, 12)]
         private static void ConstraintBezierHierarchyItem() { ConstraintToolWindow.OpenBezierFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.ConstraintBezierHierarchy, true)]
         private static bool ConstraintBezierHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
-        [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, false, 23)]
+        [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, false, 13)]
         private static void InsertablePropHierarchyItem() { ConstraintToolWindow.OpenInsertableFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.InsertablePropHierarchy, true)]
         private static bool InsertablePropHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
-        [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, false, 24)]
+        [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, false, 14)]
         private static void DualAxisHierarchyItem() { ConstraintToolWindow.OpenDualAxisFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.DualAxisHierarchy, true)]
         private static bool DualAxisHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
-        [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, false, 25)]
+        [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, false, 15)]
         private static void ThreeAxisHierarchyItem() { ConstraintToolWindow.OpenThreeAxisFromHierarchy(); }
 
         [MenuItem(RiryToolsRightClickMenu.ThreeAxisHierarchy, true)]
         private static bool ThreeAxisHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
+
+        [MenuItem(RiryToolsRightClickMenu.MenuToolHierarchy, false, 17)]
+        private static void MenuToolHierarchyItem() { MenuToolWindow.OpenFromHierarchy(Selection.activeGameObject); }
+
+        [MenuItem(RiryToolsRightClickMenu.MenuToolHierarchy, true)]
+        private static bool MenuToolHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
+
+        [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, false, 18)]
+        private static void FindReplaceHierarchyItem() { BehaviourFindReplaceWindow.OpenPopup(Selection.activeGameObject); }
+
+        [MenuItem(RiryToolsRightClickMenu.FindReplaceHierarchy, true)]
+        private static bool FindReplaceHierarchyValid() { return !StopAllToolScripts.Active && (SceneObjectSelected()); }
 
         // Scene and Prefab Mode objects only, not prefab assets.
         private static bool SceneObjectSelected()
@@ -101,24 +124,17 @@ namespace Riry.RiryTools.Editor
 }
 
 // ============================================================================
-// GLOSSARY: VRChat menu entries
-//   Tools/RiryTools/Constraint Tools (2030)       -> ConstraintToolWindow.OpenFromTools (Editor/VRChat/UI/ConstraintTools/ConstraintToolWindow.cs):
-//                                                      the Constraint Tools window on the tab used last
-//   Tools/RiryTools/Menu Tools (2066), menu key E -> MenuToolWindow.Open (Editor/VRChat/UI/MenuTool/MenuToolWindow.cs): its own
-//                                                      window; the Main Menu's Menu Tools tab hosts its Parameter budget
-//                                                      (CreateMenuTool = MenuToolWindow.CreateHosted); its Menu manager opens
-//                                                      this window
-//   Tools/RiryTools/Animator Tools/Find and Replace (1995) -> BehaviourFindReplaceWindow.OpenPopup (Editor/VRChat/UI/AnimatorTools/
-//                                                      BehaviourFindReplaceWindow.cs); also in the Hierarchy (22) and Project (2006)
-//                                                      right-click menus, for a scene object and an animator controller
-//   Tools/RiryTools/FTEmulator (2067)            -> in com.riry.ftemulator (Editor/UI/FTEmulatorMenus.cs), not here.
-//   GameObject/RiryTools/Constraint Tools/Train (20)  -> ConstraintToolWindow.OpenTrainFromHierarchy: the Train tab; the active
-//                                                      object becomes the chain start, a selected descendant the end.
-//   GameObject/RiryTools/Constraint Tools/Bezier (21) -> ConstraintToolWindow.OpenBezierFromHierarchy: the Bezier tab, the same way.
-//   GameObject/RiryTools/Constraint Tools/Insertable prop (23) -> ConstraintToolWindow.OpenInsertableFromHierarchy: the Insertable
-//                                                      prop tab; the active object becomes the Socket, its avatar the Avatar root.
-//   GameObject/RiryTools/Constraint Tools/Dual axis detector (24) / Three axis detector (25) -> ConstraintToolWindow.
-//                                                      OpenDualAxisFromHierarchy / OpenThreeAxisFromHierarchy: that tab; the active
-//                                                      object becomes Source, another selected object Relative to.
+// GLOSSARY: VRChat menu entries (paths in RiryToolsMenuBar.cs and RiryToolsRightClickMenu.cs)
+//   Tools/RiryTools/General Tools/Constraint Tools/Train (2020), Bezier (2021), Insertable prop (2022), Dual axis detector (2023),
+//                                                   Three axis detector (2024) -> ConstraintToolWindow.Open on that tab
+//   Tools/RiryTools/Menu Tools (2060), menu key E -> MenuToolWindow.Open; the Main Menu's Menu Tools tab hosts its Parameter budget
+//   Tools/RiryTools/Animator Tools/Find and Replace (2070) -> BehaviourFindReplaceWindow.OpenPopup
+//   Assets/RiryTools/Animator Tools/Find and Replace (2010) -> the popup with the selected animator controller
+//   GameObject/RiryTools/General Tools/Constraint Tools/Train (11), Bezier (12), Insertable prop (13), Dual axis detector (14),
+//                                                   Three axis detector (15) -> ConstraintToolWindow.Open*FromHierarchy: that tab,
+//                                                   filled from the selection
+//   GameObject/RiryTools/Menu Tools (17)          -> MenuToolWindow.OpenFromHierarchy: the selection's avatar as the target
+//   GameObject/RiryTools/Animator Tools/Find and Replace (18) -> the popup with the selected scene object
+//   Tools/RiryTools/FTEmulator (2090)             -> in com.riry.ftemulator (Editor/UI/FTEmulatorMenus.cs), not here.
 //   SceneObjectSelected      Validator of the Hierarchy entries: a scene or Prefab Mode object is active.
 // ============================================================================

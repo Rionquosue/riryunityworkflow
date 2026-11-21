@@ -22,9 +22,23 @@ namespace Riry.RiryTools.Editor
 
         internal static void Open()
         {
+            Open(null);
+        }
+
+        // The Hierarchy entry: the window with the selected Animator's controller filled in.
+        internal static void Open(AnimatorController selected)
+        {
             var window = GetWindow<ControllerCleanerWindow>();
             window.titleContent = new GUIContent(Title);
+            if (selected != null) window.controller = selected;
             window.Show();
+        }
+
+        /// <summary>The controller of the Animator on the object or its nearest parent with one; null when there is none.</summary>
+        internal static AnimatorController ControllerOf(GameObject selected)
+        {
+            Animator animator = selected != null ? selected.GetComponentInParent<Animator>(true) : null;
+            return animator != null ? animator.runtimeAnimatorController as AnimatorController : null;
         }
 
         private void OnGUI()
