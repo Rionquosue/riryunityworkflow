@@ -30,6 +30,7 @@ Display names are what the user sees (menus, window titles, docs, `docs/variable
 | --- | --- | --- |
 | Attach To | `Utilities/` | `AttachTo` |
 | Invert Global Position | `Utilities/` | `InvertGlobalPosition` |
+| Find scripts that reference this | `Utilities/` | `FindReferencingScripts` |
 | AutoSync | `AutoSync/` | `AutoSync` |
 | Avatar Migration Assistant | `AvatarMigrator/` | `AvatarMigrator` |
 | Blendshape Sync | `BlendshapeSync/` | `BlendshapeSync` |
@@ -233,6 +234,7 @@ com.riry.rirytools/
     │   │   └── ImportPresetSaveWindow.UI.cs
     │   ├── Utilities/
     │   │   ├── AttachToWindow.cs
+    │   │   ├── FindReferencingScriptsWindow.cs
     │   │   ├── InvertGlobalPositionPrompts.cs
     │   │   └── MaterialCleanerWindow.cs
     │   ├── RiryToolsMainMenu.cs
@@ -242,6 +244,7 @@ com.riry.rirytools/
     │   ├── AttachTo.cs
     │   ├── AttachToAvatarTracker.cs
     │   ├── AttachToBones.cs
+    │   ├── FindReferencingScripts.cs
     │   ├── InvertGlobalPosition.cs
     │   ├── MaterialCleaner.cs
     │   ├── MaterialCleanerSources.cs

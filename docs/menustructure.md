@@ -27,6 +27,7 @@ If an item requires fixed height or width to be usable, it should not be docked 
     * GUID Tools
     * Menu Tools
     * Invert Global Position
+    * Find scripts that reference this
 
 **Project folder**
 

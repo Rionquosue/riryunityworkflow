@@ -39,6 +39,7 @@ Example:
 - **Tool names:**
   - Attach To
   - Invert Global Position
+  - Find scripts that reference this
   - AutoSync
   - Avatar Migration Assistant
   - Blendshape Sync
@@ -315,6 +316,13 @@ Moving or renaming a file must move its `.meta` with it.
 | `InvertGlobalPosition.DescriptorType` | `VRC.SDK3.Avatars.Components.VRCAvatarDescriptor`: found by name to pick the avatar root (else the nearest Animator). | `Utilities/InvertGlobalPosition.cs` |
 | `RiryLog.InvertGlobalPosition` | `Invert Global Position`: its Console lines' tool name. | `Components/RiryLog.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs` |
 
+### Find scripts that reference this
+
+| Name | Use | Scripts |
+|---|---|---|
+| `FindReferencingScripts.Title` | `Find scripts that reference this`: the menu entry's name and the popup's title. | `Utilities/FindReferencingScripts.cs`, `UI/Utilities/FindReferencingScriptsWindow.cs`, `UI/RiryToolsRightClickMenu.cs` |
+| `RiryLog.FindReferencingScripts` | `Find scripts that reference this`: its Console lines' tool name. | `Components/RiryLog.cs` |
+
 ### Avatar Migration Assistant
 
 | Name | Use | Scripts |
@@ -489,6 +497,7 @@ Also in the GameObject menu.
 | `GameObject/RiryTools/Animator Tools/Find and Replace` | (22) The Find and Replace popup with the selected scene object; enabled when one is selected. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Attach To` | (19) The Attach To popup; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs` |
 | `GameObject/RiryTools/Invert Global Position` | (26) Mirrors the selected objects to the other side of their avatar, then asks whether to move them under the mirrored bone; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/InvertGlobalPositionPrompts.cs` |
+| `GameObject/RiryTools/Find scripts that reference this` | (27) A popup of links to the components in the selected objects' avatar that reference them; enabled when scene objects are selected; in no other menu. | `UI/RiryToolsRightClickMenu.cs`, `UI/Utilities/FindReferencingScriptsWindow.cs` |
 | `GameObject/RiryTools/Constraint Tools/Bezier` | (21) The Bezier tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintBezierHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Constraint Tools/Train` | (20) The Train tab, with the selection as the chain. Path is `RiryToolsRightClickMenu.ConstraintTrainHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |
 | `GameObject/RiryTools/Constraint Tools/Insertable prop` | (23) The Insertable prop tab; the selected object becomes the Socket and the avatar it is in the Avatar root (on the avatar root itself, only the Avatar root). Path is `RiryToolsRightClickMenu.InsertablePropHierarchy`. | `UI/RiryToolsRightClickMenu.cs`, `VRChat/UI/RiryToolsVRChatMenus.cs` |

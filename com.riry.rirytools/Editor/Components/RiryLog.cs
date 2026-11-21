@@ -21,6 +21,7 @@ namespace Riry.RiryTools.Editor
         internal const string StopAllToolScripts = "Stop all tool scripts";
         internal const string FindNullReferences = "Find Null references";
         internal const string FindReplace = "Find and Replace";
+        internal const string FindReferencingScripts = "Find scripts that reference this";
         internal const string FTEmulator = "FTEmulator";
         internal const string ConstraintTool = "Constraint Tools";
         internal const string GuidTools = "GUID Tools";
