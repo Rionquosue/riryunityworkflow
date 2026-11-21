@@ -56,7 +56,7 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `attributes and constants` | Menu entries (17, lines 26-46) |
+| `attributes and constants` | Menu entries (18, lines 26-47) |
 
 ### `Components/StopAllToolScripts.cs`
 
@@ -154,6 +154,21 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Attach` | Dialogs (3, lines 100-123) |
+
+## Find scripts that reference this
+
+### `UI/Utilities/FindReferencingScriptsWindow.cs`
+
+| Method | Text |
+|---|---|
+| `Open` | Window titles (1, line 21, `FindReferencingScripts.Title`) |
+| `OnGUI` | Labels (2, lines 38-41), Links (1, lines 48-50: each result, with a tooltip) |
+
+### `Utilities/FindReferencingScripts.cs`
+
+| Method | Text |
+|---|---|
+| `Title` | Text shown through a variable (1, line 14: the menu entry and the popup's title) |
 
 ## Invert Global Position
 
