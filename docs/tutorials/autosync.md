@@ -4,7 +4,7 @@ Commit every scene and prefab save to Git, and recover when something breaks the
 
 ## 1. Turn on Sync
 
-Choose **Tools > RiryTools > AutoSync > Sync** (or **Git > Sync**). If Git is not
+Choose **Tools > RiryTools > General Tools > AutoSync > Sync** (or **Git > Sync**). If Git is not
 installed, the dialog links to the download; install it, restart Unity and choose
 **Sync** again. Without a repository, one is created in the project folder with the
 Unity `.gitignore` and `.gitattributes`, and Git LFS is enabled.
@@ -17,7 +17,7 @@ Only the saved files and their `.meta` files go into the commit.
 
 ## 3. Push to a server (optional)
 
-1. Choose **Tools > RiryTools > AutoSync > Configuration**.
+1. Choose **Tools > RiryTools > General Tools > AutoSync > Configuration**.
 2. Enter the server address in **Push to remote** and click **Add Remote**.
 3. Every commit is now pushed. When the server asks you to sign in, Git's
    credential manager opens its own window.

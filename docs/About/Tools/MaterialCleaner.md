@@ -4,9 +4,9 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | Tools > RiryTools > Utilities | Material Cleaner |
+| Menu bar | Tools > RiryTools > General Tools > PopUp Tools | Material Cleaner |
 | Main Menu | General Tools > PopUp Tools | Material Cleaner |
-| Right Click (project) | RiryTools > Material Cleaner | the selected material fills the Material field |
+| Right Click (project) | RiryTools > General Tools > PopUp Tools > Material Cleaner | the selected material fills the Material field |
 | Broken References window | Call material cleaner | |
 
 ## 2. Brief description
@@ -23,7 +23,7 @@ Removes texture, float and color entries a material's current shader doesn't hav
 - A material whose shader is missing is skipped.
 - Each row shows the count with a **Clean** button; **Clean all** cleans every listed material.
 - Clean removes the texture slots (and the textures they reference), floats and colors that the shader doesn't have. Each Clean is one undo step, and the log lists what was removed.
-- Opened from **Tools > RiryTools > Utilities > Material Cleaner** or the Main Menu's General Tools > PopUp Tools sub-tab.
+- Opened from **Tools > RiryTools > General Tools > PopUp Tools > Material Cleaner** or the Main Menu's General Tools > PopUp Tools sub-tab.
 
 ## 5. Flow chart
 

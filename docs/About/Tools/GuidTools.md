@@ -4,12 +4,13 @@
 
 | Access | Location | Item |
 | --- | --- | --- |
-| Menu bar | RiryTools > GUID Tools | |
+| Menu bar | RiryTools > General Tools > PopUp Tools | GUID Regenerator, GUID Repair, GUID Broken Reference Checker, Prefab Cleaner |
+| Menu bar | RiryTools > Debug Tools > Delete GUID Reference Cache | |
 | Main Menu | General Tools > PopUp Tools | GUID Regenerator, GUID Repair, GUID Broken Reference Checker, Prefab Cleaner |
 | Main Menu | Debug Tools | Delete GUID Reference Cache |
-| Right Click (project) | RiryTools > Regenerate GUID | |
-| Right Click (project) | RiryTools > Repair Missing GUID References | |
-| Right Click (project) | RiryTools > Prefab Cleaner | |
+| Right Click (project) | RiryTools > General Tools > PopUp Tools > GUID Regenerator | |
+| Right Click (project) | RiryTools > General Tools > PopUp Tools > GUID Repair | |
+| Right Click (project) | RiryTools > General Tools > PopUp Tools > Prefab Cleaner | |
 | Prompt | When an opened scene or prefab points at missing assets | |
 
 ## 2. Brief description
@@ -28,7 +29,7 @@ Regenerates asset GUIDs without breaking references, and repairs references to a
 - Not listed: empty slots, prefab bookkeeping, references in a controller's unused sub-assets, material texture slots the shader doesn't have, references outside objects that hold a missing reference when loaded, and references from a file to its own missing parts.
 - Each missing GUID offers candidates (redirects, name matches, Git restores) or a manual pick. Each place it sits shows the object and field holding it; clicking selects the object.
 - From the Main Menu's PopUp Tools, **GUID Regenerator** and **GUID Repair** open a popup listing the assets and folders to run on, filled from the Project window's selection when opened; entries can be added and removed before running.
-- A reference can be ignored (kept out of the list and the save check). **Prefab Cleaner** removes prefab overrides whose target or property no longer exists, after asking. **Call material cleaner** opens Material Cleaner. The Project window's **RiryTools > Prefab Cleaner** does the same on the selected scenes and prefabs, and those in selected folders. From the Main Menu's PopUp Tools it opens a popup whose Target is Scene (the open scenes and the prefab in Prefab Mode), Project (the Project window's selection) or Prefab (one prefab asset), starting from the selection.
+- A reference can be ignored (kept out of the list and the save check). **Prefab Cleaner** removes prefab overrides whose target or property no longer exists, after asking. **Call material cleaner** opens Material Cleaner. The Project window's **RiryTools > General Tools > PopUp Tools > Prefab Cleaner** does the same on the selected scenes and prefabs, and those in selected folders. From the Main Menu's PopUp Tools it opens a popup whose Target is Scene (the open scenes and the prefab in Prefab Mode), Project (the Project window's selection) or Prefab (one prefab asset), starting from the selection.
 - After Apply, Controller Cleaner is offered on controllers the repair touched.
 - When an opened scene or prefab points at missing assets, it offers Check for Broken References; saving such a file is guarded.
 

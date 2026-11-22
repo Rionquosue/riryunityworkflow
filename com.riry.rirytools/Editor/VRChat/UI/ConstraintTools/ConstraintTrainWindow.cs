@@ -29,8 +29,8 @@ namespace Riry.RiryTools.Editor
             {
                 get { return Real.GetRange(0, Math.Max(0, Real.Count - 1)); }
             }
-            // Source 0 of every bone: where the train starts from.
-            public Transform Start;
+            // Source 0 of each bone: where the train starts from (empty with no start position).
+            public readonly List<Transform> Starts = new List<Transform>();
             public readonly List<List<Transform>> Chains = new List<List<Transform>>();
             public ConstraintTrainPlanner.Settings Settings;
             public Transform Root;
@@ -43,6 +43,12 @@ namespace Riry.RiryTools.Editor
         // The start position: one object every bone is constrained to before the train reaches it (no Rest chain: rest is the
         // constraints switched off).
         [SerializeField] private Transform startPosition;
+        // StartNone: each bone stays at rest until the train reaches it. StartAll: startPosition for every bone.
+        // StartPerBone: boneStarts, one per moving bone.
+        internal const int StartNone = 0, StartAll = 1, StartPerBone = 2;
+        internal static readonly string[] StartModes = { "None", "All", "Per bone" };
+        [SerializeField] private int startMode = StartAll;
+        [SerializeField] private Transform[] boneStarts = new Transform[0];
         [SerializeField] private Transform[] chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
         [SerializeField] private bool addEndpoints = true;
         [SerializeField] private float trainEnd = 0.5f;
@@ -81,6 +87,7 @@ namespace Riry.RiryTools.Editor
                 // Chains and the avatar root found for the previous start do not apply to a new one.
                 avatarRoot = null;
                 startPosition = null;
+                boneStarts = new Transform[0];
                 chainStarts = new Transform[ConstraintTrainPlanner.MaxChains];
                 realEnd = null;
             }
@@ -105,6 +112,7 @@ namespace Riry.RiryTools.Editor
                     Array.Copy(chainStarts, resized, Mathf.Min(chainStarts.Length, resized.Length));
                 chainStarts = resized;
             }
+            if (boneStarts == null) boneStarts = new Transform[0];
             if (stepCurve == null) stepCurve = AnimationCurve.Linear(0, 0, 1, 1);
             if (blendCurve == null) blendCurve = AnimationCurve.Linear(0, 0, 1, 1);
             if (chainEnds == null || chainEnds.Length != ConstraintTrainPlanner.MaxChains - 1)
@@ -162,7 +170,8 @@ namespace Riry.RiryTools.Editor
                 TrainEnd = trainEnd,
                 ChainEnds = chainEnds,
                 StepCurve = stepCurve,
-                BlendCurve = blendCurve
+                BlendCurve = blendCurve,
+                UseStart = startMode != StartNone
             };
         }
 
@@ -242,23 +251,30 @@ namespace Riry.RiryTools.Editor
             error = ConstraintTrainPlanner.Validate(plan.Settings);
             if (error != null) return false;
 
-            if (startPosition == null)
+            for (int bone = 0; bone < plan.Settings.BoneCount && startMode != StartNone; bone++)
             {
-                error = "Assign the start position.";
-                return false;
+                bool oneForAll = startMode == StartAll;
+                Transform start = oneForAll ? startPosition : bone < boneStarts.Length ? boneStarts[bone] : null;
+                string label = oneForAll ? "Start position" : "Start position for " + plan.Real[bone].name;
+                if (start == null)
+                {
+                    error = "Assign the " + (oneForAll ? "start position" : "start position for " + plan.Real[bone].name) +
+                        ", or set Start position to None.";
+                    return false;
+                }
+                // As for chain targets: not inside the constrained chain, and inside the avatar root.
+                if (start.IsChildOf(plan.Real[0]))
+                {
+                    error = label + ": it must not be inside the real bone chain.";
+                    return false;
+                }
+                if (!start.IsChildOf(plan.Root))
+                {
+                    error = label + ": it must be inside the avatar root.";
+                    return false;
+                }
+                plan.Starts.Add(start);
             }
-            // As for chain targets: not inside the constrained chain, and inside the avatar root.
-            if (startPosition.IsChildOf(plan.Real[0]))
-            {
-                error = "Start position: it must not be inside the real bone chain.";
-                return false;
-            }
-            if (!startPosition.IsChildOf(plan.Root))
-            {
-                error = "Start position: it must be inside the avatar root.";
-                return false;
-            }
-            plan.Start = startPosition;
             for (int c = 0; c < chainCount; c++)
             {
                 var chain = new List<Transform>();
@@ -267,7 +283,9 @@ namespace Riry.RiryTools.Editor
                 plan.Chains.Add(chain);
             }
 
-            var all = new List<List<Transform>>(plan.Chains) { new List<Transform> { plan.Start } };
+            var all = new List<List<Transform>>(plan.Chains);
+            // Bones may share a start position, but not with a physics chain.
+            if (plan.Starts.Count > 0) all.Add(plan.Starts.Distinct().ToList());
             Transform shared = ConstraintTrainChains.FindSharedTarget(all);
             if (shared != null)
             {
@@ -308,7 +326,7 @@ namespace Riry.RiryTools.Editor
             int chain;
             int chainBone;
             ConstraintTrainPlanner.DescribeSource(bone, source, out chain, out chainBone);
-            return chain < 0 ? plan.Start : plan.Chains[chain][chainBone];
+            return chain < 0 ? plan.Starts[bone] : plan.Chains[chain][chainBone];
         }
 
         private void SetUpConstraints()
@@ -372,9 +390,11 @@ namespace Riry.RiryTools.Editor
                 else Undo.RecordObject(constraint, UndoName);
 
                 // Every source at zero influence; the clip sets the weights (and switches the constraint on) when it plays.
-                var weights = new float[ConstraintTrainPlanner.SourceCount(bone, plan.Settings.ChainCount)];
+                // Without a start position, source 0 of the layout is left out.
+                int first = plan.Settings.UseStart ? 0 : 1;
+                var weights = new float[ConstraintTrainPlanner.SourceCount(bone, plan.Settings.ChainCount) - first];
                 var targets = new Transform[weights.Length];
-                for (int s = 0; s < weights.Length; s++) targets[s] = Target(plan, bone, s);
+                for (int s = 0; s < weights.Length; s++) targets[s] = Target(plan, bone, s + first);
                 ConstraintToolSources.AddSources(constraint, targets, weights);
                 ConstraintToolSources.ApplyDefaults(constraint);
                 constraint.IsActive = false;
@@ -461,11 +481,19 @@ namespace Riry.RiryTools.Editor
                 bindings.Add(EditorCurveBinding.FloatCurve(path, typeof(VRCParentConstraint), "IsActive"));
                 curves.Add(AnimationCurve.Constant(0f, 1f, 1f));
                 AnimationCurve[] boneCurves = ConstraintTrainPlanner.BuildCurves(plan.Settings, bone);
-                for (int s = 0; s < boneCurves.Length; s++)
+                // The last curve is the global weight, only animated without a start position (rest is weight 0).
+                int global = boneCurves.Length - 1;
+                int first = plan.Settings.UseStart ? 0 : 1;
+                for (int s = first; s < global; s++)
                 {
                     bindings.Add(EditorCurveBinding.FloatCurve(path, typeof(VRCParentConstraint),
-                        ConstraintToolSources.SourceWeightProperty(s)));
+                        ConstraintToolSources.SourceWeightProperty(s - first)));
                     curves.Add(boneCurves[s]);
+                }
+                if (!plan.Settings.UseStart)
+                {
+                    bindings.Add(EditorCurveBinding.FloatCurve(path, typeof(VRCParentConstraint), "GlobalWeight"));
+                    curves.Add(boneCurves[global]);
                 }
             }
             AnimationUtility.SetEditorCurves(target, bindings.ToArray(), curves.ToArray());

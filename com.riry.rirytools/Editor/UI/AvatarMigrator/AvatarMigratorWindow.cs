@@ -59,7 +59,18 @@ namespace Riry.RiryTools.Editor
         /// <summary>The Main Menu's General Tools > PopUp Tools sub-tab: the tool in its own floating window.</summary>
         internal static void OpenPopup()
         {
+            OpenPopup(null);
+        }
+
+        /// <summary>The Hierarchy entry: the popup with the selected object's avatar (or the object) as Source.</summary>
+        internal static void OpenPopup(GameObject source)
+        {
             AvatarMigratorWindow window = GetWindow<AvatarMigratorWindow>(true, Title);
+            if (source != null && !EditorUtility.IsPersistent(source))
+            {
+                Transform root = InvertGlobalPosition.AvatarRoot(source.transform);
+                window.source = root != null ? root.gameObject : source;
+            }
             window.minSize = new Vector2(420f, 360f);
             window.Show();
             EditorApplication.delayCall += AvatarMigratorSdkNoticeWindow.ShowIfNeeded;

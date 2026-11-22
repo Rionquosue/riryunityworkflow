@@ -14,8 +14,8 @@ folder) or a copied asset must stop being treated as the original.
 
 1. Select the assets or folders in the Project window. Folders include
    everything inside them; folder GUIDs themselves never change.
-2. Right-click and choose **RiryTools > Regenerate GUID**, or open
-   **Tools > RiryTools > GUID Tools** and click **Regenerate GUID**.
+2. Right-click and choose **RiryTools > General Tools > PopUp Tools > GUID Regenerator**, or open
+   **Tools > RiryTools > General Tools > PopUp Tools > GUID Regenerator**.
 3. Confirm. Every text reference in the project is updated, and the open scenes
    are reloaded from disk.
 
@@ -28,7 +28,7 @@ Use this when a scene or prefab shows missing scripts or missing assets, for
 example after restoring an old copy of a file.
 
 1. Select the broken scenes, prefabs or their folders.
-2. Right-click and choose **RiryTools > Repair Missing GUID References** (or
+2. Right-click and choose **RiryTools > General Tools > PopUp Tools > GUID Repair** (or
    **Repair Missing GUID References** in the GUID Tools window).
 3. The **Broken References** window lists each missing GUID, the files that use
    it, and every replacement found, with how each was found (remap ledger, logs,

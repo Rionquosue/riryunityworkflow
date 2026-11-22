@@ -5,7 +5,7 @@ mesh while you work.
 
 ## 1. Add a job
 
-Choose **Tools > RiryTools > Blendshape Sync**, or click **Add Job** in the
+Choose **Tools > RiryTools > General Tools > Blendshape Sync**, or click **Add Job** in the
 **Blendshape Sync** tab of **Tools > RiryTools > Main Menu**. A popup opens for the
 new job. Closing it keeps the job running; the Main Menu tab lists your jobs with
 **Auto**, **Sync Now**, **Edit**, **Set All to Original** and **Remove**, and they come

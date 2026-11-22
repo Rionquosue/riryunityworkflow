@@ -9,18 +9,19 @@ show **VRCSDK not found**.
 ## 1. Open the window on the chain
 
 Right-click the first bone of the chain in the Hierarchy (the one closest to the
-root) and choose **RiryTools > Constraint Tools > Train**. To fill in the last bone
+root) and choose **RiryTools > General Tools > Constraint Tools > Train**. To fill in the last bone
 too, Ctrl/Cmd-click it first so both are selected.
 
-You can also choose **Tools > RiryTools > Constraint Tools**, open the **Train** tab, and drag the bones
+You can also choose **Tools > RiryTools > General Tools > Constraint Tools**, open the **Train** tab, and drag the bones
 into **Start (RB1)** and **End**. **Avatar root** fills itself in with the
 avatar's Animator.
 
 ## 2. Make the target chains
 
-1. Assign **Start position**: the object every bone is held at until the train
-   reaches it. It must be inside the avatar root and not part of the real bone
-   chain.
+1. Pick **Start position**: **None** keeps each bone at rest until the train
+   reaches it; **All** takes one object every bone is held at; **Per bone**
+   lists one field per bone once the real chain is assigned. Start objects must
+   be inside the avatar root and not part of the real bone chain.
 2. Set **Physics chains** to how many chains the bones should travel through (1
    to 5).
 3. Leave **Add endpoints** on so each physics chain gets an end bone for the

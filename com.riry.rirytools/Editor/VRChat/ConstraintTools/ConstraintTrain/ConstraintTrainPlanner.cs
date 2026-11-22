@@ -31,6 +31,8 @@ namespace Riry.RiryTools.Editor
             public float[] ChainEnds;
             public AnimationCurve StepCurve;
             public AnimationCurve BlendCurve;
+            // False: no start position source; each bone rests (global weight 0) until the train reaches it.
+            public bool UseStart = true;
         }
 
         // Source layout on bone i (0-based):
@@ -174,10 +176,11 @@ namespace Riry.RiryTools.Editor
         /// Time state. Intervals are split until straight keys stay within
         /// <see cref="SampleTolerance"/> of the weights, then collinear keys are
         /// removed, so linear settings produce keys only at the break times.
+        /// One more curve after the sources is the constraint's global weight.
         /// </summary>
         internal static AnimationCurve[] BuildCurves(Settings settings, int bone)
         {
-            int count = SourceCount(bone, settings.ChainCount);
+            int count = SourceCount(bone, settings.ChainCount) + 1;
             var times = new List<float>();
             var samples = new List<float[]>();
             List<float> breaks = BreakTimes(settings);
@@ -205,9 +208,26 @@ namespace Riry.RiryTools.Editor
 
         private static float[] Sample(Settings settings, int bone, float t)
         {
-            var weights = new float[SourceCount(bone, settings.ChainCount)];
+            int count = SourceCount(bone, settings.ChainCount);
+            var weights = new float[count + 1];
             EvaluateWeights(settings, bone, t, weights);
+            weights[count] = 1f;
+            if (!settings.UseStart) WithoutStart(weights, count);
             return weights;
+        }
+
+        // The start position's weight becomes rest: the global weight rises as it falls, and the
+        // remaining sources are scaled back to a full share (chain-1 bone 0 while the bone rests).
+        private static void WithoutStart(float[] weights, int count)
+        {
+            float rest = weights[0];
+            weights[0] = 0f;
+            weights[count] = 1f - rest;
+            if (rest >= 1f) weights[1] = 1f;
+            else if (rest > 0f)
+            {
+                for (int s = 1; s < count; s++) weights[s] /= 1f - rest;
+            }
         }
 
         /// <summary>Adds the interior samples of (a, b), in order.</summary>
