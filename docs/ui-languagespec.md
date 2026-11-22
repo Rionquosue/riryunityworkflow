@@ -387,25 +387,26 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `OnGUI` | Help boxes (1, line 23) |
-| `DrawRealChain` | Labels (2, lines 44-67), Field labels (2, lines 45-46), Tooltips (1, line 50) |
-| `DrawTargets` | Labels (1, line 72), Field labels (1, line 73), Tooltips (2, lines 82-87), Buttons (1, line 96) |
-| `DrawChainRow` | Buttons (1, line 110) |
-| `DrawTiming` | Labels (1, line 120), Tooltips (2, lines 124-132), Buttons (1, line 126) |
-| `DrawPrefabSave` | Help boxes (2, lines 173-178), Buttons (2, lines 175-181) |
-| `DrawOutput` | Labels (1, line 186), Tooltips (1, line 188), Buttons (2, lines 192-193) |
+| `OnGUI` | Help boxes (1, line 25) |
+| `DrawRealChain` | Labels (2, lines 46-69), Field labels (2, lines 47-48), Tooltips (1, line 52) |
+| `DrawTargets` | Labels (1, line 74), Field labels (1, line 75), Tooltips (3, lines 84-97), Buttons (1, line 124) |
+| `DrawChainRow` | Buttons (1, line 138) |
+| `DrawTiming` | Labels (1, line 148), Tooltips (2, lines 152-160), Buttons (1, line 154) |
+| `DrawPrefabSave` | Help boxes (2, lines 201-206), Buttons (2, lines 203-209) |
+| `DrawOutput` | Labels (1, line 214), Tooltips (1, line 216), Buttons (2, lines 220-221) |
 
 ### `VRChat/UI/ConstraintTools/ConstraintTrainWindow.cs`
 
 | Method | Text |
 |---|---|
-| `SaveToPrefab` | Text shown through a variable (4, lines 124-152), Dialogs (2, lines 127-141) |
-| `GenerationError` | Text shown through a variable (2, lines 173-175) |
-| `Generate` | Text shown through a variable (2, lines 184-190) |
-| `GenerateMissing` | Text shown through a variable (1, line 209) |
-| `TryGather` | Text shown through a variable (6, lines 226-274) |
-| `SetUpConstraints` | Dialogs (1, line 350), Text shown through a variable (1, line 396) |
-| `IsInImmutablePackage` | Text shown through a variable (2, lines 431-443), Dialogs (1, line 434) |
+| `StartModes` | Popup options (3, line 49) |
+| `SaveToPrefab` | Text shown through a variable (4, lines 132-160), Dialogs (2, lines 135-149) |
+| `GenerationError` | Text shown through a variable (2, lines 182-184) |
+| `Generate` | Text shown through a variable (2, lines 193-199) |
+| `GenerateMissing` | Text shown through a variable (1, line 218) |
+| `TryGather` | Text shown through a variable (4, lines 235-292) |
+| `SetUpConstraints` | Dialogs (1, line 368), Text shown through a variable (1, line 416) |
+| `IsInImmutablePackage` | Text shown through a variable (2, lines 451-463), Dialogs (1, line 454) |
 
 ### `VRChat/UI/ConstraintTools/InsertablePropWindow.UI.cs`
 

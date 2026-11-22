@@ -18,9 +18,10 @@ avatar's Animator.
 
 ## 2. Make the target chains
 
-1. Assign **Start position**: the object every bone is held at until the train
-   reaches it. It must be inside the avatar root and not part of the real bone
-   chain.
+1. Pick **Start position**: **None** keeps each bone at rest until the train
+   reaches it; **All** takes one object every bone is held at; **Per bone**
+   lists one field per bone once the real chain is assigned. Start objects must
+   be inside the avatar root and not part of the real bone chain.
 2. Set **Physics chains** to how many chains the bones should travel through (1
    to 5).
 3. Leave **Add endpoints** on so each physics chain gets an end bone for the

@@ -28,7 +28,7 @@ One window with a tab per subtool, all built on VRChat constraints and contacts:
 **Train**
 - Opened from the Hierarchy's right-click **RiryTools > General Tools > Constraint Tools > Train** on the first bone (Ctrl/Cmd-click the end bone too), or the Main Menu's General Tools > Constraint Tools sub-tab.
 - The real chain runs from the start bone to the end bone. The end bone is where the train stops; the bones before it are constrained.
-- One **Start position** object is where every bone sits before the train reaches it.
+- **Start position** sets where each bone sits before the train reaches it: **None** (the bone stays at rest, then blends from rest onto physics chain 1), **All** (one object for every bone) or **Per bone** (one object for each bone, listed once the real chain is assigned).
 - 1 to 5 physics chains (`Phys1_`, `Phys2_`...) can be generated beside the chain, each matching the real chain bone for bone.
 - **Set up constraints** adds a VRC Parent Constraint to each moving bone, switched off, with every source at 0, at-rest values from the bone's pose, and the bones left at rest. One undo step.
 - **Build animation** writes a Motion Time clip: each bone is switched on, moves from the Start position along physics chain 1 one bone per step (the tip leads, each bone toward the root one step later) and stops one chain bone past its own, so the last stops at the end bone's chain bone; then every bone blends to chain 2, chain 3 and so on. Train end, chain ends and two curves shape the timing.

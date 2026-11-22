@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text;
 using UnityEditor;
@@ -83,9 +85,35 @@ namespace Riry.RiryTools.Editor
                     "repeats the offset between the last two real bones."), addEndpoints));
 
             bool canGenerate = realBones.Count > 0 && GenerationError(realBones) == null;
-            startPosition = RiryToolGUI.Set(this, SettingsUndo, startPosition, (Transform)EditorGUILayout.ObjectField(
-                new GUIContent("Start position", "Every bone is constrained here until the train reaches it. Rest is the constraints switched off."),
-                startPosition, typeof(Transform), true));
+            startMode = RiryToolGUI.Set(this, SettingsUndo, startMode, EditorGUILayout.Popup(
+                new GUIContent("Start position", "Where each bone is constrained until the train reaches it. None: the bone stays at " +
+                    "rest, then blends from rest onto physics chain 1. All: one object for every bone. Per bone: one object each."),
+                startMode, StartModes.Select(m => new GUIContent(m)).ToArray()));
+            using (new EditorGUI.IndentLevelScope())
+            {
+                if (startMode == StartAll)
+                {
+                    startPosition = RiryToolGUI.Set(this, SettingsUndo, startPosition, (Transform)EditorGUILayout.ObjectField(
+                        new GUIContent("Object", "Every bone is constrained here until the train reaches it. Rest is the constraints switched off."),
+                        startPosition, typeof(Transform), true));
+                }
+                else if (startMode == StartPerBone && realBones.Count > 1)
+                {
+                    // One field per moving bone: the real chain without its end bone.
+                    if (boneStarts.Length != realBones.Count - 1)
+                    {
+                        var resized = new Transform[realBones.Count - 1];
+                        Array.Copy(boneStarts, resized, Mathf.Min(boneStarts.Length, resized.Length));
+                        boneStarts = resized;
+                    }
+                    for (int bone = 0; bone < boneStarts.Length; bone++)
+                    {
+                        boneStarts[bone] = RiryToolGUI.Set(this, SettingsUndo, boneStarts[bone], (Transform)EditorGUILayout.ObjectField(
+                            new GUIContent(realBones[bone].name, "Bone " + realBones[bone].name + " is constrained here until the train reaches it."),
+                            boneStarts[bone], typeof(Transform), true));
+                    }
+                }
+            }
             for (int c = 0; c < chainCount; c++)
             {
                 chainStarts[c] = RiryToolGUI.Set(this, SettingsUndo, chainStarts[c], DrawChainRow("Physics chain " + (c + 1), chainStarts[c], realBones,
