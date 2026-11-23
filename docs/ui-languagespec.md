@@ -531,7 +531,7 @@ settings keys, file contents and other strings the user never sees as UI.
 | `Id` | Text shown through a variable (1, line 253) |
 | `Evidence` | Text shown through a variable (1, line 260) |
 | `ReadSchema` | Text shown through a variable (4, lines 280-291) |
-| `ReadHardware` | Text shown through a variable (6, lines 316-362) |
+| `ReadHardware` | Text shown through a variable (10, lines 339-407) |
 | `ReadAvatar` | Text shown through a variable (10, lines 397-462) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorExpression.cs`
@@ -593,12 +593,12 @@ settings keys, file contents and other strings the user never sees as UI.
 | Method | Text |
 |---|---|
 | `Start` | Text shown through a variable (4, lines 229-238) |
-| `Tick` | Text shown through a variable (2, lines 526-533) |
-| `PassthroughProblem` | Text shown through a variable (4, lines 712-716) |
-| `Verify` | Text shown through a variable (1, line 744) |
-| `Snapshot` | Text shown through a variable (25, lines 820-973) |
-| `OutputRow` | Text shown through a variable (1, line 981) |
-| `StateText` | Text shown through a variable (5, lines 988-992) |
+| `Tick` | Text shown through a variable (2, lines 530-537) |
+| `PassthroughProblem` | Text shown through a variable (4, lines 718-724) |
+| `Verify` | Text shown through a variable (1, line 752) |
+| `Snapshot` | Text shown through a variable (26, lines 828-988) |
+| `OutputRow` | Text shown through a variable (1, line 996) |
+| `StateText` | Text shown through a variable (5, lines 1003-1007) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`
 

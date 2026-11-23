@@ -20,6 +20,20 @@
     "Cheek squint, dimple and stretch follow the smile and sad controls only with Documented module behavior.",
     "The lower funnel and left stretch assignments are kept as the inspected module has them."
   ],
+  "parameters": [
+    {
+      "name": "Viseme",
+      "type": "Int",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "Voice",
+      "type": "Float",
+      "min": 0,
+      "max": 1
+    }
+  ],
   "controls": [
     {
       "name": "LeftGazeX",

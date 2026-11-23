@@ -16,6 +16,20 @@
     "Pupil diameter is normalised (0.5 neutral); dilation and constriction are derived from it by a fixed rule, not measured separately.",
     "Brows follow squeeze and wide only with Documented module behavior."
   ],
+  "parameters": [
+    {
+      "name": "Viseme",
+      "type": "Int",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "Voice",
+      "type": "Float",
+      "min": 0,
+      "max": 1
+    }
+  ],
   "controls": [
     {
       "name": "LeftGazeX",

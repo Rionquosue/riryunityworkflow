@@ -27,6 +27,18 @@ namespace Riry.RiryTools.Editor
         internal string Note;
     }
 
+    /// <summary>
+    /// An avatar parameter a profile always lets through, whatever the avatar's profile says (VRChat's own Viseme and
+    /// Voice). It is listed in the debug window's Parameters tab, where the user picks Live, Hold, Manual or Off.
+    /// </summary>
+    internal sealed class FTEmulatorPermittedParameter
+    {
+        internal string Name;
+        internal FTEmulatorValueType Type;
+        internal float Min;
+        internal float Max = 1f;
+    }
+
     /// <summary>What a device can track. A software capability list, not a model of its accuracy.</summary>
     internal sealed class FTEmulatorHardwareProfile
     {
@@ -43,6 +55,17 @@ namespace Riry.RiryTools.Editor
         internal FTEmulatorHardwareControl[] Controls;
         internal FTEmulatorHardwareOutput[] Outputs;
         internal Dictionary<string, int> ControlIndex;
+        internal FTEmulatorPermittedParameter[] Parameters = new FTEmulatorPermittedParameter[0];
+
+        /// <summary>The permitted parameter of that exact name, or null.</summary>
+        internal FTEmulatorPermittedParameter Permitted(string name)
+        {
+            foreach (FTEmulatorPermittedParameter parameter in Parameters)
+            {
+                if (parameter.Name == name) return parameter;
+            }
+            return null;
+        }
 
         internal string Label
         {
@@ -315,6 +338,28 @@ namespace Riry.RiryTools.Editor
             };
             if (string.IsNullOrWhiteSpace(profile.Name)) throw new FormatException("\"name\" is missing");
             profile.Evidence = Evidence(root, !profile.Unrestricted);
+            var permitted = new List<FTEmulatorPermittedParameter>();
+            foreach (object item in FTEmulatorJson.List(root, "parameters"))
+            {
+                Dictionary<string, object> entry = FTEmulatorJson.Object(item, "A permitted parameter");
+                string type = FTEmulatorJson.Text(entry, "type", "Float");
+                var parameter = new FTEmulatorPermittedParameter
+                {
+                    Name = FTEmulatorJson.Text(entry, "name"),
+                    Type = type == "Int" ? FTEmulatorValueType.Int : type == "Bool" ? FTEmulatorValueType.Bool : FTEmulatorValueType.Float,
+                    Min = (float)FTEmulatorJson.Number(entry, "min", 0),
+                    Max = (float)FTEmulatorJson.Number(entry, "max", 1),
+                };
+                if (string.IsNullOrWhiteSpace(parameter.Name) || parameter.Name.Length > 255) throw new FormatException("a permitted parameter has no usable name");
+                if (type != "Int" && type != "Bool" && type != "Float") throw new FormatException("the permitted parameter \"" + parameter.Name + "\" has an unknown type");
+                if (!(parameter.Min < parameter.Max)) throw new FormatException("the permitted parameter \"" + parameter.Name + "\" has an unusable range");
+                foreach (FTEmulatorPermittedParameter earlier in permitted)
+                {
+                    if (earlier.Name == parameter.Name) throw new FormatException("the permitted parameter \"" + parameter.Name + "\" is listed twice");
+                }
+                permitted.Add(parameter);
+            }
+            profile.Parameters = permitted.ToArray();
             var controls = new List<FTEmulatorHardwareControl>();
             var outputs = new List<FTEmulatorHardwareOutput>();
             var controlIndex = new Dictionary<string, int>(StringComparer.Ordinal);

@@ -277,6 +277,10 @@ namespace Riry.RiryTools.Editor
                 controlKeys[i] = FTEmulatorParameterStore.ControlPrefix + control.Name;
                 store.Ensure(controlKeys[i], FTEmulatorValueType.Float, control.Min, control.Max, control.Neutral);
             }
+            // Parameters every profile lets through (Viseme, Voice): listed from the start, so they can be set or turned Off
+            // before any value arrives.
+            foreach (FTEmulatorPermittedParameter permitted in hardware.Parameters)
+                store.Ensure(FTEmulatorParameterStore.ParameterPrefix + permitted.Name, permitted.Type, permitted.Min, permitted.Max, permitted.Min, false);
             // The keys the device does not have: a row each, Off until the user turns it on (Live, Hold or Manual).
             keyRows = new string[keys];
             keyOverridden = new bool[keys];
@@ -700,7 +704,9 @@ namespace Riry.RiryTools.Editor
             string key = FTEmulatorParameterStore.ParameterPrefix + value.Name;
             bool known = store.Find(key) != null;
             // These values are sent when they change, not every frame: the last one stays.
-            store.Ensure(key, value.Type, -10000f, 10000f, 0f, false);
+            FTEmulatorPermittedParameter permitted = hardware.Permitted(value.Name);
+            if (permitted != null) store.Ensure(key, permitted.Type, permitted.Min, permitted.Max, permitted.Min, false);
+            else store.Ensure(key, value.Type, -10000f, 10000f, 0f, false);
             string problem = PassthroughProblem(value.Name);
             if (problem != null && (!known || store.Find(key).Blocked == null)) Diagnostics.Record(FTEmulatorDiagnostics.ProfileBlock, value.Name + ": " + problem);
             store.SetBlocked(key, problem);
@@ -712,6 +718,8 @@ namespace Riry.RiryTools.Editor
             if (name == UserFaceTracking || name == UserEyeTracking) return "Set by FTEmulator: a status parameter is not taken from the input";
             if (evaluator != null && Array.IndexOf(evaluator.Forwarded, name) >= 0) return "Driven by the native forwarder";
             if (avatar.TypeConflicts.Contains(name)) return "Its controllers disagree on its type";
+            // Permitted by the hardware profile (Viseme, Voice): not face tracking, so never held to the device's channels.
+            if (hardware.Permitted(name) != null) return null;
             if (passthroughMapper != null) return passthroughMapper.ValidatePassthrough(name, filter.Allowed, hardware, catalog.Keys);
             return hardware.Unrestricted ? null : "Strict: the avatar has no known profile, so it cannot be checked against " + hardware.Name;
         }
@@ -964,6 +972,13 @@ namespace Riry.RiryTools.Editor
                     Owner = FTEmulatorParameterStore.Owner(entry, store.Frozen, store.SourceStopped), Hardware = entry.Blocked ?? "Allowed", Blocked = entry.Blocked != null,
                     Source = "VRCFT (already mapped)", Mapped = entry.Blocked == null, Min = -1f, Max = 1f,
                 };
+                FTEmulatorPermittedParameter permitted = hardware.Permitted(row.Name);
+                if (permitted != null)
+                {
+                    row.Min = permitted.Min;
+                    row.Max = permitted.Max;
+                    row.Hardware = "Permitted by " + hardware.Name;
+                }
                 if (row.Blocked) snapshot.Blocked++;
                 if (row.Owner == "Held" || row.Owner == "Manual") snapshot.Held++;
                 snapshot.Parameters.Add(row);

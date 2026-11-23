@@ -16,6 +16,20 @@
     "The comparison table's EYES_SQUINT / EYES_WIDEN rows are read as LidTightener / UpperLidRaiser, the FB1 names.",
     "No tongue, pupil, jaw backward, jaw clench, throat or neck channels."
   ],
+  "parameters": [
+    {
+      "name": "Viseme",
+      "type": "Int",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "Voice",
+      "type": "Float",
+      "min": 0,
+      "max": 1
+    }
+  ],
   "controls": [
     {
       "name": "BrowLowererL",

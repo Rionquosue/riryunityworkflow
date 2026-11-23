@@ -12,6 +12,20 @@
   "notes": [
     "Every tracking key is its own control. No hardware limits are applied."
   ],
+  "parameters": [
+    {
+      "name": "Viseme",
+      "type": "Int",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "Voice",
+      "type": "Float",
+      "min": 0,
+      "max": 1
+    }
+  ],
   "controls": [],
   "outputs": []
 }

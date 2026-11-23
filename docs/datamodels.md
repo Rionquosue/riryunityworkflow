@@ -159,6 +159,7 @@ Location: `com.riry.ftemulator/Editor/FTEmulator/HardwareProfiles/`
 | `evidence` | string[] | No | Source URLs or notes. |
 | `notes` | string[] | No | Implementation notes. |
 | `unrestricted` | bool | No | If true, no hardware emulation is applied. |
+| `parameters` | Parameter[] | No | Avatar parameters always let through, whatever the avatar's profile says: every profile lists VRChat's `Viseme` (Int, 0-100) and `Voice` (Float, 0-1). Listed in the debug window's Parameters tab from the start, where Live, Hold, Manual or Off is picked. |
 | `controls` | Control[] | No | Input controls (mapping from hardware to internal keys). |
 | `outputs` | Output[] | No | Final tracking keys (mapping to VRChat SDK keys). |
 
@@ -172,6 +173,15 @@ Location: `com.riry.ftemulator/Editor/FTEmulator/HardwareProfiles/`
 | `min` | float | Minimum value constraint. |
 | `max` | float | Maximum value constraint (default 1). |
 | `neutral` | float | Neutral/zero point value. |
+
+#### Parameter
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `name` | string | The avatar parameter's exact name. |
+| `type` | string | `Int`, `Float` (default) or `Bool`. |
+| `min` | float | Minimum (default 0). |
+| `max` | float | Maximum (default 1). |
 
 #### Output
 
