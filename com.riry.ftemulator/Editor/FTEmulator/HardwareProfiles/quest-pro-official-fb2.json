@@ -15,6 +15,20 @@
     "The FB1 baseline plus TongueOut. FB2's other tongue fields are left out until a module mapping is verified.",
     "No tongue directions and no pupil channels."
   ],
+  "parameters": [
+    {
+      "name": "Viseme",
+      "type": "Int",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "Voice",
+      "type": "Float",
+      "min": 0,
+      "max": 1
+    }
+  ],
   "controls": [
     {
       "name": "BrowLowererL",
