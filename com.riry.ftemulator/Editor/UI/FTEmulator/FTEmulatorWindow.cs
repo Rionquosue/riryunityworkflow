@@ -330,6 +330,11 @@ namespace Riry.RiryTools.Editor
                     GUIUtility.ExitGUI();
                 }
             }
+            AnimationClip clip = FTEmulator.Animation;
+            var pickedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation",
+                "Plays with the recording, looping on its own length: put on the avatar each frame after Gesture Manager's animation. Needs a recording."),
+                clip, typeof(AnimationClip), false);
+            if (pickedClip != clip) FTEmulator.Animation = pickedClip;
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(FTEmulatorSettings.RecordingPath)))

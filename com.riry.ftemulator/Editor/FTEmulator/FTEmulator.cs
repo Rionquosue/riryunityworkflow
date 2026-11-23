@@ -45,6 +45,9 @@ namespace Riry.RiryTools.Editor
         private static Object manager;
         private static FTEmulatorNativeSetWeights setWeights;
         private static FTEmulatorSessionSnapshot lastSnapshot;
+        // The animation played with the recording, read again when FTEmulatorSettings.AnimationId changes.
+        private static AnimationClip animation;
+        private static string animationId;
         private static string lastDiagnostics;
         // The player loop is only touched while the two steps are in it.
         private static bool stepsInstalled;
@@ -143,6 +146,26 @@ namespace Riry.RiryTools.Editor
         internal static string LastDiagnostics
         {
             get { return lastDiagnostics; }
+        }
+
+        /// <summary>The AnimationClip chosen to play with the recording (FTEmulatorSettings.AnimationId), or null.</summary>
+        internal static AnimationClip Animation
+        {
+            get
+            {
+                string id = FTEmulatorSettings.AnimationId;
+                if (id == animationId && (animation != null || id.Length == 0)) return animation;
+                animationId = id;
+                animation = id.Length > 0 && GlobalObjectId.TryParse(id, out GlobalObjectId parsed)
+                    ? GlobalObjectId.GlobalObjectIdentifierToObjectSlow(parsed) as AnimationClip : null;
+                return animation;
+            }
+            set
+            {
+                FTEmulatorSettings.AnimationId = value != null ? GlobalObjectId.GetGlobalObjectIdSlow(value).ToString() : "";
+                animationId = FTEmulatorSettings.AnimationId;
+                animation = value;
+            }
         }
 
         /// <summary>Why Autoplay has not started yet, or null.</summary>
@@ -449,6 +472,19 @@ namespace Riry.RiryTools.Editor
             }
         }
 
+        // The animation chosen to play with the recording, sampled onto the avatar after Gesture Manager's animation: only
+        // while a recording plays or is paused part way, at the recording's time on the clip's own loop.
+        private static void SampleAnimation()
+        {
+            if (output == null || !output.Valid || !FTEmulatorRecording.Loaded) return;
+            if (!FTEmulatorRecording.Playing && FTEmulatorRecording.Playhead <= 0) return;
+            AnimationClip clip = Animation;
+            GameObject avatar = output.Avatar;
+            if (clip == null || avatar == null) return;
+            float time = clip.length > 0f ? (float)(FTEmulatorRecording.Playhead % clip.length) : 0f;
+            clip.SampleAnimation(avatar, time);
+        }
+
         private static void LateTick()
         {
             FTEmulatorSession current = session;
@@ -456,6 +492,7 @@ namespace Riry.RiryTools.Editor
             try
             {
                 current.LateTick();
+                SampleAnimation();
             }
             catch (Exception exception)
             {

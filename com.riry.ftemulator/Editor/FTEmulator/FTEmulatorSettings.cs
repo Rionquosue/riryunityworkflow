@@ -26,6 +26,7 @@ namespace Riry.RiryTools.Editor
         private const string RecordingPathKey = "RiryTools.FTEmulator.RecordingPath";
         private const string AutoplayKey = "RiryTools.FTEmulator.Autoplay";
         private const string LoopKey = "RiryTools.FTEmulator.Loop";
+        private const string AnimationKey = "RiryTools.FTEmulator.Animation";
         private const string ModeKey = "RiryTools.FTEmulator.Mode";
 
         /// <summary>The chosen avatar's name, found again by fuzzy search when the object itself is gone (VRCFury's build replaces it).</summary>
@@ -54,6 +55,13 @@ namespace Riry.RiryTools.Editor
         {
             get { return EditorUserSettings.GetConfigValue(AutoplayKey) == "1"; }
             set { EditorUserSettings.SetConfigValue(AutoplayKey, value ? "1" : "0"); }
+        }
+
+        /// <summary>The animation played with the recording: an AnimationClip's GlobalObjectId, or empty for none.</summary>
+        internal static string AnimationId
+        {
+            get { return EditorUserSettings.GetConfigValue(AnimationKey) ?? ""; }
+            set { EditorUserSettings.SetConfigValue(AnimationKey, value ?? ""); }
         }
 
         /// <summary>On: playback starts again from the beginning when the recording ends.</summary>

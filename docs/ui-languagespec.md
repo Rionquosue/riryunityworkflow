@@ -501,25 +501,25 @@ settings keys, file contents and other strings the user never sees as UI.
 | `DrawHardware` | Field labels (2, lines 223-225), Buttons (1, line 234) |
 | `DrawControls` | Buttons (4, lines 243-278), Help boxes (1, line 260), Toggles (2, lines 266-270) |
 | `DrawOsc` | Labels (6, lines 285-298), Field labels (1, line 287), Toggles (1, line 289), Text shown through a variable (1, line 299), Buttons (2, lines 305-310) |
-| `DrawRecording` | Labels (5, lines 319-376), Field labels (1, line 322), Buttons (5, lines 325-357), Dialogs (1, line 328), Toggles (3, lines 359-373) |
-| `DrawManual` | Labels (2, lines 403-410), Toggles (1, line 404) |
+| `DrawRecording` | Labels (5, lines 319-381), Field labels (2, lines 322-334), Buttons (5, lines 325-362), Dialogs (1, line 328), Toggles (3, lines 364-378) |
+| `DrawManual` | Labels (2, lines 408-415), Toggles (1, line 409) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/FTEmulator.cs`
 
 | Method | Text |
 |---|---|
 | `FTEmulator` | Text shown through a variable (1, line 24) |
-| `OnEnterPlayMode` | Text shown through a variable (1, line 63) |
-| `OnPlayModeChanged` | Text shown through a variable (1, line 84) |
-| `OnBeforeReload` | Text shown through a variable (1, line 100) |
-| `OnQuitting` | Text shown through a variable (1, line 105) |
-| `DriverText` | Text shown through a variable (4, lines 162-166) |
-| `FindManagerFor` | Text shown through a variable (4, lines 205-220) |
-| `StartChosen` | Text shown through a variable (3, lines 229-240) |
-| `AutoplayUpdate` | Text shown through a variable (2, lines 260-272) |
-| `Start` | Text shown through a variable (2, lines 285-293) |
-| `Shutdown` | Text shown through a variable (1, line 367) |
-| `Tick` | Text shown through a variable (2, lines 443-448) |
+| `OnEnterPlayMode` | Text shown through a variable (1, line 66) |
+| `OnPlayModeChanged` | Text shown through a variable (1, line 87) |
+| `OnBeforeReload` | Text shown through a variable (1, line 103) |
+| `OnQuitting` | Text shown through a variable (1, line 108) |
+| `DriverText` | Text shown through a variable (4, lines 185-189) |
+| `FindManagerFor` | Text shown through a variable (4, lines 228-243) |
+| `StartChosen` | Text shown through a variable (3, lines 252-263) |
+| `AutoplayUpdate` | Text shown through a variable (2, lines 283-295) |
+| `Start` | Text shown through a variable (2, lines 308-316) |
+| `Shutdown` | Text shown through a variable (1, line 390) |
+| `Tick` | Text shown through a variable (2, lines 466-471) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorCatalog.cs`
 

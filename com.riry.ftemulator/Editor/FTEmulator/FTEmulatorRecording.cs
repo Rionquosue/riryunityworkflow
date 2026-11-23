@@ -54,6 +54,12 @@ namespace Riry.RiryTools.Editor
 
         internal static int Skipped { get; private set; }
 
+        /// <summary>Seconds into the recording (0 when stopped or rewound).</summary>
+        internal static double Playhead
+        {
+            get { return playhead; }
+        }
+
         internal static double Length
         {
             get { return packets != null && packets.Count > 0 ? packets[packets.Count - 1].Time : 0; }
