@@ -25,6 +25,12 @@ namespace Riry.RiryTools.Editor
             FTEmulator.CreateOutput = () => new FTEmulatorGestureManager();
             FTEmulator.FindManagers = () => Object.FindObjectsOfType<GestureManager>();
             FTEmulator.ManagerType = typeof(GestureManager);
+            FTEmulator.ManagerAvatar = target =>
+            {
+                var found = target as GestureManager;
+                var running = found != null ? found.Module as ModuleVrc3 : null;
+                return running != null && !running.IsInvalid() ? running.Avatar : null;
+            };
         }
 
         private GestureManager manager;
@@ -114,7 +120,8 @@ namespace Riry.RiryTools.Editor
 // ============================================================================
 //
 // FTEmulatorGestureManager (this file): IFTEmulatorOutput (com.riry.ftemulator/Editor/FTEmulator/FTEmulatorTypes.cs)
-//   static constructor       [InitializeOnLoad]: sets FTEmulator.CreateOutput, FindManagers and ManagerType.
+//   static constructor       [InitializeOnLoad]: sets FTEmulator.CreateOutput, FindManagers, ManagerType and
+//                            ManagerAvatar (the avatar a Gesture Manager runs, or null).
 //   Bind(target, out problem)  A GestureManager component, or the object that has one; its Module must be a valid ModuleVrc3
 //                            (an avatar is running).
 //   Valid                    The manager still runs the module that was bound.

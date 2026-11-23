@@ -25,7 +25,7 @@ namespace Riry.RiryTools.Editor
         private static readonly string[] MappedNames = { "All", "Mapped", "Unmapped" };
         private static readonly string[] ModeNames = { "Live", "Hold", "Manual", "Off" };
         private const float RowHeight = 20f;
-        private const float TypeWidth = 74f, ValueWidth = 58f, OwnerWidth = 64f, ActionWidth = 300f;
+        private const float TypeWidth = 74f, ValueWidth = 58f, OwnerWidth = 64f, ActionWidth = 420f;
         // A row counts as changed for this long after its value last moved.
         private const double ChangedSeconds = 2.0;
 
@@ -213,7 +213,7 @@ namespace Riry.RiryTools.Editor
             Cell(ref x, rect, hardwareWidth, new GUIContent(row.Hardware, row.Hardware), EditorStyles.miniLabel);
             Cell(ref x, rect, sourceWidth, new GUIContent(row.Source, string.IsNullOrEmpty(row.Note) ? row.Source : row.Source + "\n" + row.Note), EditorStyles.miniLabel);
             var action = new Rect(x, rect.y + 1f, ActionWidth - 8f, rect.height - 2f);
-            if (row.Key != null && !row.Blocked) DrawAction(session, row, action);
+            if (row.Key != null && !row.Blocked) DrawAction(session, row, action, tab == HardwareTab);
             else if (!string.IsNullOrEmpty(row.LinkedControl) && tab != HardwareTab)
             {
                 // A value that follows a device channel is changed there, so everything linked to it moves together.
@@ -229,8 +229,9 @@ namespace Riry.RiryTools.Editor
             else if (row.Blocked) EditorGUI.LabelField(action, "Disabled", EditorStyles.miniLabel);
         }
 
-        // Live / Hold / Manual / Off, and the value while Manual. Typing a value makes the row Manual.
-        private static void DrawAction(FTEmulatorSession session, FTEmulatorDebugRow row, Rect rect)
+        // Live / Hold / Manual / Off, and the value while Manual. Typing a value makes the row Manual. slider: every Float row
+        // gets a slider with its number field (Hardware controls); otherwise only ranges up to 2 do.
+        private static void DrawAction(FTEmulatorSession session, FTEmulatorDebugRow row, Rect rect, bool slider)
         {
             using (new EditorGUI.DisabledScope(session == null))
             {
@@ -247,7 +248,7 @@ namespace Riry.RiryTools.Editor
                 else
                 {
                     EditorGUI.BeginChangeCheck();
-                    float value = row.Max - row.Min <= 2f && row.Type == "Float"
+                    float value = (slider || row.Max - row.Min <= 2f) && row.Type == "Float" && row.Max > row.Min
                         ? EditorGUI.Slider(field, shown, row.Min, row.Max)
                         : EditorGUI.DelayedFloatField(field, shown);
                     if (EditorGUI.EndChangeCheck() && session != null) Typed(session, row, value);

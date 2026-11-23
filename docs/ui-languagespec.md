@@ -480,33 +480,46 @@ settings keys, file contents and other strings the user never sees as UI.
 
 | Method | Text |
 |---|---|
-| `FTEmulatorDebugWindow` | Text shown through a variable (2, lines 19-26), Tabs and toolbars (1, line 24) |
+| `FTEmulatorDebugWindow` | Text shown through a variable (1, line 19), Tabs and toolbars (3, lines 24-26) |
+| `DiagnosticsText` | Text shown through a variable (3, lines 63-67) |
 | `OnGUI` | Help boxes (1, line 119), Labels (1, line 131) |
-| `DrawHardware` | Labels (1, line 150) |
-| `DrawRow` | Labels (2, lines 228-229) |
-| `DrawMappings` | Labels (5, lines 288-310), Field labels (2, lines 311-312), Buttons (2, lines 318-322) |
-| `OverrideMapping` | Text shown through a variable (1, line 341) |
-| `DrawDiagnostics` | Buttons (1, line 354) |
+| `DrawFilter` | Toggles (2, lines 141-142) |
+| `DrawHardware` | Labels (1, line 150), Text shown through a variable (1, line 151) |
+| `DrawTable` | Labels (1, line 189) |
+| `DrawRow` | Buttons (1, line 220), Labels (2, lines 228-229) |
+| `DrawMappings` | Labels (5, lines 289-311), Field labels (2, lines 312-313), Buttons (2, lines 319-323) |
+| `OverrideMapping` | Text shown through a variable (1, line 342) |
+| `DrawDiagnostics` | Buttons (1, line 355) |
 
 ### `com.riry.ftemulator/Editor/UI/FTEmulator/FTEmulatorWindow.cs`
 
 | Method | Text |
 |---|---|
-| `FTEmulatorWindow` | Text shown through a variable (1, line 21) |
-| `Draw` | Help boxes (2, lines 89-100), Buttons (1, line 90), Labels (1, line 99) |
-| `DrawAvatar` | Field labels (2, lines 121-145), Help boxes (2, lines 124-164), Labels (2, lines 127-158), Buttons (1, line 130), Foldouts (1, line 153) |
-| `DrawInputAndHardware` | Field labels (3, lines 172-189), Buttons (1, line 198) |
-| `DrawControls` | Buttons (4, lines 207-240), Toggles (2, lines 228-232) |
-| `DrawOsc` | Labels (6, lines 247-260), Field labels (1, line 249), Toggles (1, line 251), Buttons (2, lines 267-272) |
-| `DrawRecording` | Labels (3, lines 282-284), Buttons (5, lines 291-310) |
-| `DrawManual` | Labels (2, lines 338-345), Toggles (1, line 339) |
+| `FTEmulatorWindow` | Text shown through a variable (1, line 22), Tabs and toolbars (2, lines 24-25) |
+| `Draw` | Help boxes (2, lines 110-121), Buttons (1, line 111), Text shown through a variable (1, line 119), Labels (1, line 120) |
+| `DrawAvatar` | Field labels (2, lines 160-190), Labels (4, lines 168-203), Buttons (1, line 175), Foldouts (1, line 198), Help boxes (1, line 209) |
+| `DrawHardware` | Field labels (2, lines 223-225), Buttons (1, line 234) |
+| `DrawControls` | Buttons (4, lines 243-278), Help boxes (1, line 260), Toggles (2, lines 266-270) |
+| `DrawOsc` | Labels (6, lines 285-298), Field labels (1, line 287), Toggles (1, line 289), Text shown through a variable (1, line 299), Buttons (2, lines 305-310) |
+| `DrawRecording` | Labels (5, lines 319-376), Field labels (1, line 322), Buttons (5, lines 325-357), Dialogs (1, line 328), Toggles (3, lines 359-373) |
+| `DrawManual` | Labels (2, lines 403-410), Toggles (1, line 404) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/FTEmulator.cs`
 
 | Method | Text |
 |---|---|
 | `FTEmulator` | Text shown through a variable (1, line 24) |
-| `Start` | Text shown through a variable (1, line 141) |
+| `OnEnterPlayMode` | Text shown through a variable (1, line 63) |
+| `OnPlayModeChanged` | Text shown through a variable (1, line 84) |
+| `OnBeforeReload` | Text shown through a variable (1, line 100) |
+| `OnQuitting` | Text shown through a variable (1, line 105) |
+| `DriverText` | Text shown through a variable (4, lines 162-166) |
+| `FindManagerFor` | Text shown through a variable (4, lines 205-220) |
+| `StartChosen` | Text shown through a variable (3, lines 229-240) |
+| `AutoplayUpdate` | Text shown through a variable (2, lines 260-272) |
+| `Start` | Text shown through a variable (2, lines 285-293) |
+| `Shutdown` | Text shown through a variable (1, line 367) |
+| `Tick` | Text shown through a variable (2, lines 443-448) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorCatalog.cs`
 
@@ -564,12 +577,28 @@ settings keys, file contents and other strings the user never sees as UI.
 | `FTEmulatorPortInUseException` | Text shown through a variable (1, line 15) |
 | `Start` | Text shown through a variable (1, line 101) |
 
+### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorRecording.cs`
+
+| Method | Text |
+|---|---|
+| `Status` | Text shown through a variable (3, lines 68-70) |
+| `Load` | Text shown through a variable (2, lines 77-79) |
+| `ExtractAttachment` | Text shown through a variable (7, lines 186-210) |
+| `Quote` | Text shown through a variable (1, line 217) |
+| `Check` | Text shown through a variable (7, lines 230-254) |
+| `Read` | Text shown through a variable (14, lines 292-339) |
+
 ### `com.riry.ftemulator/Editor/FTEmulator/FTEmulatorSession.cs`
 
 | Method | Text |
 |---|---|
-| `Start` | Text shown through a variable (3, lines 224-226) |
-| `Snapshot` | Text shown through a variable (3, lines 862-889) |
+| `Start` | Text shown through a variable (4, lines 229-238) |
+| `Tick` | Text shown through a variable (2, lines 526-533) |
+| `PassthroughProblem` | Text shown through a variable (4, lines 712-716) |
+| `Verify` | Text shown through a variable (1, line 744) |
+| `Snapshot` | Text shown through a variable (25, lines 820-973) |
+| `OutputRow` | Text shown through a variable (1, line 981) |
+| `StateText` | Text shown through a variable (5, lines 988-992) |
 
 ### `com.riry.ftemulator/Editor/FTEmulator/GestureManager/FTEmulatorGestureManager.cs`
 
