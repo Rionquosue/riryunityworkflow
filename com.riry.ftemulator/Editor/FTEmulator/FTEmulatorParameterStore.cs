@@ -5,10 +5,10 @@ namespace Riry.RiryTools.Editor
 {
     /// <summary>
     /// The Live / Held / Manual / Disabled policy of every row the debug window can change: the hardware profile's
-    /// controls, and avatar parameters that arrive already mapped. It holds tracking input, not the avatar's pose: animator
-    /// smoothing and unrelated animation keep moving.
-    /// A value is refused when its row is blocked (the hardware profile does not allow it), so an override cannot get past
-    /// the hardware limits.
+    /// controls, the tracking keys the profile does not have (Disabled until the user turns one on), and avatar
+    /// parameters that arrive already mapped. It holds tracking input, not the avatar's pose: animator smoothing and
+    /// unrelated animation keep moving.
+    /// A value is refused when its row is blocked (an already mapped parameter the hardware profile does not allow).
     /// </summary>
     internal sealed class FTEmulatorParameterStore
     {
@@ -18,6 +18,7 @@ namespace Riry.RiryTools.Editor
         internal const double FadeSeconds = 0.2;
         internal const string ControlPrefix = "control:";
         internal const string ParameterPrefix = "parameter:";
+        internal const string KeyPrefix = "key:";
 
         internal sealed class Entry
         {
@@ -29,6 +30,8 @@ namespace Riry.RiryTools.Editor
             /// <summary>False for values a source sends only when they change: the last one stays until the next.</summary>
             internal bool Expires = true;
             internal FTEmulatorRowMode Mode;
+            /// <summary>The mode a new row starts in and Reset overrides goes back to.</summary>
+            internal FTEmulatorRowMode DefaultMode;
             internal bool HasLive;
             internal float Live;
             internal double LiveTime;
@@ -61,12 +64,16 @@ namespace Riry.RiryTools.Editor
             return key != null && entries.TryGetValue(key, out Entry entry) ? entry : null;
         }
 
-        /// <summary>The row for key, made when it is new. An existing row keeps its mode and values and takes the new range.</summary>
-        internal Entry Ensure(string key, FTEmulatorValueType type, float min, float max, float neutral, bool expires = true)
+        /// <summary>
+        /// The row for key, made when it is new (in mode defaultMode). An existing row keeps its mode and values and takes
+        /// the new range.
+        /// </summary>
+        internal Entry Ensure(string key, FTEmulatorValueType type, float min, float max, float neutral, bool expires = true,
+            FTEmulatorRowMode defaultMode = FTEmulatorRowMode.Live)
         {
             if (!entries.TryGetValue(key, out Entry entry))
             {
-                entry = new Entry { Key = key };
+                entry = new Entry { Key = key, Mode = defaultMode, DefaultMode = defaultMode };
                 entries[key] = entry;
                 ordered.Add(entry);
             }
@@ -206,12 +213,12 @@ namespace Riry.RiryTools.Editor
             foreach (Entry entry in ordered) entry.HasLive = false;
         }
 
-        /// <summary>Every row back to Live, with no manual or held value.</summary>
+        /// <summary>Every row back to its default mode (Live; Disabled for a key the profile does not have), with no manual or held value.</summary>
         internal void ResetOverrides()
         {
             foreach (Entry entry in ordered)
             {
-                entry.Mode = FTEmulatorRowMode.Live;
+                entry.Mode = entry.DefaultMode;
                 entry.HasHeld = false;
                 entry.AwaitingFresh = false;
             }

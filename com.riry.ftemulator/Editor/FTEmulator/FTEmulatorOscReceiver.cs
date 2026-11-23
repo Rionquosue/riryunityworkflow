@@ -160,7 +160,6 @@ namespace Riry.RiryTools.Editor
                     return;
                 }
                 if (stopping) return;
-                FTEmulatorRecording.Capture(data, data.Length);
                 Receive(data, data.Length, remote);
             }
         }

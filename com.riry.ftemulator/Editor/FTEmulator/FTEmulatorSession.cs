@@ -84,7 +84,8 @@ namespace Riry.RiryTools.Editor
     /// runs the same with Gesture Manager in Play Mode and with stand-ins in a test. Everything here runs on the main
     /// thread; a source's own thread only fills the source's buffer.
     /// Order per frame (Tick, before animation): read input, controls from input, overrides, expand to tracking keys,
-    /// final hardware check, native evaluation or legacy mapping, parameter writes. LateTick (after animation) writes the
+    /// final hardware check, the keys the profile lacks that the user turned on, native evaluation or legacy mapping,
+    /// parameter writes. LateTick (after animation) writes the
     /// native blendshape weights.
     /// </summary>
     internal sealed class FTEmulatorSession
@@ -131,6 +132,10 @@ namespace Riry.RiryTools.Editor
         private bool[] controlAvailable = new bool[0];
         private float[] controlEffective = new float[0];
         private bool[] controlDriven = new bool[0];
+        // Per tracking key the profile does not have: its row's store key (null for a key the profile has), and whether
+        // the user turned it on this frame.
+        private string[] keyRows = new string[0];
+        private bool[] keyOverridden = new bool[0];
         private float[] values = new float[0];
         private bool[] valueDriven = new bool[0];
         private float[] lastInput = new float[0];
@@ -256,13 +261,30 @@ namespace Riry.RiryTools.Editor
             controlEffective = new float[controls];
             controlDriven = new bool[controls];
             // Rows of another device go, with any value typed or held on them; parameter rows are checked again below.
-            store.Retain(key => key.StartsWith(FTEmulatorParameterStore.ParameterPrefix, StringComparison.Ordinal) ||
-                hardware.ControlIndex.ContainsKey(key.Substring(FTEmulatorParameterStore.ControlPrefix.Length)));
+            store.Retain(key =>
+            {
+                if (key.StartsWith(FTEmulatorParameterStore.ParameterPrefix, StringComparison.Ordinal)) return true;
+                if (key.StartsWith(FTEmulatorParameterStore.KeyPrefix, StringComparison.Ordinal))
+                {
+                    int index = catalog.Key(key.Substring(FTEmulatorParameterStore.KeyPrefix.Length));
+                    return index >= 0 && !filter.Allowed[index];
+                }
+                return hardware.ControlIndex.ContainsKey(key.Substring(FTEmulatorParameterStore.ControlPrefix.Length));
+            });
             for (int i = 0; i < controls; i++)
             {
                 FTEmulatorHardwareControl control = hardware.Controls[i];
                 controlKeys[i] = FTEmulatorParameterStore.ControlPrefix + control.Name;
                 store.Ensure(controlKeys[i], FTEmulatorValueType.Float, control.Min, control.Max, control.Neutral);
+            }
+            // The keys the device does not have: a row each, Off until the user turns it on (Live, Hold or Manual).
+            keyRows = new string[keys];
+            keyOverridden = new bool[keys];
+            for (int key = 0; key < keys; key++)
+            {
+                if (filter.Allowed[key]) continue;
+                keyRows[key] = FTEmulatorParameterStore.KeyPrefix + catalog.Keys[key];
+                store.Ensure(keyRows[key], FTEmulatorValueType.Float, 0f, 1f, 0f, true, FTEmulatorRowMode.Disabled);
             }
             store.ClearLive();
             if (source != null) source.Clear();
@@ -535,6 +557,10 @@ namespace Riry.RiryTools.Editor
                         {
                             if (controlAvailable[i]) store.SetLive(controlKeys[i], controlValues[i], now);
                         }
+                        for (int key = 0; key < keyRows.Length; key++)
+                        {
+                            if (keyRows[key] != null && expressions.Valid[key]) store.SetLive(keyRows[key], expressions.Values[key], now);
+                        }
                     }
                 }
                 if (parameters != null)
@@ -558,11 +584,28 @@ namespace Riry.RiryTools.Editor
             // 3. Controls to tracking keys, then the final check: nothing the device lacks gets through.
             filter.Expand(controlEffective, controlDriven, values, valueDriven);
             blockedValues = filter.Validate(values, valueDriven);
+            // A key the device does not have, turned on by the user: its row's value goes through whatever the profile says.
+            for (int key = 0; key < keyRows.Length; key++)
+            {
+                keyOverridden[key] = false;
+                if (keyRows[key] == null || !store.TryEffective(keyRows[key], now, out float own)) continue;
+                values[key] = Math.Min(Math.Max(own, 0f), 1f);
+                valueDriven[key] = true;
+                keyOverridden[key] = true;
+                anyControl = true;
+            }
             eyeAvailable = false;
             faceAvailable = false;
             for (int key = 0; key < values.Length; key++)
             {
-                if (!filter.Allowed[key] || !valueDriven[key]) continue;
+                if (!valueDriven[key]) continue;
+                if (keyOverridden[key])
+                {
+                    if (catalog.EyeKey[key]) eyeAvailable = true;
+                    else faceAvailable = true;
+                    continue;
+                }
+                if (!filter.Allowed[key]) continue;
                 if (catalog.EyeKey[key]) eyeAvailable |= hardware.EyeTracking;
                 else faceAvailable |= hardware.FaceTracking;
             }
@@ -748,8 +791,7 @@ namespace Riry.RiryTools.Editor
             if (!started || stopped) return;
             stopped = true;
             cancel.Cancel();
-            string saved = FTEmulatorRecording.StopAll();
-            if (saved != null) Info?.Invoke("Recording saved to " + saved);
+            FTEmulatorRecording.Stop();
             StopSource();
             if (source != null) source.Dispose();
             source = null;
@@ -818,19 +860,41 @@ namespace Riry.RiryTools.Editor
                 if (row.Owner == "Held" || row.Owner == "Manual") snapshot.Held++;
                 snapshot.Controls.Add(row);
             }
+            // The keys the device does not have: Off by default, and the user may turn any of them on.
+            for (int key = 0; key < keyRows.Length; key++)
+            {
+                if (keyRows[key] == null) continue;
+                FTEmulatorParameterStore.Entry entry = store.Find(keyRows[key]);
+                var row = new FTEmulatorDebugRow
+                {
+                    Key = keyRows[key], Name = catalog.Keys[key], Group = "Not in " + hardware.Name, HasLive = entry.HasLive, Live = entry.Live,
+                    HasEffective = keyOverridden[key], Effective = values[key], Owner = FTEmulatorParameterStore.Owner(entry, store.Frozen, store.SourceStopped),
+                    Hardware = "Not in " + hardware.Name + " (Off by default)", Mode = entry.Mode, Min = 0f, Max = 1f, Mapped = true,
+                    Source = entry.HasLive ? "Observed" : "Unavailable", Note = filter.BlockedReason(key),
+                };
+                if (row.Owner == "Held" || row.Owner == "Manual") snapshot.Held++;
+                snapshot.Controls.Add(row);
+            }
 
             // Tracking keys: what the controls expand to. Read-only; a key follows its control.
             for (int key = 0; key < catalog.Keys.Length; key++)
             {
                 int[] from = filter.ControlsOf(key);
                 bool allowed = filter.Allowed[key];
+                bool overridden = keyOverridden.Length > key && keyOverridden[key];
                 var row = new FTEmulatorDebugRow
                 {
                     Name = catalog.Keys[key], Group = catalog.EyeKey[key] ? "Eye" : "Face", HasLive = lastInputValid[key], Live = lastInput[key],
-                    HasEffective = allowed && valueDriven[key], Effective = values[key], Blocked = !allowed, Mapped = allowed,
-                    Hardware = allowed ? filter.IsDerived(key) ? "Derived" : "Allowed" : filter.BlockedReason(key),
+                    HasEffective = (allowed || overridden) && valueDriven[key], Effective = values[key], Blocked = !allowed && !overridden, Mapped = allowed || overridden,
+                    Hardware = allowed ? filter.IsDerived(key) ? "Derived" : "Allowed" : overridden ? "On: not in " + hardware.Name : filter.BlockedReason(key),
                     Source = lastInputValid[key] ? "Observed" : "Unavailable", Note = allowed ? filter.NoteOf(key) : "",
                 };
+                // A key the device does not have is changed under Hardware controls, where it is Off by default.
+                if (!allowed)
+                {
+                    row.LinkedControl = catalog.Keys[key];
+                    if (overridden) row.Owner = FTEmulatorParameterStore.Owner(store.Find(keyRows[key]), store.Frozen, store.SourceStopped);
+                }
                 if (allowed && from.Length == 1)
                 {
                     row.LinkedControl = hardware.Controls[from[0]].Name;
@@ -840,7 +904,7 @@ namespace Riry.RiryTools.Editor
                         ? "Linked" : FTEmulatorParameterStore.Owner(entry, store.Frozen, store.SourceStopped);
                 }
                 else if (allowed) row.Owner = "Linked";
-                if (!allowed) snapshot.Blocked++;
+                if (row.Blocked) snapshot.Blocked++;
                 snapshot.Expressions.Add(row);
             }
 

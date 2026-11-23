@@ -8,28 +8,46 @@ using Object = UnityEngine.Object;
 namespace Riry.RiryTools.Editor
 {
     /// <summary>
-    /// The FTEmulator window (logic in com.riry.ftemulator/Editor/FTEmulator/): the avatar, backend, input and hardware choices, the
-    /// Start, Active listening, Freeze output and Stop controls, and the OSC connection. It shows the session's snapshot
+    /// The FTEmulator window (logic in com.riry.ftemulator/Editor/FTEmulator/): the avatar, backend and hardware choices, the
+    /// mode tabs (Playback, OSC, Manual: each picks the input), the Start, Active listening, Freeze output and Stop
+    /// controls. It shows the session's snapshot
     /// and sends commands to FTEmulator and its session; it opens no socket, reads no avatar and works out no value
     /// itself. Opening or closing it starts and stops nothing: a session a user started keeps running without it, and is
     /// shown again when the window is reopened. Settings can be changed in Edit Mode; Start needs Play Mode.
     /// Tools > RiryTools > FTEmulator, and the Main Menu's FTEmulator tab. The tables are in
     /// FTEmulatorDebugWindow.
     /// </summary>
-    internal sealed class FTEmulatorWindow : EditorWindow
+    internal sealed class FTEmulatorWindow : EditorWindow, IRiryHostedTool
     {
         internal const string Title = "FTEmulator";
-        private static readonly string[] InputNames = { "VRCFT OSC", "Manual" };
+        // In FTEmulatorMode's order.
+        private static readonly string[] ModeNames = { "Playback", "OSC", "Manual" };
         private static readonly string[] BehaviorNames = { "Strict hardware", "Documented module behavior" };
 
         // The Main Menu's copy (CreateHosted): never shown on its own.
         [SerializeField] private bool hosted;
-        // The Gesture Manager object chosen by the user. Never filled in automatically.
-        [SerializeField] private Object managerObject;
+        // The avatar picked by the user; FTEmulatorAvatarFinder keeps its name to find it again after VRCFury's build.
+        [SerializeField] private GameObject avatarObject;
+        [NonSerialized] private string checkReport;
+        [NonSerialized] private bool checkPassed;
+        [NonSerialized] private string driverText;
+        [NonSerialized] private bool gestureManagerRunning;
         [SerializeField] private bool showEvidence;
         [SerializeField] private Vector2 scroll;
         [NonSerialized] private string startProblem;
         [NonSerialized] private FTEmulatorSessionSnapshot snapshot;
+        // The Main Menu while this window is hosted in its FTEmulator tab (IRiryHostedTool); null on its own.
+        [NonSerialized] private EditorWindow surface;
+
+        public EditorWindow Surface
+        {
+            set { surface = value; }
+        }
+
+        // Nothing is drawn outside IMGUI.
+        public void NotDrawn()
+        {
+        }
 
         /// <summary>The Main Menu's copy (RiryToolsVRChatMenus sets RiryToolsMainMenu.CreateFTEmulator to this): never shown on its own.</summary>
         internal static EditorWindow CreateHosted()
@@ -62,7 +80,10 @@ namespace Riry.RiryTools.Editor
             if (StopAllToolScripts.Active) return;
             FTEmulatorSession session = FTEmulator.Session;
             snapshot = session != null ? session.Snapshot() : FTEmulator.LastSnapshot;
-            if (session != null && managerObject == null) managerObject = FTEmulator.Manager;
+            driverText = FTEmulator.DriverText();
+            gestureManagerRunning = FTEmulator.GestureManagerRunning();
+            // The picked avatar was replaced (VRCFury's build): show the one found again by name.
+            if (avatarObject == null && EditorApplication.isPlaying && FTEmulatorAvatarFinder.HasChoice) avatarObject = FTEmulatorAvatarFinder.Find();
             Repaint();
         }
 
@@ -101,30 +122,54 @@ namespace Riry.RiryTools.Editor
 
             DrawAvatar(session, catalog, playing);
             EditorGUILayout.Space(6f);
-            DrawInputAndHardware(session, catalog);
+            DrawHardware(session, catalog);
+            EditorGUILayout.Space(4f);
+            DrawModes(session);
             EditorGUILayout.Space(6f);
             DrawControls(session, playing);
-            EditorGUILayout.Space(6f);
-            if (FTEmulatorSettings.Input == FTEmulatorInput.VrcftOsc) DrawOsc(session);
-            else DrawManual(session);
+        }
+
+        // The mode tabs, below View allowed channels. The tab picks the input: Playback and OSC use VRCFT OSC (a recording
+        // plays through the OSC receiver), Manual the Manual input.
+        private void DrawModes(FTEmulatorSession session)
+        {
+            int mode = (int)FTEmulatorSettings.Mode;
+            int picked = RiryToolsMainMenu.TabStrip(surface != null ? surface : this, mode, ModeNames, hosted ? GUI.skin.verticalScrollbar.fixedWidth + 4f : 0f,
+                RiryToolsMainMenu.ToolTabs);
+            if (picked != mode)
+            {
+                FTEmulatorMode value = (FTEmulatorMode)picked;
+                FTEmulatorSettings.Mode = value;
+                FTEmulatorInput input = value == FTEmulatorMode.Manual ? FTEmulatorInput.Manual : FTEmulatorInput.VrcftOsc;
+                FTEmulatorSettings.Input = input;
+                if (session != null) session.SetInput(input);
+            }
+            EditorGUILayout.Space(4f);
+            switch (FTEmulatorSettings.Mode)
+            {
+                case FTEmulatorMode.Playback: DrawRecording(session); break;
+                case FTEmulatorMode.Osc: DrawOsc(session); break;
+                default: DrawManual(session); break;
+            }
         }
 
         private void DrawAvatar(FTEmulatorSession session, FTEmulatorCatalog catalog, bool playing)
         {
-            if (FTEmulator.CreateOutput == null)
+            // Always editable, in Edit or Play Mode, with or without a session.
+            if (avatarObject == null && FTEmulatorAvatarFinder.Chosen != null) avatarObject = FTEmulatorAvatarFinder.Chosen;
+            GameObject pickedAvatar = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Avatar",
+                    "The avatar to drive. After VRCFury's build replaces it in Play Mode, it is found again by name."), avatarObject, typeof(GameObject), true);
+            if (pickedAvatar != avatarObject)
             {
-                EditorGUILayout.HelpBox(new GestureManagerNotFoundException(Title).Message, MessageType.Info);
-                return;
+                avatarObject = pickedAvatar;
+                FTEmulatorAvatarFinder.Choose(pickedAvatar);
             }
-            using (new EditorGUI.DisabledScope(session != null))
-            {
-                managerObject = EditorGUILayout.ObjectField(new GUIContent("Gesture Manager", "The Gesture Manager object whose avatar is driven."),
-                    managerObject, FTEmulator.ManagerType ?? typeof(Object), true);
-            }
-            if (managerObject == null && playing && session == null) EditorGUILayout.HelpBox("Select a Gesture Manager avatar.", MessageType.Info);
+            if (avatarObject == null && FTEmulatorSettings.AvatarName.Length > 0)
+                EditorGUILayout.LabelField(" ", "Looking for \"" + FTEmulatorSettings.AvatarName + "\"", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField(new GUIContent("Driver", "Found automatically in the scene."), new GUIContent(driverText ?? (driverText = FTEmulator.DriverText())));
             using (new EditorGUILayout.HorizontalScope())
             {
-                EditorGUILayout.LabelField("Avatar", session != null && snapshot != null ? snapshot.Avatar : "None");
+                EditorGUILayout.LabelField("Driving", session != null && snapshot != null ? snapshot.Avatar : "None");
                 using (new EditorGUI.DisabledScope(session == null))
                 {
                     if (GUILayout.Button(new GUIContent("Rescan", "Read the avatar's parameters and face tracking settings again."), GUILayout.Width(70f)))
@@ -166,17 +211,8 @@ namespace Riry.RiryTools.Editor
             }
         }
 
-        private void DrawInputAndHardware(FTEmulatorSession session, FTEmulatorCatalog catalog)
+        private void DrawHardware(FTEmulatorSession session, FTEmulatorCatalog catalog)
         {
-            int input = FTEmulatorSettings.Input == FTEmulatorInput.Manual ? 1 : 0;
-            int pickedInput = EditorGUILayout.Popup(new GUIContent("Input", "VRCFT OSC: VRCFaceTracking sends to FTEmulator. Manual: values typed in the debug window."), input, InputNames);
-            if (pickedInput != input)
-            {
-                FTEmulatorInput value = pickedInput == 1 ? FTEmulatorInput.Manual : FTEmulatorInput.VrcftOsc;
-                FTEmulatorSettings.Input = value;
-                if (session != null) session.SetInput(value);
-            }
-
             var labels = new string[catalog.Hardware.Count];
             int hardware = 0;
             for (int i = 0; i < catalog.Hardware.Count; i++)
@@ -202,11 +238,11 @@ namespace Riry.RiryTools.Editor
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUI.DisabledScope(!playing || session != null || managerObject == null || FTEmulator.CreateOutput == null))
+                using (new EditorGUI.DisabledScope(!playing || session != null || !FTEmulatorAvatarFinder.HasChoice))
                 {
                     if (GUILayout.Button("Start", GUILayout.Height(26f)))
                     {
-                        FTEmulator.Start(managerObject, out startProblem);
+                        FTEmulator.StartChosen(out startProblem);
                         snapshot = null;
                     }
                 }
@@ -220,6 +256,8 @@ namespace Riry.RiryTools.Editor
                 }
             }
             if (!string.IsNullOrEmpty(startProblem) && session == null) EditorGUILayout.HelpBox(startProblem, MessageType.Warning);
+            if (playing && FTEmulatorSettings.Autoplay && !string.IsNullOrEmpty(FTEmulator.AutoplayProblem))
+                EditorGUILayout.HelpBox("Autoplay: " + FTEmulator.AutoplayProblem, MessageType.Info);
             using (new EditorGUI.DisabledScope(session == null))
             {
                 using (new EditorGUI.DisabledScope(FTEmulatorSettings.Input != FTEmulatorInput.VrcftOsc))
@@ -272,65 +310,97 @@ namespace Riry.RiryTools.Editor
                     if (GUILayout.Button("Copy diagnostics", GUILayout.Height(22f))) EditorGUIUtility.systemCopyBuffer = FTEmulatorDebugWindow.DiagnosticsText();
                 }
             }
-            DrawRecording(session);
         }
 
-        // Record the OSC packets VRCFaceTracking sends, and play a saved recording back through the receiver.
+        // The Playback tab: a companion recording (.mkv or .ftrec.jsonl) anywhere on this PC, played through the
+        // receiver. Recording itself is the companion's job.
         private void DrawRecording(FTEmulatorSession session)
         {
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Recording", EditorStyles.boldLabel);
-            if (FTEmulatorRecording.Recording) EditorGUILayout.LabelField("Recording", FTEmulatorRecording.RecordedPackets + " packet(s)");
-            if (FTEmulatorRecording.Playing) EditorGUILayout.LabelField("Playing", FTEmulatorRecording.PlayStatus);
+            EditorGUILayout.LabelField("Recording playback", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUI.DisabledScope(session == null && !FTEmulatorRecording.Recording))
+                string path = EditorGUILayout.DelayedTextField(new GUIContent("Recording", "A recording made by the companion: .mkv or .ftrec.jsonl, anywhere on this PC."),
+                    FTEmulatorSettings.RecordingPath);
+                if (path != FTEmulatorSettings.RecordingPath) SetRecordingPath(path);
+                if (GUILayout.Button("Browse…", GUILayout.Width(70f)))
                 {
-                    if (!FTEmulatorRecording.Recording)
-                    {
-                        if (GUILayout.Button(new GUIContent("Record", "Keeps every OSC packet the receiver takes, with its time, until Stop recording or Play Mode ends."),
-                                GUILayout.Height(22f)))
-                            FTEmulatorRecording.StartRecording();
-                    }
-                    else if (GUILayout.Button("Stop recording", GUILayout.Height(22f)))
-                    {
-                        string saved = FTEmulatorRecording.StopRecording();
-                        RiryLog.Info(RiryLog.FTEmulator, saved != null ? "Recording saved to " + saved : "Nothing was recorded.");
-                    }
+                    string folder = string.IsNullOrEmpty(FTEmulatorSettings.RecordingPath) ? "" : System.IO.Path.GetDirectoryName(FTEmulatorSettings.RecordingPath);
+                    string chosen = EditorUtility.OpenFilePanelWithFilters("Recording", folder, new[] { "Recordings", "mkv,jsonl", "All files", "*" });
+                    if (!string.IsNullOrEmpty(chosen)) SetRecordingPath(chosen);
+                    GUIUtility.ExitGUI();
                 }
-                using (new EditorGUI.DisabledScope(session == null))
+            }
+            AnimationClip clip = FTEmulator.Animation;
+            var pickedClip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Animation",
+                "Plays with the recording, looping on its own length: put on the avatar each frame after Gesture Manager's animation. Needs a recording."),
+                clip, typeof(AnimationClip), false);
+            if (pickedClip != clip) FTEmulator.Animation = pickedClip;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(FTEmulatorSettings.RecordingPath)))
+                {
+                    if (GUILayout.Button(new GUIContent("Check validity", "Reads the whole recording and decodes every packet, without playing it."), GUILayout.Height(22f)))
+                        checkPassed = FTEmulatorRecording.Check(FTEmulatorSettings.RecordingPath, out checkReport);
+                }
+            }
+            if (!string.IsNullOrEmpty(checkReport)) EditorGUILayout.HelpBox(checkReport, checkPassed ? MessageType.Info : MessageType.Error);
+            if (FTEmulatorRecording.Loaded) EditorGUILayout.LabelField(FTEmulatorRecording.Playing ? "Playing" : "Loaded", FTEmulatorRecording.Status);
+            // Play/Pause and Stop only in Play Mode with Gesture Manager running an avatar; Loop, Autoplay and Speed always.
+            bool ready = EditorApplication.isPlaying && gestureManagerRunning;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(!ready || session == null || string.IsNullOrWhiteSpace(FTEmulatorSettings.RecordingPath)))
                 {
                     if (!FTEmulatorRecording.Playing)
                     {
-                        if (GUILayout.Button(new GUIContent("Play recording", "Plays a saved recording through the receiver at its recorded times."), GUILayout.Height(22f)))
-                            PlayRecording();
+                        if (GUILayout.Button("Play", GUILayout.Height(22f))) PlayRecording();
                     }
-                    else if (GUILayout.Button("Stop playback", GUILayout.Height(22f))) FTEmulatorRecording.StopPlayback();
+                    else if (GUILayout.Button("Pause", GUILayout.Height(22f))) FTEmulatorRecording.Pause();
                 }
-                if (GUILayout.Button("Open folder", GUILayout.Height(22f)))
+                using (new EditorGUI.DisabledScope(!ready || !FTEmulatorRecording.Loaded))
                 {
-                    System.IO.Directory.CreateDirectory(FTEmulatorRecording.Folder);
-                    EditorUtility.RevealInFinder(FTEmulatorRecording.Folder);
+                    if (GUILayout.Button(new GUIContent("Stop", "Stops and rewinds."), GUILayout.Height(22f))) FTEmulatorRecording.Stop();
+                }
+                bool loop = GUILayout.Toggle(FTEmulatorSettings.Loop, new GUIContent("Loop", "On: playback starts again from the beginning when the recording ends."),
+                    "Button", GUILayout.Height(22f));
+                if (loop != FTEmulatorSettings.Loop) FTEmulatorSettings.Loop = loop;
+                bool autoplay = EditorGUILayout.ToggleLeft(new GUIContent("Autoplay", "On: entering Play Mode starts FTEmulator on the avatar and plays the recording."),
+                    FTEmulatorSettings.Autoplay, GUILayout.Width(80f));
+                if (autoplay != FTEmulatorSettings.Autoplay) FTEmulatorSettings.Autoplay = autoplay;
+            }
+            if (FTEmulatorSettings.Autoplay) EditorGUILayout.LabelField("Plays from the start each time Play Mode starts.", EditorStyles.wordWrappedMiniLabel);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Speed", GUILayout.Width(EditorGUIUtility.labelWidth - 4f));
+                foreach (float rate in FTEmulatorRecording.Speeds)
+                {
+                    bool on = Mathf.Approximately(FTEmulatorRecording.Speed, rate);
+                    if (GUILayout.Toggle(on, rate.ToString("0.##", CultureInfo.InvariantCulture) + "×", "Button") && !on) FTEmulatorRecording.Speed = rate;
                 }
             }
+            if (session == null) EditorGUILayout.LabelField("Start FTEmulator in Play Mode to play.", EditorStyles.wordWrappedMiniLabel);
         }
 
-        private static void PlayRecording()
+        private void SetRecordingPath(string path)
         {
-            System.IO.Directory.CreateDirectory(FTEmulatorRecording.Folder);
-            string path = EditorUtility.OpenFilePanel("Play recording", FTEmulatorRecording.Folder, FTEmulatorRecording.Extension.TrimStart('.'));
-            if (!string.IsNullOrEmpty(path))
+            FTEmulatorSettings.RecordingPath = path.Trim().Trim('"');
+            checkReport = null;
+        }
+
+        // Loads (only when changed) and plays from the playhead.
+        private void PlayRecording()
+        {
+            try
             {
-                try
-                {
-                    FTEmulatorRecording.Play(path);
-                }
-                catch (Exception exception) when (exception is System.IO.IOException || exception is System.IO.InvalidDataException || exception is UnauthorizedAccessException)
-                {
-                    RiryLog.Exception(RiryLog.FTEmulator, "Could not play " + path, exception);
-                }
+                FTEmulatorRecording.Load(FTEmulatorSettings.RecordingPath);
+                FTEmulatorRecording.Play();
             }
-            GUIUtility.ExitGUI();
+            catch (Exception exception) when (exception is System.IO.IOException || exception is System.IO.InvalidDataException ||
+                                              exception is UnauthorizedAccessException || exception is ArgumentException || exception is NotSupportedException)
+            {
+                checkPassed = false;
+                checkReport = exception.Message;
+            }
         }
 
         private void DrawManual(FTEmulatorSession session)
@@ -355,12 +425,15 @@ namespace Riry.RiryTools.Editor
 //   CreateHosted()           The Main Menu's copy (hosted): drawn in the Main Menu's FTEmulator tab, never shown.
 //   Open()                   Tools > RiryTools > FTEmulator: the window of its own (never the hosted copy), in a scroll view.
 //   OnInspectorUpdate()      Ten times a second: FTEmulatorSession.Snapshot (or FTEmulator.LastSnapshot), then Repaint.
-//   Draw()                   State; Gesture Manager (an object field the user fills; the message of
-//                            GestureManagerNotFoundException without Gesture Manager); Avatar and Rescan; Avatar backend
-//                            (Auto, Native, the catalog's profiles) with its summary, Evidence and the Partial preview
-//                            reasons; Input; Hardware limits; Behavior; View allowed channels; Start and Stop; Active
-//                            listening; Freeze output; Open debug window; Reset overrides; then the OSC connection
-//                            (port, Discovery, identity, tracking app, last payload, traffic, Restart connection, Copy
-//                            diagnostics) or the Manual input's toggle.
-//   Every choice is stored in FTEmulatorSettings and sent to the running session; the window keeps only the Gesture
-//   Manager object, the Evidence foldout and its scroll position.
+//   Draw()                   State; Avatar (a GameObject field, always editable; FTEmulatorAvatarFinder.Choose keeps its
+//                            name and path to find it again after VRCFury's build); Driver (FTEmulator.DriverText, found
+//                            automatically); Driving and Rescan; Avatar backend with its summary, Evidence and Partial
+//                            preview reasons; Input; Hardware limits; Behavior; View allowed channels; Start
+//                            (FTEmulator.StartChosen) and Stop; the Autoplay problem; Active listening; Freeze output; Open
+//                            debug window; Reset overrides; then the OSC connection and Recording playback, or the Manual
+//                            input's toggle.
+//   DrawRecording            Recording (path + Browse…, any folder; .mkv or .ftrec.jsonl), Check validity
+//                            (FTEmulatorRecording.Check, result shown), Autoplay toggle; without Autoplay: Play/Pause,
+//                            Stop (rewind) and Speed 0.25–2×. No recording is made in Unity.
+//   Every choice is stored in FTEmulatorSettings and sent to the running session; the window keeps only the
+//   avatar field, the Check validity result, the Evidence foldout and its scroll position.

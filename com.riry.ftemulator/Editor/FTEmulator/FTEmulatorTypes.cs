@@ -15,6 +15,17 @@ namespace Riry.RiryTools.Editor
         Manual
     }
 
+    /// <summary>The FTEmulator window's mode tab. Playback and OSC use the VRCFT OSC input; Manual the Manual input.</summary>
+    internal enum FTEmulatorMode
+    {
+        /// <summary>A companion recording played through the OSC receiver.</summary>
+        Playback,
+        /// <summary>VRCFaceTracking sends live OSC to the receiver.</summary>
+        Osc,
+        /// <summary>Only the values typed in the debug window.</summary>
+        Manual
+    }
+
     /// <summary>How a hardware profile's channels reach Unified Expressions.</summary>
     internal enum FTEmulatorBehavior
     {
